@@ -1,0 +1,6 @@
+import { NACState } from './nac.states';
+
+export const NAC_TRANSITIONS = {
+  NAC_IDLE: ['AGENT_SELECTED'],
+  AGENT_SELECTED: ['IDENTITY_EDIT','LIBRARY_EDIT','TRAINING_MODE','SIMULATION_MODE','AUDIT_ONLY'],
+};

@@ -1,0 +1,11 @@
+{
+  "id": "demo-001",
+  "nome": "Victor Lawrence Bernardes Santana",
+  "sessions": [
+    {
+      "timestamp": 1735789200000,
+      "label": "Sessão iniciada em 02/01/2026 10:20",
+      "content": "<p>Conteúdo da sessão</p>"
+    }
+  ]
+}

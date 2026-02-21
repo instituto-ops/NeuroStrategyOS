@@ -1,0 +1,1 @@
+Núcleo Clínico — contratos, eventos, guards e persistência.

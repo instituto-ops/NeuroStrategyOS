@@ -1,0 +1,1 @@
+Configurações, chaves, modo offline e arquitetura.

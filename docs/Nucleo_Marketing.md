@@ -1,0 +1,1 @@
+Núcleo de Marketing e Crescimento (MiniMax).

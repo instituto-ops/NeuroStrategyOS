@@ -1,0 +1,9 @@
+{
+  "session_id": "39df6e76-2c7b-4e65-95da-232af1ca1f19",
+  "patient_id": "688d95e0-015e-4605-8408-b67384391c63",
+  "started_at": "2026-01-01T10:09:07.030Z",
+  "ended_at": null,
+  "status": "ACTIVE",
+  "created_by": "CLI",
+  "schema_version": "1.0.0"
+}

@@ -1,0 +1,21 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.mode {
+  display: none;
+  padding: 16px;
+}
+
+.mode.active {
+  display: block;
+}
+
+.dev {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px dashed #aaa;
+  background: #f9f9f9;
+}

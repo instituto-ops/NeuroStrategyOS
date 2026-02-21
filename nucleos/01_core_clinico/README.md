@@ -1,0 +1,1 @@
+Coração clínico do sistema. Governado pelos blocos 1–7.

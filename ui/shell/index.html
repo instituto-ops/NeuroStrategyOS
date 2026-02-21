@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>NeuroStrategy OS — Shell</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div id="shell-root">
+
+    <!-- MENU PRINCIPAL (Nível 1) - fixo e sempre visível -->
+    <header class="top-menu">
+      <div class="menu-item" data-target="dashboard">Dashboard</div>
+      <div class="menu-item" data-target="pacientes">Pacientes</div>
+      <div class="menu-item" data-target="nucleo_clinico">Núcleo Clínico</div>
+      <div class="menu-item" data-target="diagnostico_redacao">Diagnóstico & Redação</div>
+      <div class="menu-item" data-target="administracao">Administração</div>
+      <div class="menu-item" data-target="marketing">Marketing</div>
+      <div class="menu-item" data-target="pesquisa">Pesquisa</div>
+      <div class="menu-item" data-target="configuracoes">Configurações</div>
+    </header>
+
+    <!-- ÁREA CENTRAL DE CARREGAMENTO DE NÚCLEOS (iframe isolado) -->
+    <main id="shell-content">
+      <iframe id="content-frame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
+    </main>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+Diagnóstico estratégico e redação automatizada.

@@ -1,0 +1,24 @@
+(function () {
+
+  const tabs = document.querySelectorAll(".tab");
+
+  function activate(tabName) {
+    tabs.forEach(tab => {
+      tab.classList.toggle(
+        "active",
+        tab.dataset.tab === tabName
+      );
+    });
+  }
+
+  window.addEventListener("message", (event) => {
+    const { type, payload } = event.data || {};
+    if (type === "CHANGE_FICHA_TAB") {
+      activate(payload.tab);
+    }
+  });
+
+  // Estado inicial seguro
+  activate("principal");
+
+})();

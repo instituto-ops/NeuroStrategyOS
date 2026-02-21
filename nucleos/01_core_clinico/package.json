@@ -1,0 +1,12 @@
+{
+  "name": "01_core_clinico",
+  "version": "1.0.0",
+  "description": "Coração clínico do sistema. Governado pelos blocos 1–7.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
