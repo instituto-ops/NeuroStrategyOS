@@ -421,7 +421,7 @@ window.chatApp = {
                 // Fallback para backend node
                 const formData = new FormData();
                 formData.append('message', prompt);
-                const response = await fetch('http://localhost:3001/api/chat', {
+                const response = await fetch('/api/chat', {
                     method: 'POST',
                     body: formData
                 });
@@ -470,7 +470,7 @@ window.chatApp = {
             const formData = new FormData();
             formData.append('theme', theme);
             
-            const response = await fetch('http://localhost:3001/api/blueprint', {
+            const response = await fetch('/api/blueprint', {
                 method: 'POST',
                 body: formData
             });
@@ -511,7 +511,7 @@ window.chatApp = {
             formData.append('html', currentHtml);
             formData.append('keyword', keyword);
             
-            const response = await fetch('http://localhost:3001/api/audit', {
+            const response = await fetch('/api/audit', {
                 method: 'POST',
                 body: formData
             });
@@ -708,7 +708,7 @@ window.chatApp = {
                 formData.append('screenshot', blob, 'preview.png');
             }
             
-            const response = await fetch('http://localhost:3001/api/chat', {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 body: formData
             });

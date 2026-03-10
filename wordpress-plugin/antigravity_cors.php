@@ -33,10 +33,10 @@ add_action('rest_api_init', function() {
         if (in_array($origin, $allowed_origins)) {
             header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
         } else {
-            // Em produção pesada, remova isso. No momento, o "*" quebra a segurança,
-            // então não permitimos de forma global. No entanto, o GET pode ser público.
-            // Para segurança máxima de criação de POST, a restrição original é mantida.
-            header('Access-Control-Allow-Origin: *'); 
+            // Em produção, se não estiver na lista, não enviamos o header de origem,
+            // o que fará o navegador bloquear a requisição por padrão.
+            // Para requisições GET públicas, o WP já tem comportamento padrão.
+            // Aqui silenciamos para evitar exposição.
         }
 
         header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
