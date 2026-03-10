@@ -205,9 +205,13 @@
                         <button class="toggle-btn" onclick="window.chatApp.toggleHeaderAI()" title="Esconder Topo">🔼</button>
                         <button class="toggle-btn" onclick="window.chatApp.toggleSidebarAI()" title="Esconder Assistente">▶️</button>
                         <hr>
+                        <button class="toggle-btn" onclick="window.chatApp.showBlockInserterMenu(event.clientX, event.clientY)" title="Adicionar Novo Bloco (Clique)">➕</button>
+                        <hr>
                         <button class="toggle-btn" onclick="window.chatApp.undoHistory()" title="Desfazer (Ctrl+Z)">↩️</button>
                         <button class="toggle-btn" onclick="window.chatApp.redoHistory()" title="Refazer (Ctrl+Y)">↪️</button>
                         <button class="toggle-btn" onclick="window.chatApp.deleteSelected()" title="Deletar Selecionado" style="color:#ef4444;">🗑️</button>
+                        <hr>
+                        <button class="toggle-btn" onclick="window.chatApp.showGlobalStyleMenu(event.clientX, event.clientY)" title="Alterar Estilo / Cores">🎨 Estilo</button>
                         <hr>
                         <button class="toggle-btn" onclick="document.getElementById('live-preview').className='preview-canvas desktop'" title="Desktop">💻</button>
                         <button class="toggle-btn" onclick="document.getElementById('live-preview').className='preview-canvas mobile'" title="Mobile">📱</button>
@@ -236,6 +240,19 @@
 
                         <div id="live-preview" class="preview-canvas desktop" style="display: none;">
                             <h1 style="color: #1a202c; font-size: 24px; text-align: center; margin-top: 80px; opacity: 0.3;">Crie algo novo ou carregue do WP...</h1>
+                        </div>
+
+                        <!-- [NOVO] Caixa de Comando Customizado (Floating) -->
+                        <div id="custom-command-box" style="display:none; position:fixed; z-index:10001; background:white; border:1px solid #cbd5e1; border-radius:12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); padding:10px; width:300px; gap:8px; flex-direction:column;">
+                            <div style="font-size:10px; font-weight:bold; color:#64748b; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
+                                <span>🎯 INSTRUÇÃO PARA SELEÇÃO</span>
+                                <span id="cc-target-tag" style="background:#f1f5f9; padding:2px 4px; border-radius:3px;">TAG</span>
+                            </div>
+                            <textarea id="custom-command-input" placeholder="Ex: Mude a cor para azul e reescreva com foco em ansiedade..." style="width:100%; height:80px; font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:10px; outline:none; resize:none; font-family:inherit;"></textarea>
+                            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:5px;">
+                                <button class="btn btn-secondary" onclick="window.chatApp.hideCustomCommandBox()" style="padding:6px 12px; font-size:11px;">Cancelar</button>
+                                <button class="btn btn-primary" onclick="window.chatApp.applyCustomCommand()" style="padding:6px 16px; font-size:11px; background:#6366f1; color:white; border:none; border-radius:6px; cursor:pointer;">🚀 Aplicar</button>
+                            </div>
                         </div>
                     </div>
 

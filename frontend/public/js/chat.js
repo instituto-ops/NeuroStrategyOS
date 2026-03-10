@@ -187,45 +187,36 @@ window.chatApp = {
             controls.className = 'bloco-controls';
             Object.assign(controls.style, {
                 position: 'absolute', top: '10px', right: '10px',
-                display: 'flex', gap: '5px', opacity: '0', transition: 'opacity .2s', zIndex: '999'
+                display: 'flex', gap: '5px', opacity: '0', transition: 'opacity .2s', zIndex: '999',
+                background: 'rgba(30, 41, 59, 0.7)', padding: '5px', borderRadius: '8px', backdropFilter: 'blur(5px)'
+            });
+
+            // Botão Comando (Novo)
+            const btnCmd = this.createControlButton('🪄 Comando', '#6366f1', () => {
+                this.selectedElement = sec;
+                this.showCustomCommandBox(sec);
+            });
+            
+            // Botão Nova Sugestão (Novo)
+            const btnSug = this.createControlButton('✨ Nova Sugestão', '#10b981', () => {
+                this.executeMicroCommand('Gere uma nova variante completa para este bloco, mantendo a estrutura mas mudando o texto e tom');
             });
 
             // Botão Copiar
-            const btnCopy = document.createElement('button');
-            btnCopy.textContent = '📋 Copiar';
-            btnCopy.title = 'Copiar para Elementor';
-            Object.assign(btnCopy.style, {
-                background: '#1e293b', color: 'white', border: 'none',
-                padding: '6px 12px', borderRadius: '6px', fontSize: '11px',
-                cursor: 'pointer', fontWeight: '700'
-            });
-            btnCopy.onclick = (e) => { e.stopPropagation(); this.copyBlock(sec); };
+            const btnCopy = this.createControlButton('📋 Copiar', '#1e293b', () => this.copyBlock(sec));
+
+            // Botão Estilo (Local)
+            const btnStyle = this.createControlButton('🎨', '#f59e0b', (e) => this.showGlobalStyleMenu(e.clientX, e.clientY, sec));
 
             // Botão Excluir
-            const btnDel = document.createElement('button');
-            btnDel.textContent = '🗑️';
-            btnDel.title = 'Excluir Bloco';
-            Object.assign(btnDel.style, {
-                background: '#ef4444', color: 'white', border: 'none',
-                padding: '6px 10px', borderRadius: '6px', fontSize: '11px',
-                cursor: 'pointer'
-            });
-            btnDel.onclick = (e) => { e.stopPropagation(); this.deleteBlock(sec); };
+            const btnDel = this.createControlButton('🗑️', '#ef4444', () => this.deleteBlock(sec));
 
             // Botão Inserir (+)
-            const btnAdd = document.createElement('button');
-            btnAdd.textContent = '➕';
-            btnAdd.title = 'Inserir Bloco Abaixo';
-            Object.assign(btnAdd.style, {
-                background: '#3b82f6', color: 'white', border: 'none',
-                padding: '6px 10px', borderRadius: '6px', fontSize: '11px',
-                cursor: 'pointer'
-            });
-            btnAdd.onclick = (e) => { 
-                e.stopPropagation(); 
-                this.showBlockInserterMenu(e.clientX, e.clientY, sec); 
-            };
+            const btnAdd = this.createControlButton('➕', '#3b82f6', (e) => this.showBlockInserterMenu(e.clientX, e.clientY, sec));
 
+            controls.appendChild(btnCmd);
+            controls.appendChild(btnSug);
+            controls.appendChild(btnStyle);
             controls.appendChild(btnCopy);
             controls.appendChild(btnAdd);
             controls.appendChild(btnDel);
@@ -234,6 +225,18 @@ window.chatApp = {
             sec.onmouseenter = () => controls.style.opacity = '1';
             sec.onmouseleave = () => controls.style.opacity = '0';
         });
+    },
+
+    createControlButton(text, bg, onclick) {
+        const btn = document.createElement('button');
+        btn.textContent = text;
+        Object.assign(btn.style, {
+            background: bg, color: 'white', border: 'none',
+            padding: '6px 10px', borderRadius: '6px', fontSize: '11px',
+            cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap'
+        });
+        btn.onclick = (e) => { e.stopPropagation(); onclick(e); };
+        return btn;
     },
 
     deleteBlock(sec) {
@@ -347,6 +350,16 @@ window.chatApp = {
             this.selectedElement.style.outlineOffset = '2px';
 
             this.showMicroCommandsMenu(e.target, e.clientX, e.clientY);
+        });
+
+        // Clique com botão direito ou segurando ALT para mostrar caixa de comando direto
+        preview.addEventListener('contextmenu', (e) => {
+            const valid = ['p', 'h1', 'h2', 'h3', 'span', 'li', 'a', 'section', 'div', 'img'];
+            if (valid.includes(e.target.tagName.toLowerCase())) {
+                e.preventDefault();
+                this.selectedElement = e.target;
+                this.showCustomCommandBox(e.target);
+            }
         });
 
         // Permitir seleção de IMAGENS especificamente
@@ -472,7 +485,132 @@ window.chatApp = {
         }
     },
 
-    async generateBlueprint(theme) {
+    showCustomCommandBox(target) {
+        const box = document.getElementById('custom-command-box');
+        const tag = document.getElementById('cc-target-tag');
+        const input = document.getElementById('custom-command-input');
+        
+        tag.textContent = target.tagName;
+        box.style.display = 'flex';
+        
+        // Posicionar próximo ao elemento (se possível) ou centro
+        const rect = target.getBoundingClientRect();
+        box.style.left = `${Math.min(rect.left, window.innerWidth - 320)}px`;
+        box.style.top = `${Math.min(rect.bottom + 10, window.innerHeight - 200)}px`;
+        
+        input.value = '';
+        input.focus();
+    },
+
+    hideCustomCommandBox() {
+        document.getElementById('custom-command-box').style.display = 'none';
+    },
+
+    async applyCustomCommand() {
+        const input = document.getElementById('custom-command-input');
+        const instruction = input.value.trim();
+        if (!instruction) return;
+        
+        this.hideCustomCommandBox();
+        await this.executeMicroCommand(instruction);
+    },
+
+    showGlobalStyleMenu(x, y, target = null) {
+        let menu = document.getElementById('global-style-menu');
+        if (!menu) {
+            menu = document.createElement('div');
+            menu.id = 'global-style-menu';
+            menu.style.cssText = 'position: fixed; z-index: 10002; background: #1e293b; color: white; border-radius: 12px; box-shadow: var(--shadow-2xl); padding: 12px; width: 240px; max-height: 80vh; overflow-y: auto;';
+            document.body.appendChild(menu);
+        }
+
+        const themes = [
+            { name: 'Modern Dark', colors: ['#0f172a', '#1e293b', '#38bdf8'] },
+            { name: 'Clinical White', colors: ['#ffffff', '#f8fafc', '#0ea5e9'] },
+            { name: 'Professional Blue', colors: ['#1e40af', '#eff6ff', '#1d4ed8'] },
+            { name: 'Warm Empathy', colors: ['#78350f', '#fffbeb', '#d97706'] }
+        ];
+
+        const fonts = [
+            { name: 'Inter (Moderno)', pair: 'Inter, sans-serif' },
+            { name: 'Outfit (Premium)', pair: 'Outfit, sans-serif' },
+            { name: 'Roboto (Clinico)', pair: 'Roboto, sans-serif' },
+            { name: 'Merriweather (Serif)', pair: 'Merriweather, serif' }
+        ];
+
+        let html = `<div style="font-size: 11px; font-weight: bold; margin-bottom: 10px; color: #94a3b8;">${target ? '🎨 ESTILO DO BLOCO' : '🎨 ESTILO GLOBAL'}</div>`;
+        
+        // Cores
+        html += `<div style="font-size: 10px; color: #64748b; margin-bottom: 5px;">PALETA DE CORES</div>`;
+        html += `<div style="display: grid; grid-template-columns: 1fr; gap: 6px; margin-bottom: 15px;">`;
+        themes.forEach(t => {
+            html += `
+                <button onclick="window.chatApp.applyTheme('${t.name}', ${target ? 'true' : 'false'})" style="background:#334155; border:none; color:white; padding:8px; border-radius:6px; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:8px; text-align:left; transition: background .2s;" onmouseover="this.style.background='#475569'">
+                    <div style="display:flex; gap:2px;">
+                        ${t.colors.map(c => `<div style="width:8px; height:8px; border-radius:50%; background:${c}"></div>`).join('')}
+                    </div>
+                    ${t.name}
+                </button>
+            `;
+        });
+        html += `</div>`;
+
+        // Tipografia
+        html += `<div style="font-size: 10px; color: #64748b; margin-bottom: 5px;">TIPOGRAFIA / FONTES</div>`;
+        html += `<div style="display: grid; grid-template-columns: 1fr; gap: 6px;">`;
+        fonts.forEach(f => {
+            html += `
+                <button onclick="window.chatApp.applyFont('${f.pair}', ${target ? 'true' : 'false'})" style="background:#334155; border:none; color:white; padding:8px; border-radius:6px; font-size:12px; cursor:pointer; font-family:${f.pair}; text-align:left; transition: background .2s;" onmouseover="this.style.background='#475569'">
+                    Aa - ${f.name}
+                </button>
+            `;
+        });
+        html += `</div>`;
+        
+        menu.innerHTML = html;
+        menu.style.left = `${Math.min(x, window.innerWidth - 240)}px`;
+        menu.style.top = `${Math.min(y, window.innerHeight - 200)}px`;
+        menu.style.display = 'block';
+
+        const closer = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.style.display = 'none';
+                document.removeEventListener('mousedown', closer);
+            }
+        };
+        setTimeout(() => document.addEventListener('mousedown', closer), 10);
+    },
+
+    async applyTheme(themeName, isLocal = false) {
+        const targetDesc = isLocal ? "este bloco selecionado" : "toda a página (rascunho inteiro)";
+        const instruction = `Aplique o tema visual "${themeName}" em ${targetDesc}. Mude cores de fundo, cores de texto e botões para seguirem esta paleta. Mantenha o equilíbrio visual profissional e legível.`;
+        
+        document.getElementById('global-style-menu').style.display = 'none';
+        
+        if (isLocal && this.selectedElement) {
+            await this.executeMicroCommand(instruction);
+        } else {
+            this.addMessage(`🎨 Aplicando tema **${themeName}** globalmente...`);
+            // Aqui enviamos para o chat geral para reformular tudo
+            document.getElementById('chat-input').value = instruction;
+            this.sendMessage(false);
+        }
+    },
+
+    async applyFont(fontStack, isLocal = false) {
+        const targetDesc = isLocal ? "este bloco selecionado" : "toda a página (rascunho inteiro)";
+        const instruction = `Altere a tipografia (família de fontes) para "${fontStack}" em ${targetDesc}. Garanta que os H1, H2 e textos fiquem visualmente elegantes e profissionais usando esta fonte.`;
+        
+        document.getElementById('global-style-menu').style.display = 'none';
+        
+        if (isLocal && this.selectedElement) {
+            await this.executeMicroCommand(instruction);
+        } else {
+            this.addMessage(`🔡 Aplicando fonte **${fontStack}** globalmente...`);
+            document.getElementById('chat-input').value = instruction;
+            this.sendMessage(false);
+        }
+    },
         // Mostra o loading state
         const welcomeContainer = document.getElementById('blueprint-welcome');
         if (welcomeContainer) welcomeContainer.style.display = 'none';

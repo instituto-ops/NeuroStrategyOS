@@ -62,6 +62,10 @@ const mediaLibrary = {
             });
 
             container.innerHTML = '';
+            
+            // Injetar ícones locais primeiro
+            this.renderLocalIcons();
+
             media.forEach(item => {
                 const hasAlt = item.alt_text && item.alt_text.trim().length > 0;
                 const altMatch = ["Psicólogo", "TEA", "Goiânia", "Lawrence"].some(k => (item.alt_text||"").toLowerCase().includes(k.toLowerCase()));
@@ -107,7 +111,46 @@ const mediaLibrary = {
                 container.appendChild(card);
             });
 
-        } catch (error) { console.error(error); }
+        } catch (error) { 
+            console.error(error); 
+            // Se falhar o WP, tenta carregar apenas os locais para não ficar vazio
+            this.renderLocalIcons();
+        }
+    },
+
+    renderLocalIcons() {
+        const container = document.getElementById('media-list-container');
+        if (!container) return;
+        
+        const localIcons = [
+            { id: 'icon-1', source_url: '/img/icon-1.svg', title: { rendered: '🧠 Neuro/Cérebro' }, alt_text: 'Ícone Cérebro' },
+            { id: 'icon-2', source_url: '/img/icon-2.svg', title: { rendered: '🧬 Genética/Biologia' }, alt_text: 'Ícone DNA' },
+            { id: 'icon-3', source_url: '/img/icon-3.svg', title: { rendered: '🛡️ Proteção/Segurança' }, alt_text: 'Ícone Escudo' },
+            { id: 'icon-4', source_url: '/img/icon-4.svg', title: { rendered: '📊 Dados/Análise' }, alt_text: 'Ícone Gráfico' },
+            { id: 'icon-5', source_url: '/img/icon-5.svg', title: { rendered: '🤝 Empatia/Apoio' }, alt_text: 'Ícone Mãos' },
+            { id: 'icon-9', source_url: '/img/icon-9.svg', title: { rendered: '🚀 Evolução/Foco' }, alt_text: 'Ícone Foguete' },
+            { id: 'icon-7', source_url: '/img/icon-7.svg', title: { rendered: '💡 Insight/Ideia' }, alt_text: 'Ícone Lâmpada' },
+            { id: 'icon-8', source_url: '/img/icon-8.svg', title: { rendered: '✅ Conclusão/OK' }, alt_text: 'Ícone Check' },
+            { id: 'icon-14', source_url: '/img/icon-14.svg', title: { rendered: '🧘 Equilíbrio/Paz' }, alt_text: 'Ícone Zen' },
+            { id: 'icon-15', source_url: '/img/icon-15.svg', title: { rendered: '🏆 Sucesso' }, alt_text: 'Ícone Troféu' }
+        ];
+
+        localIcons.forEach(item => {
+            const card = document.createElement('div');
+            card.className = `card media-thumb-card`;
+            card.style.cssText = `padding: 8px; cursor: pointer; border: 2px solid #3b82f6; border-radius: 8px; height: 120px; text-align: center; background: #f8fafc;`;
+            card.onclick = () => this.selectMedia(item);
+            card.innerHTML = `
+                <div style="background: white; border-radius: 6px; padding: 10px; margin-bottom: 5px;">
+                    <img src="${item.source_url}" style="width: 40px; height: 40px;">
+                </div>
+                <div style="font-size: 10px; color: #1e293b; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    ${item.title.rendered}
+                </div>
+                <div style="font-size: 8px; color: #64748b;">📍 Local/Ícone</div>
+            `;
+            container.appendChild(card);
+        });
     },
 
     async fixSEO(id, url) {

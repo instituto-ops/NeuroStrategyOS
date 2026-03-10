@@ -89,6 +89,31 @@ app.post('/api/wp-settings', async (req, res) => {
         res.json(response.data);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
+// Endpoint especial para Upload de Mídia (Multipart/Form-Data)
+app.post('/api/wp-upload-media', upload.shared ? upload.single('file') : upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) throw new Error("Nenhum arquivo enviado.");
+
+        const formData = new (require('form-data'))();
+        formData.append('file', req.file.buffer, {
+            filename: req.file.originalname,
+            contentType: req.file.mimetype
+        });
+        formData.append('title', req.body.title || '');
+        formData.append('alt_text', req.body.alt_text || '');
+
+        const response = await axios.post(`${WP_API_BASE}/media`, formData, {
+            headers: {
+                ...formData.getHeaders(),
+                'Authorization': `Basic ${WP_AUTH}`
+            }
+        });
+        res.json(response.data);
+    } catch (e) {
+        console.error("Upload Proxy Error:", e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // ==============================================================================
 // 2. PROXY AI (Gemini)

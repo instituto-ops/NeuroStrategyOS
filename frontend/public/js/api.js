@@ -92,13 +92,27 @@ const wpAPI = {
         }
     },
 
-    // O upload de mídia é especial pois usa FormData. No momento o proxy /wp/:type 
-    // lida com JSON. Para simplificar, vou manter o upload direto se o usuário permitir,
-    // mas o ideal é que o proxy suporte multipart/form-data também.
-    // Como segurança é a prioridade, vamos desativar o upload direto e avisar.
     async uploadMedia(file, altText, title = "") {
-        alert("Upload de mídia via Proxy em desenvolvimento. Use a biblioteca do WordPress diretamente por enquanto.");
-        return null;
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('title', title);
+            formData.append('alt_text', altText);
+
+            const response = await fetch(`${this.baseUrl}/wp-upload-media`, {
+                method: 'POST',
+                body: formData
+                // Note: Don't set Content-Type header when using FormData with fetch,
+                // the browser will set it automatically with the boundary string.
+            });
+
+            if (!response.ok) throw new Error("Erro no upload via Proxy.");
+            return await response.json();
+        } catch (error) {
+            console.error("Upload Error:", error);
+            alert("Erro ao subir arquivo: " + error.message);
+            return null;
+        }
     },
 
     async updateMedia(id, data) {
