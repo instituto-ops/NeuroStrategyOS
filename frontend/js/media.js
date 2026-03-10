@@ -67,28 +67,135 @@ const mediaLibrary = {
                 const altMatch = ["Psicólogo", "TEA", "Goiânia", "Lawrence"].some(k => (item.alt_text||"").toLowerCase().includes(k.toLowerCase()));
                 const isSelected = this.selectedMedia && item.id === this.selectedMedia.id;
                 
+                const titleLower = item.title.rendered.toLowerCase();
+                const hasBadTitle = titleLower.includes(".jpg") || titleLower.includes(".png") || /^\d+$/.test(titleLower.replace(/\D/g, ''));
+                const needsSEO = !hasAlt || hasBadTitle;
+
                 const card = document.createElement('div');
                 card.className = `card media-thumb-card ${isSelected ? 'selected' : ''}`;
+                card.id = `media-card-${item.id}`;
                 card.style.cssText = `
                     padding: 8px; cursor: pointer; 
-                    border: 2px solid ${isSelected ? 'var(--color-secondary)' : (altMatch ? '#22c55e' : (hasAlt ? '#cbd5e1' : '#f43f5e'))};
+                    border: 2px solid ${isSelected ? 'var(--color-secondary)' : (altMatch ? '#22c55e' : (hasAlt && !needsSEO ? '#cbd5e1' : '#f43f5e'))};
                     transition: all 0.2s; position: relative; height: 160px;
                     ${isSelected ? 'transform: scale(1.02); box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);' : ''}
                 `;
                 
-                card.onclick = () => this.selectMedia(item);
+                // Allow clicking the card itself to select, but not if clicking the fix button
+                card.onclick = (e) => {
+                    if(!e.target.closest('button')) this.selectMedia(item);
+                }
                 
-                card.innerHTML = `
-                    <div style="position: absolute; top: 4px; right: 4px; z-index: 5;">${altMatch ? '✅' : (hasAlt ? '⚠️' : '🚨')}</div>
-                    <img src="${item.source_url}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
-                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; font-size: 9px; padding: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                let bageHtml = `<div style="position: absolute; top: 4px; right: 4px; z-index: 5;">${altMatch ? '✅' : (hasAlt && !needsSEO ? '⚠️' : '<span style="background: #f43f5e; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold;">🚨 Falha SEO</span>')}</div>`;
+                
+                let fixBtnHtml = '';
+                if(needsSEO) {
+                    fixBtnHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 4px; background: rgba(0,0,0,0.8); text-align: center;">
+                        <button id="btn-fix-${item.id}" onclick="window.mediaLibrary.fixSEO(${item.id}, '${item.source_url}')" class="btn" style="background: #f59e0b; color: white; font-size: 10px; padding: 4px 8px; width: 100%; font-weight: bold;">🪄 Corrigir SEO (IA)</button>
+                    </div>`;
+                } else {
+                    fixBtnHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; font-size: 9px; padding: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                         ${item.title.rendered}
-                    </div>
+                    </div>`;
+                }
+
+                card.innerHTML = `
+                    ${bageHtml}
+                    <img src="${item.source_url}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+                    ${fixBtnHtml}
                 `;
                 container.appendChild(card);
             });
 
         } catch (error) { console.error(error); }
+    },
+
+    async fixSEO(id, url) {
+        const btn = document.getElementById(`btn-fix-${id}`);
+        if(btn) {
+            btn.innerHTML = '⏳ Analisando...';
+            btn.disabled = true;
+        }
+
+        try {
+            // Usa o Gemini para analisar a foto pela URL
+            const prompt = `Atue como Especialista SEO para Psicólogos (Método Abidos). Analise esta imagem URL (${url}). Crie um Título curto (max 40) e um Alt Text rico (max 100) focando em TEA, Psicologia, Goiânia ou Victor Lawrence. Retorne APENAS um JSON válido no formato: {"title": "Titulo", "alt_text": "Alt text"}. Não use blocos \`\`\`.`;
+            
+            const responseTxt = await gemini.callAPI(prompt);
+            
+            // Tenta parsear o JSON retornado pela LLM
+            const cleanJson = responseTxt.replace(/```json/g, '').replace(/```/g, '').trim();
+            const newSeo = JSON.parse(cleanJson);
+
+            if(newSeo.title && newSeo.alt_text) {
+                const result = await wpAPI.updateMediaSEO(id, newSeo.title, newSeo.alt_text);
+                
+                if(result) {
+                    if(btn) {
+                        btn.style.background = '#10b981';
+                        btn.innerHTML = '✅ Otimizado';
+                    }
+                    // Atualiza a galeria em background
+                    setTimeout(() => { this.loadLibrary(false); }, 1500); 
+                } else {
+                    throw new Error("Falha ao salvar no WP.");
+                }
+            } else {
+                throw new Error("LLM retornou JSON inválido.");
+            }
+        } catch(e) {
+            console.error("Batch Fix Error:", e);
+            if(btn) {
+                btn.innerHTML = '⚠️ Erro IA';
+                btn.style.background = '#ef4444';
+            }
+            alert("Não foi possível otimizar esta mídia: " + e.message);
+        } finally {
+            if(btn) btn.disabled = false;
+        }
+    },
+
+    async fixGallerySEO() {
+        if(!confirm("Deseja iniciar a otimização em lote? O sistema enviará cada mídia sem SEO para a IA uma a uma. Isso pode levar alguns minutos.")) return;
+        
+        // Localiza todos os botões de correção visíveis na tela
+        const fixButtons = document.querySelectorAll('[id^="btn-fix-"]');
+        
+        if(fixButtons.length === 0) {
+            alert("A galeria atual já está 100% otimizada!");
+            return;
+        }
+
+        const btnStatus = document.querySelector('button[onclick*="fixGallerySEO"]');
+        const originalText = btnStatus.innerText;
+
+        for(let i=0; i<fixButtons.length; i++) {
+            const btn = fixButtons[i];
+            
+            // Só processa botões que ainda não foram otimizados/erros gravíssimos
+            if (btn.innerText.includes("Corrigir") || btn.innerText.includes("Erro")) {
+                const clickRegex = /fixSEO\((\d+),\s*'([^']+)'\)/;
+                const match = btn.getAttribute('onclick').match(clickRegex);
+                
+                if (match) {
+                    const mediaId = match[1];
+                    const mediaUrl = match[2];
+                    
+                    btnStatus.innerText = `⏳ Otimizando ${i+1}/${fixButtons.length}...`;
+                    btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Aguarda a resolução da imagem atual antes de passar pra próxima (Evitar Rate Limit do Gemini)
+                    await this.fixSEO(mediaId, mediaUrl);
+                    
+                    // Pequeno delay entre requisições
+                    await new Promise(r => setTimeout(r, 2000));
+                }
+            }
+        }
+        
+        btnStatus.innerText = originalText;
+        alert("Otimização em Lote concluída!");
+        this.loadLibrary(true);
     },
 
     selectMedia(item) {

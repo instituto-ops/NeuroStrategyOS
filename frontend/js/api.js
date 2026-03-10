@@ -161,5 +161,32 @@ const wpAPI = {
             console.error("Delete media error:", error);
             return null;
         }
+    },
+
+    async updateMediaSEO(id, title, altText) {
+        try {
+            const response = await fetch(`${this.url}/media/${id}`, {
+                method: "POST",
+                headers: { 
+                    "Authorization": this.getAuthHeader(),
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ title: title, alt_text: altText })
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error("Permissão negada. Você não tem autorização para editar esta mídia.");
+                }
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Erro ${response.status} ao atualizar mídia.`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error("SEO Batch Optimizer Error:", error);
+            alert("Erro na Otimização SEO: " + error.message);
+            return null;
+        }
     }
 }

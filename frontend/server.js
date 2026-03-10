@@ -78,6 +78,96 @@ REGRAS DE RESPOSTA CRÍTICAS (NÃO NEGOCIÁVEIS):
     }
 });
 
+app.post('/api/blueprint', upload.none(), async (req, res) => {
+    try {
+        const { theme } = req.body;
+        console.log(`🧠 Gerando Blueprint para o tema: ${theme}`);
+        
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        
+        let promptText = `
+Você é Jules, o Arquiteto Headless do NeuroEngine.
+O usuário solicitou a geração completa de um Blueprint (Página 90% pronta) para o tema: "${theme}".
+
+Sua tarefa: Retornar APENAS o código HTML final da página montada. NÃO retorne a tag \`\`\`html. Não dê explicações. Apenas o HTML cru.
+
+O HTML deve seguir esta estrutura pré-validada de blocos:
+1. Um Header (<header class="hero-section" style="padding: 60px 20px; background:#f8fafc; text-align:center;">) com um <h1> persuasivo, um <p> acolhedor focando na dor, e um <button class="btn btn-primary">Agendar Avaliação</button>.
+2. Uma seção de Benefícios (<section style="padding:40px 20px;">) com um <h2> e 3 colunas ou tópicos abordando a solução.
+3. Uma seção de Autoridade (<section style="background:#eef2ff; padding:40px 20px;">) focada no "Psicólogo Victor Lawrence", CRP 09/012681, citando a "Abordagem Especializada".
+4. Uma seção de FAQ (<section style="padding:40px 20px;">).
+
+Regras de Copywriting para o tema "${theme}":
+- Foque na empatia e na dor específica do ${theme}.
+- Se for TEA Adulto, cite "Diagnóstico Tardio", "Mascaramento (Masking)" e "Exaustão".
+- Se for Hipnose Clínica, explique que não é perda de consciência, mas foco.
+- A comunicação é clínica, direta e de alta conversão.
+`;
+
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: promptText }] }]
+        });
+        
+        const response = await result.response;
+        const htmlContent = response.text().replace(/```html|```/g, '').trim();
+
+        res.json({ html: htmlContent });
+
+    } catch (error) {
+        console.error("Erro no Blueprint:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/audit', upload.none(), async (req, res) => {
+    try {
+        const { html, keyword } = req.body;
+        console.log(`🧠 Auditando página para a keyword: ${keyword}`);
+        
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        
+        let promptText = `
+Você é Jules, o Auditor de Qualidade do NeuroEngine.
+Analise rigorosamente o seguinte HTML de uma Landing Page Clínica sob os critérios do "Método Abidos".
+A palavra-chave foco é: "${keyword || 'Psicólogo em Goiânia'}".
+
+HTML DA PÁGINA:
+${html.substring(0, 15000)}
+
+Você deve devolver APENAS um JSON válido. Não inclua a tag \`\`\`json. Não adicione nenhum texto antes ou depois.
+
+Formato OBRIGATÓRIO de saída:
+[
+  { "passou": true, "criterio": "O H1 contém a palavra-chave.", "acao": null },
+  { "passou": false, "criterio": "Falta Prova Social (Depoimentos).", "acao": "inserir_prova_social" },
+  { "passou": false, "criterio": "Não há botão de WhatsApp na primeira dobra.", "acao": "inserir_cta" }
+]
+
+Verifique no mínimo:
+1. Presença de CTA (botão/link WhatsApp).
+2. H1 focado na dor/palavra-chave.
+3. Seção ou traços de Autoridade/E-E-A-T (CRP, nome do especialista).
+4. Prova Social (Depoimentos ou Avaliações).
+`;
+
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: promptText }] }]
+        });
+        
+        const response = await result.response;
+        let responseText = response.text().replace(/```json|```/g, '').trim();
+
+        // Faz o parse do JSON
+        const checklist = JSON.parse(responseText);
+
+        res.json({ checklist });
+
+    } catch (error) {
+        console.error("Erro no Auditor:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(port, () => {
     console.log(`🧠 NeuroEngine AI Chatbot rodando na porta ${port}`);
 });

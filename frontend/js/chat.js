@@ -20,11 +20,263 @@ window.chatApp = {
         }
     },
     mediaGallery: [], // Cache de mídias para a IA
+    historyStack: [],  // Undo history
+    redoStack: [],     // Redo history
 
     init() {
         this.setupEventListeners();
         this.setupInspector();
+        this.setupKeyboardShortcuts();
         console.log("🧠 NeuroEngine Copilot Initialized");
+    },
+
+    // --- HISTORY (Undo / Redo) ---
+    saveHistory() {
+        const preview = document.getElementById('live-preview');
+        this.historyStack.push(preview.innerHTML);
+        this.redoStack = []; // clear redo on new change
+        if (this.historyStack.length > 50) this.historyStack.shift();
+    },
+
+    undoHistory() {
+        const preview = document.getElementById('live-preview');
+        if (this.historyStack.length === 0) {
+            this.addMessage("↩️ Nada para desfazer.", false);
+            return;
+        }
+        this.redoStack.push(preview.innerHTML);
+        preview.innerHTML = this.historyStack.pop();
+        this.addMessage("↩️ Desfeito.", false);
+    },
+
+    redoHistory() {
+        const preview = document.getElementById('live-preview');
+        if (this.redoStack.length === 0) {
+            this.addMessage("↪️ Nada para refazer.", false);
+            return;
+        }
+        this.historyStack.push(preview.innerHTML);
+        preview.innerHTML = this.redoStack.pop();
+        this.addMessage("↪️ Refeito.", false);
+    },
+
+    // --- DELETE SELECTED ---
+    deleteSelected() {
+        if (!this.selectedElement) {
+            this.addMessage("🗑️ Clique em um elemento no Preview para selecioná-lo antes de deletar.", false);
+            return;
+        }
+        if (!confirm(`Deletar elemento <${this.selectedElement.tagName.toLowerCase()}>?`)) return;
+        this.saveHistory();
+        this.selectedElement.remove();
+        this.selectedElement = null;
+        this.hideMicroCommandsMenu();
+        this.addMessage("🗑️ Elemento deletado. Use ↩️ Desfazer se necessário.", false);
+    },
+
+    // --- KEYBOARD SHORTCUTS ---
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'z') { e.preventDefault(); this.undoHistory(); }
+            if (e.ctrlKey && e.key === 'y') { e.preventDefault(); this.redoHistory(); }
+            if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedElement && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                this.deleteSelected();
+            }
+        });
+    },
+
+    // --- JACKAL PANEL TOGGLE ---
+    toggleJackal() {
+        const panel = document.getElementById('jackal-panel');
+        const buttons = document.getElementById('jackal-buttons');
+        const isOpen = buttons.style.display === 'flex';
+        if (isOpen) {
+            buttons.style.display = 'none';
+            panel.style.width = '40px';
+        } else {
+            buttons.style.display = 'flex';
+            panel.style.width = '110px';
+        }
+    },
+
+    // --- ABIDOS BLOCK INSERTER ---
+    insertAbidosBlock(blockType) {
+        const preview = document.getElementById('live-preview');
+        if (preview.style.display === 'none') {
+            preview.style.display = 'block';
+            const welcome = document.getElementById('blueprint-welcome');
+            if (welcome) welcome.style.display = 'none';
+        }
+        this.saveHistory();
+
+        const whatsapp = `https://wa.me/5562982171845`;
+        const crp = this.authorityContext.crp;
+        const name = this.authorityContext.name;
+
+        const blocks = {
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // ① HERO — PRIMEIRA DOBRA
+            // ⚠️ REGRA: H1 é ÚNICO por página. SE colando no WordPress/Elementor,
+            // o título do post (gerado pelo Astra) JÁ É o H1 do tema.
+            // Nesse caso, SUBSTITUA o <h1> abaixo por <h2>.
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            'h1': `<header class="abidos-hero" style="padding:60px 20px; background:linear-gradient(135deg,#f0f9ff,#e0f2fe); text-align:center; border-bottom:3px solid #0ea5e9;">
+  <!-- H1: ÚNICO por página. Keyword Primária + Promessa + Localização -->
+  <h1 style="font-size:clamp(24px,4vw,42px); color:#0c4a6e; margin:0 0 15px 0; line-height:1.2;">Psicólogo Especialista em TEA Adulto em Goiânia: Diagnóstico e Suporte para Quem Sempre Se Sentiu Diferente</h1>
+</header>`,
+
+            'subtitulo': `<div style="padding:30px 20px; text-align:center; background:#f8fafc; max-width:700px; margin:0 auto;">
+  <!-- Parágrafo de apoio ao H1: modalidades + diferenciais -->
+  <p style="font-size:18px; color:#475569; line-height:1.7;">Atendimento presencial em Goiânia e online para todo o Brasil. Ambiente sigiloso e acolhedor, conduzido por psicólogo CRP ${crp}.</p>
+</div>`,
+
+            'cta': `<div style="text-align:center; padding:30px 20px; background:#f0fdf4;">
+  <!-- CTA Primário: botão focado no benefício -->
+  <a href="${whatsapp}" target="_blank" style="display:inline-block; background:#16a34a; color:white; padding:16px 32px; border-radius:50px; font-size:18px; font-weight:bold; text-decoration:none; box-shadow:0 4px 15px rgba(22,163,74,0.4);">📱 Toque aqui para falar comigo</a>
+  <p style="color:#64748b; font-size:12px; margin-top:10px;">Resposta em até 24h • Sem compromisso</p>
+</div>
+<!-- Botão flutuante WhatsApp (onipresente, Mobile-First) -->
+<a href="${whatsapp}" target="_blank" aria-label="Falar pelo WhatsApp" style="position:fixed; bottom:20px; right:20px; background:#16a34a; color:white; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; text-decoration:none; z-index:9999; box-shadow:0 4px 15px rgba(0,0,0,0.2);">💬</a>`,
+
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // ② CORPO / JORNADA
+            // H2 = Seção estratégica / silo semântico
+            // H3 = Subtítulo dentro do H2 (detalhe de serviço ou objeção)
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            'dor': `<section style="padding:50px 20px; background:#fff1f2; border-top:3px solid #f43f5e;">
+  <div style="max-width:700px; margin:0 auto; text-align:center;">
+    <!-- H2: Pergunta retórica para conexão emocional / identificação da dor -->
+    <h2 style="color:#9f1239; font-size:clamp(20px,3vw,28px);">Sente que a exaustão emocional está travando sua vida?</h2>
+    <p style="color:#64748b; font-size:16px; line-height:1.8; margin-top:15px;">Você se esforça muito mais do que os outros só para parecer "normal". Sente um cansaço profundo que ninguém ao redor consegue entender.</p>
+    <div style="display:flex; justify-content:center; gap:20px; margin-top:30px; flex-wrap:wrap;">
+      <!-- H3: Ícones + micro-identificadores de dor -->
+      <div style="background:white; padding:15px 20px; border-radius:8px; border-left:4px solid #f43f5e; max-width:200px; text-align:left;"><span style="font-size:24px;">😰</span><h3 style="font-size:13px; color:#64748b; margin:5px 0 0 0; font-weight:normal;">Ansiedade social e sobrecarga sensorial</h3></div>
+      <div style="background:white; padding:15px 20px; border-radius:8px; border-left:4px solid #f43f5e; max-width:200px; text-align:left;"><span style="font-size:24px;">🎭</span><h3 style="font-size:13px; color:#64748b; margin:5px 0 0 0; font-weight:normal;">Mascaramento (Masking) exaustivo</h3></div>
+      <div style="background:white; padding:15px 20px; border-radius:8px; border-left:4px solid #f43f5e; max-width:200px; text-align:left;"><span style="font-size:24px;">🔍</span><h3 style="font-size:13px; color:#64748b; margin:5px 0 0 0; font-weight:normal;">Dúvida: "Será que sou autista?"</h3></div>
+    </div>
+  </div>
+</section>`,
+
+            'beneficios': `<section style="padding:50px 20px; background:#f8fafc;">
+  <div style="max-width:800px; margin:0 auto;">
+    <!-- H2: Introdução dos serviços / silos semânticos -->
+    <h2 style="text-align:center; color:#1e293b; font-size:clamp(20px,3vw,28px);">Como a Psicologia Especializada em Goiânia Pode te Ajudar</h2>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; margin-top:30px;">
+      <!-- H3: Detalhamento de cada serviço (micro-intenção) -->
+      <div style="background:white; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);"><div style="font-size:30px; margin-bottom:10px;">🧠</div><h3 style="font-size:16px; color:#1e293b; margin:0 0 8px 0;">Avaliação Diagnóstica de TEA em Adultos em Goiânia</h3><p style="font-size:13px; color:#64748b; margin:0;">Processo criterioso, humanizado e baseado em instrumentos validados internacionalmente.</p></div>
+      <div style="background:white; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);"><div style="font-size:30px; margin-bottom:10px;">🌀</div><h3 style="font-size:16px; color:#1e293b; margin:0 0 8px 0;">Hipnose Clínica Ericksoniana para Ansiedade</h3><p style="font-size:13px; color:#64748b; margin:0;">Técnica reconhecida pelo CFP (Res. 013/2000) para ansiedade, compulsões e fobias.</p></div>
+      <div style="background:white; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);"><div style="font-size:30px; margin-bottom:10px;">💬</div><h3 style="font-size:16px; color:#1e293b; margin:0 0 8px 0;">Psicoterapia Online — Todo o Brasil</h3><p style="font-size:13px; color:#64748b; margin:0;">Atendimento seguro, sigiloso e com a mesma qualidade do presencial.</p></div>
+    </div>
+  </div>
+</section>`,
+
+            'objections': `<section style="padding:40px 20px; background:#fffbe8; border-top:1px solid #fef08a;">
+  <div style="max-width:700px; margin:0 auto;">
+    <!-- H2: Quebra de objeções (sub-silo dentro de Benefícios) -->
+    <h2 style="color:#854d0e; font-size:clamp(18px,2.5vw,22px);">Ainda tem dúvidas? Veja o que nossos pacientes precisavam saber antes de agendar</h2>
+    <ul style="list-style:none; padding:0; margin:15px 0 0 0; display:flex; flex-direction:column; gap:12px;">
+      <!-- H3: Prova de cada objeção específica -->
+      <li style="background:white; padding:12px 15px; border-radius:8px; border-left:3px solid #eab308;"><h3 style="font-size:14px; color:#64748b; margin:0; font-weight:normal;">✅ <strong>Sigilo garantido</strong> — Protegido pelo Código de Ética do CFP (art. 9º).</h3></li>
+      <li style="background:white; padding:12px 15px; border-radius:8px; border-left:3px solid #eab308;"><h3 style="font-size:14px; color:#64748b; margin:0; font-weight:normal;">✅ <strong>Sem julgamentos</strong> — Um ambiente seguro para você ser quem é.</h3></li>
+      <li style="background:white; padding:12px 15px; border-radius:8px; border-left:3px solid #eab308;"><h3 style="font-size:14px; color:#64748b; margin:0; font-weight:normal;">✅ <strong>Primeira sessão de alinhamento</strong> — Para avaliar juntos o melhor caminho.</h3></li>
+    </ul>
+  </div>
+</section>`,
+
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // ③ AUTORIDADE / E-E-A-T
+            // H2 = seção de autoridade / transparência
+            // H3 = credenciais, detalhes do especialista
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            'autoridade': `<section style="padding:50px 20px; background:#eef2ff; border-top:3px solid #6366f1;">
+  <div style="max-width:700px; margin:0 auto; display:flex; gap:30px; align-items:center; flex-wrap:wrap;">
+    <div style="width:120px; height:120px; border-radius:50%; background:#cbd5e1; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:40px;">👨‍⚕️</div>
+    <div style="flex:1;">
+      <!-- H2: Humanização + Autoridade (E-E-A-T) -->
+      <h2 style="color:#312e81; font-size:clamp(18px,2.5vw,24px); margin:0 0 5px 0;">Conheça ${name}, seu Psicólogo Especialista em Goiânia</h2>
+      <!-- H3: Credenciais e registro (sinal de E-E-A-T para o Google) -->
+      <h3 style="color:#4338ca; font-size:14px; margin:0 0 12px 0; font-weight:600;">Psicólogo CRP ${crp} • Mestrando em Ciências da Saúde (UFU) • Instituto Lawrence de Hipnose Clínica</h3>
+      <p style="color:#475569; font-size:14px; line-height:1.7; margin:0;">Especialista em Avaliação e Diagnóstico de TEA em Adultos e Hipnose Clínica Ericksoniana. Mais de 5 anos dedicados ao cuidado de adultos que sempre sentiram que eram "diferentes".</p>
+    </div>
+  </div>
+</section>`,
+
+            'ambiente': `<section style="padding:50px 20px; background:#f8fafc;">
+  <div style="max-width:800px; margin:0 auto; text-align:center;">
+    <!-- H2: Transparência do consultório — elimina medo do desconhecido -->
+    <h2 style="color:#1e293b; font-size:clamp(18px,2.5vw,24px);">Um Ambiente Seguro e Preparado para Você em Goiânia</h2>
+    <p style="color:#64748b; font-size:14px; margin:10px 0 25px 0;">Consultório pensado para conforto sensorial e privacidade total.</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px;">
+      <!-- Substitua pelos arquivos reais: consultorio-goiania-01.jpg, etc. -->
+      <div style="background:#e2e8f0; height:180px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:40px;">🏠</div>
+      <div style="background:#e2e8f0; height:180px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:40px;">🛋️</div>
+      <div style="background:#e2e8f0; height:180px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:40px;">🌿</div>
+    </div>
+    <p style="font-size:11px; color:#94a3b8; margin-top:10px;">📸 Troque os ícones por fotos do consultório. Nome do arquivo: consultorio-psicologo-goiania-01.jpg</p>
+  </div>
+</section>`,
+
+            'social': `<section style="padding:50px 20px; background:#fffbe8; border-top:3px solid #eab308;">
+  <div style="max-width:700px; margin:0 auto; text-align:center;">
+    <!-- H2: Prova Social / Certificações (em nichos regulamentados: currículo e ciência) -->
+    <h2 style="color:#854d0e; font-size:clamp(18px,2.5vw,24px);">Formação e Reconhecimento Técnico do Dr. ${name}</h2>
+    <p style="color:#92400e; font-size:13px; margin-bottom:25px;">Em saúde mental, a prova de qualidade é o currículo, as certificações e a ciência.</p>
+    <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
+      <!-- H3: Cada certificação / credencial -->
+      <div style="background:white; padding:15px 20px; border-radius:8px; border:1px solid #fef08a; min-width:140px;"><div style="font-size:28px;">🎓</div><h3 style="font-size:12px; color:#64748b; margin:5px 0 0 0; font-weight:600;">Mestrando UFU — Ciências da Saúde</h3></div>
+      <div style="background:white; padding:15px 20px; border-radius:8px; border:1px solid #fef08a; min-width:140px;"><div style="font-size:28px;">📋</div><h3 style="font-size:12px; color:#64748b; margin:5px 0 0 0; font-weight:600;">CRP ${crp} — Psicólogo Registrado</h3></div>
+      <div style="background:white; padding:15px 20px; border-radius:8px; border:1px solid #fef08a; min-width:140px;"><div style="font-size:28px;">⭐</div><h3 style="font-size:12px; color:#64748b; margin:5px 0 0 0; font-weight:600;">Avaliações Google Meu Negócio</h3></div>
+    </div>
+  </div>
+</section>`,
+
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // ④ RETENÇÃO / RODAPÉ
+            // FAQ: SEMPRE H2 (obrigatório pelo Método Abidos)
+            // Linkagem: SEMPRE www.hipnolawrence.com como página raiz
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            'faq': `<section style="padding:50px 20px; background:#f8fafc;">
+  <div style="max-width:700px; margin:0 auto;">
+    <!-- H2: FAQ (OBRIGATÓRIO ser H2 — nunca H3 ou H4) -->
+    <h2 style="text-align:center; color:#1e293b; font-size:clamp(18px,2.5vw,24px);">Perguntas Frequentes sobre Psicologia e TEA Adulto em Goiânia</h2>
+    <!-- Accordion nativo HTML5 (<details>/<summary>) — compatível com Elementor sem JavaScript customizado -->
+    <div style="margin-top:25px; display:flex; flex-direction:column; gap:10px;">
+      <details style="background:white; padding:15px 20px; border-radius:8px; border:1px solid #e2e8f0; cursor:pointer;"><summary style="font-weight:bold; color:#334155; font-size:14px;">O atendimento psicológico em Goiânia é sigiloso?</summary><p style="color:#64748b; font-size:13px; margin:10px 0 0 0; line-height:1.7;">Sim. O sigilo profissional é garantido pelo Código de Ética do CFP (art. 9º). Nenhuma informação sua será compartilhada sem autorização expressa.</p></details>
+      <details style="background:white; padding:15px 20px; border-radius:8px; border:1px solid #e2e8f0; cursor:pointer;"><summary style="font-weight:bold; color:#334155; font-size:14px;">Quanto tempo dura a avaliação de TEA Adulto?</summary><p style="color:#64748b; font-size:13px; margin:10px 0 0 0; line-height:1.7;">O processo varia de 3 a 6 sessões, dependendo do caso. Utilizamos instrumentos validados internacionalmente pelo protocolo ADOS-2 e ADI-R.</p></details>
+      <details style="background:white; padding:15px 20px; border-radius:8px; border:1px solid #e2e8f0; cursor:pointer;"><summary style="font-weight:bold; color:#334155; font-size:14px;">A hipnose clínica funciona para ansiedade?</summary><p style="color:#64748b; font-size:13px; margin:10px 0 0 0; line-height:1.7;">Sim. A Hipnose Clínica Ericksoniana é reconhecida pelo CFP (Resolução 013/2000) e tem eficácia comprovada em ansiedade, fobias e compulsões.</p></details>
+      <details style="background:white; padding:15px 20px; border-radius:8px; border:1px solid #e2e8f0; cursor:pointer;"><summary style="font-weight:bold; color:#334155; font-size:14px;">O psicólogo atende plano de saúde?</summary><p style="color:#64748b; font-size:13px; margin:10px 0 0 0; line-height:1.7;">No momento atendo apenas de forma particular. Consulte valores e condições pelo WhatsApp.</p></details>
+    </div>
+  </div>
+</section>`,
+
+            'linkagem': `<section style="padding:40px 20px; background:#1e293b;">
+  <div style="max-width:700px; margin:0 auto; text-align:center;">
+    <!-- Linkagem interna estratégica (Silo) — distribui autoridade pelo site -->
+    <p style="color:#94a3b8; font-size:13px; margin:0 0 20px 0; text-transform:uppercase; letter-spacing:1px;">Veja também</p>
+    <div style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap;">
+      <a href="https://www.hipnolawrence.com/psicologia-goiania" style="background:#334155; color:#e2e8f0; padding:10px 20px; border-radius:8px; text-decoration:none; font-size:13px;">🧠 Psicologia em Goiânia</a>
+      <a href="https://www.hipnolawrence.com/hipnose-clinica-goiania" style="background:#334155; color:#e2e8f0; padding:10px 20px; border-radius:8px; text-decoration:none; font-size:13px;">🌀 Hipnose Clínica</a>
+      <!-- Link para a Página Inicial — SEMPRE www.hipnolawrence.com -->
+      <a href="https://www.hipnolawrence.com" style="background:#0ea5e9; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:bold;">🏠 Início — hipnolawrence.com</a>
+    </div>
+  </div>
+</section>`,
+
+            'hero': null, // handled below — composição de h1 + subtitulo + cta
+        };
+
+        // 'hero' = h1 + subtitulo + cta composto
+        if (blockType === 'hero') {
+            preview.insertAdjacentHTML('afterbegin', blocks['h1'] + blocks['subtitulo'] + blocks['cta']);
+        } else if (blocks[blockType]) {
+            preview.insertAdjacentHTML('beforeend', blocks[blockType]);
+        } else {
+            this.addMessage(`⚠️ Bloco "${blockType}" não reconhecido.`, false);
+            return;
+        }
+
+        this.addMessage(`✅ Bloco **${blockType}** inserido. Clique no Preview para editar com Micro-Comandos.`, false);
     },
 
     setupEventListeners() {
@@ -51,23 +303,262 @@ window.chatApp = {
     setupInspector() {
         const preview = document.getElementById('live-preview');
         preview.addEventListener('click', (e) => {
-            // Se clicar em um elemento, seleciona-o para ajuste fino
+            const validTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'li', 'a', 'strong', 'em', 'button'];
+            const tagName = e.target.tagName.toLowerCase();
+
+            if (!validTags.includes(tagName)) return;
+
             e.preventDefault();
             e.stopPropagation();
 
             // Limpa seleção anterior
             if (this.selectedElement) {
-                this.selectedElement.classList.remove('element-selected');
+                this.selectedElement.classList.remove('element-selected', 'outline-blue');
+                this.selectedElement.style.outline = '';
             }
 
             this.selectedElement = e.target;
-            this.selectedElement.classList.add('element-selected');
+            this.selectedElement.classList.add('element-selected', 'outline-blue');
+            this.selectedElement.style.outline = '2px dashed #3b82f6';
+            this.selectedElement.style.outlineOffset = '2px';
 
-            const tagName = this.selectedElement.tagName.toLowerCase();
-            this.addMessage(`🎯 Elemento **${tagName}** selecionado. Peça no chat para mudar cor, fonte ou texto dele.`);
+            this.showMicroCommandsMenu(e.target, e.clientX, e.clientY);
+        });
+
+        // Fechar menu ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#micro-commands-menu') && !e.target.closest('#live-preview')) {
+                this.hideMicroCommandsMenu();
+            }
         });
     },
 
+    showMicroCommandsMenu(target, x, y) {
+        let menu = document.getElementById('micro-commands-menu');
+        if (!menu) {
+            menu = document.createElement('div');
+            menu.id = 'micro-commands-menu';
+            menu.style.cssText = 'position: fixed; z-index: 10000; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); padding: 5px; display: flex; flex-direction: column; gap: 5px; min-width: 150px;';
+            document.body.appendChild(menu);
+        }
+
+        menu.innerHTML = `
+            <div style="font-size: 10px; font-weight: bold; color: #64748b; padding: 4px 5px; border-bottom: 1px solid #f1f5f9; margin-bottom: 3px; cursor: default;">Micro-Comandos IA</div>
+            <button onclick="window.chatApp.executeMicroCommand('Reescreva de forma mais empática, acolhedora e focada na dor emocional do paciente')" class="btn" style="background: #eff6ff; color: #1d4ed8; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer;">🪄 + Empático</button>
+            <button onclick="window.chatApp.executeMicroCommand('Reescreva com mais autoridade clínica profissional, adicionando tom técnico de psicologia')" class="btn" style="background: #fdf2f8; color: #be185d; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer;">🪄 + Clínico</button>
+            <button onclick="window.chatApp.executeMicroCommand('Reescreva de forma mais curta, concisa e direta ao ponto')" class="btn" style="background: #f0fdf4; color: #15803d; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer;">🪄 Mais Curto</button>
+            <button onclick="window.chatApp.hideMicroCommandsMenu()" class="btn" style="background: transparent; color: #94a3b8; font-size: 10px; text-align: center; margin-top: 3px; padding: 4px; border: none; cursor: pointer;">✕ Cancelar</button>
+        `;
+
+        // Evitar que o menu saia da tela
+        const menuWidth = 150;
+        const menuHeight = 160;
+        const adjustedX = x + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 20 : x + 15;
+        const adjustedY = y + menuHeight > window.innerHeight ? window.innerHeight - menuHeight - 20 : y + 15;
+
+        menu.style.left = `${adjustedX}px`;
+        menu.style.top = `${adjustedY}px`;
+        menu.style.display = 'flex';
+    },
+
+    hideMicroCommandsMenu() {
+        const menu = document.getElementById('micro-commands-menu');
+        if (menu) menu.style.display = 'none';
+        if (this.selectedElement) {
+            this.selectedElement.classList.remove('element-selected', 'outline-blue');
+            this.selectedElement.style.outline = '';
+            // Não anulamos o selectedElement para permitir que o chat normal ainda faça referência a ele se necessário
+        }
+    },
+
+    async executeMicroCommand(instruction) {
+        if (!this.selectedElement) return;
+
+        const target = this.selectedElement;
+        const originalText = target.innerText;
+        
+        target.innerText = "⏳ Reescrevendo...";
+        this.hideMicroCommandsMenu();
+
+        try {
+            const prompt = `Você é um Copywriter Clínico focado em Psicologia (Método Abidos). Sua tarefa é reescrever o texto a seguir aplicando esta exata instrução: "${instruction}".\n\nTexto original: "${originalText}"\n\nREGRAS CRÍTICAS:\n- Retorne APENAS o texto puro (plain text) da nova frase.\n- Não inclua aspas no começo nem no fim.\n- Não use NENHUMA tag HTML (ex: sem <p>, sem <strong>).\n- Não forneça explicações.\n- Mantenha o tamanho compatível com a instrução.`;
+            
+            let newText = null;
+            
+            // Usando a instância local de Gemini
+            if (typeof gemini !== 'undefined' && gemini.callAPI) {
+                newText = await gemini.callAPI(prompt);
+            } else {
+                // Fallback para backend node
+                const formData = new FormData();
+                formData.append('message', prompt);
+                const response = await fetch('http://localhost:3001/api/chat', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                newText = data.reply;
+            }
+
+            if (newText) {
+                // Remove qualquer resquício de HTML ou aspas que a LLM possa ter teimado em incluir
+                let cleanedText = newText.replace(/<[^>]*>?/gm, '').replace(/^"|"$/g, '').trim();
+                target.innerText = cleanedText;
+                this.addMessage(`✅ Texto atualizado com sucesso via Micro-Comando.`, false);
+            } else {
+                throw new Error("Resposta vazia da IA");
+            }
+        } catch (error) {
+            console.error("MicroCommand Error:", error);
+            target.innerText = originalText;
+            alert("Não foi possível reescrever o texto no momento. Verifique sua conexão com a API.");
+        }
+    },
+
+    async generateBlueprint(theme) {
+        // Mostra o loading state
+        const welcomeContainer = document.getElementById('blueprint-welcome');
+        if (welcomeContainer) welcomeContainer.style.display = 'none';
+        
+        const preview = document.getElementById('live-preview');
+        preview.style.display = 'block';
+        preview.innerHTML = `<div style="text-align:center; padding-top: 100px;">
+            <div class="spinner" style="font-size:40px;">⚙️</div>
+            <h3 style="color:#334155; margin-top:20px;">Montando Blueprint: ${theme}</h3>
+            <p style="color:#64748b; font-size:14px;">Injetando Método Abidos... isso leva em média 10 segundos.</p>
+        </div>`;
+        
+        const chatCanvas = document.getElementById('studio-canvas');
+        if(chatCanvas) chatCanvas.classList.add('split-active');
+        const studioSidebarArea = document.getElementById('studio-sidebar');
+        if (studioSidebarArea) studioSidebarArea.style.display = 'flex'; // Mostra sidebar de edição
+        
+        // Define o contexto SEO sugerido baseado no Blueprint para o frontend e chat
+        document.getElementById('seo-context').value = theme;
+        document.getElementById('ai-studio-new-title').value = `Campanha ${theme}`;
+        
+        try {
+            const formData = new FormData();
+            formData.append('theme', theme);
+            
+            const response = await fetch('http://localhost:3001/api/blueprint', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) throw new Error(`Network response was not ok: ${response.status}`);
+            
+            const data = await response.json();
+            
+            if (data.html) {
+                preview.innerHTML = data.html;
+                this.addMessage(`✅ Blueprint de **${theme}** gerado com sucesso. Clique em qualquer texto à esquerda para usar os Micro-Comandos.`, false);
+            } else {
+                throw new Error("HTML não retornado pela API");
+            }
+        } catch (error) {
+            console.error("Blueprint Error:", error);
+            preview.innerHTML = `<div style="text-align:center; padding-top: 100px; color:red;">
+                <h3>Status Vermelho</h3><p>Ocorreu um erro (${error.message}) ao gerar o Blueprint. O servidor Node.js está rodando?</p>
+                <button class="btn" onclick="window.location.reload()">Recarregar Studio</button>
+            </div>`;
+        }
+    },
+    
+    async auditAbidos() {
+        const preview = document.getElementById('live-preview');
+        const currentHtml = preview.innerHTML;
+        const keyword = document.getElementById('ai-studio-keyword').value || 'Terapia em Goiânia';
+
+        if(currentHtml.trim().length === 0 || currentHtml.includes('Crie algo novo')) {
+            this.addMessage("⚠️ Rascunho vazio. Gere um Blueprint ou adicione conteúdo antes de auditar.", false);
+            return;
+        }
+
+        this.addMessage("🔍 Rodando Auditoria Abidos...", false);
+        
+        try {
+            const formData = new FormData();
+            formData.append('html', currentHtml);
+            formData.append('keyword', keyword);
+            
+            const response = await fetch('http://localhost:3001/api/audit', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) throw new Error(`Network response was not ok: ${response.status}`);
+            
+            const data = await response.json();
+            
+            if (data.checklist) {
+                this.renderAuditFeedback(data.checklist);
+            } else {
+                throw new Error("Checklist não retornado.");
+            }
+        } catch (error) {
+            console.error("Audit Error:", error);
+            this.addMessage("🚨 Erro na auditoria. Verifique a conexão com o node.", false);
+        }
+    },
+
+    renderAuditFeedback(checklist) {
+        const chatHistory = document.getElementById('chat-history');
+        const msgDiv = document.createElement('div');
+        msgDiv.style.padding = '10px 15px';
+        msgDiv.style.borderRadius = '10px 10px 10px 0';
+        msgDiv.style.alignSelf = 'flex-start';
+        msgDiv.style.maxWidth = '85%';
+        msgDiv.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+        msgDiv.style.background = '#fef2f2';
+        msgDiv.style.border = '1px solid #fee2e2';
+
+        let html = '<div style="font-weight:bold; color:#b91c1c; margin-bottom: 8px;">📋 Checklist Método Abidos:</div><ul style="padding-left: 20px; list-style-type: none; margin: 0; color: #7f1d1d; font-size: 12px; display:flex; flex-direction:column; gap:8px;">';
+        
+        checklist.forEach(item => {
+            if (item.passou) {
+                html += `<li style="display:flex; align-items:flex-start; gap:5px;"><span style="color:#15803d; font-weight:bold;">✅</span> <span>${item.criterio}</span></li>`;
+            } else {
+                let actionBtn = "";
+                if (item.acao) {
+                    actionBtn = `<button onclick="window.chatApp.injectBlock('${item.acao}')" style="margin-top:4px; padding:3px 8px; font-size:10px; border:none; background:#991b1b; color:white; border-radius:3px; cursor:pointer;">Inserir Bloco</button>`;
+                }
+                html += `<li style="display:flex; align-items:flex-start; gap:5px;"><span style="color:#b91c1c; font-weight:bold;">❌</span> <div><span>${item.criterio}</span><br>${actionBtn}</div></li>`;
+            }
+        });
+        
+        html += '</ul>';
+        msgDiv.innerHTML = html;
+        chatHistory.appendChild(msgDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    },
+
+    injectBlock(action) {
+        const preview = document.getElementById('live-preview');
+        let blockHtml = "";
+        
+        if (action === "inserir_prova_social") {
+            blockHtml = `
+                <section class="abidos-social-proof" style="padding: 40px 20px; background: #fffbe8; border-top: 1px solid #fef08a;">
+                    <h2 style="text-align:center; color:#854d0e;">O que dizem os pacientes</h2>
+                    <div style="display:flex; justify-content:center; gap:20px; margin-top:20px; flex-wrap:wrap;">
+                        <div style="background:white; padding:15px; border-radius:8px; width:250px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">⭐️⭐️⭐️⭐️⭐️<br>"Encontrei no Dr. Lawrence um espaço seguro para falar sobre meu diagnóstico tardio."<br><em>- M. S.</em></div>
+                        <div style="background:white; padding:15px; border-radius:8px; width:250px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">⭐️⭐️⭐️⭐️⭐️<br>"A hipnose ajudou a focar e a entender o meu burnout."<br><em>- J. P.</em></div>
+                    </div>
+                </section>`;
+        } else if (action === "inserir_cta") {
+            blockHtml = `
+                <div class="abidos-cta-block" style="text-align:center; padding: 20px; margin: 20px 0;">
+                    <a href="${this.authorityContext.socials.whatsapp}" style="background:#16a34a; color:white; padding: 12px 24px; font-weight:bold; border-radius:30px; text-decoration:none; display:inline-block;">Agendar Avaliação via WhatsApp</a>
+                </div>`;
+        }
+
+        if (blockHtml) {
+            preview.innerHTML += blockHtml;
+            this.addMessage("✅ Bloco injetado no final da página. Revise o Live Preview.", false);
+        }
+    },
+    
     addMessage(text, isUser = false) {
         const chatHistory = document.getElementById('chat-history');
         const msgDiv = document.createElement('div');
@@ -197,10 +688,64 @@ window.chatApp = {
             console.error(error);
             this.addMessage("Erro de conexão com o terminal IA (Port 3001).", false);
         } finally {
-            btnSend.innerHTML = 'Enviar Comando';
-            btnSnap.innerHTML = '📸 Enviar Visualização p/ IA';
+            btnSend.innerHTML = '🚀 Executar';
+            btnSnap.innerHTML = '📷 Corrigir Layout Visualmente';
             btnSend.disabled = false;
             btnSnap.disabled = false;
+        }
+    },
+
+    // --- LAYOUT CONTROLS ---
+
+    toggleHeaderAI() {
+        const header = document.getElementById('studio-header');
+        header.classList.toggle('collapsed');
+        const btn = document.querySelector('button[title="Esconder Topo"]');
+        btn.innerText = header.classList.contains('collapsed') ? '🔽' : '🔼';
+    },
+
+    toggleSidebarAI() {
+        const sidebar = document.getElementById('studio-sidebar');
+        sidebar.classList.toggle('collapsed');
+        const btn = document.querySelector('button[title="Esconder Assistente"]');
+        btn.innerText = sidebar.classList.contains('collapsed') ? '◀️' : '▶️';
+    },
+
+    previewLive() {
+        if (!this.currentItemId) return alert("Salve um rascunho primeiro para visualizar no site.");
+        const baseUrl = wpAPI.url.replace('/wp-json/wp/v2', '').replace(/\/$/, '');
+        window.open(`${baseUrl}/?p=${this.currentItemId}&preview=true`, '_blank');
+    },
+
+    async publishWP() {
+        if (!this.currentItemId) return alert("Salve um rascunho antes de publicar.");
+        if (!confirm("Deseja publicar esta página oficialmente no site?")) return;
+
+        const btn = event.currentTarget;
+        const originalText = btn.innerText;
+        btn.innerText = "🚀 Publicando..."; btn.disabled = true;
+
+        const result = await wpAPI.saveContent(this.currentType, { status: 'publish' }, this.currentItemId);
+        if (result) {
+            alert("Página publicada com sucesso!");
+            this.addMessage("✅ **Página Publicada!** Ela agora está visível para o público.");
+        }
+        btn.innerText = originalText; btn.disabled = false;
+    },
+
+    onSEOContextChange() {
+        const seoContext = document.getElementById('seo-context').value;
+        const keyword = document.getElementById('ai-studio-keyword').value;
+        const titleInput = document.getElementById('ai-studio-new-title');
+        
+        if (seoContext || keyword) {
+            let msg = `Você selecionou um novo foco SEO.\nContexto: **${seoContext || 'Nenhum'}**\nPalavra-chave: **${keyword || 'Nenhuma'}**`;
+            this.addMessage(msg, false);
+            
+            // Sugerir automaticamente um título estratégico se o usuário ainda não tiver preenchido
+            if (titleInput && !titleInput.value) {
+                this.suggestTitle();
+            }
         }
     },
 
@@ -336,24 +881,31 @@ window.chatApp = {
     async suggestTitle() {
         const type = document.getElementById('ai-studio-type').value;
         const keyword = document.getElementById('ai-studio-keyword').value || "TEA em Adultos";
+        const btn = document.getElementById('ai-studio-suggest-btn');
+        const originalText = btn.innerText;
+
+        btn.innerText = "⏳..."; btn.disabled = true;
         
         const prompt = `Atue como um Especialista em Copywriting de Conversão (Método Abidos).
-Sua tarefa é sugerir EXATAMENTE UM (1) título de impacto para um(a) ${type === 'pages' ? 'Página' : 'Post'}.
-O foco deve ser a keyword: "${keyword}".
-REGRAS CRÍTICAS:
-1. NÃO use a palavra "Abidos" no título. Ela é apenas a sua metodologia interna.
-2. O título deve focar na DOR do paciente (TEA, Mascaramento, Burnout ou Suspeita).
-3. Deve incluir autoridade (especialista, instituto) ou localização (Goiânia) se couber.
-4. O resultado deve ser direto, curto e persuasivo.
-5. RETORNE APENAS O TEXTO DO TÍTULO, sem comentários, explicações ou listas.`;
+Sugerir EXATAMENTE UM (1) título de impacto para um(a) ${type === 'pages' ? 'Página' : 'Post'}.
+Foco: "${keyword}".
+REGRAS:
+1. FOCO na DOR ou DESEJO do paciente.
+2. Seja direto e persuasivo.
+3. RETORNE APENAS O TEXTO DO TÍTULO.`;
 
-        const suggestion = await gemini.callAPI(prompt);
-        if(suggestion) {
-            // Limpa qualquer aspa ou prefixo que a IA possa ter colocado
-            const cleanTitle = suggestion.replace(/^["']|["']$/g, '').trim();
-            document.getElementById('ai-studio-new-title').value = cleanTitle;
-            this.addMessage(`💡 Sugestão de Título: **"${cleanTitle}"**`);
-        }
+        try {
+            const suggestion = await gemini.callAPI(prompt);
+            if(suggestion) {
+                const cleanTitle = suggestion.replace(/^["']|["']$/g, '').trim();
+                const titleInput = document.getElementById('ai-studio-new-title');
+                titleInput.value = cleanTitle;
+                titleInput.style.display = 'block';
+                this.addMessage(`💡 Sugestão de Título: **"${cleanTitle}"**`);
+            }
+        } catch(e) { console.error(e); }
+        
+        btn.innerText = originalText; btn.disabled = false;
     },
 
     toggleChecklist() {
