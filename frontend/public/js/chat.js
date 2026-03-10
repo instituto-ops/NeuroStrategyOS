@@ -22,6 +22,7 @@ window.chatApp = {
     mediaGallery: [], // Cache de mídias para a IA
     historyStack: [],  // Undo history
     redoStack: [],     // Redo history
+    currentKeyword: '', // Store current keyword for AI sync
 
     init() {
         this.setupEventListeners();
@@ -348,6 +349,18 @@ window.chatApp = {
             this.showMicroCommandsMenu(e.target, e.clientX, e.clientY);
         });
 
+        // Permitir seleção de IMAGENS especificamente
+        preview.addEventListener('click', (e) => {
+            if (e.target.tagName === 'IMG') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.selectedElement) this.selectedElement.style.outline = '';
+                this.selectedElement = e.target;
+                this.selectedElement.style.outline = '4px solid #ef4444';
+                this.showMicroCommandsMenu(e.target, e.clientX, e.clientY, true);
+            }
+        });
+
         // Fechar menu ao clicar fora
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#micro-commands-menu') && !e.target.closest('#live-preview')) {
@@ -356,7 +369,7 @@ window.chatApp = {
         });
     },
 
-    showMicroCommandsMenu(target, x, y) {
+    showMicroCommandsMenu(target, x, y, isImage = false) {
         let menu = document.getElementById('micro-commands-menu');
         if (!menu) {
             menu = document.createElement('div');
@@ -365,19 +378,28 @@ window.chatApp = {
             document.body.appendChild(menu);
         }
 
-        menu.innerHTML = `
-            <div style="font-size: 10px; font-weight: bold; color: #64748b; padding: 4px 5px; border-bottom: 1px solid #f1f5f9; margin-bottom: 3px; cursor: default;">Micro-Comandos IA</div>
-            <button onclick="window.chatApp.executeMicroCommand('Reescreva de forma mais empática, acolhedora e focada na dor emocional do paciente')" class="btn" style="background: #eff6ff; color: #1d4ed8; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer;">🪄 + Empático</button>
-            <button onclick="window.chatApp.executeMicroCommand('Reescreva com mais autoridade clínica profissional, adicionando tom técnico de psicologia')" class="btn" style="background: #fdf2f8; color: #be185d; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer;">🪄 + Clínico</button>
-            <button onclick="window.chatApp.executeMicroCommand('Reescreva de forma mais curta, concisa e direta ao ponto')" class="btn" style="background: #f0fdf4; color: #15803d; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer;">🪄 Mais Curto</button>
-            
-            <div style="border-top: 1px solid #f1f5f9; margin-top: 3px; padding-top: 3px;">
-                <button onclick="window.chatApp.showBlockInserterMenu(event.clientX, event.clientY, window.chatApp.selectedElement.closest('section'))" class="btn" style="background: #f8fafc; color: #334155; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; width: 100%;">➕ Inserir Bloco Aqui</button>
-                <button onclick="window.chatApp.deleteBlock(window.chatApp.selectedElement.closest('section'))" class="btn" style="background: #fee2e2; color: #ef4444; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 2px;">🗑️ Excluir Seção Inteira</button>
-            </div>
+        if (isImage) {
+            menu.innerHTML = `
+                <div style="font-size: 10px; font-weight: bold; color: #64748b; padding: 4px 5px; border-bottom: 1px solid #f1f5f9; margin-bottom: 3px;">Comandos de Imagem</div>
+                <button onclick="window.chatApp.executeMicroCommand('Sugira e troque esta imagem por uma mais adequada ao contexto da clínica de psicologia victor lawrence')" class="btn" style="background: #eff6ff; color: #1d4ed8; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer;">🪄 Trocar Imagem (IA)</button>
+                <button onclick="window.chatApp.deleteSelected()" class="btn" style="background: #fee2e2; color: #ef4444; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer;">🗑️ Excluir Imagem</button>
+                <button onclick="window.chatApp.hideMicroCommandsMenu()" class="btn" style="background: transparent; color: #94a3b8; font-size: 10px; text-align: center; margin-top: 3px; padding: 4px; border: none; cursor: pointer; width: 100%;">✕ Cancelar</button>
+            `;
+        } else {
+            menu.innerHTML = `
+                <div style="font-size: 10px; font-weight: bold; color: #64748b; padding: 4px 5px; border-bottom: 1px solid #f1f5f9; margin-bottom: 3px; cursor: default;">Micro-Comandos IA</div>
+                <button onclick="window.chatApp.executeMicroCommand('Reescreva de forma mais empática, acolhedora e focada na dor emocional do paciente')" class="btn" style="background: #eff6ff; color: #1d4ed8; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer;">🪄 + Empático</button>
+                <button onclick="window.chatApp.executeMicroCommand('Reescreva com mais autoridade clínica profissional, adicionando tom técnico de psicologia')" class="btn" style="background: #fdf2f8; color: #be185d; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer;">🪄 + Clínico</button>
+                <button onclick="window.chatApp.executeMicroCommand('Reescreva de forma mais curta, concisa e direta ao ponto')" class="btn" style="background: #f0fdf4; color: #15803d; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer;">🪄 Mais Curto</button>
+                
+                <div style="border-top: 1px solid #f1f5f9; margin-top: 3px; padding-top: 3px;">
+                    <button onclick="window.chatApp.showBlockInserterMenu(event.clientX, event.clientY, window.chatApp.selectedElement.closest('section'))" class="btn" style="background: #f8fafc; color: #334155; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; width: 100%;">➕ Inserir Bloco Aqui</button>
+                    <button onclick="window.chatApp.deleteBlock(window.chatApp.selectedElement.closest('section'))" class="btn" style="background: #fee2e2; color: #ef4444; font-size: 11px; text-align: left; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 2px;">🗑️ Excluir Seção Inteira</button>
+                </div>
 
-            <button onclick="window.chatApp.hideMicroCommandsMenu()" class="btn" style="background: transparent; color: #94a3b8; font-size: 10px; text-align: center; margin-top: 3px; padding: 4px; border: none; cursor: pointer; width: 100%;">✕ Cancelar</button>
-        `;
+                <button onclick="window.chatApp.hideMicroCommandsMenu()" class="btn" style="background: transparent; color: #94a3b8; font-size: 10px; text-align: center; margin-top: 3px; padding: 4px; border: none; cursor: pointer; width: 100%;">✕ Cancelar</button>
+            `;
+        }
 
         // Evitar que o menu saia da tela
         const menuWidth = 150;
@@ -404,43 +426,49 @@ window.chatApp = {
         if (!this.selectedElement) return;
 
         const target = this.selectedElement;
-        const originalText = target.innerText;
+        const originalContent = target.outerHTML;
         
-        target.innerText = "⏳ Reescrevendo...";
+        if (target.tagName !== 'IMG') target.innerText = "⏳ Reescrevendo...";
         this.hideMicroCommandsMenu();
 
         try {
-            const prompt = `Você é um Copywriter Clínico focado em Psicologia (Método Abidos). Sua tarefa é reescrever o texto a seguir aplicando esta exata instrução: "${instruction}".\n\nTexto original: "${originalText}"\n\nREGRAS CRÍTICAS:\n- Retorne APENAS o texto puro (plain text) da nova frase.\n- Não inclua aspas no começo nem no fim.\n- Não use NENHUMA tag HTML (ex: sem <p>, sem <strong>).\n- Não forneça explicações.\n- Mantenha o tamanho compatível com a instrução.`;
+            const prompt = `Você é um Copywriter Clínico focado em Psicologia (Método Abidos). Sua tarefa é reescrever o texto ou trocar a imagem a seguir aplicando esta exata instrução: "${instruction}".\n\nOriginal: "${originalContent}"\n\nREGRAS CRÍTICAS:\n- Se for texto: Retorne APENAS o texto puro renovado.\n- Se for imagem: Retorne APENAS a nova tag <img src="..." alt="...">.\n- Não forneça explicações.`;
             
-            let newText = null;
+            this.saveHistory(); // Salva estado antes da mudança
+            let newContent = null;
             
-            // Usando a instância local de Gemini
-            if (typeof gemini !== 'undefined' && gemini.callAPI) {
-                newText = await gemini.callAPI(prompt);
-            } else {
-                // Fallback para backend node
-                const formData = new FormData();
-                formData.append('message', prompt);
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                newText = data.reply;
-            }
+            const formData = new FormData();
+            formData.append('message', prompt);
+            if (this.currentKeyword) formData.append('currentKeyword', this.currentKeyword);
+            
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            newContent = data.reply;
 
-            if (newText) {
-                // Remove qualquer resquício de HTML ou aspas que a LLM possa ter teimado em incluir
-                let cleanedText = newText.replace(/<[^>]*>?/gm, '').replace(/^"|"$/g, '').trim();
-                target.innerText = cleanedText;
-                this.addMessage(`✅ Texto atualizado com sucesso via Micro-Comando.`, false);
+            if (newContent) {
+                if (target.tagName === 'IMG') {
+                    const temp = document.createElement('div');
+                    temp.innerHTML = newContent.trim();
+                    const newImg = temp.querySelector('img');
+                    if (newImg) {
+                        target.src = newImg.src;
+                        target.alt = newImg.alt;
+                    }
+                } else {
+                    let cleanedText = newContent.replace(/<[^>]*>?/gm, '').replace(/^"|"$/g, '').trim();
+                    target.innerText = cleanedText;
+                }
+                this.addMessage(`✅ Elemento atualizado via Micro-Comando.`, false);
             } else {
                 throw new Error("Resposta vazia da IA");
             }
         } catch (error) {
             console.error("MicroCommand Error:", error);
-            target.innerText = originalText;
-            alert("Não foi possível reescrever o texto no momento. Verifique sua conexão com a API.");
+            if (target.tagName !== 'IMG' && typeof originalContent !== 'undefined') target.innerHTML = originalContent;
+            alert("Erro ao processar comando IA.");
         }
     },
 
@@ -632,7 +660,7 @@ window.chatApp = {
         const btnSend = document.getElementById('btn-send-chat');
         const btnSnap = document.getElementById('btn-snap-error');
         const livePreview = document.getElementById('live-preview');
-        const keyword = document.getElementById('ai-studio-keyword').value;
+        this.currentKeyword = document.getElementById('ai-studio-keyword').value;
 
         const message = chatInput.value.trim();
         if (!message) return;
@@ -693,7 +721,7 @@ window.chatApp = {
         VANTAGEM: Esses blocos são Mobile-First e compatíveis com o Widget HTML do Elementor.
         AÇÃO: Se o usuário pedir algo novo ou estrutural, sugiro que ele utilize esses blocos específicos (ex: "Sugiro inserir o bloco 'dor' para conectar com o paciente").`;
 
-        formData.append('message', promptContext);
+        formData.append('currentKeyword', this.currentKeyword);
         
         // 3. Contexto da Página Inteira
         const currentHtml = livePreview.innerHTML;

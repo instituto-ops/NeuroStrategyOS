@@ -107,12 +107,44 @@ app.post('/api/ai/generate', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+const DOCTORALIA_REVIEWS = `
+- Carla (TEA): "Diagnóstico tardio possível pela técnica adequada... melhora significativa na qualidade de vida."
+- Y. (Autista): "Acompanhamento fez enorme diferença... hipnose e PNL com empatia e respeito."
+- A. M. (Sábio): "Estrutura da minha vida, alguém sábio que me fez enxergar eu mesma."
+- R. A. (Ansiedade): "Problema de ansiedade resolvido em algumas sessões. Muito profissional."
+- L. F. S.: "Resultados nítidos e precisos. Indico fortemente."
+`;
+
 app.post('/api/chat', upload.single('screenshot'), async (req, res) => {
     try {
-        const { message, htmlContext } = req.body;
+        const { message, htmlContext, currentKeyword } = req.body;
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         
-        let promptText = `Atue como o Assistente Jules para a Clínica Victor Lawrence em Goiânia. Contexto: ${htmlContext ? 'Editando página' : 'Chat Geral'}. Mensagem: ${message}`;
+        let promptText = `
+        VOCÊ É JULES, ASSISTENTE ELITE DA CLÍNICA VICTOR LAWRENCE (GOIÂNIA).
+        SUA MISSÃO: CRIAR LANDING PAGES DE ALTA CONVERSÃO USANDO O MÉTODO ABIDOS.
+        
+        REGRAS DE OURO:
+        1. ESTRUTURA SEMPRE EM 4 SEÇÕES:
+           - Seção 1 (Hero): H1 (Keyword exata + Benefício + Goiânia), Subtítulo, CTA WhatsApp (62982171845).
+           - Seção 2 (Jornada/Corpo): H2 (Identificação da Dor), Texto H2 (Serviços), H3 (Quebra de Objeções).
+           - Seção 3 (E-E-A-T): H2 (Apresentação), H2 (Ambiente), Prova Social (USE AS REVIEWS ABAIXO).
+           - Seção 4 (Retenção): H2 (FAQ), Link Interno estilo "Veja também" para Silos de Conteúdo.
+        
+        2. PROVA SOCIAL (DOCTORALIA):
+        ${DOCTORALIA_REVIEWS}
+        
+        3. DESIGN: Use Tailwind, cores profissionais (#1e293b, #0ea5e9). Imagens: use tags <img src="URL" alt="SEO Description">.
+        
+        CONTEXTO ATUAL:
+        - Keyword: ${currentKeyword || 'Não especificada'}
+        - HTML Atual: ${htmlContext || 'Vazio'}
+        - Mensagem do Usuário: ${message}
+        
+        SE O USUÁRIO PEDIR PARA CRIAR OU GERAR, RETORNE O HTML COMPLETO SEGUINDO O MÉTODO.
+        SE O USUÁRIO PEDIR PARA TROCAR IMAGEM, SUGIRA UMA NOVA URL DE IMAGEM OU REMOVA A ATUAL.
+        `;
+        
         let parts = [{ text: promptText }];
         if (req.file) {
             parts.push({ inlineData: { data: req.file.buffer.toString('base64'), mimeType: req.file.mimetype } });
@@ -128,7 +160,19 @@ app.post('/api/blueprint', async (req, res) => {
     try {
         const { theme } = req.body;
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
-        const result = await model.generateContent(`Gere HTML cru para uma landing page de: ${theme}`);
+        const prompt = `
+        GERE UM BLUEPRINT HTML COMPLETO (4 SEÇÕES ABIDOS) PARA: ${theme}.
+        LOCAÇÃO: Goiânia. 
+        WHATSAPP: 62982171845.
+        REVIEWS: Inclua depoimentos reais da Doctoralia (Carla, Y, etc).
+        ESTRUTURA: 
+        1. Hero (H1 Estratégico)
+        2. Jornada (Dor e Benefícios)
+        3. Autoridade (Quem é Victor Lawrence + Clientes)
+        4. FAQ + Silos.
+        RETORNE APENAS O HTML CRU.
+        `;
+        const result = await model.generateContent(prompt);
         const resp = await result.response;
         res.json({ html: resp.text().replace(/```html|```/g, '').trim() });
     } catch (e) { res.status(500).json({ error: e.message }); }

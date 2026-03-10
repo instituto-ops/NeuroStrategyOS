@@ -468,15 +468,39 @@ select:focus {
     opacity: 0;
 }
 
-/* Float Controls */
+/* Float Controls - Horizontal Footer Style */
 .float-controls {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    bottom: 25px;
+    left: 45%;
+    transform: translateX(-50%);
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
     z-index: 100;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 8px 16px;
+    border-radius: 40px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0,0,0,0.04);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.float-controls:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    bottom: 28px;
+}
+
+.float-controls hr {
+    height: 20px;
+    width: 1px;
+    border: none;
+    background: rgba(0,0,0,0.1);
+    margin: 0 4px;
 }
 
 .toggle-btn {

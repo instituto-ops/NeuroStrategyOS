@@ -160,18 +160,24 @@
                         <div style="display: flex; gap: 8px; align-items: center;">
                             <select id="seo-context" style="flex: 1; padding: 5px; font-size: 12px; background: #fff1f2; border-color: #f43f5e; color: #9f1239;" onchange="window.chatApp.onSEOContextChange()">
                                 <option value="">🏆 Contexto Ouro</option>
-                                <option value="psicólogo online especializado em autismo feminino">TEA Feminino</option>
-                                <option value="hipnose ericksoniana para compulsões">Hipnose</option>
-                                <option value="terapia para adulto que descobriu autismo tarde">Diagnóstico Tardio TEA</option>
+                                <option value="Autismo Adulto">TEA Adulto (Avaliação)</option>
+                                <option value="Diagnóstico Tardio">Diagnóstico Tardio</option>
+                                <option value="Autismo Feminino">TEA Feminino</option>
+                                <option value="Burnout e Neurodivergência">Burnout & TEA</option>
+                                <option value="Hipnose Clínica">Hipnose Ericksoniana</option>
+                                <option value="Psicoterapia Breve">Terapia Estratégica</option>
+                                <option value="Relacionamentos e Neurodivergência">Silo: Relacionamentos</option>
                             </select>
                             <select id="ai-studio-keyword" style="flex: 1; padding: 5px; font-size: 12px; background: #eff6ff; border-color: #3b82f6; color: #1e40af;" onchange="window.chatApp.onSEOContextChange()">
                                 <option value="">🎯 Keyword</option>
-                                <option value="psicólogo online especializado em autismo feminino">TEA Feminino</option>
-                                <option value="psicólogo para adultos com suspeita de TEA">Suspeita TEA</option>
-                                <option value="hipnose clínica para TEA em adultos">Hipnose + TEA</option>
-                                <option value="terapia para adulto que descobriu autismo tarde">Diagnóstico Tardio</option>
-                                <option value="hipnose ericksoniana para compulsões">Hipnose Ericksoniana</option>
-                                <option value="psicólogo especialista em autismo alto funcionamento">Autismo Nível 1</option>
+                                <option value="psicólogo especialista em autismo adulto goiânia">Especialista TEA Goiânia</option>
+                                <option value="avaliação de autismo em adultos valor">Avaliação TEA (Valor)</option>
+                                <option value="sintomas de autismo em mulheres adultas">TEA Feminino Sintomas</option>
+                                <option value="como saber se sou autista depois de adulto">Suspeita TEA Adulto</option>
+                                <option value="tratamento para ansiedade com hipnose goiânia">Ansiedade + Hipnose</option>
+                                <option value="hipnose ericksoniana para compulsões">Hipnose + Compulsões</option>
+                                <option value="psicólogo para altas habilidades e superdotação">AH/SD Adulto</option>
+                                <option value="psicoterapia breve estratégica com hipnose">Terapia Breve + Hipnose</option>
                             </select>
                             <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="window.chatApp.toggleSettings()">⚙️ SEO</button>
                         </div>
@@ -198,11 +204,11 @@
                     <div class="float-controls">
                         <button class="toggle-btn" onclick="window.chatApp.toggleHeaderAI()" title="Esconder Topo">🔼</button>
                         <button class="toggle-btn" onclick="window.chatApp.toggleSidebarAI()" title="Esconder Assistente">▶️</button>
-                        <hr style="width: 100%; opacity: 0.1;">
+                        <hr>
                         <button class="toggle-btn" onclick="window.chatApp.undoHistory()" title="Desfazer (Ctrl+Z)">↩️</button>
                         <button class="toggle-btn" onclick="window.chatApp.redoHistory()" title="Refazer (Ctrl+Y)">↪️</button>
                         <button class="toggle-btn" onclick="window.chatApp.deleteSelected()" title="Deletar Selecionado" style="color:#ef4444;">🗑️</button>
-                        <hr style="width: 100%; opacity: 0.1;">
+                        <hr>
                         <button class="toggle-btn" onclick="document.getElementById('live-preview').className='preview-canvas desktop'" title="Desktop">💻</button>
                         <button class="toggle-btn" onclick="document.getElementById('live-preview').className='preview-canvas mobile'" title="Mobile">📱</button>
                     </div>
