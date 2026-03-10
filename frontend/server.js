@@ -25,7 +25,7 @@ app.post('/api/chat', upload.single('screenshot'), async (req, res) => {
         
         let promptText = `
 Você é Jules, o Assistente de Engenharia Headless (AntiGravity CMS).
-Sua função é auxiliar o Dr. Victor Lawrence a criar e otimizar páginas no WordPress usando o 'Método Abidos' (Foco profundo em E-A-T, Cópias orientadas à Dor/Solução, Velocidade e Alta Conversão para Psicoterapia e TEA em Adultos).
+Sua função é auxiliar o Dr. Victor Lawrence a criar e otimizar páginas no WordPress usando a Metodologia de Conversão Lawrence (E-E-A-T, Cópias orientadas à Dor/Solução, Velocidade e Alta Conversão para Psicoterapia e TEA em Adultos).
 
 O usuário enviou a seguinte mensagem/pedido:
 "${message}"
@@ -34,12 +34,17 @@ Aqui está o código HTML atual da página que ele está editando:
 ${htmlContext ? htmlContext.substring(0, 15000) : "Nenhum código atual fornecido."}
 
 REGRAS DE RESPOSTA CRÍTICAS (NÃO NEGOCIÁVEIS):
-1. NUNCA use as palavras "Abidos" ou "Método Abidos" no texto final da página, títulos ou mensagens do chat. Este é um nome de metodologia INTERNA.
-2. LINK INTERNO OBRIGATÓRIO: Toda página ou seção gerada DEVE ter pelo menos um link ou botão chamando a página inicial (www.hipnolawrence.com) de forma orgânica e contextualizada (ex: "Conheça nossa abordagem completa na página inicial" ou um botão "Voltar ao Início").
-3. Se o usuário pedir para criar/gerar código, retorne o HTML/CSS organizado dentro de blocos \`\`\`html.
-4. Use um tom clínico, empático e focado na dor do paciente (TEA em adultos, Mascaramento, Burnout).
-5. Foque na localização: Goiânia.
-6. Seja conciso e direto na parte textual.
+1. NUNCA use as palavras "Abidos" ou "Método Abidos" no texto final da página, títulos ou mensagens do chat. Este é um nome de metodologia INTERNA. Use termos como "Abordagem Especializada" ou "Protocolo Clínico".
+2. LINK INTERNO OBRIGATÓRIO: Toda página ou seção gerada DEVE ter pelo menos um link ou botão chamando a página inicial (www.hipnolawrence.com) de forma orgânica e contextualizada.
+3. ARQUITETURA OBRIGATÓRIA PARA GERAÇÃO COMPLETA:
+   - Seção Hero: H1 Único (Keyword + Promessa + Goiânia), Subtítulo acolhedor, Botão CTA WhatsApp.
+   - Jornada do Paciente: H2 Identificação da Dor (Empatia), H2 Benefícios e Categorias, H3 Detalhes/Objeções.
+   - Autoridade (E-E-A-T): H2 Sobre o Especialista (Bio, CRP, Foto space), H2 Ambiente/Galeria.
+   - Retenção: H2 FAQ Accordion, Linkagem Interna "Veja Também".
+   - Links: SEMPRE use links para a home www.hipnolawrence.com.
+4. Se o usuário pedir para criar/gerar código, retorne o HTML/CSS organizado dentro de blocos \`\`\`html.
+5. Tom Clínico e Empático: Foco na dor (TEA Adulto, Mascaramento, Burnout ou Suspeita).
+6. Localização Prioritária: Goiânia.
 `;
 
         let parts = [{ text: promptText }];
@@ -55,7 +60,7 @@ REGRAS DE RESPOSTA CRÍTICAS (NÃO NEGOCIÁVEIS):
                  }
              });
              
-             parts[0].text += `\n[O usuário anexou uma imagem do layout atual. Analise-a para dar feedback visual.]`;
+             parts[0].text += `\n[O usuário anexou uma imagem do layout atual. Analise-a para dar feedback visual de design.]`;
         }
 
         const result = await model.generateContent({

@@ -259,7 +259,17 @@ window.chatApp = {
         if (isNew && !newTitle) return alert("Digite um título.");
 
         const htmlContent = document.getElementById('live-preview').innerHTML;
-        const result = await wpAPI.saveContent(type, { content: htmlContent, title: isNew ? newTitle : undefined, status: "draft" }, this.currentItemId);
+        const slug = document.getElementById('seo-slug').value.trim();
+        
+        const payload = { 
+            content: htmlContent, 
+            status: "draft" 
+        };
+
+        if (isNew) payload.title = newTitle;
+        if (slug) payload.slug = slug;
+
+        const result = await wpAPI.saveContent(type, payload, this.currentItemId);
         
         if(result && result.id) {
             this.currentItemId = result.id;
@@ -347,7 +357,13 @@ REGRAS CRÍTICAS:
         const keyword = document.getElementById('ai-studio-keyword').value || "TEA em Adultos";
         const title = document.getElementById('ai-studio-new-title').value || "Psicoterapia Especializada";
         const prompts = {
-            full: `Crie um conteúdo completo e otimizado para o Título: "${title}". Use a keyword "${keyword}". Inclua uma Dobra Hero, seção de dores/problemas, benefícios do tratamento, uma breve bio do especialista e o link obrigatório para a home www.hipnolawrence.com. NUNCA mencione a palavra Abidos.`,
+            full: `Crie um conteúdo COMPLETO seguindo a ARQUITETURA OBRIGATÓRIA LAWRENCE para o Título: "${title}". Use a keyword "${keyword}". 
+ORDEM DE CONSTRUÇÃO:
+1. Seção Hero: H1 (Forte + Goiânia), subtítulo acolhedor e botão WhatsApp.
+2. Jornada do Paciente: H2 Identificação da Dor (Empatia profunda), H2 Benefícios Clínicos, H3 Quebra de Objeções/FAQ sutil.
+3. Autoridade: H2 Sobre o Especialista (Dr. Victor Lawrence, Bio, CRP, espaço para foto), H2 Infraestrutura/Ambiente.
+4. Retenção: H2 FAQ Accordion, Linkagem Interna linkando para www.hipnolawrence.com.
+Regras: NUNCA cite a palavra Abidos. Use tom empático-clínico. Localização: Goiânia.`,
             hero: `Crie uma dobra Hero (Header) focada em conversão para "${keyword}". Regra: Título de impacto focado na dor do paciente, subtexto de autoridade e um botão de CTA para WhatsApp em Goiânia. NUNCA use a palavra Abidos no texto. OBRIGATÓRIO: Inclua um link orgânico para a home em www.hipnolawrence.com.`,
             social: `Gere uma seção de depoimentos de pacientes adultos com TEA. Use um design limpo e inclua um link sutil para 'Conhecer nossa história' levando a www.hipnolawrence.com. NUNCA cite a palavra Abidos.`,
             faq: `Crie um FAQ quebra-objeções focado em TEA Adulto e Hipnose. As respostas devem ser acolhedoras e citar a página inicial www.hipnolawrence.com para mais detalhes sobre a clínica.`,
@@ -371,6 +387,51 @@ REGRAS CRÍTICAS:
         if (!this.currentItemId) return alert("Salve primeiro.");
         const baseUrl = wpAPI.url.replace('/wp-json/wp/v2', '');
         window.open(`${baseUrl}/?p=${this.currentItemId}&preview=true`, '_blank');
+    },
+
+    toggleSettings() {
+        const panel = document.getElementById('ai-studio-settings-panel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        this.addMessage("⚙️ Painel de Configurações SEO aberto. Você pode definir a URL, Título SEO e Meta Description aqui.");
+    },
+
+    async generateSEOMeta() {
+        const title = document.getElementById('ai-studio-new-title').value || "Psicoterapia em Goiânia";
+        const keyword = document.getElementById('ai-studio-keyword').value || "Autismo Adulto";
+        
+        this.addMessage("⚙️ Gerando configurações de SEO otimizadas...");
+
+        const prompt = `Atue como um Especialista em SEO Técnico e Copywriter.
+Sugerir configurações de SEO para o conteúdo: "${title}" com a keyword foco "${keyword}".
+REGRAS:
+1. URL (Slug): Silo geolocalizado, curta e sem acentos (ex: terapia-ansiedade-em-goiania).
+2. Título SEO: Keyword nos primeiros 50 caracteres (total 50-60 carac.).
+3. Meta Description: 150-160 caracteres, persuasiva, com a keyword e um CTA implícito.
+
+RETORNE APENAS UM JSON no formato exato:
+{
+  "slug": "url-aqui",
+  "seoTitle": "Título SEO aqui",
+  "metaDesc": "Descrição aqui"
+}`;
+
+        const response = await gemini.callAPI(prompt);
+        if (response) {
+            try {
+                // Tenta extrair JSON do texto (limpa ```json se a IA colocar)
+                const jsonStr = response.replace(/```json|```/g, '').trim();
+                const meta = JSON.parse(jsonStr);
+                
+                document.getElementById('seo-slug').value = meta.slug;
+                document.getElementById('seo-title-tag').value = meta.seoTitle;
+                document.getElementById('seo-meta-desc').value = meta.metaDesc;
+                
+                this.addMessage("✅ Configurações SEO geradas com sucesso! Verifique os campos no painel de Configurações.");
+            } catch (e) {
+                console.error("Erro ao processar JSON de SEO", e);
+                this.addMessage("❌ Erro ao formatar sugestão de SEO. Tente novamente ou use o título sugerido.");
+            }
+        }
     }
 };
 

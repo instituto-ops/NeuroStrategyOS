@@ -278,8 +278,31 @@
                         </select>
 
                         <div style="margin-left: auto; display: flex; gap: 8px;">
+                            <button class="btn" style="background: #94a3b8; color: white; padding: 6px 12px; font-size: 13px;" onclick="window.chatApp.toggleSettings()">⚙️ Configurações</button>
                             <button id="ai-studio-preview-btn" class="btn" style="background: #6366f1; color: white; display: none; padding: 6px 15px; font-size: 13px;" onclick="window.chatApp.previewDraft()">👁️ Ver no Site</button>
                             <button class="btn" style="background: var(--color-success); color: white; padding: 6px 20px; font-size: 13px; font-weight: 700;" onclick="window.chatApp.saveToWP()">💾 Salvar WP</button>
+                        </div>
+                    </div>
+
+                    <!-- Fila 3: Painel de Configurações SEO (Oculto) -->
+                    <div id="ai-studio-settings-panel" style="display: none; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 5px;">
+                        <h4 style="font-size: 12px; color: #1e293b; margin-bottom: 10px; display: flex; align-items: center; gap: 5px;">🚀 Configurações Meta e URL (SEO Silo)</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="font-size: 11px; font-weight: bold; color: #64748b; display: block; margin-bottom: 4px;">URL (Slug):</label>
+                                <input type="text" id="seo-slug" style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 4px;" placeholder="ex: terapia-tea-em-goiania">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: bold; color: #64748b; display: block; margin-bottom: 4px;">Título SEO (50-60 carac.):</label>
+                                <input type="text" id="seo-title-tag" style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 4px;" placeholder="Título otimizado para o Google">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: bold; color: #64748b; display: block; margin-bottom: 4px;">Meta Description (150-160 carac.):</label>
+                                <textarea id="seo-meta-desc" style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 4px; height: 32px;" placeholder="Resumo persuasivo com CTA..."></textarea>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+                            <button class="btn" style="background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; font-size: 11px; padding: 4px 12px;" onclick="window.chatApp.generateSEOMeta()">✨ Gerar Metas via IA</button>
                         </div>
                     </div>
                 </div>
