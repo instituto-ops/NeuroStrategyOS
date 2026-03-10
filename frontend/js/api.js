@@ -1,8 +1,8 @@
 const wpAPI = {
     // Configurações do WordPress a partir do .env
     url: "https://hipnolawrence.com/wp-json/wp/v2",
-    username: "SEU_USUARIO",
-    appPassword: "SUA_APPLICATION_PASSWORD",
+    username: typeof CONFIG_LOCAL !== 'undefined' ? CONFIG_LOCAL.WP_USERNAME : "SEU_USUARIO",
+    appPassword: typeof CONFIG_LOCAL !== 'undefined' ? CONFIG_LOCAL.WP_APP_PASSWORD : "SUA_APPLICATION_PASSWORD",
 
     getAuthHeader() {
         return "Basic " + btoa(this.username + ":" + this.appPassword);

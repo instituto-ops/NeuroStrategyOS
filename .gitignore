@@ -1,3 +1,4 @@
+config.local.js
 credentials/
 *.json
 *.csv

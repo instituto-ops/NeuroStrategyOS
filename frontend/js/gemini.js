@@ -1,6 +1,6 @@
 const gemini = {
     // API Key lida do .env (Nota: em um ambiente de produção real, use um backend para não vazar a chave no painel do usuário. Como isto é um Painel Administrativo local/fechado, podemos usar diretamente)
-    apiKey: "SUA_GEMINI_API_KEY", 
+    apiKey: typeof CONFIG_LOCAL !== 'undefined' ? CONFIG_LOCAL.GEMINI_API_KEY : "SUA_GEMINI_API_KEY", 
     apiUrl: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
 
     async callAPI(prompt) {
