@@ -21,6 +21,7 @@
                 <button class="nav-btn" data-target="content-overview">Gerenciar Conteúdo</button>
                 <button class="nav-btn" data-target="create-content">Editor de Código Aberto</button>
                 <button class="nav-btn" data-target="ai-studio">AI Studio (Assistente Copilot)</button>
+                <button class="nav-btn" data-target="media-library">🖼️ Biblioteca de Mídia</button>
                 <hr style="border-color: #374151; margin: 5px 0;">
                 <button class="nav-btn" data-target="theme-editor">Config. Astra & WP</button>
                 <button class="nav-btn" data-target="elementor-builder">Elementor Builder</button>
@@ -396,6 +397,67 @@
 
                 </div>
             </section>
+            <!-- Section: Biblioteca de Mídia -->
+            <section id="media-library" class="content-section">
+                <div class="card" style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div>
+                            <h2 style="margin: 0;">🖼️ Biblioteca de Mídia & Estratégia</h2>
+                            <p style="font-size: 14px; color: #64748b;">Upload inteligente com Alt Text otimizado e controle de uso.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="file" id="media-upload-input" style="display: none;" accept="image/*" multiple>
+                            <button class="btn btn-primary" onclick="document.getElementById('media-upload-input').click()">📤 Upload Mídia (IA Auto-Alt)</button>
+                            <button class="btn btn-secondary" onclick="window.mediaLibrary.loadLibrary()">🔄 Recarregar</button>
+                        </div>
+                    </div>
+
+                    <!-- Media Grid / Control -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <!-- Coluna Esquerda: Galeria & Uso -->
+                        <div>
+                            <h3 style="font-size: 15px; margin-top: 0;">🌐 Arquivos no WP (Uso Estratégico)</h3>
+                            <div id="media-list-container" style="max-height: 500px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;">
+                                <!-- Imagens carregadas aparecerão aqui -->
+                                <p style="text-align: center; grid-column: span 3; opacity: 0.5; padding: 50px;">Carregando mídia do WordPress...</p>
+                            </div>
+                        </div>
+
+                        <!-- Coluna Direita: Planejamento & Demanda -->
+                        <div>
+                            <h3 style="font-size: 15px; margin-top: 0;">📅 Planejamento de Demanda</h3>
+                            <div class="card" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                                <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="text-align: left; border-bottom: 1px solid #e2e8f0;">
+                                            <th style="padding: 8px;">Necessidade</th>
+                                            <th style="padding: 8px;">Prompt Sugerido</th>
+                                            <th style="padding: 8px;">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="media-planning-tbody">
+                                        <tr>
+                                            <td style="padding: 8px;">Foto Clínica (Goiânia)</td>
+                                            <td style="padding: 8px;">"Foto realista de consultório de psicologia moderno..."</td>
+                                            <td style="padding: 8px;"><span class="badge" style="background:#fef3c7; color:#b45309;">Pendente</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div style="padding: 10px; border-top: 1px solid #e2e8f0; margin-top: 10px; text-align: right;">
+                                    <button class="btn" style="padding: 3px 10px; font-size: 11px; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc;" onclick="window.mediaLibrary.generateDemand()">✨ Gerar Demanda via IA</button>
+                                </div>
+                            </div>
+
+                            <div class="card mt-2" style="background: #fff; padding: 15px;">
+                                <h4 style="margin-top: 0; font-size: 13px;">🔗 Link Rápido p/ Editor</h4>
+                                <div id="media-item-detail" style="font-size: 12px; min-height: 100px;">
+                                    <p style="opacity: 0.5; font-style: italic;">Selecione uma imagem na galeria para ver o link e o Alt Text Abidos.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -407,5 +469,6 @@
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
     <script src="js/chat.js"></script>
+    <script src="js/media.js"></script>
 </body>
 </html>

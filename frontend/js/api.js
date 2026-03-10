@@ -98,5 +98,36 @@ const wpAPI = {
             console.error(error);
             return null; 
         }
+    },
+
+    async fetchMedia() {
+        try {
+            const response = await fetch(`${this.url}/media?per_page=50&_fields=id,source_url,alt_text,title,media_details`, {
+                headers: { "Authorization": this.getAuthHeader() }
+            });
+            return await response.json();
+        } catch (error) {
+            console.error("Media fetch error:", error);
+            return [];
+        }
+    },
+
+    async uploadMedia(file, altText) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('alt_text', altText);
+        formData.append('title', file.name);
+
+        try {
+            const response = await fetch(`${this.url}/media`, {
+                method: "POST",
+                headers: { "Authorization": this.getAuthHeader() },
+                body: formData
+            });
+            return await response.json();
+        } catch (error) {
+            console.error("Upload error:", error);
+            return null;
+        }
     }
 };
