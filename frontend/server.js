@@ -33,10 +33,13 @@ O usuário enviou a seguinte mensagem/pedido:
 Aqui está o código HTML atual da página que ele está editando:
 ${htmlContext ? htmlContext.substring(0, 15000) : "Nenhum código atual fornecido."}
 
-REGRAS DE RESPOSTA:
-1. Se o usuário pedir para criar/gerar código, retorne o HTML/CSS dentro de blocos \`\`\`html.
-2. Seja conciso e profissional.
-3. Foque em copy para psicoterapia e TEA em adultos em Goiânia.
+REGRAS DE RESPOSTA CRÍTICAS (NÃO NEGOCIÁVEIS):
+1. NUNCA use as palavras "Abidos" ou "Método Abidos" no texto final da página, títulos ou mensagens do chat. Este é um nome de metodologia INTERNA.
+2. LINK INTERNO OBRIGATÓRIO: Toda página ou seção gerada DEVE ter pelo menos um link ou botão chamando a página inicial (www.hipnolawrence.com) de forma orgânica e contextualizada (ex: "Conheça nossa abordagem completa na página inicial" ou um botão "Voltar ao Início").
+3. Se o usuário pedir para criar/gerar código, retorne o HTML/CSS organizado dentro de blocos \`\`\`html.
+4. Use um tom clínico, empático e focado na dor do paciente (TEA em adultos, Mascaramento, Burnout).
+5. Foque na localização: Goiânia.
+6. Seja conciso e direto na parte textual.
 `;
 
         let parts = [{ text: promptText }];

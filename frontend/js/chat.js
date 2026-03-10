@@ -267,11 +267,24 @@ window.chatApp = {
 
     async suggestTitle() {
         const type = document.getElementById('ai-studio-type').value;
-        const prompt = `Sugira um título Abidos (Dor + Autoridade + Goiânia) para um(a) ${type}. Nicho: Psicoterapia/TEA. Curto e Forte. APENAS O TÍTULO.`;
+        const keyword = document.getElementById('ai-studio-keyword').value || "TEA em Adultos";
+        
+        const prompt = `Atue como um Especialista em Copywriting de Conversão (Método Abidos).
+Sua tarefa é sugerir EXATAMENTE UM (1) título de impacto para um(a) ${type === 'pages' ? 'Página' : 'Post'}.
+O foco deve ser a keyword: "${keyword}".
+REGRAS CRÍTICAS:
+1. NÃO use a palavra "Abidos" no título. Ela é apenas a sua metodologia interna.
+2. O título deve focar na DOR do paciente (TEA, Mascaramento, Burnout ou Suspeita).
+3. Deve incluir autoridade (especialista, instituto) ou localização (Goiânia) se couber.
+4. O resultado deve ser direto, curto e persuasivo.
+5. RETORNE APENAS O TEXTO DO TÍTULO, sem comentários, explicações ou listas.`;
+
         const suggestion = await gemini.callAPI(prompt);
         if(suggestion) {
-            document.getElementById('ai-studio-new-title').value = suggestion;
-            this.addMessage(`💡 Sugestão: **"${suggestion}"**`);
+            // Limpa qualquer aspa ou prefixo que a IA possa ter colocado
+            const cleanTitle = suggestion.replace(/^["']|["']$/g, '').trim();
+            document.getElementById('ai-studio-new-title').value = cleanTitle;
+            this.addMessage(`💡 Sugestão de Título: **"${cleanTitle}"**`);
         }
     },
 
@@ -291,18 +304,29 @@ window.chatApp = {
             'check-eat': ['crp', 'crm', 'psicó', 'especialista'].some(k => text.toLowerCase().includes(k)),
             'check-pain': ['tea', 'autismo', 'masking', 'burnout'].some(k => text.toLowerCase().includes(k)),
             'check-cta': html.toLowerCase().includes('href') && (html.toLowerCase().includes('whatsapp') || html.toLowerCase().includes('agende')),
-            'check-keyword': !!document.querySelector('#live-preview h1')
+            'check-keyword': html.toLowerCase().includes('hipnolawrence.com')
+        };
+
+        // Custom label for checklist items to show what they are
+        const labels = {
+            'check-seo': 'SEO Local (Goiânia)',
+            'check-eat': 'Autoridade (E-E-A-T)',
+            'check-pain': 'Foco na Dor (TEA/Adulto)',
+            'check-cta': 'Conversão (WhatsApp)',
+            'check-keyword': 'Link Interno (Home)'
         };
 
         Object.keys(checks).forEach(id => {
             const el = document.getElementById(id);
-            if(checks[id]) {
-                score += 20;
-                el.style.color = '#059669';
-                el.innerText = el.innerText.replace('❌', '✅');
-            } else {
-                el.style.color = '#dc2626';
-                el.innerText = el.innerText.replace('✅', '❌');
+            if(el) {
+                if(checks[id]) {
+                    score += 20;
+                    el.style.color = '#059669';
+                    el.innerHTML = `✅ ${labels[id]}`;
+                } else {
+                    el.style.color = '#dc2626';
+                    el.innerHTML = `❌ ${labels[id]}`;
+                }
             }
         });
 
@@ -313,11 +337,11 @@ window.chatApp = {
     runQuickPrompt(type) {
         const keyword = document.getElementById('ai-studio-keyword').value || "TEA em Adultos";
         const prompts = {
-            hero: `Crie uma dobra Hero (Header) foca em conversão para ${keyword}. Método Abidos: Titulo forte, Subtitulo autoridade e CTA WhatsApp.`,
-            social: `Gere uma seção de depoimentos de pacientes adultos com TEA. Design limpo.`,
-            faq: `Crie um FAQ quebra-objeções para TEA Adulto.`,
-            eeat: `Crie uma seção 'Sobre o Especialista' focada no Dr. Victor Lawrence e E-E-A-T.`,
-            cta: `Crie um botão flutuante de WhatsApp animado.`
+            hero: `Crie uma dobra Hero (Header) focada em conversão para "${keyword}". Regra: Título de impacto focado na dor do paciente, subtexto de autoridade e um botão de CTA para WhatsApp em Goiânia. NUNCA use a palavra Abidos no texto. OBRIGATÓRIO: Inclua um link orgânico para a home em www.hipnolawrence.com.`,
+            social: `Gere uma seção de depoimentos de pacientes adultos com TEA. Use um design limpo e inclua um link sutil para 'Conhecer nossa história' levando a www.hipnolawrence.com. NUNCA cite a palavra Abidos.`,
+            faq: `Crie um FAQ quebra-objeções focado em TEA Adulto e Hipnose. As respostas devem ser acolhedoras e citar a página inicial www.hipnolawrence.com para mais detalhes sobre a clínica.`,
+            eeat: `Crie uma seção 'Sobre o Especialista' focada no Dr. Victor Lawrence, CRM/CRP e especialidade em Autismo Feminino. Inclua um botão 'Voltar para a Home' para www.hipnolawrence.com.`,
+            cta: `Crie um botão flutuante de WhatsApp animado e um link de rodapé contextualizado para www.hipnolawrence.com.`
         };
         const input = document.getElementById('chat-input');
         input.value = prompts[type];
