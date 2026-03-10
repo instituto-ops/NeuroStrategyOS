@@ -114,7 +114,9 @@
                     </div>
                     <div class="card">
                         <h3>Checklist Abidos (SEO & CRO)</h3>
-                        <div id="ai-feedback" style="display: none; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0; margin-bottom: 10px;"></div>
+                        <div id="ai-feedback" style="display: none; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0; margin-bottom: 10px; font-size: 12px; border-left: 4px solid #6366f1; background: #f8fafc;">
+                            <span id="ai-feedback-text"></span>
+                        </div>
                         <ul id="checklist-abidos">
                             <li>⭕ H1 com Keyword + Cidade</li>
                             <li>⭕ CTAs Visíveis</li>
@@ -344,7 +346,6 @@
                 </div>
             </section>
 
-            <!-- Section: Media Library -->
             <section id="media-library" class="content-section">
                 <div class="card" style="margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -356,6 +357,14 @@
                             <button class="btn" style="background: #f59e0b; color: white; font-weight: bold;" onclick="window.mediaLibrary.fixGallerySEO()">🪄 Otimizar Lote (IA)</button>
                             <button class="btn btn-secondary" onclick="window.mediaLibrary.loadLibrary()">🔄 Recarregar</button>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- Feedback Local para Mídia -->
+                <div id="ai-media-feedback" style="display: none; margin-bottom: 20px; padding: 12px; border-radius: 8px; border-left: 4px solid #6366f1; background: #eff6ff; font-size: 13px; color: #1e40af; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 16px;">🪄</span>
+                        <span id="ai-media-feedback-text">IA está analisando sua galeria...</span>
                     </div>
                 </div>
 

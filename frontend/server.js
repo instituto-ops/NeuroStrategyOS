@@ -22,7 +22,7 @@ const upload = multer({ storage: storage });
 
 // Initialize Gemini SDK
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const VISION_MODEL = 'gemini-1.5-flash';
+const VISION_MODEL = 'gemini-2.5-flash';
 
 // Configurações WordPress do .env
 const WP_URL = (process.env.WP_URL || 'https://hipnolawrence.com/').replace(/\/$/, '');
@@ -130,6 +130,7 @@ app.post('/api/wp-upload-media', upload.shared ? upload.single('file') : upload.
 app.post('/api/ai/generate', async (req, res) => {
     try {
         const { prompt, config } = req.body;
+        console.log(`🧠 [AI PROXY] Generate request for prompt prompt: "${prompt.substring(0, 50)}..."`);
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         const result = await model.generateContent({
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -137,7 +138,10 @@ app.post('/api/ai/generate', async (req, res) => {
         });
         const resp = await result.response;
         res.json({ text: resp.text() });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { 
+        console.error("❌ [AI PROXY ERROR]", e.message);
+        res.status(500).json({ error: e.message }); 
+    }
 });
 
 const DOCTORALIA_REVIEWS = `

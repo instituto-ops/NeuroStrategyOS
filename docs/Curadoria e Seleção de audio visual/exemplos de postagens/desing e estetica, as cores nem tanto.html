@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panorama da Psicologia Clínica: TEA e Hipnose</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8fafc;
+    color: #0f172a;
+}
+.chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    height: 350px;
+    max-height: 400px;
+}
+@media (min-width: 768px) {
+    .chart-container {
+        height: 400px;
+    }
+}
+.timeline-item {
+    border-left: 4px solid #14b8a6;
+    padding-left: 1.5rem;
+    padding-bottom: 2rem;
+    position: relative;
+}
+.timeline-item::before {
+    content: '■';
+    color: #14b8a6;
+    position: absolute;
+    left: -0.55rem;
+    top: 0;
+    font-size: 1rem;
+}
+.timeline-item:last-child {
+    border-left-color: transparent;
+}
+.glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+</style>
+</head>
+<body class="antialiased">
+
+<nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+            <div class="flex-shrink-0 flex items-center gap-2">
+                <span class="text-2xl font-black text-indigo-600">■</span>
+                <span class="font-bold text-xl tracking-tight text-slate-800">PsicoData</span>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#cenario" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Cenário Atual</a>
+                <a href="#tea" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">TEA em Adultos</a>
+                <a href="#hipnose" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Hipnose Clínica</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<header class="bg-indigo-600 text-white py-20 px-4">
+    <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-4xl md:text-6xl font-black mb-6 leading-tight">A Nova Fronteira da <span class="text-teal-300">Psicologia Clínica</span></h1>
+        <p class="text-xl md:text-2xl text-indigo-100 mb-8 font-light">Compreendendo o avanço do diagnóstico de TEA na vida adulta e a eficácia baseada em evidências da Hipnose Clínica.</p>
+        <div class="flex justify-center gap-4">
+            <div class="bg-indigo-800/50 rounded-lg p-4 backdrop-blur-sm border border-indigo-500/30">
+                <p class="text-3xl font-bold text-teal-300">+240%</p>
+                <p class="text-sm font-medium text-indigo-100 uppercase tracking-wide">Busca por Diagnóstico</p>
+            </div>
+            <div class="bg-indigo-800/50 rounded-lg p-4 backdrop-blur-sm border border-indigo-500/30">
+                <p class="text-3xl font-bold text-rose-400">78%</p>
+                <p class="text-sm font-medium text-indigo-100 uppercase tracking-wide">Eficácia Terapêutica</p>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+
+    <section id="cenario" class="space-y-8">
+        <div class="max-w-3xl">
+            <h2 class="text-3xl font-bold text-slate-800 mb-4 border-b-4 border-amber-400 pb-2 inline-block">Motivações Clínicas</h2>
+            <p class="text-lg text-slate-600 leading-relaxed">
+                A prática clínica contemporânea observa uma mudança significativa nas demandas dos pacientes. O autoconhecimento, a regulação emocional e a busca por intervenções focadas têm superado as procuras tradicionais. O gráfico abaixo ilustra a composição das principais queixas iniciais nos consultórios.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div class="glass-card shadow-lg rounded-2xl p-6">
+                <div class="chart-container">
+                    <canvas id="motivosChart"></canvas>
+                </div>
+            </div>
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="text-xl font-bold text-teal-600 mb-2">Ansiedade e Burnout</h3>
+                    <p class="text-slate-600">Representam a esmagadora maioria das buscas, impulsionadas pelo ritmo de vida moderno e cobranças profissionais.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="text-xl font-bold text-indigo-600 mb-2">Investigação Neurodivergente</h3>
+                    <p class="text-slate-600">Uma área em franca expansão. Adultos que passaram a vida mascarando sintomas buscam validação e respostas sobre seu funcionamento cognitivo.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tea" class="space-y-8">
+        <div class="max-w-3xl">
+            <h2 class="text-3xl font-bold text-slate-800 mb-4 border-b-4 border-teal-400 pb-2 inline-block">O Despertar do TEA na Vida Adulta</h2>
+            <p class="text-lg text-slate-600 leading-relaxed">
+                Historicamente, o Transtorno do Espectro Autista foi associado exclusivamente à infância. Hoje, vivemos uma revolução diagnóstica. Muitos adultos, especialmente mulheres, estão sendo diagnosticados tardiamente, revelando uma vida de camuflagem social ("masking") e exaustão mental.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card shadow-lg rounded-2xl p-6 md:col-span-2">
+                <h3 class="text-center font-bold text-slate-700 mb-4">Crescimento de Diagnósticos Tardios (Projeção Anual)</h3>
+                <div class="chart-container w-full max-w-4xl">
+                    <canvas id="teaTrendChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="glass-card shadow-lg rounded-2xl p-6">
+                <h3 class="font-bold text-xl text-slate-800 mb-6">A Jornada do Diagnóstico Tardio</h3>
+                <div class="mt-4">
+                    <div class="timeline-item">
+                        <h4 class="font-bold text-teal-600">A Sensação de Deslocamento</h4>
+                        <p class="text-sm text-slate-600 mt-1">Sentimento crônico de ser "diferente", dificuldades sociais persistentes e sobrecarga sensorial não explicada ao longo da vida.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4 class="font-bold text-amber-500">O Gatilho (Burnout Autista)</h4>
+                        <p class="text-sm text-slate-600 mt-1">Eventos de vida estressantes ou a exaustão de manter a "máscara social" levam a uma crise aguda, frequentemente confundida com depressão resistente.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4 class="font-bold text-indigo-500">A Avaliação Neuropsicológica</h4>
+                        <p class="text-sm text-slate-600 mt-1">Busca por profissionais especializados. Realização de testes estruturados, anamnese profunda e análise do histórico de desenvolvimento.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4 class="font-bold text-rose-500">Acomodação e Identidade</h4>
+                        <p class="text-sm text-slate-600 mt-1">Reconstrução da autoimagem, luto pelos anos sem suporte, e implementação de acomodações sensoriais e limites claros.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card shadow-lg rounded-2xl p-6">
+                <h3 class="font-bold text-slate-700 mb-4 text-center">Comorbidades Mais Comuns em Adultos com TEA</h3>
+                <div class="chart-container">
+                    <canvas id="comorbidadesChart"></canvas>
+                </div>
+                <p class="text-sm text-slate-500 mt-4 text-center">A sobreposição de diagnósticos frequentemente atrasa a identificação do autismo estrutural subjacente.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="hipnose" class="space-y-8">
+        <div class="max-w-3xl">
+            <h2 class="text-3xl font-bold text-slate-800 mb-4 border-b-4 border-rose-400 pb-2 inline-block">Hipnose Clínica: Ciência e Eficácia</h2>
+            <p class="text-lg text-slate-600 leading-relaxed">
+                Distante dos mitos do entretenimento, a hipnose clínica é um estado de atenção concentrada e receptividade aumentada. É uma ferramenta coadjuvante poderosa em psicoterapia, alterando a percepção da dor, reestruturando fobias e facilitando o acesso a recursos cognitivos internos.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card shadow-lg rounded-2xl p-6">
+                <h3 class="text-center font-bold text-slate-700 mb-4">Taxa de Eficácia Percebida por Transtorno</h3>
+                <div class="chart-container">
+                    <canvas id="hipnoseEficaciaChart"></canvas>
+                </div>
+            </div>
+
+            <div class="flex flex-col justify-center space-y-6">
+                <div class="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-xl shadow-sm border border-indigo-100">
+                    <div class="flex items-center gap-4 mb-2">
+                        <span class="text-2xl font-black text-rose-500">x</span>
+                        <h3 class="text-xl font-bold text-slate-800">O que NÃO é</h3>
+                    </div>
+                    <ul class="space-y-2 text-slate-600 ml-8 list-disc">
+                        <li>Perda de consciência ou controle.</li>
+                        <li>Controle mental por parte do terapeuta.</li>
+                        <li>Soro da verdade ou revelação de segredos.</li>
+                        <li>Magia ou misticismo.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gradient-to-br from-teal-50 to-white p-6 rounded-xl shadow-sm border border-teal-100">
+                    <div class="flex items-center gap-4 mb-2">
+                        <span class="text-2xl font-black text-teal-500">✓</span>
+                        <h3 class="text-xl font-bold text-slate-800">O que É</h3>
+                    </div>
+                    <ul class="space-y-2 text-slate-600 ml-8 list-disc">
+                        <li>Foco intenso e relaxamento periférico.</li>
+                        <li>Colaboração ativa entre paciente e terapeuta.</li>
+                        <li>Estado natural do cérebro (ondas alfa/theta).</li>
+                        <li>Ferramenta de modulação neurológica e emocional.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer class="bg-slate-900 text-slate-400 py-8 mt-12 text-center">
+    <p>&copy; 2026 PsicoData Infographics. Visualização de dados para saúde mental.</p>
+</footer>
+
+<script>
+function wrapLabel(label) {
+    if (label.length <= 16) return label;
+    const words = label.split(' ');
+    const lines = [];
+    let currentLine = '';
+    words.forEach(word => {
+        if ((currentLine + word).length > 16) {
+            if (currentLine) lines.push(currentLine.trim());
+            currentLine = word + ' ';
+        } else {
+            currentLine += word + ' ';
+        }
+    });
+    if (currentLine) lines.push(currentLine.trim());
+    return lines;
+}
+
+function processLabels(labelsArray) {
+    return labelsArray.map(label => wrapLabel(label));
+}
+
+const commonTooltipConfig = {
+    callbacks: {
+        title: function(tooltipItems) {
+            const item = tooltipItems[0];
+            let label = item.chart.data.labels[item.dataIndex];
+            if (Array.isArray(label)) {
+              return label.join(' ');
+            } else {
+              return label;
+            }
+        }
+    }
+};
+
+const rawMotivosLabels = ['Ansiedade Generalizada e Estresse', 'Avaliação de Neurodivergência (TEA/TDAH)', 'Sintomas Depressivos e Luto', 'Problemas de Relacionamento', 'Transição de Carreira'];
+const motivosData = {
+    labels: processLabels(rawMotivosLabels),
+    datasets: [{
+        data: [45, 25, 15, 10, 5],
+        backgroundColor: ['#14b8a6', '#6366f1', '#f43f5e', '#f59e0b', '#8b5cf6'],
+        borderWidth: 0
+    }]
+};
+new Chart(document.getElementById('motivosChart'), {
+    type: 'doughnut',
+    data: motivosData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'right', labels: { font: { family: 'Inter' } } },
+            tooltip: commonTooltipConfig
+        },
+        cutout: '65%'
+    }
+});
+
+const rawTeaLabels = ['Ano Base 2018', 'Registros 2019', 'Registros 2020', 'Registros 2021', 'Registros 2022', 'Registros 2023'];
+const teaTrendData = {
+    labels: processLabels(rawTeaLabels),
+    datasets: [{
+        label: 'Índice Relativo de Diagnósticos em Adultos',
+        data: [100, 115, 140, 190, 260, 340],
+        borderColor: '#14b8a6',
+        backgroundColor: 'rgba(20, 184, 166, 0.2)',
+        borderWidth: 3,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#14b8a6',
+        pointRadius: 5,
+        fill: true,
+        tension: 0.4
+    }]
+};
+new Chart(document.getElementById('teaTrendChart'), {
+    type: 'line',
+    data: teaTrendData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: commonTooltipConfig
+        },
+        scales: {
+            y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+const rawComorbLabels = ['Transtorno de Ansiedade Social', 'Episódios Depressivos Maiores', 'TDAH (Transtorno de Déficit de Atenção)', 'Transtorno Obsessivo Compulsivo'];
+const comorbData = {
+    labels: processLabels(rawComorbLabels),
+    datasets: [{
+        label: 'Prevalência (%)',
+        data: [65, 55, 40, 25],
+        backgroundColor: '#6366f1',
+        borderRadius: 6
+    }]
+};
+new Chart(document.getElementById('comorbidadesChart'), {
+    type: 'bar',
+    data: comorbData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+            legend: { display: false },
+            tooltip: commonTooltipConfig
+        },
+        scales: {
+            x: { max: 100, grid: { color: '#f1f5f9' } },
+            y: { grid: { display: false } }
+        }
+    }
+});
+
+const rawHipnoseLabels = ['Manejo da Dor Crônica', 'Controle de Ansiedade', 'Fobias Específicas', 'Cessação do Tabagismo', 'Distúrbios do Sono'];
+const hipnoseData = {
+    labels: processLabels(rawHipnoseLabels),
+    datasets: [{
+        label: 'Taxa de Resposta Positiva (%)',
+        data: [82, 75, 88, 65, 70],
+        backgroundColor: 'rgba(244, 63, 94, 0.6)',
+        borderColor: '#f43f5e',
+        borderWidth: 2,
+        pointBackgroundColor: '#f43f5e'
+    }]
+};
+new Chart(document.getElementById('hipnoseEficaciaChart'), {
+    type: 'radar',
+    data: hipnoseData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: commonTooltipConfig
+        },
+        scales: {
+            r: {
+                angleLines: { color: '#e2e8f0' },
+                grid: { color: '#e2e8f0' },
+                pointLabels: { font: { family: 'Inter', size: 12 }, color: '#475569' },
+                suggestedMin: 0,
+                suggestedMax: 100
+            }
+        }
+    }
+});
+</script>
+</body>
+</html>

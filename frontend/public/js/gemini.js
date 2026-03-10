@@ -86,12 +86,22 @@ REGRAS: Retorne APENAS o HTML cru, sem markdown.`;
 };
 
 function showFeedback(text, colorClass) {
-    const feedbackBox = document.getElementById("ai-feedback");
-    const feedbackText = document.getElementById("ai-feedback-text");
+    // Tenta primeiro o feedback específico de mídia se estiver na seção de mídia
+    const isMediaSection = document.getElementById('media-library').classList.contains('active');
+    const mediaBox = document.getElementById("ai-media-feedback");
+    const mediaText = document.getElementById("ai-media-feedback-text");
+
+    const feedbackBox = isMediaSection && mediaBox ? mediaBox : document.getElementById("ai-feedback");
+    const feedbackText = isMediaSection && mediaText ? mediaText : document.getElementById("ai-feedback-text");
     
     if(!feedbackBox) return;
 
     feedbackBox.style.display = "block";
     feedbackBox.style.borderLeftColor = colorClass === "red" ? "#ef4444" : (colorClass === "green" ? "#10b981" : "#6366f1");
-    feedbackText.innerHTML = text;
+    
+    // Fallback se o elemento de texto específico não existir
+    const targetText = feedbackText || feedbackBox;
+    if (targetText) {
+        targetText.innerHTML = text;
+    }
 }

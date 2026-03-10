@@ -165,12 +165,13 @@ const mediaLibrary = {
             const prompt = `Atue como Especialista SEO para Psicólogos (Método Abidos). Analise esta imagem URL (${url}). Crie um Título curto (max 40) e um Alt Text rico (max 100) focando em TEA, Psicologia, Goiânia ou Victor Lawrence. Retorne APENAS um JSON válido no formato: {"title": "Titulo", "alt_text": "Alt text"}. Não use blocos \`\`\`.`;
             
             const responseTxt = await gemini.callAPI(prompt);
+            if (!responseTxt) throw new Error("A IA não retornou uma resposta válida.");
             
             // Tenta parsear o JSON retornado pela LLM
             const cleanJson = responseTxt.replace(/```json/g, '').replace(/```/g, '').trim();
             const newSeo = JSON.parse(cleanJson);
 
-            if(newSeo.title && newSeo.alt_text) {
+            if(newSeo && newSeo.title && newSeo.alt_text) {
                 const result = await wpAPI.updateMediaSEO(id, newSeo.title, newSeo.alt_text);
                 
                 if(result) {
