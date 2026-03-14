@@ -156,6 +156,15 @@ const DOCTORALIA_REVIEWS = `
 // 3. TABELA DE REVISÃO E PIPELINE DE AGENTES (HUMAN-IN-THE-LOOP & LANGGRAPH)
 // ==============================================================================
 
+// Estado do Perfil de Voz (Clone de Voz / Reverse Prompting)
+let voiceProfile = {
+    learned_style: "Direto, clínico, porém empático. Foco em autoridade técnica e resultados práticos (Goiânia).",
+    vocabulary: ["Goiânia", "Neuropsicologia", "TEA", "Clínica", "Avaliação"],
+    prohibited_terms: ["cura milagrosa", "garantido", "mudar sua vida para sempre"],
+    rhythm: "Sentenças curtas e estruturadas por bullet points.",
+    last_updated: new Date().toISOString()
+};
+
 let draftsDb = [
     {
         "draft_id": "RASC-2026-084",
@@ -205,9 +214,21 @@ app.post('/api/agents/generate-pipeline', async (req, res) => {
 
         console.log(`🤖 [LANGGRAPH PIPELINE] Iniciando fluxo para: ${topic}`);
 
-        // NÓ 1: Agente Gerador (RAG & Pesquisa)
-        console.log(`📡 [NÓ 1] Agente de Pesquisa...`);
-        const pGerador = `Atue como Especialista Clínico. Escreva um rascunho de landing page sobre "${topic}" focado em Goiânia. Use tags HTML simples (h1, h2, p).`;
+        // NÓ 1: Agente Gerador (RAG & Pesquisa + Personalidade Aprendida)
+        console.log(`📡 [NÓ 1] Agente de Pesquisa (Voz Dr. Victor)...`);
+        const pGerador = `
+        VOCÊ É O CLONE DE VOZ DO DR. VICTOR LAWRENCE.
+        
+        PERFIL DE VOZ APRENDIDO:
+        - Estilo: ${voiceProfile.learned_style}
+        - Ritmo: ${voiceProfile.rhythm}
+        - Vocabulário Favorecido: ${voiceProfile.vocabulary.join(', ')}
+        - Termos Proibidos: ${voiceProfile.prohibited_terms.join(', ')}
+        
+        TAREFA: Escreva um rascunho de landing page sobre "${topic}" focado em Goiânia. 
+        Mantenha a autoridade clínica, evite clichês de marketing robótico.
+        Use tags HTML simples (h1, h2, p).
+        `;
         const resGerador = await model.generateContent(pGerador);
         const rascunhoPrimario = resGerador.response.text();
 
@@ -264,32 +285,232 @@ app.post('/api/agents/audit', async (req, res) => {
         console.log(`🔍 [AGENTE ABIDOS] Auditing draft...`);
         
         const prompt = `
-        Você é o "Agente Abidos", um Arquiteto de Sistemas e Auditor Sênior Implacável especializado no Método Abidos para clínicas de psicologia em Goiânia.
-        Sua função exclusiva é dissecar o rascunho abaixo e garantir que ele segue 100% as diretrizes de SEO, hierarquia semântica e conformidade ética (CFP).
+        Você é o "Agente Abidos", um Arquiteto de Sistemas e Auditor Sênior Implacável.
         
-        REGRAS DE AUDITORIA:
-        1. Regra do H1 Único: Deve haver apenas um título principal (H1) que contém a Palavra-chave exata + Promessa + Localização (Goiânia).
-        2. Mapeamento de H2 e H3: Cheque se H2 separa os "Silos" e H3 detalha serviços.
-        3. Validação de Copywriting e Conformidade Ética (CFP): Sem depoimentos que quebrem sigilo ou promessas mercadológicas de "cura definitiva. Use Autoridade Acadêmica.
-        4. Foco UX/Mobile: CTAs devem incentivar o clique (ex: "Toque aqui para falar comigo").
+        SUA MISSÃO: Realizar uma auditoria de nível clínico no rascunho abaixo.
+        
+        MÉTODO DE AUDITORIA (FACTSCORE):
+        1. Decomposição Atômica: Quebre o texto em afirmações individuais.
+        2. Validação Factual: Verifique se há "alucinações" ou promessas de cura (Proibido pelo CFP).
+        3. MED-F1 (Extração de Entidades): Liste termos técnicos (ex: TEA, TDAH, ISRS) e verifique se o contexto está correto.
+        4. Hierarquia Abidos: Cheque se há H1 único com palavra-chave e localização (Goiânia).
         
         Rascunho a auditar:
         """${content}"""
         
-        MÉTODO DE RESPOSTA (Gere um pequeno relatório visual):
-        - Status: (Aprovado / Rejeitado)
-        - Nota Abidos: (0 a 100)
-        - Análises e Falhas Encontradas: (lista curta em bullet points)
-        - Instrução de Correção para a IA Geradora: (Se houver falha)
+        RETORNE UM RELATÓRIO FORMATADO EM HTML (usando tags span, strong, br) COM:
+        - ✅ PONTOS POSITIVOS
+        - ⚠️ ALERTAS DE RISCO (CFP/LGPD)
+        - 📊 PONTUAÇÃO FACTSCORE (0-100%)
+        - 📝 SUGESTÕES DE REESCRITA
         `;
 
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         const result = await model.generateContent(prompt);
         const resp = await result.response;
         
-        res.json({ report: resp.text() });
+        res.json({ success: true, report: resp.text() });
     } catch (e) {
         console.error("❌ [AGENTE ABIDOS ERROR]", e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// NÓ DE APRENDIZADO DE ESTILO: Reverse Prompting
+app.post('/api/agents/learn-style', async (req, res) => {
+    try {
+        const { texts } = req.body;
+        if (!texts || !Array.isArray(texts)) throw new Error("Textos para análise não fornecidos.");
+
+        console.log(`🧠 [ESTILO] Iniciando Reverse Prompting de ${texts.length} textos...`);
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+
+        const prompt = `
+        Aja como um Linguista Forense e Especialista em Copywriting de Conversão.
+        Analise os textos abaixo (autênticos do autor Victor Lawrence) e extraia o DNA da escrita.
+        
+        Textos:
+        """${texts.join('\n\n')}"""
+        
+        Sua tarefa é codificar esse estilo em um JSON com os campos:
+        - rhythm: (Descrição da cadência das frases)
+        - vocabulary: (Lista de palavras recorrentes e jargões favoritos)
+        - learned_style: (Resumo técnico da "voz" do autor)
+        - prohibited_terms: (Palavras que ele parece evitar ou que seriam artificiais para ele)
+        
+        Retorne APENAS o JSON.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        const extractedProfile = JSON.parse(jsonStr);
+
+        voiceProfile = {
+            ...extractedProfile,
+            last_updated: new Date().toISOString()
+        };
+
+        res.json({ success: true, profile: voiceProfile });
+    } catch (e) {
+        console.error("❌ [LEARN STYLE ERROR]", e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// NÓ DE AFINAMENTO: Text Diffs (Learn from user edits)
+app.post('/api/agents/analyze-diff', async (req, res) => {
+    try {
+        const { original, edited } = req.body;
+
+        console.log(`📝 [DIFF] Analisando edições do usuário para ajuste fino de tom...`);
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+
+        const prompt = `
+        Analise a diferença entre o rascunho da IA e a versão editada pelo Dr. Victor.
+        Rascunho IA: """${original}"""
+        Versão Final: """${edited}"""
+        
+        O que mudou no tom? O que ele removeu? O que ele adicionou?
+        Atualize o perfil de voz atual: ${JSON.stringify(voiceProfile)}
+        
+        Retorne o novo perfil de voz COMPLETO em JSON.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        voiceProfile = JSON.parse(jsonStr);
+        voiceProfile.last_updated = new Date().toISOString();
+
+        res.json({ success: true, profile: voiceProfile });
+    } catch (e) {
+        console.error("❌ [DIFF ANALYZE ERROR]", e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ==============================================================================
+// 4. MOTOR SEMÂNTICO (SEO PROGRAMÁTICO & SILOS)
+// ==============================================================================
+
+app.get('/api/seo/analyze-silos', async (req, res) => {
+    try {
+        console.log(`🧭 [SEO] Iniciando Auditoria de Silos e Interlinking...`);
+        
+        // 1. Puxa todas as páginas do WP
+        const pages = await callWP('GET', '/pages', null, { per_page: 100 });
+        if(!pages.data) throw new Error("Não foi possível carregar as páginas do WP.");
+
+        const pageMap = pages.data.map(p => ({
+            id: p.id,
+            title: p.title.rendered,
+            link: p.link,
+            content: p.content.rendered.substring(0, 500) // Amostra para IA
+        }));
+
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        const prompt = `
+        Aja como um Arquiteto de SEO Programático.
+        Analise a lista de páginas da clínica abaixo e construa um Mapa de Interlinking (Silos).
+        
+        Objetivo: Identificar quais páginas (Spokes) devem linkar para qual Hub principal e encontrar páginas "órfãs".
+        
+        Páginas: ${JSON.stringify(pageMap)}
+        
+        Retorne um JSON com:
+        - silos: [{ hub: "Título Hub", spokes: ["Título 1", "Título 2"] }]
+        - suggestions: [{ from_id: id, to_id: id, anchor_text: "Texto do Link", reason: "Por que?" }]
+        
+        Retorne APENAS o JSON.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        const siloData = JSON.parse(jsonStr);
+
+        res.json(siloData);
+    } catch (e) {
+        console.error("❌ [SEO SILO ERROR]", e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ==============================================================================
+// 5. MONITORAMENTO PROFILÁTICO (LIGHTHOUSE) E REPUTACIONAL
+// ==============================================================================
+
+app.get('/api/health/lighthouse', async (req, res) => {
+    try {
+        console.log(`🔦 [LIGHTHOUSE] Iniciando Auditoria de Performance Profilática...`);
+        
+        // Simulação de Auditoria (Em um sistema real, chamaria a Lighthouse CLI)
+        const metrics = {
+            performance: Math.floor(Math.random() * (100 - 85) + 85),
+            accessibility: 98,
+            best_practices: 100,
+            seo: 100,
+            core_web_vitals: {
+                lcp: "1.2s",
+                fid: "14ms",
+                cls: "0.02"
+            },
+            timestamp: new Date().toISOString()
+        };
+
+        res.json(metrics);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/reputation/analyze', async (req, res) => {
+    try {
+        const { platform, content } = req.body;
+        console.log(`🛡️ [REPUTAÇÃO] Analisando impacto de feedback em ${platform}...`);
+
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        const prompt = `
+        Analise o seguinte feedback de paciente recebido na plataforma ${platform}:
+        """${content}"""
+        
+        Sua tarefa:
+        1. Classificar Sentimento (Positivo / Neutro / Alerta Crítico).
+        2. Identificar Riscos Éticos (Baseado nas normas do CFP).
+        3. Gerar "Resposta Sugerida" (Empática, respeitando sigilo, sem promessas).
+        4. Sugerir Melhoria Interna na Clínica.
+        
+        Retorne em JSON.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        res.json(JSON.parse(jsonStr));
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ==============================================================================
+// 6. MARKETING LAB (GOOGLE ADS STAGs & PERFORMANCE)
+// ==============================================================================
+
+app.get('/api/marketing/audit', async (req, res) => {
+    try {
+        console.log(`📈 [MARKETING] Analisando performance de campanhas Google Ads...`);
+        
+        // Simulação de dados de API Google Ads
+        const adsData = {
+            budget_utilization: "92%",
+            top_performing_stag: "TEA Adulto Goiânia",
+            critica_loss: "8% (Perda por Rank em 'Depressão')",
+            recommendations: [
+                { type: "STAG", theme: "Avaliação TDAH", reason: "Alta demanda local em Goiânia" },
+                { type: "BID", action: "Aumentar 5%", reason: "CTR acima da média em TEA" }
+            ],
+            insights: "Sua campanha de TEA Adulto é o Core da clínica hoje. Sugiro expandir para 'Diagnóstico Tardio' como novo STAG."
+        };
+
+        res.json(adsData);
+    } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });

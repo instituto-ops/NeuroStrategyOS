@@ -100,8 +100,27 @@ window.abidosReview = {
     },
 
     async approveDraft() {
+        const draft = this.drafts.find(d => d.draft_id === this.currentDraftId);
+        const editedContent = document.getElementById('draft-modal-content').value;
+
+        // [CLONE DE VOZ] Se houve edição, envia para o Nó de Aprendizado (Text Diff)
+        if (draft && draft.conteudo_gerado !== editedContent) {
+            console.log("🧬 Ajustando perfil de voz baseado nas suas edições...");
+            fetch('/api/agents/analyze-diff', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    original: draft.conteudo_gerado, 
+                    edited: editedContent 
+                })
+            }).then(r => r.json()).then(data => {
+                if(data.success) console.log("✅ DNA de escrita atualizado com as novas preferências.");
+            }).catch(e => console.error("Erro ao treinar voz:", e));
+        }
+
         alert("Publicação Final: Agente de Integração ativado! O WordPress irá receber a carga final formatada via REST API.");
         document.getElementById('draft-modal').style.display = 'none';
+        this.loadDrafts(); // Atualiza a lista
     },
 
     async rejectDraft() {
@@ -136,6 +155,27 @@ window.abidosReview = {
             console.error("Erro no pipeline", e);
             alert("❌ Erro ao orquestrar a IA: " + e.message);
             this.loadDrafts(); // Recarrega para limpar o aviso
+        }
+    },
+
+    async trainVoice() {
+        const texts = prompt("Cole aqui alguns parágrafos de textos que VOCÊ escreveu (posts antigos, artigos, etc) para a IA aprender seu estilo:");
+        if(!texts) return;
+
+        alert("🧠 Analisando seu DNA de escrita... Isso criará o seu 'Reverse Prompting' personalizado.");
+        
+        try {
+            const response = await fetch('/api/agents/learn-style', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ texts: [texts] })
+            });
+            const result = await response.json();
+            if(result.success) {
+                alert(`✅ Perfil de Voz Atualizado!\n\nEstilo aprendido: ${result.profile.learned_style}\nRitmo: ${result.profile.rhythm}`);
+            }
+        } catch (e) {
+            alert("Erro ao treinar voz: " + e.message);
         }
     }
 };

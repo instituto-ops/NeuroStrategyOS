@@ -34,6 +34,21 @@ const app = {
                 if (targetId === 'abidos-review') {
                     if(window.abidosReview) window.abidosReview.loadDrafts();
                 }
+
+                // [NOVO] Auto-load SEO Silos when entering
+                if (targetId === 'seo-silos') {
+                    if(window.seoEngine) window.seoEngine.analyze();
+                }
+
+                // [NOVO] Auto-load Health & Reputation when entering
+                if (targetId === 'health-reputation') {
+                    if(window.healthSystem) window.healthSystem.checkLighthouse();
+                }
+
+                // [NOVO] Auto-load Marketing Lab when entering
+                if (targetId === 'marketing-lab') {
+                    if(window.marketingLab) window.marketingLab.loadAnalytics();
+                }
             });
         });
 

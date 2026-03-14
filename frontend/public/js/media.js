@@ -128,9 +128,14 @@ const mediaLibrary = {
             { id: 'icon-3', source_url: '/img/icon-3.svg', title: { rendered: '🛡️ Proteção/Segurança' }, alt_text: 'Ícone Escudo' },
             { id: 'icon-4', source_url: '/img/icon-4.svg', title: { rendered: '📊 Dados/Análise' }, alt_text: 'Ícone Gráfico' },
             { id: 'icon-5', source_url: '/img/icon-5.svg', title: { rendered: '🤝 Empatia/Apoio' }, alt_text: 'Ícone Mãos' },
-            { id: 'icon-9', source_url: '/img/icon-9.svg', title: { rendered: '🚀 Evolução/Foco' }, alt_text: 'Ícone Foguete' },
+            { id: 'icon-6', source_url: '/img/icon-6.svg', title: { rendered: '⏰ Tempo/Pontualidade' }, alt_text: 'Ícone Relógio' },
             { id: 'icon-7', source_url: '/img/icon-7.svg', title: { rendered: '💡 Insight/Ideia' }, alt_text: 'Ícone Lâmpada' },
             { id: 'icon-8', source_url: '/img/icon-8.svg', title: { rendered: '✅ Conclusão/OK' }, alt_text: 'Ícone Check' },
+            { id: 'icon-9', source_url: '/img/icon-9.svg', title: { rendered: '🚀 Evolução/Foco' }, alt_text: 'Ícone Foguete' },
+            { id: 'icon-10', source_url: '/img/icon-10.svg', title: { rendered: '📍 Localização/Goiânia' }, alt_text: 'Ícone Pin' },
+            { id: 'icon-11', source_url: '/img/icon-11.svg', title: { rendered: '📞 Contato/WhatsApp' }, alt_text: 'Ícone Telefone' },
+            { id: 'icon-12', source_url: '/img/icon-12.svg', title: { rendered: '🏢 Clínica/Ambiente' }, alt_text: 'Ícone Prédio' },
+            { id: 'icon-13', source_url: '/img/icon-13.svg', title: { rendered: '🔍 Pesquisa Clínica' }, alt_text: 'Ícone Lupa' },
             { id: 'icon-14', source_url: '/img/icon-14.svg', title: { rendered: '🧘 Equilíbrio/Paz' }, alt_text: 'Ícone Zen' },
             { id: 'icon-15', source_url: '/img/icon-15.svg', title: { rendered: '🏆 Sucesso' }, alt_text: 'Ícone Troféu' }
         ];

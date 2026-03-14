@@ -6,6 +6,7 @@
     <title>NeuroEngine - Mission Control (Psysi Dashboard)</title>
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="icon" href="https://hipnolawrence.com/wp-content/uploads/2024/02/favicon.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -23,6 +24,9 @@
                 <button class="nav-btn" data-target="create-content">💻 <span>Editor Aberto</span></button>
                 <button class="nav-btn" data-target="ai-studio">🤖 <span>AI Studio (Copilot)</span></button>
                 <button class="nav-btn" data-target="abidos-review">📑 <span>Tabela de Revisão</span></button>
+                <button class="nav-btn" data-target="seo-silos">🧭 <span>SEO Silos</span></button>
+                <button class="nav-btn" data-target="health-reputation">🛡️ <span>Saúde & Ética</span></button>
+                <button class="nav-btn" data-target="marketing-lab">📈 <span>Marketing Lab</span></button>
                 <button class="nav-btn" data-target="media-library">🖼️ <span>Biblioteca Mídia</span></button>
                 <hr style="border-color: #374151; margin: 5px 0;">
                 <button class="nav-btn" data-target="theme-editor">⚙️ <span>Config. Astra & WP</span></button>
@@ -100,7 +104,10 @@
                                 Aprove ou rejeite os rascunhos elaborados pelos Agentes. Textos filtrados pelo <strong>Método Abidos</strong>.
                             </p>
                         </div>
-                        <button class="btn btn-primary" onclick="window.abidosReview.requestNewDraft()">🚀 Orquestrar Novo Rascunho</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="window.abidosReview.trainVoice()">🧬 Treinar Minha Voz</button>
+                            <button class="btn btn-primary" onclick="window.abidosReview.requestNewDraft()">🚀 Orquestrar Novo Rascunho</button>
+                        </div>
                     </div>
 
                     <div class="table-container">
@@ -510,6 +517,94 @@
                 </div>
             </section>
 
+            <!-- Section: Marketing Lab (Ads & STAGs) -->
+            <section id="marketing-lab" class="content-section">
+                <div class="card">
+                    <h2>📈 Marketing Lab: Otimização de Performance (STAGs)</h2>
+                    <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
+                        Gestão de tráfego pago baseada em agrupamentos semânticos de alta conversão.
+                    </p>
+                    
+                    <div class="grid">
+                        <div class="card" style="background: #eff6ff;">
+                            <h3>💰 Status de Investimento</h3>
+                            <div id="ads-performance-summary">
+                                <p style="font-size: 14px; color: #64748b;">Conectando ao Google Ads...</p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3>🚀 Sugestões de Expansão (STAGs)</h3>
+                            <div id="ads-stag-suggestions">
+                                <p style="font-size: 14px; color: #64748b;">Aguardando dados de leilão...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Saúde & Ética (Profiling & Reputation) -->
+            <section id="health-reputation" class="content-section">
+                <div class="card">
+                    <h2>🛡️ Saúde Técnica & Monitoramento Reputacional</h2>
+                    <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
+                        Auditoria de Core Web Vitals e Gestão de Imagem baseada em diretrizes CFP.
+                    </p>
+                    
+                    <div class="grid">
+                        <!-- Card: Lighthouse -->
+                        <div class="card" style="border-top: 4px solid #10b981;">
+                            <h3>🔦 Auditoria Profilática (Lighthouse)</h3>
+                            <div id="lighthouse-metrics" style="padding-top: 10px;">
+                                <button class="btn btn-secondary" onclick="window.healthSystem.checkLighthouse()">▶ Executar Escaneamento</button>
+                            </div>
+                        </div>
+
+                        <!-- Card: Reputation -->
+                        <div class="card" style="border-top: 4px solid #6366f1;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <h3>💬 Gestão de Reputação (Sentiment)</h3>
+                                <button class="btn btn-secondary" style="font-size: 10px; padding: 4px 8px;" onclick="window.healthSystem.simulateScraping()">🌐 Scrape Doctoralia/Insta</button>
+                            </div>
+                            <textarea id="reputation-input" placeholder="Cole aqui o comentário/review do Doctoralia ou Instagram..." style="width: 100%; height: 80px; margin-bottom: 10px;"></textarea>
+                            <button class="btn btn-primary" style="width: 100%;" onclick="window.healthSystem.analyzeReputation()">🛡️ Analisar Risco e Gerar Resposta</button>
+                            <div id="reputation-result" style="margin-top: 15px; font-size: 13px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: SEO Silos (Programático) -->
+            <section id="seo-silos" class="content-section">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>🧭 Motor Semântico: Arquitetura Silos (Hub-and-Spoke)</h2>
+                        <button class="btn btn-primary" onclick="window.seoEngine.analyze()">🔄 Analisar Estrutura de Links</button>
+                    </div>
+                    
+                    <div class="grid">
+                        <div class="card" style="background: #f8fafc;">
+                            <h3>📂 Agrupamentos Críticos (Silos)</h3>
+                            <div id="silo-groups-container">
+                                <p style="font-size: 14px; color: #64748b;">Nenhum mapeamento realizado.</p>
+                            </div>
+                        </div>
+                        <div class="card" style="background: #f8fafc;">
+                            <h3>🔗 Sugestões de Interlinking</h3>
+                            <div id="silo-suggestions-container">
+                                <p style="font-size: 14px; color: #64748b;">Aguardando auditoria de páginas órfãs...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Novo: Visualizador de Grafo -->
+                    <div class="card" style="margin-top: 20px; height: 500px; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
+                        <h3>🕸️ Mapa Semântico Interativo (Grafos)</h3>
+                        <div id="cy-map" style="width: 100%; height: 450px;"></div>
+                        <div style="position: absolute; bottom: 10px; right: 10px; font-size: 10px; color: #64748b;">IA Graph Generator v1.0</div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Section: Config. Astra & WP -->
             <section id="theme-editor" class="content-section">
                 <div class="card">
@@ -555,6 +650,9 @@
     <script src="js/chat.js"></script>
     <script src="js/media.js"></script>
     <script src="js/abidos-review.js"></script>
+    <script src="js/seo-engine.js"></script>
+    <script src="js/health-system.js"></script>
+    <script src="js/marketing-lab.js"></script>
 
 </body>
 </html>
