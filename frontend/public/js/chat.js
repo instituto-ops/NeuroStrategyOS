@@ -789,6 +789,14 @@ window.chatApp = {
             const formData = new FormData();
             formData.append('theme', theme);
             
+            // Clima Clínico Selecionado
+            const moodSelector = document.getElementById('global-mood-selector');
+            if (moodSelector) formData.append('moodId', moodSelector.value);
+
+            // Tipo de Conteúdo (Silo/Page ou Spoke/Post)
+            const typeSelector = document.getElementById('ai-studio-type');
+            if (typeSelector) formData.append('type', typeSelector.value);
+
             // WhatsApp dinâmico
             const waInput = document.getElementById('setting-whatsapp');
             if (waInput && waInput.value) {
@@ -1094,6 +1102,14 @@ window.chatApp = {
         formData.append('prompt', promptContext);
         if (currentHtml) formData.append('htmlContext', currentHtml);
         
+        // Recupera o Clima Clínico Selecionado
+        const moodSelector = document.getElementById('global-mood-selector');
+        if (moodSelector) formData.append('moodId', moodSelector.value);
+
+        // Recupera o Tipo de Conteúdo
+        const typeSelector = document.getElementById('ai-studio-type');
+        if (typeSelector) formData.append('type', typeSelector.value || 'pages');
+
         // WhatsApp dinâmico das configurações
         const waInput = document.getElementById('setting-whatsapp');
         if (waInput && waInput.value) {

@@ -5,6 +5,7 @@ const axios = require('axios');
 const path = require('path');
 require('dotenv').config({ path: '../.env' }); 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const fs = require('fs');
 
 const app = express();
 const port = 3000; // Unificando na porta 3000 (Frontend + API)
@@ -24,6 +25,20 @@ const upload = multer({ storage: storage });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const VISION_MODEL = 'gemini-2.5-flash'; 
 const draftsDb = []; // In-memory store for newly generated drafts before WP sync
+
+// [FASE 5] Módulo Neuro-Training: Memória de Estilo do Dr. Victor
+const getVictorStyle = () => {
+    try {
+        const stylePath = path.join(__dirname, 'estilo_victor.json');
+        if (fs.existsSync(stylePath)) {
+            const data = fs.readFileSync(stylePath, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error("❌ Erro ao ler estilo_victor.json:", e);
+    }
+    return { style_rules: [] };
+};
 
 
 // Configurações WordPress do .env
@@ -248,6 +263,41 @@ AMBIENTE CONSULTÓRIO:
 - https://hipnolawrence.com/wp-content/uploads/2026/02/IMG_0359-scaled.jpeg
 - https://hipnolawrence.com/wp-content/uploads/2026/03/98593981-F8A7-4F8E-86A4-BBF2C04F704C.jpg
 `;
+
+const CLIMAS_CLINICOS = {
+  "1_introspeccao_profunda": {
+    "nome_amigavel": "Introspecção Profunda (Ultra-Dark)",
+    "fundo_principal": "!bg-[#05080f]",
+    "texto_principal": "!text-slate-300",
+    "texto_destaque": "!text-white",
+    "cor_acao": "!bg-[#2dd4bf]",
+    "efeitos_obrigatorios": "Efeito Orb Glow Teal no fundo: div absoluta com !bg-[#2dd4bf], blur-[150px] e opacity-20."
+  },
+  "2_despertar_clareza": {
+    "nome_amigavel": "Despertar & Clareza (Light)",
+    "fundo_principal": "!bg-[#faf9f6]",
+    "texto_principal": "!text-slate-700",
+    "texto_destaque": "!text-[#0b1221]",
+    "cor_acao": "!bg-[#14b8a6]",
+    "efeitos_obrigatorios": "Glassmorphism Claro e Sombra Suave longa: shadow-[0_30px_60px_rgba(11,18,33,0.03)]."
+  },
+  "3_conforto_neurodivergente": {
+    "nome_amigavel": "Conforto Neurodivergente (Low Contrast)",
+    "fundo_principal": "!bg-[#0b1221]",
+    "texto_principal": "!text-slate-400",
+    "texto_destaque": "!text-slate-200",
+    "cor_acao": "!bg-[#14b8a6]",
+    "efeitos_obrigatorios": "Cores apaziguadoras. ZERO contrastes extremos (nunca usar branco puro ou preto puro). Glassmorphism com desfoque subtil para não causar distrações."
+  },
+  "4_autoridade_academica": {
+    "nome_amigavel": "Autoridade Académica (Minimalista)",
+    "fundo_principal": "!bg-white",
+    "texto_principal": "!text-gray-600",
+    "texto_destaque": "!text-gray-900",
+    "cor_acao": "!bg-[#0f172a]",
+    "efeitos_obrigatorios": "Design limpo, académico e sem distracções. Uso de linhas finas divisorias (!border-gray-200). ZERO efeitos de luz ou desfoque extremo."
+  }
+};
 
 const ABIDOS_TEMPLATE_MINIMO = `
 <!-- CONFIGURAÇÃO TAILWIND -->
@@ -731,7 +781,191 @@ app.post('/api/reputation/analyze', async (req, res) => {
 });
 
 // ==============================================================================
-// 6. MARKETING LAB (GOOGLE ADS STAGs & PERFORMANCE)
+// 6. AGENTES DA ESTEIRA DE PRODUÇÃO (FASE 2: MÁQUINA DE ESTADOS)
+// ==============================================================================
+
+async function runConstructor(userInput, feedback = null, waNumber, moodId = "1_introspeccao_profunda", contentType = "pages") {
+    console.log(`🏗️ [AGENTE 1] Iniciando construção do rascunho (Tipo: ${contentType}, Mood: ${moodId})...`);
+    const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+    
+    // Extrai clima e memória de estilo
+    const clima = CLIMAS_CLINICOS[moodId] || CLIMAS_CLINICOS["1_introspeccao_profunda"];
+    const personalStyle = getVictorStyle();
+    const styleContext = personalStyle.style_rules?.length > 0 ? 
+        `\n[MEMÓRIA DE ESTILO (NEURO-TRAINING)]: \n- ${personalStyle.style_rules.join('\n- ')}` : '';
+    
+    // Bloco de Restrição Estética (Fase 3)
+    const restricaEstetica = `
+    [ALERTA DE RESTRIÇÃO ESTRITA DE DESIGN: CLIMA CLÍNICO ATIVO]
+    Para esta tarefa, você está OBRIGADO a utilizar o perfil visual: ${clima.nome_amigavel}.
+    Você está ESTRITAMENTE PROIBIDO de inventar códigos hexadecimais, paletas de cores ou gradientes que não estejam listados abaixo. O não cumprimento resultará na reprovação imediata do seu código.
+
+    Variáveis Obrigatórias do Tailwind CSS v4:
+    - Fundo das secções principais: Deve ser exclusivamente ${clima.fundo_principal}.
+    - Cor da Tipografia de parágrafos e textos longos: Deve ser exclusivamente ${clima.texto_principal}.
+    - Cor dos Títulos (H2, H3) e destaques: Deve ser exclusivamente ${clima.texto_destaque}.
+    - Cor de Acção (Botões, Links, Ícones CTA): Deve ser exclusivamente ${clima.cor_acao}.
+
+    Diretrizes de Efeitos Visuais UI/UX:
+    Aplique rigorosamente a seguinte regra de efeitos: ${clima.efeitos_obrigatorios}.
+    Lembre-se: Todas as classes críticas de col acima já possuem o prefixo ! para forçar a prioridade (important). Não o remova.
+    `;
+
+    let specificRolePrompt = "";
+
+    if (contentType === "posts") {
+        specificRolePrompt = `
+[IDENTIDADE E PROPÓSITO: MÓDULO DE POSTAGENS ABIDOS V3.2]
+Você é o Arquiteto Frontend Sênior responsável por gerar as Postagens de Blog (Spokes) da Clínica Victor Lawrence. Sua missão é criar artigos em HTML/Tailwind CSS que não sejam apenas textos, mas Experiências Editoriais Imersivas e Hipnóticas, utilizando o "Protocolo Abidos v3.2".
+
+DNA VISUAL E ATMOSFERA (A ESTÉTICA ERICKSONIANA):
+As postagens devem evocar um transe visual sóbrio, elegante e naturalista. O paciente deve sentir-se acolhido e focado.
+- Tipografia: Fonte Inter. Títulos (H1, H2, H3) devem usar !font-extrabold e !tracking-tight. Parágrafos base devem usar !font-normal, !text-slate-300 (no tema dark) ou !text-slate-700 (no tema light), com entrelinhas generoso !leading-[1.8].
+- Cores Restritas: Fundo principal !bg-[#05080f] (Midnight) ou !bg-[#faf9f6] (Off-white). Destaques sempre em !bg-[#2dd4bf] ou !text-[#2dd4bf] (Teal).
+- Obrigatoriedade Técnica: Todo o código deve estar encapsulado na <div class="abidos-wrapper">. Todas as classes Tailwind utilitárias críticas devem levar o prefixo ! (ex: !flex, !mt-8) para blindar contra o tema WordPress legado.
+
+DIRETRIZES DE ESTRUTURA E VARIAÇÃO DE LAYOUT:
+1. Header do Artigo (Hero do Blog): Sempre inicie com um H1 impactante centralizado, a data/categoria, e uma imagem de capa grande com cantos arredondados (!rounded-[2rem]) e filtro suave (grayscale-[15%]).
+2. Cápsula de Leitura: O texto do corpo (body do artigo) deve estar OBRIGATORIAMENTE confinado em uma div com max-w-3xl mx-auto. A fluência cognitiva é a prioridade zero.
+3. Citações Hipnóticas (Blockquotes): Transforme frases-chave ou reflexões importantes do Dr. Victor em blocos destacados usando o estilo Glassmorphism Sóbrio.
+   - Código Base: <blockquote class="abidos-glass-dark !p-8 !rounded-2xl !border-l-4 !border-[#2dd4bf] !my-10 !text-xl !italic !text-white">
+4. Respiros Visuais (Imagens In-line): Alterne imagens secundárias ao longo do texto. Em um bloco, coloque a imagem fluindo à direita (float-right !ml-8 !mb-4 w-1/2); em outro post, use imagens expandidas quebrando o layout.
+5. Aura Periférica (Orb Glows): Insira esferas de luz animadas na borda da tela para manter a atmosfera sem poluir o texto central.
+
+ESTRUTURA SEO E E-E-A-T:
+- Linkagem Interna Contextual: Ao longo do texto, crie cards elegantes (usando Glassmorphism leve) recomendando a página de Serviço Principal (Silo Pai).
+- Caixa de Autoridade (Author Box): No final de TODA postagem, gere um bloco visual de rodapé com a foto do Victor Lawrence, CRP 09/012681, menção ao Mestrado (UFU) e um botão sutil de WhatsApp.
+        `;
+    } else {
+        specificRolePrompt = `
+[INSTRUÇÃO DE IDENTIDADE E PAPEL: MÓDULO DE PÁGINAS ABIDOS V3.2]
+Você é um Arquiteto de Software Frontend Sênior, Especialista em Neuromarketing Clínico e SEO Técnico (Metodologia Abidos v3.1/v3.2). A sua missão é escrever código puro e infalível em HTML5 semântico estruturado com Tailwind CSS v4.
+Você não é um assistente de conversação; você é uma máquina geradora de código de alta performance e conversão para o nicho de Saúde Mental (YMYL - Your Money or Your Life).
+
+[ESTRUTURA DE SEO ON-PAGE E HIERARQUIA DE TAGS]
+- O Gatilho de Captura (<h1>): A página deve ter UM E APENAS UM <h1>. Ele deve unir a Palavra-chave Primária Exata + Promessa de Valor (Transformação) + Localização (Goiânia/Setor Sul).
+- O Desenvolvimento (<h2>): Utilize as tags <h2> para criar os "Silos Internos" da página: (Dor, Especialista, Ambiente, FAQ).
+- A Quebra de Objeções (<h3>): Utilize para detalhar micro-intenções.
+- SEO de Imagens: TODAS as tags <img> com alt tags geo-otimizadas.
+
+[COPYWRITING CLÍNICO E E-E-A-T]
+- Prova de Autoridade: CRP 09/012681, Mestrado UFU, Autor da escala AQ10b.
+- Rodapé (Footer): Construído em 4 colunas com NAP (Nome, Endereço, Telefone).
+        `;
+    }
+
+    let prompt = `
+${specificRolePrompt}
+
+${restricaEstetica}
+
+[REGRA ABSOLUTA E INVIOLÁVEL: VERACIDADE DOS DADOS]
+É ESTRITAMENTE PROIBIDO o uso de dados falsos, "Lorem Ipsum", informações genéricas ou placeholders (como href="#" ou imagens de bancos gratuitos).
+Utilize EXCLUSIVAMENTE a Base de Dados de Links Reais e o Repositório Visual de Imagens fornecidos no final deste prompt.
+
+[DIRETRIZES TÉCNICAS GERAIS (ABIDOS V3.2)]
+- GERAÇÃO NATIVA TOTAL: Você não está mais criando apenas o 'corpo' da página. Você deve agora gerar obrigatoriamente:
+    1. CABEÇALHO (Header): Menu responsivo com logótipo real, links para silos e CTA de agendamento.
+    2. RODAPÉ (Footer): Estrutura de 4 colunas (Identidade, Navegação, Silos, Contato/NAP) seguindo o Google Meu Negócio.
+- Wrapper Mestre: Todo o código deve estar encapsulado dentro de <div class="abidos-wrapper">.
+- Imunidade: Prefixo !important em classes críticas.
+- Mobile-First: Botões !whitespace-nowrap.
+
+${styleContext}
+
+[REQUISIÇÃO DO USUÁRIO]
+WHATSAPP PARA CTAs: ${waNumber}
+PEDIDO EXPLICITO: ${userInput}
+${feedback ? `⚠️ FEEDBACK DE CORREÇÃO DOS INSPETORES (CORRIJA ISTO): ${feedback}` : ''}
+
+============== TEMPLATE ESTRUTURAL MÍNIMO ==============
+${ABIDOS_TEMPLATE_MINIMO}
+
+============== DADOS REAIS E ASSETS ==============
+${REAL_ASSETS}
+${DOCTORALIA_REVIEWS}
+
+[INSTRUÇÃO DE EXECUÇÃO FINAL]
+Gere o código HTML completo aplicando estas regras. Retorne APENAS o código HTML cru.
+    `;
+    const result = await model.generateContent(prompt);
+    return result.response.text().replace(/```html|```/g, '').trim();
+}
+
+async function runAbidosInspector(html) {
+    console.log(`🔍 [AGENTE 2] Auditando Estrutura e SEO (Abidos Gate)...`);
+    const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+    let prompt = `
+        🔍 AGENTE 2: Inspetor Abidos (Auditor de Estrutura e SEO)
+        Papel: Você é um Auditor de SEO Técnico implacável. Você não escreve código do zero, apenas analisa o código fornecido pelo Agente Construtor.
+        Comportamento: Leia o HTML gerado e procure falhas estruturais.
+        Regras de Validação:
+        1. Existe mais de um <h1>? (Se sim, REPROVOU).
+        2. O código está encapsulado na div abidos-wrapper? (Se não, REPROVOU).
+        3. A estrutura tem links de Silo corretos na base? (Se não, REPROVOU).
+        Output Exigido: Responda APENAS no formato JSON: {"status": "PASSOU"} OU {"status": "REPROVOU", "motivo": "Descrição exata do que o Construtor deve apagar ou mudar"}.
+        
+        HTML PARA AUDITORIA:
+        ${html}
+    `;
+    const result = await model.generateContent(prompt);
+    try {
+        return JSON.parse(result.response.text().replace(/```json|```/g, '').trim());
+    } catch (e) {
+        return { status: "REPROVOU", motivo: "Erro na resposta do inspetor. Tente novamente." };
+    }
+}
+
+async function runClinicalInspector(html) {
+    console.log(`🧠 [AGENTE 3] Auditando E-E-A-T e Ética (Clinical Gate)...`);
+    const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+    let prompt = `
+        🧠 AGENTE 3: Inspetor Clínico (Auditor de E-E-A-T e Ética YMYL)
+        Papel: Você é um Revisor do Conselho Federal de Psicologia (CFP) e especialista nas diretrizes YMYL do Google. Você não escreve código, apenas audita o texto gerado.
+        Comportamento: Leia toda a copy (texto) embutida no HTML. O nicho é saúde mental sensível.
+        Regras de Validação:
+        1. Existe alguma promessa de "cura rápida", "garantia de resultado" ou jargão de marketing agressivo como "Compre agora"? (Se sim, REPROVOU).
+        2. A autoridade E-E-A-T do Dr. Victor Lawrence (CRP 09/012681, Mestrado pela UFU) está explicitamente citada? (Se não, REPROVOU).
+        3. A linguagem é empática e gera baixa fricção cognitiva? (Se não, REPROVOU).
+        Output Exigido: Responda APENAS no formato JSON: {"status": "PASSOU"} OU {"status": "REPROVOU", "motivo": "Substitua a frase X por um tom mais clínico e acolhedor"}.
+        
+        HTML PARA AUDITORIA:
+        ${html}
+    `;
+    const result = await model.generateContent(prompt);
+    try {
+        return JSON.parse(result.response.text().replace(/```json|```/g, '').trim());
+    } catch (e) {
+        return { status: "REPROVOU", motivo: "Erro na resposta do inspetor. Tente novamente." };
+    }
+}
+
+async function runDesignInspector(html) {
+    console.log(`🎨 [AGENTE 4] Auditando UI/UX Tailwind (Design Gate)...`);
+    const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+    let prompt = `
+        🎨 AGENTE 4: Inspetor de Design (Auditor de UI/UX Tailwind)
+        Papel: Você é um Engenheiro de Neuromarketing Visual especializado em Tailwind v4. Você não cria design, apenas revisa.
+        Comportamento: Leia as classes Tailwind no código para garantir que o Design System do Método Abidos foi respeitado.
+        Regras de Validação:
+        1. O Glassmorphism está aplicado corretamente com a fórmula de backdrop-filter? (Se não, REPROVOU).
+        2. Os textos em parágrafos usam font-normal (peso 400) para evitar cansaço visual? (Se não, REPROVOU).
+        3. Existe risco de colisão mobile (ex: botões com textos gigantes que quebram a linha)? (Se sim, REPROVOU).
+        Output Exigido: Responda APENAS no formato JSON: {"status": "PASSOU"} OU {"status": "REPROVOU", "motivo": "Adicione a classe '!whitespace-nowrap' no botão Y"}.
+        
+        HTML PARA AUDITORIA:
+        ${html}
+    `;
+    const result = await model.generateContent(prompt);
+    try {
+        return JSON.parse(result.response.text().replace(/```json|```/g, '').trim());
+    } catch (e) {
+        return { status: "REPROVOU", motivo: "Erro na resposta do inspetor. Tente novamente." };
+    }
+}
+
+// ==============================================================================
+// 7. MARKETING LAB & ORQUESTRAÇÃO
 // ==============================================================================
 
 app.get('/api/marketing/audit', async (req, res) => {
@@ -763,80 +997,128 @@ app.get('/api/marketing/audit', async (req, res) => {
 
 app.post('/api/chat', upload.single('screenshot'), async (req, res) => {
     try {
-        const { prompt, message, htmlContext, currentKeyword, whatsapp } = req.body;
-        const finalMessage = prompt || message;
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
-        
+        const { prompt, message, htmlContext, currentKeyword, whatsapp, moodId, type } = req.body;
+        const userInput = prompt || message;
         const waNumber = whatsapp || '5562991545295';
+        const selectedMood = moodId || '1_introspeccao_profunda';
+        const contentType = type || 'pages';
         
-        let promptText = `
-        VOCÊ É A NEUROENGINE AI, ATUANDO COMO UM HUB DE AGENTES ESPECIALIZADOS (PROTOCOLO ABIDOS 3.2).
-        SUA MISSÃO: ORQUESTRAR DESIGN, COPY E ENGENHARIA PARA LANDING PAGES CLÍNICAS DE ALTA PERFORMANCE.
+        console.log(`\n🚦 [ESTEIRA] Iniciando Orquestração Sequencial (Tipo: ${contentType}, Mood: ${selectedMood}) para: "${userInput.substring(0, 30)}..."`);
         
-        DIRETRIZES TÉCNICAS (V3.2):
-        1. PALETA PREMIUM: Midnight Dark (#05080f), Deep Blue (#0b1221), Teal (#2dd4bf), Off-White (#faf9f6).
-        2. BLINDAGEM WP: Use !important em TODAS as classes Tailwind (ex: !text-white). Envolva tudo em <div class="abidos-wrapper">.
-        3. ANTI-CONFLITO ASTRA: Proibido H1 (Use H2 na Hero). Use "initAbidos()" para animações reveal.
-        4. DESIGN BOUTIQUE: Use Glassmorphism (.abidos-glass-dark/light) e esferas de luz desfocadas (blur-[150px], orb-glow).
-        5. E-E-A-T & COPY: Tom acadêmico/clínico (Victor Lawrence, Mestrando UFU). Verbos táteis ("Toque aqui").
-        
-        REGRAS DE ESTRUTURA (4 SEÇÕES):
-        - Hero: H2 Estratégico + Pulse Orb + Botão WhatsApp.
-        - Jornada: Identificação da Dor + O Método Científico.
-        - Autoridade: Foto Real + Rapport Chart + Bio Técnica.
-        - Conversão: FAQ + Links de Silo (Referência Real).
-        
-        ${REAL_ASSETS}
-        ${DOCTORALIA_REVIEWS}
+        let currentHtml = "";
+        let feedback = null;
+        let attempts = 0;
+        const maxRetries = 3;
 
-        CONTEXTO ATUAL:
-        - Keyword: ${currentKeyword || 'Não especificada'}
-        - HTML Atual: ${htmlContext || 'Vazio'}
-        - Mensagem do Usuário: ${finalMessage}
-        
-        REPORTE APENAS O HTML OU RESPOSTA TÉCNICA SEGUINDO O PROTOCOLO.
-        `;
-        
-        let parts = [{ text: promptText }];
-        if (req.file) {
-            parts.push({ inlineData: { data: req.file.buffer.toString('base64'), mimeType: req.file.mimetype } });
+        while (attempts < maxRetries) {
+            attempts++;
+            console.log(`🔄 [TENTATIVA ${attempts}/${maxRetries}]`);
+            
+            // 1. CONSTRUTOR
+            currentHtml = await runConstructor(userInput, feedback, waNumber, selectedMood, contentType);
+            
+            // 2. INSPEÇÃO ABIDOS
+            const abidosResult = await runAbidosInspector(currentHtml);
+            if (abidosResult.status === "REPROVOU") {
+                console.warn(`❌ [ABIDOS REPROVOU] Motivo: ${abidosResult.motivo}`);
+                feedback = `AGENTE ABIDOS REPROVOU: ${abidosResult.motivo}`;
+                continue;
+            }
+            console.log(`✅ [ABIDOS PASSOU]`);
+
+            // 3. INSPEÇÃO CLÍNICA
+            const clinicalResult = await runClinicalInspector(currentHtml);
+            if (clinicalResult.status === "REPROVOU") {
+                console.warn(`❌ [CLÍNICO REPROVOU] Motivo: ${clinicalResult.motivo}`);
+                feedback = `AGENTE CLÍNICO REPROVOU: ${clinicalResult.motivo}`;
+                continue;
+            }
+            console.log(`✅ [CLÍNICO PASSOU]`);
+
+            // 4. INSPEÇÃO DESIGN
+            const designResult = await runDesignInspector(currentHtml);
+            if (designResult.status === "REPROVOU") {
+                console.warn(`❌ [DESIGN REPROVOU] Motivo: ${designResult.motivo}`);
+                feedback = `AGENTE DESIGN REPROVOU: ${designResult.motivo}`;
+                continue;
+            }
+            console.log(`✅ [DESIGN PASSOU]`);
+
+            // SE CHEGOU AQUI, PASSOU EM TUDO
+            console.log(`🏁 [ESTEIRA CONCLUÍDA] Código aprovado por todos os inspetores.`);
+            return res.json({ reply: currentHtml });
         }
 
-        const result = await model.generateContent({ contents: [{ role: 'user', parts }] });
-        const resp = await result.response;
-        res.json({ reply: resp.text() });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+        // SE ESGOTOU TENTATIVAS
+        console.error(`🚨 [ESTEIRA FALHOU] Limite de ${maxRetries} retentativas atingido.`);
+        res.json({ reply: `⚠️ Atenção: O Studio não conseguiu resolver todas as pendências de qualidade após ${maxRetries} tentativas. Feedback final do último inspetor: ${feedback}. Intervenção manual necessária.` });
+
+    } catch (e) { 
+        console.error("❌ [ESTEIRA ERROR]", e.message);
+        res.status(500).json({ error: e.message }); 
+    }
 });
 
-app.post('/api/blueprint', async (req, res) => {
+app.post('/api/blueprint', upload.none(), async (req, res) => {
     try {
-        const { theme, whatsapp } = req.body;
+        const { theme, whatsapp, moodId, type } = req.body;
         const waNumber = whatsapp || '5562991545295';
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
-        const prompt = `
-        ATUE COMO UM WEB DESIGNER SÊNIOR E ESPECIALISTA EM NEUROMARKETING.
-        MISSÃO: GERAR UM BLUEPRINT HTML COMPLETO (4 SEÇÕES ABIDOS - VERSÃO 3.2) PARA: ${theme}.
-        LOCAÇÃO: Goiânia. 
-        WHATSAPP: ${waNumber}.
-
-        ESTRUTURA TÉCNICA OBRIGATÓRIA (PROTOCOLO V3.2):
-        1. Use a paleta MIDNIGHT (#05080f), DEEP BLUE (#0b1221), TEAL (#2dd4bf).
-        2. Mantenha a tipografia legível (Inter). Títulos TRACKING-TIGHT e LEADING-[1.1].
-        3. Aplique Glassmorphism (abidos-glass-dark) e Orb Glow (luzes de fundo).
-        4. O rascunho deve ser envolvido em <div class="abidos-wrapper"> e usar !important (!) em todas as classes Tailwind.
-        5. PROIBIDO H1 (O Astra já tem o título). Use H2 na primeira dobra.
-
-        TEMPLATE ESTRUTURAL MÍNIMO (INJETE O CONTEÚDO DENTRO DO WRAPPPER):
-        ${ABIDOS_TEMPLATE_MINIMO}
-        ${REAL_ASSETS}
-        ${DOCTORALIA_REVIEWS}
+        const selectedMood = moodId || '1_introspeccao_profunda';
+        const contentType = type || 'pages';
         
-        RETORNE APENAS O HTML CRU.
-        `;
-        const result = await model.generateContent(prompt);
-        const resp = await result.response;
-        res.json({ html: resp.text().replace(/```html|```/g, '').trim() });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+        console.log(`\n📐 [BLUEPRINT] Iniciando Esteira de Produção (Tipo: ${contentType}, Mood: ${selectedMood}) para Tema: "${theme}"`);
+        
+        let currentHtml = "";
+        let feedback = null;
+        let attempts = 0;
+        const maxRetries = 3;
+
+        while (attempts < maxRetries) {
+            attempts++;
+            console.log(`🔄 [TENTATIVA ${attempts}/${maxRetries}]`);
+            
+            // 1. CONSTRUTOR
+            currentHtml = await runConstructor(`Criar blueprint completo para o tema: ${theme}`, feedback, waNumber, selectedMood, contentType);
+            
+            // 2. INSPEÇÃO ABIDOS
+            const abidosResult = await runAbidosInspector(currentHtml);
+            if (abidosResult.status === "REPROVOU") {
+                console.warn(`❌ [ABIDOS REPROVOU] Motivo: ${abidosResult.motivo}`);
+                feedback = `AGENTE ABIDOS REPROVOU: ${abidosResult.motivo}`;
+                continue;
+            }
+            console.log(`✅ [ABIDOS PASSOU]`);
+
+            // 3. INSPEÇÃO CLÍNICA
+            const clinicalResult = await runClinicalInspector(currentHtml);
+            if (clinicalResult.status === "REPROVOU") {
+                console.warn(`❌ [CLÍNICO REPROVOU] Motivo: ${clinicalResult.motivo}`);
+                feedback = `AGENTE CLÍNICO REPROVOU: ${clinicalResult.motivo}`;
+                continue;
+            }
+            console.log(`✅ [CLÍNICO PASSOU]`);
+
+            // 4. INSPEÇÃO DESIGN
+            const designResult = await runDesignInspector(currentHtml);
+            if (designResult.status === "REPROVOU") {
+                console.warn(`❌ [DESIGN REPROVOU] Motivo: ${designResult.motivo}`);
+                feedback = `AGENTE DESIGN REPROVOU: ${designResult.motivo}`;
+                continue;
+            }
+            console.log(`✅ [DESIGN PASSOU]`);
+
+            // FINALIZADO
+            console.log(`🏁 [BLUEPRINT CONCLUÍDO] Blueprint aprovado por todos os inspetores.`);
+            return res.json({ html: currentHtml });
+        }
+
+        console.error(`🚨 [BLUEPRINT FALHOU] Limite de ${maxRetries} retentativas atingido.`);
+        res.json({ html: `<!-- 🚨 FALHA CRÍTICA: O Studio não conseguiu resolver rascunho Abidos após 3 tentativas. Intervenção manual necessária. -->\n${currentHtml}` });
+
+    } catch (e) { 
+        console.error("❌ [BLUEPRINT ERROR]", e.message);
+        res.status(500).json({ error: e.message }); 
+    }
 });
 
 app.post('/api/audit', async (req, res) => {
@@ -847,6 +1129,91 @@ app.post('/api/audit', async (req, res) => {
         const resp = await result.response;
         res.json({ checklist: JSON.parse(resp.text().replace(/```json|```/g, '').trim()) });
     } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 🚀 [FASE 5] ENDPOINTS NEURO-TRAINING
+app.get('/api/neuro-training/memory', (req, res) => {
+    res.json(getVictorStyle());
+});
+
+app.post('/api/neuro-training/extract', async (req, res) => {
+    try {
+        const { sample, currentAiOutput } = req.body;
+        if (!sample) return res.status(400).json({ error: "Amostra necessária." });
+
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        const isTranscript = sample.toLowerCase().includes('terapeuta') || sample.toLowerCase().includes('paciente') || sample.length > 1000;
+        
+        const prompt = isTranscript ? 
+`Você está a receber uma transcrição em bruto de uma sessão clínica real do Dr. Victor Lawrence. O seu único objetivo é clonar o cérebro e a voz do terapeuta.
+
+Aja como um Analista Linguístico e faça o seguinte:
+1. Identifique as falas do Terapeuta (geralmente aquele que faz as perguntas abertas e as induções hipnóticas).
+2. Extraia 3 regras de escrita ou 'Rapport' que demonstrem como ele usa a 'Comunicação Indireta Ericksoniana'.
+3. Crie um pequeno feedback personalizado (insight) sobre o que percebeu no padrão de linguagem do Victor e como isso ajuda a converter e acolher pacientes.
+4. Formate essas extrações como regras de Copywriting.
+
+[TRANSCRIÇÃO]:
+"${sample}"
+
+Retorne APENAS um JSON com:
+{
+  "new_rules": ["regra 1", "regra 2", "regra 3"],
+  "insight": "Seu feedback sobre a linguagem aqui..."
+}` : 
+`Atue como Especialista em Reverse Prompt Engineering. Analise a diferença entre o que a IA gerou e o que o Victor falou/escreveu.
+
+[IA GENERATED]: "${currentAiOutput || 'Indisponível'}"
+[VICTOR CORRECTION/SAMPLE]: "${sample}"
+
+TAREFA:
+1. Identifique o desvio de tom (ex: 'A IA foi técnica demais, o Victor foi mais humano').
+2. Extraia a regra de escrita (ex: 'Sempre use analogias tecnológicas para explicar o cérebro').
+3. Crie um pequeno feedback (insight) sobre como essa correção melhora o material.
+
+Retorne APENAS um JSON com:
+{
+  "new_rules": ["regra 1", "regra 2"],
+  "insight": "Seu feedback aqui..."
+}`;
+
+        const response = await model.generateContent(prompt);
+        const text = response.response.text().replace(/```json|```/g, '').trim();
+        const extracted = JSON.parse(text);
+
+        // Atualiza estilo_victor.json
+        const stylePath = path.join(__dirname, 'estilo_victor.json');
+        let current = { style_rules: [] };
+        if (fs.existsSync(stylePath)) {
+            current = JSON.parse(fs.readFileSync(stylePath, 'utf8'));
+        }
+
+        current.style_rules = [...new Set([...current.style_rules, ...extracted.new_rules])].slice(-60); 
+        current.last_update = new Date().toISOString();
+        
+        // Mantém histórico de insights
+        if (!current.insights_history) current.insights_history = [];
+        const newInsight = {
+            text: extracted.insight || "Novas regras de estilo integradas com sucesso.",
+            date: current.last_update
+        };
+        current.insights_history.unshift(newInsight);
+        current.insights_history = current.insights_history.slice(0, 50); // Mantém os 50 últimos
+        
+        current.last_insight = newInsight.text;
+        
+        fs.writeFileSync(stylePath, JSON.stringify(current, null, 2));
+
+        res.json({ 
+            success: true, 
+            updated_rules: current.style_rules,
+            insight_history: current.insights_history
+        });
+
+    } catch (e) {
+        console.error("❌ [NEURO-TRAINING ERROR]", e.message);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 app.listen(port, () => {
