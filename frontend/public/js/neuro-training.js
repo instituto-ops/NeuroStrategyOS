@@ -159,9 +159,9 @@ window.neuroTraining = {
         if (!feed) return;
 
         feed.innerHTML = rules.map(r => `
-            <div class="card" style="background: white; border: 1px solid #e2e8f0; border-left: 4px solid #2dd4bf; padding: 12px; margin-bottom: 5px; animation: slideIn 0.3s ease;">
-                <p style="text-transform: uppercase; font-size: 8px; font-weight: 900; color: #0d9488; margin-bottom: 3px;">${r.categoria || 'DNA'}</p>
-                <p style="font-size: 12px; color: #334155; line-height: 1.4; margin: 0;">${r.regra || r}</p>
+            <div class="card" style="background: white; border: 1px solid #e2e8f0; border-left: 4px solid #6366f1; padding: 18px; margin-bottom: 5px; animation: slideIn 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <p style="text-transform: uppercase; font-size: 10px; font-weight: 900; color: #6366f1; margin-bottom: 8px; letter-spacing: 0.5px;">${r.sintese || 'SÍNTESE DNA'}</p>
+                <p style="font-size: 13px; color: #334155; line-height: 1.5; margin: 0;">${r.regra || r}</p>
             </div>
         `).join('');
     },

@@ -16,16 +16,20 @@ const port = 3000; // Unificando na porta 3000 (Frontend + API)
 // mas mantemos por segurança para acessos via IP ou subdomínios.
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // 1. SERVIR ARQUIVOS ESTÁTICOS (Frontend)
 app.use(express.static(path.join(__dirname, 'public')));
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB
+});
 
 // Initialize Gemini SDK
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const VISION_MODEL = 'gemini-2.5-flash'; 
+const VISION_MODEL = 'gemini-1.5-flash'; 
 const draftsDb = []; // In-memory store for newly generated drafts before WP sync
 
 // [FASE 5] Módulo Neuro-Training: Memória de Estilo do Dr. Victor
@@ -1176,24 +1180,16 @@ app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, 
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         
         const dnaPrompt = `
-        VOCÊ É O 'APRENDIZ DE ABIDOS' (SISTEMA DE CLONAGEM COGNITIVA E LINGUÍSTICA).
-        MISSÃO: Extrair o DNA de escrita e a Prosódia Intelectual do Dr. Victor Lawrence.
+        VOCÊ É O 'APRENDIZ DE ABIDOS' (SISTEMA DE CLONAGEM COGNITIVA).
+        ANALISE O ÁUDIO DO DR. VICTOR PARA EXTRAIR O DNA DE ESCRITA E ATENDIMENTO.
         
-        FOCO PRIMÁRIO DA ANÁLISE:
-        1. FORMA DE FALAR/ESCREVER: Analise a cadência, o comprimento das frases e o uso de pontuação.
-        2. LÉXICO E VOCABULÁRIO: Identifique palavras recorrentes, termos técnicos preferidos e "Victorisms" (expressões únicas).
-        3. PADRÕES CONVERSACIONAIS: Como ele inicia uma explicação? Como ele responde a uma dúvida? (Ex: Uso de Pacing e Leading).
-        4. METÁFORAS E ANALOGIAS: Capture as figuras de linguagem que ele usa para explicar conceitos complexos (ex: neuroplasticidade, hipnose).
-        5. RACIOCÍNIO SUBJACENTE: Qual a lógica que ele segue antes de dar uma resposta técnica?
-        
-        DIRETRIZ DE SIGILO:
-        - Substitua nomes reais por [PACIENTE].
-        
-        RETORNE UM JSON ARRAY DE REGRAS:
+        SÁIDA REQUERIDA (JSON APENAS):
         { 
-          "new_rules": [{"categoria": "Estilo|Voz|Raciocínio|Vocabulário", "regra": "Descrição do padrão detectado"}],
-          "insight": "Um feedback 'espelho' descrevendo para o Dr. como você percebeu que ele pensa e escreve."
+          "new_rules": [{"sintese": "Frase curta de 3-5 palavras sintetizando a ideia", "regra": "Descrição do padrão clínico"}],
+          "insight": "Feedback qualitativo para o Dr. Victor."
         }
+        
+        OBS: Anonimize nomes de pacientes em [PACIENTE].
         `;
 
         const result = await model.generateContent([
@@ -1204,24 +1200,18 @@ app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, 
         const responseText = result.response.text().replace(/```json|```/g, '').trim();
         const extracted = JSON.parse(responseText);
 
-        // 1. Anonimização Adicional no Texto (Fail-safe)
-        extracted.new_rules = extracted.new_rules.map(r => ({
-            categoria: r.categoria,
-            regra: cleanClinicalData(r.regra)
-        }));
-        extracted.insight = cleanClinicalData(extracted.insight);
-
-        // 2. Persistência no estilo_victor.json
+        // 1. Anonimização e Sintese
         const stylePath = path.join(__dirname, 'estilo_victor.json');
         let current = getVictorStyle();
 
-        // Evitar duplicatas em 'regra'
-        const existingRules = current.style_rules.map(r => typeof r === 'string' ? r : r.regra);
-        const uniqueNew = extracted.new_rules.filter(nr => !existingRules.includes(nr.regra));
+        const uniqueNew = extracted.new_rules.map(r => ({
+            sintese: r.sintese || "Padrão Detectado",
+            regra: cleanClinicalData(r.regra)
+        }));
 
         current.style_rules = [...current.style_rules, ...uniqueNew].slice(-80); 
         current.last_update = new Date().toISOString();
-        current.last_insight = extracted.insight;
+        current.last_insight = cleanClinicalData(extracted.insight);
 
         if (!current.insights_history) current.insights_history = [];
         current.insights_history.unshift({ text: extracted.insight, date: current.last_update });
@@ -1327,20 +1317,18 @@ app.post('/api/neuro-training/chat', async (req, res) => {
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         
         const chatPrompt = `
-        VOCÊ É O 'APRENDIZ DE ABIDOS' (SISTEMA DE CLONAGEM COGNITIVA E LINGUÍSTICA).
-        MISSÃO: Entrevistar o Dr. Victor Lawrence para extrair o DNA de escrita e de raciocínio dele.
+        VOCÊ É O 'APRENDIZ DE ABIDOS'. ENTREVISTE O DR. VICTOR LAWRENCE PARA EXTRAIR O DNA CLÍNICO DELE.
+        DR. VICTOR DIZ: "${message}"
         
-        MENSAGEM DO DR. VICTOR: "${message}"
-        
-        TAREFAS:
-        1. Responda como um aprendiz curioso e profissional. Mantenha o diálogo fluindo.
-        2. Se você detectar um padrão de escrita, uma regra ética ou uma forma única de responder, extraia essa regra.
-        3. Anonimize dados sensíveis caso ele cite algum caso (use [PACIENTE]).
+        MISSÃO:
+        1. Responda como um aprendiz profissional e curioso.
+        2. Se detectar um padrão de escrita, voz ou atendimento, extraia-o.
+        3. CRIE UMA "SÍNTESE" (TÍTULO DE 3-5 PALAVRAS) que resuma a ideia central da regra.
         
         RETORNE UM JSON:
         { 
-          "reply": "Sua resposta conversacional aqui incentivando ele a explicar mais...",
-          "insights": [{"categoria": "Estilo|Voz|Raciocínio|Vocabulário", "regra": "Descrição curta da regra se detectada, senão deixe array vazio"}]
+          "reply": "Resposta para manter a conversa fluindo...",
+          "insights": [{"sintese": "Título sintetizado", "regra": "Descrição completa"}]
         }
         `;
 
@@ -1348,13 +1336,12 @@ app.post('/api/neuro-training/chat', async (req, res) => {
         const responseText = result.response.text().replace(/```json|```/g, '').trim();
         const extracted = JSON.parse(responseText);
 
-        // Fail-safe anonimização e salvamento se houver insights
         if (extracted.insights && extracted.insights.length > 0) {
             const stylePath = path.join(__dirname, 'estilo_victor.json');
             let current = getVictorStyle();
             
             const uniqueNew = extracted.insights.map(i => ({
-                categoria: i.categoria,
+                sintese: i.sintese || "Insight Conversacional",
                 regra: cleanClinicalData(i.regra)
             }));
 
@@ -1389,26 +1376,25 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
             text = buffer.toString('utf-8');
         }
 
-        console.log(`🧠 [LASTRO] Analisando documento: ${req.file.originalname} (${text.length} chars)`);
+        console.log(`🧠 [LASTRO] Analisando documento: ${req.file.originalname}`);
 
-        // 2. Análise com Gemini (Foco em DNA de Escrita e Atendimento)
+        // 2. Análise com Gemini (Sintetizando DNA)
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         
         const docPrompt = `
-        VOCÊ É O 'APRENDIZ DE ABIDOS' (SISTEMA DE CLONAGEM COGNITIVA).
-        ANALISE ESTE DOCUMENTO ACADÊMICO/CLÍNICO DO DR. VICTOR LAWRENCE.
+        VOCÊ É O 'APRENDIZ DE ABIDOS'. ANALISE ESTE DOCUMENTO DO DR. VICTOR LAWRENCE.
         
         MISSÃO:
-        - Extraia a "voz" dele: Como ele atende? Como ele explica diagnósticos? Qual o tom predominante?
-        - Identifique termos técnicos e padrões de escrita.
+        - Extraia regras de como ele pensa, atende e escreve.
+        - CRIE UMA "SÍNTESE" (TÍTULO DE 3-5 PALAVRAS) que seja o título da ideia central de cada regra.
         
         CONTEÚDO DO DOCUMENTO:
-        "${text.substring(0, 15000)}" // Limite para evitar estouro de tokens
+        "${text.substring(0, 15000)}"
         
-        RETORNE UM JSON COM:
+        RETORNE UM JSON:
         { 
-          "new_rules": [{"categoria": "Habilidade|Atendimento|Voz|Léxico", "regra": "Descrição da regra detectada"}],
-          "feedback_analysis": "Seu feedback detalhado e qualitativo sobre a forma como ele pensa e atende, baseado no texto leído."
+          "new_rules": [{"sintese": "Título curto sintetizado", "regra": "Descrição completa"}],
+          "feedback_analysis": "Seu feedback qualitativo para o Dr. Victor."
         }
         `;
 
@@ -1416,27 +1402,24 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
         const responseText = result.response.text().replace(/```json|```/g, '').trim();
         const extracted = JSON.parse(responseText);
 
-        // 3. Persistência e Anonimização
+        // 3. Persistência
         const stylePath = path.join(__dirname, 'estilo_victor.json');
         let current = getVictorStyle();
 
         const uniqueNew = extracted.new_rules.map(i => ({
-            categoria: i.categoria,
+            sintese: i.sintese || "Lastro Documental",
             regra: cleanClinicalData(i.regra)
         }));
 
         const cleanFeedback = cleanClinicalData(extracted.feedback_analysis);
-
         current.style_rules = [...current.style_rules, ...uniqueNew].slice(-80);
         current.last_update = new Date().toISOString();
         current.last_insight = cleanFeedback;
 
         if (!current.insights_history) current.insights_history = [];
         current.insights_history.unshift({ text: cleanFeedback, date: current.last_update });
-        current.insights_history = current.insights_history.slice(0, 50);
 
         fs.writeFileSync(stylePath, JSON.stringify(current, null, 2));
-
         res.json({ success: true, insights: extracted.new_rules, summary: cleanFeedback });
 
     } catch (e) {
