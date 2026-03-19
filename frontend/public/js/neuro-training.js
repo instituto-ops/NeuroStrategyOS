@@ -169,8 +169,33 @@ window.neuroTraining = {
     async handleFileUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
+
         this.addMessage('user', `📁 Enviando documento: ${file.name}`);
-        // Implementar lógica de upload se necessário
+        this.addMessage('ai', "⌛ Analisando seu material técnico para extrair padrões de DNA clínico...");
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/neuro-training/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.addMessage('ai', `✅ Li o documento "${file.name}".`);
+                this.addMessage('ai', data.summary);
+                await this.loadMemory();
+            } else {
+                this.addMessage('ai', "⚠️ Houve um problema ao processar este arquivo.");
+            }
+        } catch (err) {
+            console.error(err);
+            this.addMessage('ai', "❌ Erro de conexão ao enviar o arquivo.");
+        } finally {
+            event.target.value = ''; // Reset input
+        }
     }
 };
 

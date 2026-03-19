@@ -7,6 +7,8 @@ require('dotenv').config({ path: '../.env' });
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 
+const pdf = require('pdf-parse');
+const mammoth = require('mammoth');
 const app = express();
 const port = 3000; // Unificando na porta 3000 (Frontend + API)
 
@@ -1365,6 +1367,80 @@ app.post('/api/neuro-training/chat', async (req, res) => {
 
     } catch (e) {
         console.error("❌ [CHAT ERROR]", e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) throw new Error("Documento não recebido.");
+        
+        let text = "";
+        const buffer = req.file.buffer;
+
+        // 1. Extração de Texto baseado no Tipo
+        if (req.file.mimetype === 'application/pdf') {
+            const data = await pdf(buffer);
+            text = data.text;
+        } else if (req.file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            const result = await mammoth.extractRawText({ buffer: buffer });
+            text = result.value;
+        } else {
+            text = buffer.toString('utf-8');
+        }
+
+        console.log(`🧠 [LASTRO] Analisando documento: ${req.file.originalname} (${text.length} chars)`);
+
+        // 2. Análise com Gemini (Foco em DNA de Escrita e Atendimento)
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        
+        const docPrompt = `
+        VOCÊ É O 'APRENDIZ DE ABIDOS' (SISTEMA DE CLONAGEM COGNITIVA).
+        ANALISE ESTE DOCUMENTO ACADÊMICO/CLÍNICO DO DR. VICTOR LAWRENCE.
+        
+        MISSÃO:
+        - Extraia a "voz" dele: Como ele atende? Como ele explica diagnósticos? Qual o tom predominante?
+        - Identifique termos técnicos e padrões de escrita.
+        
+        CONTEÚDO DO DOCUMENTO:
+        "${text.substring(0, 15000)}" // Limite para evitar estouro de tokens
+        
+        RETORNE UM JSON COM:
+        { 
+          "new_rules": [{"categoria": "Habilidade|Atendimento|Voz|Léxico", "regra": "Descrição da regra detectada"}],
+          "feedback_analysis": "Seu feedback detalhado e qualitativo sobre a forma como ele pensa e atende, baseado no texto leído."
+        }
+        `;
+
+        const result = await model.generateContent(docPrompt);
+        const responseText = result.response.text().replace(/```json|```/g, '').trim();
+        const extracted = JSON.parse(responseText);
+
+        // 3. Persistência e Anonimização
+        const stylePath = path.join(__dirname, 'estilo_victor.json');
+        let current = getVictorStyle();
+
+        const uniqueNew = extracted.new_rules.map(i => ({
+            categoria: i.categoria,
+            regra: cleanClinicalData(i.regra)
+        }));
+
+        const cleanFeedback = cleanClinicalData(extracted.feedback_analysis);
+
+        current.style_rules = [...current.style_rules, ...uniqueNew].slice(-80);
+        current.last_update = new Date().toISOString();
+        current.last_insight = cleanFeedback;
+
+        if (!current.insights_history) current.insights_history = [];
+        current.insights_history.unshift({ text: cleanFeedback, date: current.last_update });
+        current.insights_history = current.insights_history.slice(0, 50);
+
+        fs.writeFileSync(stylePath, JSON.stringify(current, null, 2));
+
+        res.json({ success: true, insights: extracted.new_rules, summary: cleanFeedback });
+
+    } catch (e) {
+        console.error("❌ [UPLOAD ERROR]", e.message);
         res.status(500).json({ error: e.message });
     }
 });
