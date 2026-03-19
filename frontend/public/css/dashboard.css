@@ -424,16 +424,13 @@ select:focus {
 }
 
 .studio-header.collapsed {
-    max-height: 0 !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    visibility: hidden !important;
-    box-shadow: none !important;
-    flex: 0 0 0 !important;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+    margin-bottom: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .studio-body {
@@ -466,14 +463,9 @@ select:focus {
 }
 
 .studio-sidebar.collapsed {
-    width: 0 !important;
-    margin-right: -400px !important;
-    padding: 0 !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    visibility: hidden !important;
-    overflow: hidden !important;
-    flex: 0 0 0 !important;
+    width: 0;
+    margin-right: -400px;
+    opacity: 0;
 }
 
 /* Float Controls - Horizontal Footer Style */

@@ -173,8 +173,14 @@ const mediaLibrary = {
             if (!responseTxt) throw new Error("A IA não retornou uma resposta válida.");
             
             // Tenta parsear o JSON retornado pela LLM
-            const cleanJson = responseTxt.replace(/```json/g, '').replace(/```/g, '').trim();
-            const newSeo = JSON.parse(cleanJson);
+            let newSeo;
+            try {
+                const cleanJson = responseTxt.replace(/```json/g, '').replace(/```/g, '').trim();
+                newSeo = JSON.parse(cleanJson);
+            } catch (parseErr) {
+                console.error("Erro ao parsear SEO IA:", responseTxt);
+                throw new Error("A IA retornou um formato inválido. Tente novamente.");
+            }
 
             if(newSeo && newSeo.title && newSeo.alt_text) {
                 const result = await wpAPI.updateMediaSEO(id, newSeo.title, newSeo.alt_text);
@@ -427,8 +433,14 @@ REGRAS:
             const response = await gemini.callAPI(prompt);
             if (!response) throw new Error("IA não respondeu.");
 
-            const cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim();
-            const recommendations = JSON.parse(cleanJson);
+            let recommendations;
+            try {
+                const cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim();
+                recommendations = JSON.parse(cleanJson);
+            } catch (parseErr) {
+                console.error("Erro ao parsear Recomendações Media:", response);
+                throw new Error("O Conselho de Agentes retornou um formato inesperado.");
+            }
 
             // 3. Renderiza Tabela
             resultPanel.innerHTML = `

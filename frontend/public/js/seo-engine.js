@@ -12,6 +12,7 @@ window.seoEngine = {
 
         try {
             const response = await fetch('/api/seo/analyze-silos');
+            if (!response.ok) throw new Error(`Status ${response.status}`);
             const data = await response.json();
             this.fullData = data; // Armazena para filtro
 
@@ -77,9 +78,9 @@ window.seoEngine = {
                    silo.spokes.some(sp => sug.reason.toLowerCase().includes(sp.toLowerCase()));
         });
 
-        suggestContainer.innerHTML = '';
+        if (suggestContainer) suggestContainer.innerHTML = '';
         if (relatedSuggestions.length === 0) {
-            suggestContainer.innerHTML = '<p style="font-size: 12px; color: #64748b; padding: 10px;">Nenhuma sugestão de linkagem detectada para este silo específico.</p>';
+            if (suggestContainer) suggestContainer.innerHTML = '<p style="font-size: 12px; color: #64748b; padding: 10px;">Nenhuma sugestão de linkagem detectada para este silo específico.</p>';
         } else {
             relatedSuggestions.forEach(sug => {
                 const div = document.createElement('div');

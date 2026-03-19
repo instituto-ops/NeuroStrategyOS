@@ -7,10 +7,20 @@ window.neuroTraining = {
     async loadMemory() {
         try {
             const response = await fetch('/api/neuro-training/memory');
+            if (!response.ok) throw new Error(`Status ${response.status}`);
             const data = await response.json();
             this.renderMemory(data);
         } catch (e) {
             console.error("Erro ao carregar memória:", e);
+            const list = document.getElementById('neuro-style-memory-list');
+            if (list) {
+                list.innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #f87171;">
+                        <p style="font-weight: bold; margin-bottom: 5px;">⚠️ Erro de Conexão (Mission Control)</p>
+                        <p style="font-size: 11px; opacity: 0.7;">Não foi possível recuperar a Memória Dr. Victor. Tente recarregar.</p>
+                    </div>
+                `;
+            }
         }
     },
 
@@ -110,23 +120,33 @@ window.neuroTraining = {
         if (!file) return;
 
         const status = document.getElementById('upload-status');
-        status.innerText = `⏳ Lendo: ${file.name}...`;
+        status.innerHTML = `<span style="color: #6366f1;">⏳ Processando: ${file.name}...</span>`;
 
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const content = e.target.result;
-            document.getElementById('neuro-training-sample').value = content;
-            status.innerHTML = `<span style="color: #10b981;">✅ ${file.name} carregado!</span>`;
-            
-            // Auto-trigger analysis if large file (transcript)
-            if (content.length > 500) {
-                console.log("Auto-trigger extraction for transcript...");
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/neuro-training/parse', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('neuro-training-sample').value = data.text;
+                status.innerHTML = `<span style="color: #10b981;">✅ ${file.name} processado com sucesso!</span>`;
+                
+                // Auto-trigger analysis if large content
+                if (data.text.length > 500) {
+                    console.log("Auto-trigger extraction for document...");
+                }
+            } else {
+                status.innerHTML = `<span style="color: #ef4444;">❌ Erro: ${data.error}</span>`;
             }
-        };
-        reader.onerror = () => {
-            status.innerHTML = `<span style="color: #ef4444;">❌ Erro ao ler arquivo.</span>`;
-        };
-        reader.readAsText(file);
+        } catch (e) {
+            console.error(e);
+            status.innerHTML = `<span style="color: #ef4444;">❌ Erro de conexão ao processar documento.</span>`;
+        }
     },
 
     async extractStyle() {
