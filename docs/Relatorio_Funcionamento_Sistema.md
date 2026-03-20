@@ -191,3 +191,124 @@ const modelPro = genAI.getGenerativeModel({
     }
 });
 (Nota técnica de Abidos: Eu optei pelas versões estáveis 2.5 em vez das versões preview da 3.1 para garantir que a trava do JSON Mode não sofra com instabilidades de modelos beta. O 2.5 Flash é um monstro na leitura de áudio).
+
+
+Relatório Mestre do Sistema "Antigravity / Mission Control" (Protocolo Abidos v3.2).
+
+Este documento sintetiza toda a engenharia, arquitetura, processos de inteligência artificial, diretrizes clínicas e regras de SEO evoluídas ao longo do nosso planejamento. Ele serve como o Manual Definitivo de funcionamento do seu Gêmeo Digital Clínico.
+
+🚀 RELATÓRIO MESTRE: SISTEMA ANTIGRAVITY (Protocolo Abidos v3.2)
+1. Visão Geral e Filosofia do Sistema
+
+O sistema deixa de ser um "assistente de redação" e passa a atuar como um Compilador Determinístico e Gêmeo Digital Clínico. O objetivo é atingir a publicação "Zero Touch": delegar 100% da engenharia de front-end, design, SEO e copywriting para a IA, restando ao Dr. Victor Lawrence apenas o papel de curadoria intelectual (Aprovação Final).
+
+Nicho: Psicologia Clínica, Autismo em Adultos (TEA) e Hipnose Ericksoniana.
+
+Foco: Máxima conversão local (Goiânia), E-E-A-T profundo, Índice de Qualidade 10/10 no Google Ads e tráfego orgânico via Hub & Spoke.
+
+2. Arquitetura Técnica Base (Infraestrutura)
+
+A arquitetura abandona construtores visuais legados (Elementor, Astra) em favor de código puro e performance extrema.
+
+Abordagem Headless CMS: O WordPress atua apenas como banco de dados (via REST API com autenticação JWT).
+
+Stack Visual: HTML5 Semântico + Tailwind CSS v4 compilado nativamente.
+
+Blindagem de Código (abidos-wrapper): Todo código gerado é encapsulado na <div class="abidos-wrapper"> e utiliza o prefixo !important nas classes cruciais para impedir que o WordPress sobrescreva o design.
+
+Entrega: Compilação final enviada via plugin de funcionalidade (WPCodeBox 2), garantindo carregamento instantâneo e "Zero CLS".
+
+3. A Esteira Sequencial de Agentes (Máquina de Estados)
+
+O paralelismo (agentes criando ao mesmo tempo) foi substituído por uma Linha de Montagem Rigorosa. O rascunho passa por portões de aprovação (QA) antes de chegar ao humano. Possui um Loop de Retentativa de até 3 vezes caso um inspetor reprove o código.
+
+Agente Construtor (AI Studio): O único autorizado a escrever código. Gera HTML/Tailwind, cabeçalhos, rodapés e a copy inicial.
+
+Inspetor Abidos (Estrutura/SEO): Audita o código. Reprova se houver mais de um H1, links errados, quebra de Silo ou falta do abidos-wrapper.
+
+Inspetor Clínico (E-E-A-T/Ética): Audita a copy. Reprova promessas de cura, linguagem agressiva de vendas ("compre agora") e exige lastro acadêmico (CRP, UFU).
+
+Inspetor de Design (UI/UX): Audita o Tailwind. Reprova contraste ruim, quebras no mobile, falta de Glassmorphism ou fontes erradas.
+
+Gatekeeper Humano (Aprovação): O Dr. Victor revisa. Se aprovar, o sistema publica. Se alterar algo, aciona o "Agente Extrator" para aprender o estilo.
+
+4. O Cérebro da IA: Sistema RAG e Gêmeo Digital
+
+Para garantir que a IA não soe "robótica", o sistema possui uma memória vetorial viva, baseada no estilo e nas pesquisas do especialista.
+
+Guia de Estilo Dinâmico (estilo_victor.json): Mapeia a Identidade Clínica (empatia, ciência), Ritmo Sintático (parágrafos curtos, metáforas), Palavras Proibidas (cura, cliente) e Palavras Obrigatórias (regulação, acolhimento).
+
+O Agente Extrator (Aprendizado Contínuo): Um agente invisível que compara as correções manuais do Dr. Victor com o texto gerado pela IA. Ele deduz regras e atualiza o JSON automaticamente, aprendendo o tom de voz com o tempo.
+
+RAG Acadêmico (E-E-A-T Profundo): A IA tem acesso aos PDFs de pesquisa da UFU, IFG, validação da escala AQ10b, e os conceitos de RAS30 e Potencial de Rapport Emitido (PER). Toda afirmação clínica é lastreada nesses dados de forma orgânica. As publicações contam com citações padrão APA/ABNT no rodapé.
+
+5. Sistema de Design: Os "Climas Clínicos" e Layouts
+
+Para evitar monotonia sem diluir a identidade da marca, foram parametrizadas restrições visuais baseadas em Neuroestética.
+
+Os 4 Climas Visuais (Moods):
+
+Introspecção Profunda (Ultra-Dark): Fundo Midnight Dark (#05080f), luzes hipnóticas (Orb Glow). Foco: Hipnose, Traumas.
+
+Despertar & Clareza (Off-White): Creme/Branco (#faf9f6), botões Teal (#2dd4bf). Foco: Avaliação Neuropsicológica, Ação.
+
+Conforto Neurodivergente (Low Contrast): Azul profundo suave, contraste adaptado para evitar aversão sensorial. Foco: TEA Adulto.
+
+Autoridade Acadêmica: Clássico, minimalista, linhas finas. Foco: Pesquisas e Currículo.
+
+Diferenciação de Layout (Landing Pages vs. Blog):
+
+Landing Pages (Silos Principais): Largura total, focadas em quebra de objeções e botões fluídos (Conversão Rápida).
+
+Postagens de Blog (Spokes): Layout Editorial Imersivo. Texto confinado numa "Cápsula de Leitura" (max-w-3xl), citações em Glassmorphism, imagens com filtros intercaladas, Orb Glows periféricos e Author Box obrigatória no final.
+
+6. Arquitetura de Conversão SEO (O Protocolo Abidos)
+
+Todas as páginas geradas devem obedecer estritamente à seguinte estrutura:
+
+Geração em Cluster: O sistema é capaz de gerar um Silo completo de uma vez (1 Página Hub + 5 Artigos Spoke) com linkagem interna cruzada predefinida.
+
+Regras de Headings (H1, H2, H3):
+
+H1 (Único): Palavra-chave exata + Promessa + Localização (ex: "Psicólogo Especialista em Goiânia: Supere a Ansiedade e Restaure seu Equilíbrio Mental").
+
+H2 e H3: Quebra de objeções, identificação da dor, E-A-T e FAQs.
+
+Geração Nativa de Cabeçalho e Rodapé: A IA cria o Header (Menu, Logo, CTA) e o Footer Global em 4 colunas (Identidade, Navegação, Silos, Contato/NAP perfeitamente alinhado ao Google Meu Negócio).
+
+Sinergia com Google Ads (STAGs): As páginas espelham exatamente os anúncios (Índice de Qualidade 10/10), focando na intenção hiperlocal.
+
+SEO de Imagens: Alt Tags estendidas com modificadores geográficos (ex: "Psicólogo Victor Lawrence aplicando terapia no Setor Sul em Goiânia").
+
+7. Módulos Avançados de Operação
+A. Neuro-Training Studio (Treinamento Voice-to-Voice)
+
+Funcionamento: Uma aba usando a API Gemini Live. A IA atua como um "Provocador Clínico", entrevistando o Dr. Victor sobre casos complexos.
+
+Extração: O sistema transcreve o áudio (higienizando dados de pacientes) e extrai o Pacing and Leading, metáforas criadas na hora e ritmo sintático.
+
+Modo Sparring: O Dr. Victor pode apresentar um texto e pedir feedback por áudio sobre a naturalidade clínica do conteúdo.
+
+B. Módulo Doctoralia Assistant (V4)
+
+Um simulador projetado para gerar respostas perfeitas na plataforma Doctoralia, focado em SEO Parasitário e conversão passiva, respeitando o CFP.
+
+Estrutura da Resposta: 1. Acolhimento (Pacing) -> 2. Utilidade Prática -> 3. Reforço de Autoridade (citar AQ10b/RAS30 dependendo do contexto) -> 4. Fechamento Ético.
+
+Filtro de Contexto: Se a pergunta for fora da expertise de pesquisa (ex: Fobias), a IA omite as escalas acadêmicas e foca na empatia e experiência clínica.
+
+Blindagem Ética: Proibição estrita de gerar links, contatos, telefones, ou promessas de cura. Apenas convite genérico para avaliação.
+
+8. Diretrizes Inegociáveis (Regras de Ouro da IA)
+
+Para blindar o sistema de alucinações, o Agente Construtor atua sob as seguintes leis absolutas:
+
+PROIBIÇÃO DE DADOS FALSOS: Jamais usar Lorem Ipsum, dados inventados ou imagens de bancos de imagens genéricos.
+
+BANCO DE IMAGENS REAIS: Utilizar exclusivamente o banco de URLs fornecido pelo doutor (fotos do consultório no Setor Bueno/Sul, fotos pessoais, IFG, Congresso).
+
+INTEGRIDADE DE LINKS: Nenhum link com #. Todos os CTAs e links de Silos apontam para rotas reais de hipnolawrence.com.
+
+É TICA YMYL: Proibição do uso de depoimentos inventados. A "Prova Social" é gerada exclusivamente pela autoridade acadêmica, credenciais, histórico (10 mil horas) e menção a artigos científicos.
+
+Status do Sistema: Mission Control calibrado. Modelos RAG integrados. Arquitetura Headless estabelecida. Pronto para Geração em Escala.

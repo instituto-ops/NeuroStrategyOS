@@ -334,53 +334,13 @@
                     </div>
 
                     <!-- Left: Canvas -->
-                    <div id="studio-canvas" class="studio-canvas">
-                        <div id="blueprint-welcome" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 40px; text-align: center;">
-                            <h2 style="font-size: 28px; color: #1e293b; margin-bottom: 10px;">O que vamos construir hoje, Dr?</h2>
-                            <p style="color: #64748b; font-size: 16px; margin-bottom: 30px;">Inicie um Rascunho de Alta Conversão com um clique.</p>
-                            
-                            <div style="display: flex; gap: 20px; align-items: stretch; width: 100%; max-width: 1000px;">
-                                <!-- TEA Card -->
-                                <div style="background: linear-gradient(135deg,#eff6ff,#fff); border: 2px solid #bfdbfe; padding: 20px; border-radius: 16px; box-shadow: 0 8px 20px rgba(37,99,235,0.1); flex: 1; display: flex; flex-direction: column; gap: 10px;">
-                                    <div style="font-size: 34px; text-align: center;">🧠</div>
-                                    <h3 style="margin: 0; font-size: 14px; font-weight: 800; color: #1e3a8a; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">TEA em Adultos</h3>
-                                    <select id="blueprint-tea-focus" onchange="document.getElementById('blueprint-tea-manual').style.display = this.value === 'manual' ? 'block' : 'none'" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #bfdbfe; font-size: 12px; background: white;">
-                                        <option value="TEA Adulto e Diagn&oacute;stico Tardio em Goi&acirc;nia">Diagn&oacute;stico Tardio</option>
-                                        <option value="TEA Adulto e Masking Social">Masking Social</option>
-                                        <option value="TEA Adulto e Burnout Autista">Burnout Autista</option>
-                                        <option value="manual">✏️ Outro foco...</option>
-                                    </select>
-                                    <input type="text" id="blueprint-tea-manual" placeholder="Ex: Autismo Feminino..." style="display: none; width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #bfdbfe; font-size: 12px;">
-                                    <button onclick="let f = document.getElementById('blueprint-tea-focus').value; let val = f === 'manual' ? document.getElementById('blueprint-tea-manual').value : f; if(!val) return alert('Especifique o foco'); window.chatApp.generateBlueprint(val)" class="btn btn-primary" style="margin-top: auto; font-size: 11px; padding: 12px; background: #2563eb; border: none; font-weight: 800; border-radius: 10px;">🚀 CONSTRUIR ➔</button>
-                                </div>
-
-                                <!-- Hipnose Card -->
-                                <div style="background: linear-gradient(135deg,#fdf2f8,#fff); border: 2px solid #fbcfe8; padding: 20px; border-radius: 16px; box-shadow: 0 8px 20px rgba(219,39,119,0.1); flex: 1; display: flex; flex-direction: column; gap: 10px;">
-                                    <div style="font-size: 34px; text-align: center;">🌀</div>
-                                    <h3 style="margin: 0; font-size: 14px; font-weight: 800; color: #9d174d; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Hipnose Cl&iacute;nica</h3>
-                                    <select id="blueprint-hipnose-focus" onchange="document.getElementById('blueprint-hipnose-manual').style.display = this.value === 'manual' ? 'block' : 'none'" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #fbcfe8; font-size: 12px; background: white;">
-                                        <option value="Hipnose Cl&iacute;nica Ericksoniana em Goi&acirc;nia">Ericksoniana Geral</option>
-                                        <option value="Hipnose para Controle da Dor Cr&ocirc;nica">Controle da Dor</option>
-                                        <option value="Hipnose para Ansiedade e Performance">Ansiedade e Performance</option>
-                                        <option value="manual">✏️ Outro foco...</option>
-                                    </select>
-                                    <input type="text" id="blueprint-hipnose-manual" placeholder="Ex: Parar de fumar..." style="display: none; width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #fbcfe8; font-size: 12px;">
-                                    <button onclick="let f = document.getElementById('blueprint-hipnose-focus').value; let val = f === 'manual' ? document.getElementById('blueprint-hipnose-manual').value : f; if(!val) return alert('Especifique o foco'); window.chatApp.generateBlueprint(val)" class="btn btn-primary" style="margin-top: auto; font-size: 11px; padding: 12px; background: #db2777; border: none; font-weight: 800; border-radius: 10px;">🚀 CONSTRUIR ➔</button>
-                                </div>
-
-                                <!-- [NOVO] Card Manual -->
-                                <div style="background: linear-gradient(135deg,#f8fafc,#fff); border: 2px solid #e2e8f0; padding: 20px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.07); flex: 1; display: flex; flex-direction: column; gap: 10px;">
-                                    <div style="font-size: 34px; text-align: center;">🎨</div>
-                                    <h3 style="margin: 0; font-size: 14px; font-weight: 800; color: #334155; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Foco Manual</h3>
-                                    <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: -4px 0 0 0;">Qualquer tema livre</p>
-                                    <input type="text" id="blueprint-manual-focus" placeholder="O que vamos criar hoje?" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px;">
-                                    <button onclick="const val = document.getElementById('blueprint-manual-focus').value; if(!val) return alert('Digite o tema'); window.chatApp.generateBlueprint(val)" class="btn" style="margin-top: auto; font-size: 11px; padding: 12px; background: #475569; color:white; border: none; font-weight: 800; border-radius: 10px;">🚀 CONSTRUIR ➔</button>
-                                </div>
+                    <div id="studio-canvas" class="studio-canvas" style="background: #f1f5f9; position: relative;">
+                        <div id="live-preview" class="preview-canvas desktop" style="display: flex; flex-direction: column; min-height: 100%; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-radius: 4px; border: 1px solid #e2e8f0; padding: 0; margin: 0 auto; max-width: 1000px; transition: all 0.3s ease;">
+                            <div id="canvas-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 600px; color: #cbd5e1; user-select: none;">
+                                <div style="font-size: 60px; margin-bottom: 20px; opacity: 0.5;">📄</div>
+                                <h2 style="font-size: 20px; font-weight: 700; color: #94a3b8;">Mapa em Branco</h2>
+                                <p style="font-size: 14px; color: #94a3b8; max-width: 300px; text-align: center;">Comande a IA no chat lateral para começar a construir sua estratégia Abidos v4.</p>
                             </div>
-                        </div>
-
-                        <div id="live-preview" class="preview-canvas desktop" style="display: none;">
-                            <h1 style="color: #1a202c; font-size: 24px; text-align: center; margin-top: 80px; opacity: 0.3;">Crie algo novo ou carregue do WP...</h1>
                         </div>
 
                         <!-- [NOVO] Caixa de Comando Customizado (Floating) -->

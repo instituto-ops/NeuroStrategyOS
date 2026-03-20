@@ -1264,7 +1264,11 @@ window.chatApp = {
             const contentHtml = data.content?.rendered || data.content?.raw || '';
 
             if (contentHtml.trim()) {
-                preview.style.display = 'block';
+                preview.style.display = 'flex';
+                // Remove placeholder se existir
+                const placeholder = document.getElementById('canvas-placeholder');
+                if (placeholder) placeholder.remove();
+                
                 preview.innerHTML = contentHtml;
                 this.injectCopyButtons();
                 this.updateAbidusScore();
@@ -1309,7 +1313,14 @@ window.chatApp = {
         if (suggestBtn) suggestBtn.style.display = 'block';
 
         const previewCanvas = document.getElementById('live-preview');
-        if (previewCanvas) previewCanvas.innerHTML = '<h1 style="color: #1a202c; font-size: 24px; text-align: center; margin-top: 50px; opacity: 0.5;">Comece a escrever seu novo rascunho ou peça para a IA...</h1>';
+        if (previewCanvas) {
+            previewCanvas.innerHTML = `
+                <div id="canvas-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 600px; color: #cbd5e1; user-select: none;">
+                    <div style="font-size: 60px; margin-bottom: 20px; opacity: 0.5;">📄</div>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #94a3b8;">Mapa em Branco</h2>
+                    <p style="font-size: 14px; color: #94a3b8; max-width: 300px; text-align: center;">Comande a IA no chat lateral para começar a construir sua estratégia Abidos v4.</p>
+                </div>`;
+        }
         
         const titleLabel = document.getElementById('ai-studio-title');
         if (titleLabel) titleLabel.innerText = "Novo Rascunho";
@@ -1674,24 +1685,101 @@ RETORNE APENAS O JSON, sem comentários.`;
 
     async publishDirectly() {
         const preview = document.getElementById('live-preview');
-        if (preview.innerText.includes('Crie algo novo')) return alert("O canvas está vazio!");
+        const placeholder = document.getElementById('canvas-placeholder');
+        if (placeholder) return alert("O mapa está em branco!");
 
-        if (!confirm("Deseja publicar este rascunho diretamente no WordPress agora?")) return;
+        if (!confirm("Deseja publicar este roteiro diretamente no WordPress agora?")) return;
 
-        this.addMessage("🚀 **Iniciando Publicação Direta...**");
+        const btn = event?.currentTarget || document.querySelector('button[onclick*="publishDirectly"]');
+        const originalText = btn ? btn.innerHTML : "🚀 PUBLICAR";
+        if (btn) { btn.innerHTML = "🚀 Publicando..."; btn.disabled = true; }
+
+        this.addMessage("🚀 **Iniciado Deploy Abidos...** Extraindo DNA estratégico.");
         
+        // 1. Extrai Título (Busca o primeiro H1)
+        const firstH1 = preview.querySelector('h1');
+        const titleInput = document.getElementById('ai-studio-new-title');
+        const title = firstH1 ? firstH1.innerText : (titleInput?.value || "Rascunho AI Studio " + new Date().toLocaleDateString());
+
+        // 2. Metadados SEO
+        let metaDesc = document.getElementById('seo-meta-desc').value;
+        if (!metaDesc) {
+            this.addMessage("🪄 **Gerando Meta Description estratégica...**");
+            const cleanText = preview.innerText.substring(0, 1000);
+            const prompt = `Gere uma Meta Description de alta conversão (SEO) para esta página. 
+                            Resumo do conteúdo: "${cleanText}"
+                            REGRAS: Máximo 160 caracteres. Foco em saúde mental e autoridade.
+                            SAÍDA: Apenas o texto da meta description.`;
+            metaDesc = await gemini.callAPI(prompt);
+            document.getElementById('seo-meta-desc').value = metaDesc;
+        }
+
         const payload = {
-            title: this.currentKeyword || "Novo Rascunho AI Studio",
+            type: document.getElementById('ai-studio-type').value || 'pages',
+            title: title,
             content: preview.innerHTML,
-            status: "draft"
+            status: "draft",
+            slug: document.getElementById('seo-slug').value,
+            metaDesc: metaDesc,
+            metaTitle: document.getElementById('seo-title-tag').value || title
         };
 
-        const result = await wpAPI.saveContent('posts', payload);
-        if (result && result.id) {
-            this.addMessage(`✅ **SUCESSO!** Publicado como Rascunho no WP. ID: #${result.id}`);
-            window.open(result.link, '_blank');
-        } else {
-            this.addMessage("❌ Falha na publicação. Verifique a aba Gerenciar WP ou a conexão API.");
+        try {
+            const result = await fetch('/api/content/publish-direct', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(r => r.json());
+
+            if (result.success) {
+                this.addMessage(`✅ **PUBLICAÇÃO CONCLUÍDA!**\n\nID: #${result.id}\nStatus: Rascunho Seguro Bypass-WAF.`);
+                this.addMessage(`<br><a href="${result.link}" target="_blank" class="btn btn-primary" style="display:inline-block; margin-top:5px; background:#10b981; border:none; color:white;">👁️ Ver no WordPress</a>`);
+                this.currentItemId = result.id;
+            } else {
+                this.addMessage("❌ Erro no deploy: " + (result.error || "WP recusou a injeção via Proxy."));
+            }
+        } catch (e) {
+            console.error(e);
+            this.addMessage("🚨 Erro Crítico: A ponte de publicação foi bloqueada ou o servidor está offline.");
+        } finally {
+            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+    },
+
+    async generateBlueprint(tema) {
+        this.addMessage(`🚀 **Iniciando Construção de Blueprint Abidos...**\nFoco: **${tema}**`);
+        const livePreview = document.getElementById('live-preview');
+        
+        // Limpa placeholder se existir
+        const placeholder = document.getElementById('canvas-placeholder');
+        if (placeholder) placeholder.remove();
+        
+        livePreview.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:300px;"><div class="loader"></div><p style="margin-left:15px; font-weight:bold; color:#64748b;">Orquestrando Agentes Abidos...</p></div>';
+
+        const prompt = `Gere um rascunho completo de uma Landing Page de alta conversão para o Dr. Victor Lawrence.
+        TEMA: ${tema}
+        REGRAS ABIDOS:
+        1. Use Seções Flexbox modernas.
+        2. Inclua Hero, Seção de Dor, Seção de Autoridade (E-E-A-T) e CTA de WhatsApp.
+        3. Use o tom clínico do Dr. Victor (Mestrado UFU, Ericksoniano).
+        4. O rascunho deve ser em HTML semântico limpo, pronto para o Elementor/Gutenberg.
+        5. NÃO inclua <html> ou <body>, apenas o conteúdo interno.
+        6. Use vidromorfismo e cards premium.`;
+
+        try {
+            const result = await gemini.callAPI(prompt);
+            if (result) {
+                this.saveHistory();
+                livePreview.innerHTML = result;
+                this.updateAbidusScore();
+                this.addMessage("✅ **Blueprint Gerado com Sucesso!** Ajuste os detalhes via chat ou use o Inspector.");
+                
+                // Remove o loader se a IA não retornou HTML substituto correto
+                if (livePreview.innerHTML.includes('loader')) livePreview.innerHTML = result;
+            }
+        } catch (e) {
+            this.addMessage("❌ Falha ao orquestrar agentes para o Blueprint.");
+            console.error(e);
         }
     }
 };
@@ -1704,7 +1792,8 @@ window.injectCode = function(btn) {
     const mode = modeSelect ? modeSelect.value : 'replace';
 
     // Se o preview tiver o texto placeholder, limpa antes de injetar
-    if (preview.innerText.includes('Crie algo novo') || preview.innerText.includes('Comece a escrever')) {
+    const placeholder = document.getElementById('canvas-placeholder');
+    if (placeholder || preview.innerText.includes('Crie algo novo') || preview.innerText.includes('Comece a escrever')) {
         preview.innerHTML = '';
     }
 

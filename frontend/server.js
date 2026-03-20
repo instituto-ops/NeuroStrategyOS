@@ -1350,6 +1350,86 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
     }
 });
 
+app.post('/api/content/publish-direct', async (req, res) => {
+    try {
+        const { type, title, content, status, slug, metaTitle, metaDesc } = req.body;
+        
+        console.log(`🚀 [PUBLISH PROXY] Iniciando deploy do tipo ${type}: "${title}"`);
+
+        // Payload básico para o WordPress
+        const payload = {
+            title: title || "Sem Título",
+            content: content || "",
+            status: status || "draft",
+            slug: slug || "",
+        };
+
+        // Integração com Yoast/RankMath se os campos existirem
+        // Injetando via standard WP REST API meta key
+        if (metaDesc || metaTitle) {
+            payload.meta = {
+                _yoast_wpseo_metadesc: metaDesc || "",
+                _yoast_wpseo_title: metaTitle || "",
+                rank_math_description: metaDesc || "",
+                rank_math_title: metaTitle || ""
+            };
+        }
+
+        const endpoint = type === 'posts' ? '/posts' : '/pages';
+        const response = await callWP('POST', endpoint, payload);
+
+        if (response && response.data && response.data.id) {
+             res.json({ 
+                success: true, 
+                id: response.data.id, 
+                link: response.data.link,
+                message: "Publicado com sucesso no WordPress (Status: " + payload.status + ")"
+            });
+        } else {
+            console.error("Resp WP Inválida:", response?.data);
+            res.status(500).json({ error: "Resposta inválida ou vazia do WordPress via Proxy." });
+        }
+    } catch (e) {
+        console.error("❌ [PUBLISH PROXY ERROR]", e.response?.data || e.message);
+        const wpError = e.response?.data?.message || e.message;
+        res.status(500).json({ error: "Erro na ponte do WordPress: " + wpError });
+    }
+});
+
+app.post('/api/doctoralia/generate-reply', async (req, res) => {
+    try {
+        const { question } = req.body;
+        const memory = getVictorStyle();
+        const dnaRules = (memory.style_rules || []).map(r => `[${r.categoria}]: ${r.titulo} -> ${r.regra}`).join('\n');
+
+        const systemPrompt = `
+        VOCÊ É O AVATAR CLÍNICO DO DR. VICTOR LAWRENCE (Mestre UFU, Ericksoniano).
+        RESPONDA À PERGUNTA DO PACIENTE NO DOCTORALIA: "${question}"
+        
+        PROTOCOLO DE RESPOSTA (ABRAÇO TÉCNICO):
+        1. PACING: Valide o sofrimento/dúvida com empatia profunda.
+        2. UTILIDADE: Dê uma explicação técnica simplificada (Neurociência/Psicologia).
+        3. EEAT: Mencione sutilmente a experiência clínica (Mestrado UFU, Atendimento em Goiânia).
+        4. ÉTICA: Não prometa cura. Sugira avaliação profissional.
+        
+        REGRAS CRÍTICAS:
+        - PROIBIDO USAR ** (NEGRITO) OU QUALQUER FORMATAÇÃO MARKDOWN.
+        - Texto 100% limpo, pronto para copiar e colar no Doctoralia.
+        - Não use saudações robóticas. Use um tom de voz ericksoniano e humano.
+        
+        REGRAS DE DNA EXTRAÍDAS:
+        ${dnaRules || "Escreva com tom clínico profissional e empático."}
+        `;
+
+        const result = await modelPro.generateContent(systemPrompt);
+        let reply = result.response.text().replace(/\*\*/g, '').replace(/###/g, '').replace(/##/g, '').replace(/#/g, '').trim();
+        res.json({ success: true, reply: cleanClinicalData(reply) });
+    } catch (e) {
+        console.error("❌ [DOCTORALIA ERROR]", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.post('/api/studio/gerar-rascunho', async (req, res) => {
     try {
         const { tema, formato, publico } = req.body;
