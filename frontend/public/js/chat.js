@@ -1794,6 +1794,82 @@ RETORNE APENAS O JSON, sem comentários.`;
             this.addMessage("❌ Falha ao orquestrar agentes para o Blueprint.");
             console.error(e);
         }
+    },
+
+    async createCluster() {
+        const titleInput = document.getElementById('ai-studio-new-title');
+        const theme = titleInput ? titleInput.value : "TEA em Adultos";
+        const moodId = document.getElementById('global-mood-selector')?.value || '1_introspeccao_profunda';
+        const waNumber = document.getElementById('setting-whatsapp')?.value || "5562991545295";
+        const btn = document.getElementById('ai-studio-cluster-btn');
+
+        if (!theme || theme.length < 5) return alert("Por favor, digite um tema sólido ou um título estratégico para basear o Cluster.");
+
+        if(btn) { btn.innerText = "💠 Orquestrando..."; btn.disabled = true; }
+        
+        this.addMessage(`💠 **Iniciando Orquestração de Cluster Abidos (Silo Neural)...**\n\nNeste momento, os agentes estão:\n1. Planejando a rede de interligação entre Hub e Spokes para **"${theme}"**.\n2. Produzindo individualmente 6 rascunhos de alta qualidade (1 Página Hub + 5 Posts Spokes).\n3. Auditando cada item via Esteira QA.\n\n*Aguarde de 2 a 3 minutos. O Mission Control notificará ao concluir.*`);
+        
+        await this.addAgentLog("NeuroEngine AI", "Iniciando Planejador de Silos", true);
+
+        try {
+            const response = await fetch('/api/blueprint/cluster', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ theme, moodId, whatsapp: waNumber })
+            });
+            
+            const data = await response.json();
+
+            if (data.success && data.items) {
+                let msg = `✅ **MISSION CONTROL: CLUSTER CONCLUÍDO!**\n\nForam criados 6 rascunhos estratégicos para o Silo **"${data.mainTopic}"**. Clique em cada um para carregar no canvas e revisar:\n\n<div style="background:#f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-top: 10px;">`;
+                
+                data.items.forEach((item, idx) => {
+                    const clusterKey = `clstr_${Date.now()}_${idx}`;
+                    window.AbidosClusterCache = window.AbidosClusterCache || {};
+                    window.AbidosClusterCache[clusterKey] = item.html;
+
+                    const typeIcon = item.type === 'pages' ? '📄' : '📰';
+                    msg += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; font-size: 13px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;">
+                                <span style="flex:1; padding-right: 10px;">${typeIcon} <strong>${item.title}</strong></span>
+                                <button onclick="window.chatApp.loadFromCluster('${clusterKey}', '${item.title.replace(/'/g, "\\'")}', '${item.type}')" 
+                                        style="background:#6366f1; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:bold;">
+                                    📂 Abrir
+                                </button>
+                            </div>`;
+                });
+                msg += `</div>\n\n*Dica: Após carregar e ajustar, use o botão Publicar para enviar individualmente ao WordPress.*`;
+                this.addMessage(msg);
+            } else {
+                this.addMessage(`❌ **Falha na Esteira de Clusters:** ${data.error || 'Erro desconhecido'}`);
+            }
+        } catch (e) {
+            console.error(e);
+            this.addMessage(`❌ **Erro de Rede no Mission Control.**`);
+        } finally {
+            if(btn) { btn.innerText = "💠 Gerar Cluster"; btn.disabled = false; }
+        }
+    },
+
+    loadFromCluster(key, title, type) {
+        if (!window.AbidosClusterCache || !window.AbidosClusterCache[key]) return;
+        const html = window.AbidosClusterCache[key];
+        const preview = document.getElementById('live-preview');
+        
+        // Limpa canvas
+        const placeholder = document.getElementById('canvas-placeholder');
+        if (placeholder) placeholder.remove();
+        
+        preview.innerHTML = html;
+        this.injectCopyButtons();
+        this.updateAbidusScore();
+        
+        // Atualiza UI
+        document.getElementById('ai-studio-title').innerText = `Cluster: ${title}`;
+        document.getElementById('ai-studio-new-title').value = title;
+        document.getElementById('ai-studio-new-title').style.display = 'block';
+        document.getElementById('ai-studio-type').value = type;
+        
+        this.addMessage(`📌 Item do Cluster carregado: **${title}** (${type}).\n\nPronto para revisão e publicação.`);
     }
 };
 

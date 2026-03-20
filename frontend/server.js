@@ -1087,6 +1087,55 @@ async function runDesignInspector(html) {
     }
 }
 
+/**
+ * ESTEIRA DE PRODUÇÃO UNIFICADA (MÁQUINA DE ESTADOS)
+ * Orquestra o Construtor e os 3 Inspetores com loop de retentativa.
+ */
+async function runProductionLine(userInput, feedback, waNumber, moodId, contentType, siloContext = "") {
+    let currentHtml = "";
+    let finalFeedback = feedback;
+    const maxRetries = 3;
+    let attempts = 0;
+
+    while (attempts < maxRetries) {
+        attempts++;
+        console.log(`🔄 [ESTEIRA] Tentativa ${attempts}/${maxRetries} (${contentType}) para: ${userInput.substring(0, 30)}...`);
+        
+        // 1. Construtor
+        let extendedPrompt = userInput;
+        if (siloContext) extendedPrompt += `\n\n[CONTEXTO DE SILO ABIDOS]: Este item faz parte de um cluster. Vincule-o semanticamente e crie links contextuais para: ${siloContext}`;
+
+        currentHtml = await runConstructor(extendedPrompt, finalFeedback, waNumber, moodId, contentType);
+        
+        // 2. Inspetor Abidos
+        const abidosResult = await runAbidosInspector(currentHtml);
+        if (abidosResult.status === "REPROVOU") {
+            console.warn(`❌ [ABIDOS REPROVOU] Tentativa ${attempts}: ${abidosResult.motivo}`);
+            finalFeedback = `AGENTE ABIDOS REPROVOU: ${abidosResult.motivo}`;
+            continue;
+        }
+        
+        // 3. Inspetor Clínico
+        const clinicalResult = await runClinicalInspector(currentHtml);
+        if (clinicalResult.status === "REPROVOU") {
+            console.warn(`❌ [CLÍNICO REPROVOU] Tentativa ${attempts}: ${clinicalResult.motivo}`);
+            finalFeedback = `AGENTE CLÍNICO REPROVOU: ${clinicalResult.motivo}`;
+            continue;
+        }
+
+        // 4. Inspetor Design
+        const designResult = await runDesignInspector(currentHtml);
+        if (designResult.status === "REPROVOU") {
+            console.warn(`❌ [DESIGN REPROVOU] Tentativa ${attempts}: ${designResult.motivo}`);
+            finalFeedback = `AGENTE DESIGN REPROVOU: ${designResult.motivo}`;
+            continue;
+        }
+        
+        return { success: true, html: currentHtml, attempts };
+    }
+    return { success: false, html: currentHtml, feedback: finalFeedback, attempts };
+}
+
 // ==============================================================================
 // 7. MARKETING LAB & ORQUESTRAÇÃO
 // ==============================================================================
@@ -1126,58 +1175,19 @@ app.post('/api/chat', upload.single('screenshot'), async (req, res) => {
         const selectedMood = moodId || '1_introspeccao_profunda';
         const contentType = type || 'pages';
         
-        console.log(`\n🚦 [ESTEIRA] Iniciando Orquestração Sequencial (Tipo: ${contentType}, Mood: ${selectedMood}) para: "${userInput.substring(0, 30)}..."`);
+        console.log(`\n🚦 [CHAT-ESTEIRA] Novo Comando Recebido: "${userInput.substring(0, 30)}..."`);
         
-        let currentHtml = "";
-        let feedback = null;
-        let attempts = 0;
-        const maxRetries = 3;
+        const result = await runProductionLine(userInput, null, waNumber, selectedMood, contentType);
 
-        while (attempts < maxRetries) {
-            attempts++;
-            console.log(`🔄 [TENTATIVA ${attempts}/${maxRetries}]`);
-            
-            // 1. CONSTRUTOR
-            currentHtml = await runConstructor(userInput, feedback, waNumber, selectedMood, contentType);
-            
-            // 2. INSPEÇÃO ABIDOS
-            const abidosResult = await runAbidosInspector(currentHtml);
-            if (abidosResult.status === "REPROVOU") {
-                console.warn(`❌ [ABIDOS REPROVOU] Motivo: ${abidosResult.motivo}`);
-                feedback = `AGENTE ABIDOS REPROVOU: ${abidosResult.motivo}`;
-                continue;
-            }
-            console.log(`✅ [ABIDOS PASSOU]`);
-
-            // 3. INSPEÇÃO CLÍNICA
-            const clinicalResult = await runClinicalInspector(currentHtml);
-            if (clinicalResult.status === "REPROVOU") {
-                console.warn(`❌ [CLÍNICO REPROVOU] Motivo: ${clinicalResult.motivo}`);
-                feedback = `AGENTE CLÍNICO REPROVOU: ${clinicalResult.motivo}`;
-                continue;
-            }
-            console.log(`✅ [CLÍNICO PASSOU]`);
-
-            // 4. INSPEÇÃO DESIGN
-            const designResult = await runDesignInspector(currentHtml);
-            if (designResult.status === "REPROVOU") {
-                console.warn(`❌ [DESIGN REPROVOU] Motivo: ${designResult.motivo}`);
-                feedback = `AGENTE DESIGN REPROVOU: ${designResult.motivo}`;
-                continue;
-            }
-            console.log(`✅ [DESIGN PASSOU]`);
-
-            // SE CHEGOU AQUI, PASSOU EM TUDO
-            console.log(`🏁 [ESTEIRA CONCLUÍDA] Código aprovado por todos os inspetores.`);
-            return res.json({ reply: currentHtml });
+        if (result.success) {
+            console.log(`🏁 [CHAT-ESTEIRA CONCLUÍDA] Código aprovado.`);
+            res.json({ reply: result.html });
+        } else {
+            console.error(`🚨 [CHAT-ESTEIRA FALHOU] Feedback final: ${result.feedback}`);
+            res.json({ reply: `⚠️ Atenção: O Studio não conseguiu resolver todas as pendências de qualidade após ${result.attempts} tentativas. Feedback: ${result.feedback}. Intervenção manual necessária.` });
         }
-
-        // SE ESGOTOU TENTATIVAS
-        console.error(`🚨 [ESTEIRA FALHOU] Limite de ${maxRetries} retentativas atingido.`);
-        res.json({ reply: `⚠️ Atenção: O Studio não conseguiu resolver todas as pendências de qualidade após ${maxRetries} tentativas. Feedback final do último inspetor: ${feedback}. Intervenção manual necessária.` });
-
     } catch (e) { 
-        console.error("❌ [ESTEIRA ERROR]", e.message);
+        console.error("❌ [CHAT-ESTEIRA ERROR]", e.message);
         res.status(500).json({ error: e.message }); 
     }
 });
@@ -1189,55 +1199,15 @@ app.post('/api/blueprint', upload.none(), async (req, res) => {
         const selectedMood = moodId || '1_introspeccao_profunda';
         const contentType = type || 'pages';
         
-        console.log(`\n📐 [BLUEPRINT] Iniciando Esteira de Produção (Tipo: ${contentType}, Mood: ${selectedMood}) para Tema: "${theme}"`);
+        console.log(`\n📐 [BLUEPRINT] Solicitação de Rascunho: "${theme}" (${contentType})`);
         
-        let currentHtml = "";
-        let feedback = null;
-        let attempts = 0;
-        const maxRetries = 3;
+        const result = await runProductionLine(`Criar blueprint completo para o tema: ${theme}`, null, waNumber, selectedMood, contentType);
 
-        while (attempts < maxRetries) {
-            attempts++;
-            console.log(`🔄 [TENTATIVA ${attempts}/${maxRetries}]`);
-            
-            // 1. CONSTRUTOR
-            currentHtml = await runConstructor(`Criar blueprint completo para o tema: ${theme}`, feedback, waNumber, selectedMood, contentType);
-            
-            // 2. INSPEÇÃO ABIDOS
-            const abidosResult = await runAbidosInspector(currentHtml);
-            if (abidosResult.status === "REPROVOU") {
-                console.warn(`❌ [ABIDOS REPROVOU] Motivo: ${abidosResult.motivo}`);
-                feedback = `AGENTE ABIDOS REPROVOU: ${abidosResult.motivo}`;
-                continue;
-            }
-            console.log(`✅ [ABIDOS PASSOU]`);
-
-            // 3. INSPEÇÃO CLÍNICA
-            const clinicalResult = await runClinicalInspector(currentHtml);
-            if (clinicalResult.status === "REPROVOU") {
-                console.warn(`❌ [CLÍNICO REPROVOU] Motivo: ${clinicalResult.motivo}`);
-                feedback = `AGENTE CLÍNICO REPROVOU: ${clinicalResult.motivo}`;
-                continue;
-            }
-            console.log(`✅ [CLÍNICO PASSOU]`);
-
-            // 4. INSPEÇÃO DESIGN
-            const designResult = await runDesignInspector(currentHtml);
-            if (designResult.status === "REPROVOU") {
-                console.warn(`❌ [DESIGN REPROVOU] Motivo: ${designResult.motivo}`);
-                feedback = `AGENTE DESIGN REPROVOU: ${designResult.motivo}`;
-                continue;
-            }
-            console.log(`✅ [DESIGN PASSOU]`);
-
-            // FINALIZADO
-            console.log(`🏁 [BLUEPRINT CONCLUÍDO] Blueprint aprovado por todos os inspetores.`);
-            return res.json({ html: currentHtml });
+        if (result.success) {
+            res.json({ html: result.html });
+        } else {
+            res.json({ html: `<!-- 🚨 FALHA CRÍTICA: O Studio não conseguiu resolver rascunho Abidos após 3 tentativas. -->\n${result.html}` });
         }
-
-        console.error(`🚨 [BLUEPRINT FALHOU] Limite de ${maxRetries} retentativas atingido.`);
-        res.json({ html: `<!-- 🚨 FALHA CRÍTICA: O Studio não conseguiu resolver rascunho Abidos após 3 tentativas. Intervenção manual necessária. -->\n${currentHtml}` });
-
     } catch (e) { 
         console.error("❌ [BLUEPRINT ERROR]", e.message);
         res.status(500).json({ error: e.message }); 
@@ -1397,6 +1367,54 @@ app.post('/api/content/publish-direct', async (req, res) => {
         console.error("❌ [PUBLISH PROXY ERROR]", e.response?.data || e.message);
         const wpError = e.response?.data?.message || e.message;
         res.status(500).json({ error: "Erro na ponte do WordPress: " + wpError });
+    }
+});
+
+app.post('/api/blueprint/cluster', async (req, res) => {
+    try {
+        const { theme, whatsapp, moodId } = req.body;
+        const waNumber = whatsapp || '5562991545295';
+        const selectedMood = moodId || '1_introspeccao_profunda';
+        
+        console.log(`🏗️ [CLUSTER V4] Iniciando Planejamento Silo-Hub para: "${theme}"`);
+
+        // 1. Planejamento (Flash - Estruturador)
+        const plannerPrompt = `Atue como Estrategista SEO Abidos (Psicologia Clínica/Goiânia).
+        Assunto Principal: "${theme}". 
+        Necessidade: Mão de obra de conteúdo 1-Hub + 5-Spokes.
+        RETORNE EXATAMENTE UM JSON: {
+          "hub": { "title": "O Silo Principal (Página)", "topic": "Copy focada em conversão geral sobre ${theme}", "type": "pages" },
+          "spokes": [ { "title": "Subtema 1", "topic": "Discussão específica 1", "type": "posts" }, ...x5 ]
+        }
+        As spokes devem cobrir dores, dúvidas e objeções do paciente.`;
+        
+        const planResult = await modelFlash.generateContent(plannerPrompt);
+        const siloPlan = extractJSON(planResult.response.text());
+        if (!siloPlan || !siloPlan.hub) throw new Error("Falha no planejamento neural do Silo.");
+
+        const siloSummary = `Hub: "${siloPlan.hub.title}", Spokes: ${siloPlan.spokes.map(s => s.title).join(", ")}`;
+        const generatedItems = [];
+
+        // 2. Sequência de Produção (Sequencial para não saturar limites e garantir foco)
+        // Hub primeiro
+        const hubResult = await runProductionLine(siloPlan.hub.topic, null, waNumber, selectedMood, 'pages', siloSummary);
+        generatedItems.push({ ...siloPlan.hub, html: hubResult.html, success: hubResult.success });
+
+        // Spokes
+        for(const spoke of siloPlan.spokes) {
+            const spokeResult = await runProductionLine(spoke.topic, null, waNumber, selectedMood, 'posts', siloSummary);
+            generatedItems.push({ ...spoke, html: spokeResult.html, success: spokeResult.success });
+        }
+
+        res.json({ 
+            success: true, 
+            message: "Silo/Cluster gerado com sucesso!",
+            mainTopic: theme,
+            items: generatedItems 
+        });
+    } catch (e) {
+        console.error("❌ [CLUSTER ERROR]", e);
+        res.status(500).json({ error: e.message });
     }
 });
 
