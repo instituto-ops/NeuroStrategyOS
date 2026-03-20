@@ -306,7 +306,7 @@ Relatório Mestre do Sistema "NeuroEngine" (Protocolo Abidos v3.2).
 
 Este documento sintetiza toda a engenharia, arquitetura, processos de inteligência artificial, diretrizes clínicas e regras de SEO evoluídas ao longo do nosso planejamento. Ele serve como o Manual Definitivo de funcionamento do seu Gêmeo Digital Clínico.
 
-🚀 RELATÓRIO MESTRE: SISTEMA ANTIGRAVITY (Protocolo Abidos v3.2)
+🚀 RELATÓRIO MESTRE: SISTEMA NEUROENGINE (Protocolo Abidos v3.2)
 1. Visão Geral e Filosofia do Sistema
 
 O sistema deixa de ser um "assistente de redação" e passa a atuar como um Compilador Determinístico e Gêmeo Digital Clínico. O objetivo é atingir a publicação "Zero Touch": delegar 100% da engenharia de front-end, design, SEO e copywriting para a IA, restando ao Dr. Victor Lawrence apenas o papel de curadoria intelectual (Aprovação Final).

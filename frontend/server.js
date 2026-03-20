@@ -86,6 +86,34 @@ const getVictorStyle = () => {
 
 // ──────────────────────────────────────────────────────────────────────────────
 
+// ============================================================================
+// 🧬 COMPILADOR DE DNA — Converte style_rules em diretivas autoritárias para IA
+// ============================================================================
+function getDnaContext() {
+    try {
+        const memory = getVictorStyle();
+        const regras = (memory.style_rules || []).filter(r => r.regra && r.titulo);
+        if (!regras.length) return "";
+
+        let ctx = `\n==================================================================\n`;
+        ctx += `[DIRETRIZES ABSOLUTAS DE IDENTIDADE VERBAL E COPYWRITING — DR. VICTOR LAWRENCE]\n`;
+        ctx += `Você DEVE aplicar RIGOROSAMENTE a cadência, o vocabulário e a sintaxe abaixo.\n`;
+        ctx += `Estas regras definem a 'voz' do Dr. Victor. OBEDEÇA A TODAS, SEM EXCEÇÃO.\n\n`;
+
+        regras.forEach((r, i) => {
+            const cat = (r.categoria || 'ESTILO').toUpperCase();
+            ctx += `Regra ${i + 1} — [${cat}] ${r.titulo}\n`;
+            ctx += `AÇÃO OBRIGATÓRIA: ${r.regra}\n\n`;
+        });
+
+        ctx += `==================================================================\n`;
+        return ctx;
+    } catch (e) {
+        console.warn("[DNA] Memória vazia ou corrompida, usando tom neutro.");
+        return "";
+    }
+}
+
 // FUNÇÃO DE CONSOLIDAÇÃO DE DNA (Hipocampo Digital)
 async function salvarRegrasDeEstilo(novasRegras) {
     if (!novasRegras || novasRegras.length === 0) return;
@@ -1428,39 +1456,42 @@ app.post('/api/neuro-training/chat', async (req, res) => {
         const { message } = req.body;
         if (!message) return res.status(400).json({ error: 'Mensagem vazia.' });
 
-        const memory = getVictorStyle();
-        const dnaRules = (memory.style_rules || []).slice(-10) // Últimas 10 regras como contexto
-            .map(r => `[${r.categoria}] ${r.titulo}: ${r.regra}`)
-            .join('\n');
+        const dnaExistente = getDnaContext();
 
         const systemPrompt = `
-        VOCÊ É O "APRENDIZ DE ABIDOS" — UM GÊMEO DIGITAL EM TREINAMENTO DO DR. VICTOR LAWRENCE.
-        
-        SEU PAPEL NESTA CONVERSA:
-        Você está em uma sessão de treinamento com o Dr. Victor. Ele vai falar naturalmente sobre casos clínicos, técnicas, abordagens e pensamentos. Sua missão é APRENDER e ESPELHAR o seu estilo metodológico.
-        
-        REGRAS CRÍTICAS DE EXTRAÇÃO DE DNA:
-        1. Foque APENAS na metodologia e padrões de raciocínio do Dr. Victor (o "Participante 2").
-        2. IGNORE sintomas, histórias e queixas dos pacientes (Participante 1). Eles são contexto, não DNA.
-        3. Extraia padrões como: "Ele usa a metáfora X para explicar Y", "Ele prioriza Z quando detecta W", "Seu tom é A em situações B".
-        4. Responda de forma conversacional, natural, encorajando o doutor a aprofundar o ponto.
-        
-        DNA JÁ APRENDIDO (contexto):
-        ${dnaRules || 'Nenhum padrão registrado ainda. Esta é a primeira sessão.'}
-        
-        FORMATO DA SUA RESPOSTA:
-        Responda EXCLUSIVAMENTE em JSON válido:
-        {
-          "reply": "Sua resposta conversacional aqui (sem formatação markdown, texto limpo)",
-          "regras_extraidas": [
-            {
-              "categoria": "TÉCNICA|LINGUAGEM|ABORDAGEM|ÉTICA|METÁFORA",
-              "titulo": "Nome curto do padrão detectado",
-              "regra": "Descrição da regra de DNA extraída da fala do Dr. Victor"
-            }
-          ]
-        }
-        Se não houver padrão novo claro para extrair, retorne "regras_extraidas": [].
+Você é o Engenheiro de Prompt e Analista de Tom de Voz (Copywriting) do sistema Abidos.
+Sua ÚNICA missão é clonar a identidade verbal, a cadência e o estilo de escrita do Dr. Victor Lawrence.
+
+REGRA ABSOLUTA — SIGILO E FOCO:
+- IGNORE COMPLETAMENTE a história de vida, queixas, diagnósticos ou o contexto clínico do paciente.
+- IGNORE a metodologia clínica teórica (o que ele trata). Isso não é DNA de escrita.
+- O seu foco é 100% em COMO o Dr. Victor se comunica (Forma), não no QUE ele está tratando (Conteúdo).
+
+O QUE VOCÊ DEVE EXTRAIR — O DNA DA ESCRITA:
+1. [Vocabulário] Quais palavras exatas, conectivos, expressões de transição ou bordões ele usa habitualmente?
+2. [Ritmo] Como ele constrói as frases? São curtas e diretas? Longas e permissivas? Usa perguntas retóricas?
+3. [Tom] Qual é a 'vibe' da fala? (Ex: Acolhedor, professoral, filosófico, assertivo, rítmico)
+4. [Estrutura] Como ele estrutura uma explicação ou analogia para tornar uma ideia complexa fácil?
+
+OBJETIVO FINAL:
+Transforme a análise em Diretrizes de Copywriting universais que o sistema usará para escrever Landing Pages,
+Posts de Blog ou Respostas do Doctoralia simulando com perfeição que foi o próprio Dr. Victor quem digitou.
+
+DNA JÁ APRENDIDO (não repita regras já existentes):
+${dnaExistente || 'Nenhum padrão registrado ainda. Esta é a primeira sessão.'}
+
+FORMATO OBRIGATÓRIO — Retorne EXCLUSIVAMENTE JSON válido:
+{
+  "reply": "Sua resposta conversacional aqui — engaje o doutor para aprofundar a ideia, sem markdown",
+  "regras_extraidas": [
+    {
+      "categoria": "Vocabulário | Ritmo | Tom | Estrutura",
+      "titulo": "Nome curto do padrão (ex: Perguntas Reflexivas Curtas)",
+      "regra": "Instrução direta de como replicar esse padrão em textos futuros."
+    }
+  ]
+}
+Se não houver padrão novo claro para extrair, retorne \"regras_extraidas\": [].
         `;
 
         const result = await modelFlash.generateContent([
@@ -1499,34 +1530,45 @@ app.post('/api/neuro-training/chat', async (req, res) => {
 app.post('/api/doctoralia/generate-reply', async (req, res) => {
     try {
         const { question } = req.body;
-        const memory = getVictorStyle();
-        const dnaRules = (memory.style_rules || []).map(r => `[${r.categoria}]: ${r.titulo} -> ${r.regra}`).join('\n');
+        if (!question) return res.status(400).json({ success: false, error: 'Pergunta obrigatória.' });
 
+        console.log("\ud83e\uddf6 [DOCTORALIA] Gerando resposta com DNA de Copywriting injetado...");
+
+        // 1. Carrega o manual de redação pessoal do Dr. Victor
+        const dnaInjetado = getDnaContext();
+
+        // 2. Prompt mestre: DNA de Voz PRIMEIRO, depois protocolo clínico
         const systemPrompt = `
-        VOCÊ É O AVATAR CLÍNICO DO DR. VICTOR LAWRENCE (Mestre UFU, Ericksoniano).
-        RESPONDA À PERGUNTA DO PACIENTE NO DOCTORALIA: "${question}"
-        
-        PROTOCOLO DE RESPOSTA (ABRAÇO TÉCNICO):
-        1. PACING: Valide o sofrimento/dúvida com empatia profunda.
-        2. UTILIDADE: Dê uma explicação técnica simplificada (Neurociência/Psicologia).
-        3. EEAT: Mencione sutilmente a experiência clínica (Mestrado UFU, Atendimento em Goiânia).
-        4. ÉTICA: Não prometa cura. Sugira avaliação profissional.
-        
-        REGRAS CRÍTICAS:
-        - PROIBIDO USAR ** (NEGRITO) OU QUALQUER FORMATAÇÃO MARKDOWN.
-        - Texto 100% limpo, pronto para copiar e colar no Doctoralia.
-        - Não use saudações robóticas. Use um tom de voz ericksoniano e humano.
-        
-        REGRAS DE DNA EXTRAÍDAS:
-        ${dnaRules || "Escreva com tom clínico profissional e empático."}
+Você é o Gêmeo Digital Literário do Dr. Victor Lawrence (Psicólogo Clínico CRP 09/012681, Especialista em TEA em Adultos e Hipnose Ericksoniana, Mestre UFU, Goiânia-GO).
+Sua missão é responder à dúvida de um paciente na plataforma Doctoralia.
+
+${dnaInjetado}
+
+ESTRUTURA OBRIGATÓRIA DA RESPOSTA (MÉTODO ABIDOS):
+1. Acolhimento (Pacing): Valide a dor ou dúvida aplicando sua empatia e cadência características.
+2. Utilidade Prática: Explique de forma psicoeducativa, breve e fenomenológica.
+3. Reforço de Autoridade (E-E-A-T): Se o tema for TEA, Burnout ou Hipnose, mencione sutilmente sua experiência.
+4. Fechamento: Convide para avaliação de forma permissiva, típica da sua linguagem ericksoniana.
+
+DIRETRIZES ÉTICAS (CFP & DOCTORALIA — OBRIGATÓRIO):
+- NUNCA faça diagnósticos fechados pela internet.
+- NUNCA prometa cura ou resultados garantidos.
+- NÃO inclua números de telefone, links, preços ou endereços (o algoritmo bloqueia).
+- Retorne APENAS o texto da resposta em português brasileiro, sem formatação markdown (sem **, *, #). Parágrafos limpos.
+
+PERGUNTA DO PACIENTE:
+"${question}"
         `;
 
         const result = await modelPro.generateContent(systemPrompt);
-        let reply = result.response.text().replace(/\*\*/g, '').replace(/###/g, '').replace(/##/g, '').replace(/#/g, '').trim();
-        res.json({ success: true, reply: cleanClinicalData(reply) });
+        let reply = result.response.text()
+            .replace(/\*\*/g, '').replace(/###/g, '').replace(/##/g, '')
+            .replace(/#/g, '').replace(/\*/g, '').trim();
+
+        res.json({ success: true, reply });
     } catch (e) {
-        console.error("❌ [DOCTORALIA ERROR]", e);
-        res.status(500).json({ error: e.message });
+        console.error('❌ [DOCTORALIA ERROR]', e);
+        res.status(500).json({ success: false, error: e.message });
     }
 });
 
