@@ -3,6 +3,7 @@ const multer = require('multer');
 const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
+const WebSocket = require('ws');
 require('dotenv').config({ path: '../.env' }); 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
@@ -1338,16 +1339,16 @@ app.post('/api/content/publish-direct', async (req, res) => {
             slug: slug || "",
         };
 
-        // Integração com Yoast/RankMath se os campos existirem
-        // Injetando via standard WP REST API meta key
-        if (metaDesc || metaTitle) {
-            payload.meta = {
-                _yoast_wpseo_metadesc: metaDesc || "",
-                _yoast_wpseo_title: metaTitle || "",
-                rank_math_description: metaDesc || "",
-                rank_math_title: metaTitle || ""
-            };
-        }
+        // Integração com Yoast/RankMath e [BYPASS HEADLESS ABIDOS]
+        payload.meta = {
+            _yoast_wpseo_metadesc: metaDesc || "",
+            _yoast_wpseo_title: metaTitle || "",
+            rank_math_description: metaDesc || "",
+            rank_math_title: metaTitle || "",
+            _abidos_render_headless: "1",
+            _abidos_headless_content: payload.content, // [BYPASS] HTML Puro
+            _abidos_last_sync: new Date().toISOString()
+        };
 
         const endpoint = type === 'posts' ? '/posts' : '/pages';
         const response = await callWP('POST', endpoint, payload);
@@ -1479,8 +1480,125 @@ app.post('/api/studio/gerar-rascunho', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
+app.post('/api/dna/auto-refine', async (req, res) => {
+    try {
+        const { originalHtml, editedHtml } = req.body;
+        if (!originalHtml || !editedHtml || originalHtml === editedHtml) {
+            return res.json({ success: true, newRules: [] });
+        }
+
+        console.log(`🧠 [AUTO-DNA] Analisando intervenção manual do Dr. Victor...`);
+
+        const refinePrompt = `
+        VOCÊ É O ANALISTA DE DNA CLÍNICO DO DR. VICTOR LAWRENCE.
+        
+        Sua tarefa: Comparar o HTML que a IA gerou (ORIGINAL) com o HTML após as edições do Dr. Victor (EDITADO).
+        Identifique PREFERÊNCIAS ESTILÍSTICAS, CORREÇÕES DE TOM ou ADIÇÕES DE CONTEÚDO RECORRENTES.
+
+        [PROTOCOLO DE RECONHECIMENTO]:
+        - Se o Dr. Victor mudou o tom (ex: ficou mais técnico ou mais empático), crie uma regra de TOM.
+        - Se ele mudou o design (ex: bordas, sombras, cores específicas), crie uma regra de DESIGN.
+        - Se ele adicionou credenciais (ex: CRP, Mestrado, Links sociais), crie uma regra de E-E-A-T.
+        
+        RETORNE EXATAMENTE UM JSON ARRAY de novas regras (ou array vazio se as mudanças forem triviais):
+        [
+          { "categoria": "...", "titulo": "...", "regra": "..." }
+        ]
+
+        ---
+        HTML ORIGINAL:
+        ${originalHtml.substring(0, 5000)}
+
+        HTML EDITADO:
+        ${editedHtml.substring(0, 5000)}
+        `;
+
+        const result = await modelPro.generateContent(refinePrompt);
+        const newRules = extractJSON(result.response.text()) || [];
+
+        if (Array.isArray(newRules) && newRules.length > 0) {
+            console.log(`✨ [AUTO-DNA] Detectadas ${newRules.length} novas preferências!`);
+            const memory = getVictorStyle();
+            
+            newRules.forEach(rule => {
+                rule.id = `auto_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                rule.data_extracao = new Date().toISOString();
+                memory.last_insight = `Regra aprendida automaticamente via interface: ${rule.titulo}`;
+                memory.style_rules.push(rule);
+            });
+
+            fs.writeFileSync(path.join(__dirname, 'estilo_victor.json'), JSON.stringify(memory, null, 2));
+            return res.json({ success: true, newRules });
+        }
+
+        res.json({ success: true, newRules: [] });
+
+    } catch (e) {
+        console.error("❌ [AUTO-DNA ERROR]", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+const server = app.listen(port, () => {
     console.log(`\n🚀 AntiGravity CMS: Mission Control Ativo!`);
     console.log(`📡 Frontend & API rodando em http://localhost:${port}`);
     console.log(`🔐 Camada de Segurança Proxy: ON`);
+    console.log(`🎙️ WebSocket Voice Live: Disponível em ws://localhost:${port}`);
+});
+
+// [PRIORIDADE 2] MOTOR DE VOZ LIVE (DR. VICTOR LIVE-DNA)
+const wss = new WebSocket.Server({ server });
+wss.on('connection', (ws) => {
+    console.log("🎙️ [NEURO-LIVE] Dr. Victor Lawrence conectou ao canal de voz.");
+    
+    ws.on('message', async (message) => {
+        try {
+            // Buffer contém o áudio capturado em tempo real (webm/ogg)
+            const audioBuffer = Buffer.isBuffer(message) ? message : Buffer.from(message);
+            console.log(`📡 [NEURO-LIVE] Analisando ${Math.round(audioBuffer.length/1024)}KB de voz multimodal...`);
+            
+            const prompt = `Analise este segmento de voz do Dr. Victor Lawrence.
+            Ele está em uma sessão de 'Neuro-Training' (Digital Twin Training).
+            
+            1. Transcreva o que foi dito.
+            2. Identifique o Tom de Voz Clínico (ex: Ericksoniano, Autoritário, Acolhedor).
+            3. Se houver um padrão recorrente ou uma regra de ouro dita, extraia como Insight.
+            4. Responda ao Dr. Victor com sabedoria, mantendo a persona de seu Digital Twin.
+
+            RETORNE EXATAMENTE UM JSON:
+            {
+              "transcript": "...",
+              "tone": "...",
+              "insight": { "categoria": "...", "titulo": "...", "regra": "..." } (ou null),
+              "reply": "..."
+            }`;
+
+            // Usando Gemini Pro (Capacidade Multimodal Espelhada)
+            const result = await modelPro.generateContent([
+                { inlineData: { data: audioBuffer.toString('base64'), mimeType: 'audio/webm' } },
+                prompt
+            ]);
+
+            const response = extractJSON(result.response.text());
+            if (response) {
+                // Automação: Se houver insight, salva no DNA automaticamente para fechar o loop PRIORIDADE 3 & 2
+                if (response.insight) {
+                    const memory = getVictorStyle();
+                    response.insight.id = `live_${Date.now()}`;
+                    response.insight.data_extracao = new Date().toISOString();
+                    memory.style_rules.push(response.insight);
+                    fs.writeFileSync(path.join(__dirname, 'estilo_victor.json'), JSON.stringify(memory, null, 2));
+                    console.log(`✨ [LIVE-DNA] Novo insight extraído e salvo: ${response.insight.titulo}`);
+                    response.saved_new_dna = true;
+                }
+                
+                ws.send(JSON.stringify({ type: 'reply', ...response }));
+            }
+        } catch (e) {
+            console.error("❌ [NEURO-LIVE ERROR]", e);
+            ws.send(JSON.stringify({ type: 'error', message: "Falha no processamento neural da voz." }));
+        }
+    });
+
+    ws.on('close', () => console.log("🎙️ [NEURO-LIVE] Canal de voz encerrado."));
 });

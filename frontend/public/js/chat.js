@@ -23,6 +23,7 @@ window.chatApp = {
     historyStack: [],  // Undo history
     redoStack: [],     // Redo history
     currentKeyword: '', // Store current keyword for AI sync
+    lastGeneratedHtml: null, // [AUTO-DNA] Versão original gerada pela IA para comparação
 
     init() {
         this.setupEventListeners();
@@ -1756,6 +1757,34 @@ RETORNE APENAS O JSON, sem comentários.`;
             this.addMessage("🚨 Erro Crítico: A ponte de publicação foi bloqueada ou o servidor está offline.");
         } finally {
             if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+            // Tenta refinar o DNA do Dr. Victor com base nas edições manuais dele (Aprendizado Passivo)
+            this.refineAutoDNA();
+        }
+    },
+
+    async refineAutoDNA() {
+        const currentHtml = document.getElementById('live-preview').innerHTML;
+        if (!this.lastGeneratedHtml || this.lastGeneratedHtml === currentHtml) return;
+
+        console.log("🧠 [AUTO-DNA] Detectada edição manual. Refinando estilo...");
+        
+        try {
+            const response = await fetch('/api/dna/auto-refine', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    originalHtml: this.lastGeneratedHtml, 
+                    editedHtml: currentHtml 
+                })
+            }).then(r => r.json());
+
+            if (response.success && response.newRules && response.newRules.length > 0) {
+                this.addMessage(`🧬 **Auto-DNA Progressivo:** Detectei que você fez ajustes manuais. Aprendi **${response.newRules.length} novas preferências** de estilo e tom que aplicarei nos próximos rascunhos.`);
+                // Reset da referência para não aprender a mesma coisa de novo no próximo save
+                this.lastGeneratedHtml = currentHtml;
+            }
+        } catch (e) {
+            console.warn("⚠️ [AUTO-DNA] Falha no aprendizado passivo.", e);
         }
     },
 
@@ -1784,6 +1813,7 @@ RETORNE APENAS O JSON, sem comentários.`;
             if (result) {
                 this.saveHistory();
                 livePreview.innerHTML = result;
+                this.lastGeneratedHtml = result; // [AUTO-DNA] Marca versão base
                 this.updateAbidusScore();
                 this.addMessage("✅ **Blueprint Gerado com Sucesso!** Ajuste os detalhes via chat ou use o Inspector.");
                 
@@ -1870,6 +1900,7 @@ RETORNE APENAS O JSON, sem comentários.`;
         document.getElementById('ai-studio-type').value = type;
         
         this.addMessage(`📌 Item do Cluster carregado: **${title}** (${type}).\n\nPronto para revisão e publicação.`);
+        this.lastGeneratedHtml = html; // [AUTO-DNA] Marca versão base do cluster
     }
 };
 
@@ -1892,6 +1923,7 @@ window.injectCode = function(btn) {
         preview.insertAdjacentHTML('afterbegin', code);
     } else {
         preview.innerHTML = code;
+        window.chatApp.lastGeneratedHtml = code; // [AUTO-DNA] Salva base para aprendizado
     }
 
     window.chatApp.updateAbidusScore();

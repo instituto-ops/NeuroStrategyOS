@@ -91,21 +91,38 @@ window.neuroTraining = {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             this.mediaRecorder = new MediaRecorder(stream);
-            this.audioChunks = [];
             this.isRecording = true;
+
+            // [PRIORIDADE 2] CONEXÃO WEBSOCKET LIVE
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            this.ws = new WebSocket(`${protocol}//${location.host}`);
+            
+            this.ws.onopen = () => console.log("🎙️ Conectado ao Mission Control Voice.");
+            this.ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.reply) {
+                    this.addMessage('ai', data.reply);
+                    this.speak(data.reply);
+                    if (data.insight) {
+                        this.addMessage('ai', `🧬 **DNA EXTRAÍDO:** ${data.insight.titulo}`);
+                        this.loadMemory(); // Atualiza feed de regras
+                    }
+                }
+            };
 
             const micIcon = document.getElementById('voice-mode-mic');
             if (micIcon) micIcon.style.background = "#ef4444";
 
             this.mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) this.audioChunks.push(event.data);
+                if (event.data.size > 0 && this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    // Envia fragmento de áudio bruto via WebSocket
+                    this.ws.send(event.data);
+                }
             };
 
-            this.mediaRecorder.onstop = async () => {
-                if (this.currentMode === 'voice') await this.processVoiceSession();
-            };
+            // Captura em fragmentos de 4 segundos para manter o "Voz-a-Voz" fluído
+            this.mediaRecorder.start(4000); 
 
-            this.mediaRecorder.start();
         } catch (err) {
             console.error(err);
             alert("Erro ao acessar microfone.");
@@ -117,31 +134,34 @@ window.neuroTraining = {
         if (this.mediaRecorder && this.isRecording) {
             this.mediaRecorder.stop();
             this.isRecording = false;
+            
+            if (this.ws) {
+                this.ws.close();
+                this.ws = null;
+            }
+
             const micIcon = document.getElementById('voice-mode-mic');
             if (micIcon) micIcon.style.background = "#6366f1";
         }
     },
 
-    async processVoiceSession() {
-        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-        const formData = new FormData();
-        formData.append('audio', audioBlob);
+    speak(text) {
+        if (!window.speechSynthesis) return;
+        
+        // Cancela falas anteriores
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'pt-BR';
+        utterance.rate = 1.0;
+        utterance.pitch = 0.9; // Tom um pouco mais profundo para o Avatar Clínico
 
-        try {
-            const response = await fetch('/api/neuro-training/analyze-dna', {
-                method: 'POST',
-                body: formData
-            });
+        // Tenta encontrar uma voz masculina em português se disponível
+        const voices = window.speechSynthesis.getVoices();
+        const ptVoice = voices.find(v => v.lang.includes('pt-BR') && (v.name.includes('Daniel') || v.name.includes('Google')));
+        if (ptVoice) utterance.voice = ptVoice;
 
-            const data = await response.json();
-            if (data.success) {
-                this.addMessage('ai', "🎙️ Entendi seus padrões. DNA clínico atualizado.");
-                this.addMessage('ai', data.summary);
-                await this.loadMemory();
-            }
-        } catch (err) {
-            console.error(err);
-        }
+        window.speechSynthesis.speak(utterance);
     },
 
     async loadMemory() {
