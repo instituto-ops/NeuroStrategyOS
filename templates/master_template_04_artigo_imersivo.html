@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{seo_title}}</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"DM Sans"', 'sans-serif'],
+                        serif: ['"Playfair Display"', 'serif'],
+                    },
+                    colors: {
+                        cream: {
+                            50: '#FFFCF9',
+                            100: '#FDF8F3',
+                            200: '#F7EFE8',
+                        },
+                        forest: {
+                            400: '#5A7C71',
+                            500: '#406056',
+                            800: '#1D342D',
+                            900: '#142520',
+                            950: '#0C1714',
+                        },
+                        sage: {
+                            100: '#E8EFEA',
+                            200: '#C7D9D0',
+                            500: '#759486',
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slow-fade': 'fadeIn 2s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(40px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #FFFCF9; } /* Cream 50 */
+        
+        /* Minimalist Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 2px;
+            background: transparent;
+            position: fixed;
+            top: 0;
+            z-index: 100;
+        }
+        .progress-bar {
+            height: 2px;
+            background: #759486; /* Sage 500 */
+            width: 0%;
+            transition: width 0.1s ease-out;
+        }
+        
+        /* Typography adjustments - Focus on extreme legibility */
+        .article-content {
+            font-size: 1.125rem;
+            line-height: 1.85;
+            color: #334155;
+            font-weight: 300;
+        }
+        @media (min-width: 768px) {
+            .article-content { font-size: 1.25rem; line-height: 2; }
+        }
+        .article-content p { margin-bottom: 2.5rem; }
+        
+        .article-content h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.25rem;
+            color: #142520; /* Forest 900 */
+            margin-top: 4.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+        
+        /* Drop Cap - Ultra Elegant */
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Playfair Display', serif;
+            font-size: 5.5rem;
+            line-height: 4.5rem;
+            padding-top: 0.5rem;
+            padding-right: 1rem;
+            padding-bottom: 0.5rem;
+            color: #142520;
+            font-weight: 400;
+        }
+
+        /* Interactive Highlight */
+        .highlight-text {
+            background: linear-gradient(120deg, rgba(199, 217, 208, 0.4) 0%, rgba(199, 217, 208, 0.4) 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 30%;
+            background-position: 0 88%;
+            transition: background-size 0.3s ease-in-out;
+        }
+        .highlight-text:hover { background-size: 100% 100%; }
+
+        /* Scroll Reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Drawer Animations */
+        #drawerOverlay { transition: opacity 0.4s ease; }
+        #drawerPanel { transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        /* Parallax BG - Imagem movida para inline no HTML para injeção via IA */
+        .parallax-bg {
+            background-attachment: fixed;
+            background-position: center;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body class="antialiased font-sans text-slate-800 flex flex-col min-h-screen selection:bg-sage-200 selection:text-forest-900">
+
+    <!-- [SOBERANIA ABIDOS] Camada SEO Invisível (V5) -->
+    <div class="seo-hidden-structure" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+        <h1>{{seo_h1_tecnico}}</h1>
+        <p>{{seo_resumo_indexacao}}</p>
+        <h2>{{secao1_h2}}</h2>
+        <h2>{{secao2_h2}}</h2>
+        <h2>{{secao3_h2}}</h2>
+        <h2>{{secao4_h2}}</h2>
+    </div>
+
+    <div class="progress-container z-50">
+        <div class="progress-bar" id="myBar"></div>
+    </div>
+
+    <nav id="navbar" class="fixed top-0 w-full z-40 transition-all duration-500 bg-transparent py-2">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3 text-white transition-colors duration-300" id="navBrand">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+                <span class="font-sans font-medium text-sm tracking-[0.2em] uppercase">{{nav_brand}}</span>
+            </div>
+            <button onclick="openDrawer()" class="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-white border border-white/30 hover:bg-white hover:text-forest-900 px-6 py-3 rounded-full transition-all duration-300 backdrop-blur-sm" id="navBtn">
+                <span>{{nav_cta_botao}}</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-grow">
+        
+        <header class="relative min-h-[90vh] flex items-center justify-center overflow-hidden parallax-bg" style="background-image: url('{{hero_bg_imagem_url}}');">
+            <div class="absolute inset-0 bg-forest-900/85 backdrop-blur-[2px]"></div>
+            
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 text-center flex flex-col items-center pt-20">
+                <div class="animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <span class="inline-block border border-sage-500/30 text-sage-200 text-xs font-medium uppercase tracking-[0.3em] px-5 py-2 rounded-full mb-10">
+                        {{hero_tag_categoria}}
+                    </span>
+                </div>
+                
+                <div class="text-4xl sm:text-5xl lg:text-7xl font-serif text-white leading-[1.15] mb-8 font-normal animate-fade-in-up" style="animation-delay: 0.3s;">
+                    {{ui_titulo_hero}}
+                </div>
+                
+                <p class="text-xl sm:text-2xl text-sage-100/80 mb-16 max-w-2xl font-light leading-relaxed animate-fade-in-up" style="animation-delay: 0.5s;">
+                    {{artigo_subtitulo}}
+                </p>
+                
+                <div class="animate-fade-in-up flex flex-col items-center gap-4" style="animation-delay: 0.7s;">
+                    <img src="{{autor_foto_url}}" alt="{{autor_nome}}" class="w-16 h-16 rounded-full object-cover shadow-2xl border-2 border-forest-800" onerror="this.outerHTML='<div class=\'w-16 h-16 rounded-full bg-forest-800 flex items-center justify-center text-white font-serif text-xl border-2 border-forest-500\'>VL</div>'">
+                    <div>
+                        <p class="font-medium text-white text-sm tracking-wide">Por {{autor_nome}}</p>
+                        <p class="text-sage-500 text-xs tracking-widest uppercase mt-1">{{data_publicacao}}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-sage-500/50">
+                <i data-lucide="chevron-down" class="w-8 h-8"></i>
+            </div>
+        </header>
+
+        <article class="max-w-[700px] mx-auto px-5 sm:px-6 py-20 lg:py-32 article-content">
+            
+            <p class="drop-cap reveal">
+                {{artigo_paragrafo_introdutorio}}
+            </p>
+
+            <div class="font-serif text-[2.25rem] text-[#142520] mt-[4.5rem] mb-[1.5rem] font-medium reveal leading-[1.2]">{{secao1_h2}}</div>
+            <p class="reveal">{{secao1_p1}}</p>
+            <p class="reveal">{{secao1_p2}}</p>
+
+            <figure class="my-24 text-center reveal">
+                <i data-lucide="quote" class="w-8 h-8 mx-auto text-sage-200 mb-6"></i>
+                <blockquote class="text-2xl sm:text-4xl font-serif text-forest-900 leading-snug">
+                    "{{citacao_destaque_texto}}"
+                </blockquote>
+            </figure>
+
+            <div class="font-serif text-[2.25rem] text-[#142520] mt-[4.5rem] mb-[1.5rem] font-medium reveal leading-[1.2]">{{secao2_h2}}</div>
+            <p class="reveal">{{secao2_p1}}</p>
+            <p class="reveal">{{secao2_p2}}</p>
+
+            <div class="font-serif text-[2.25rem] text-[#142520] mt-[4.5rem] mb-[1.5rem] font-medium reveal leading-[1.2]">{{secao3_h2}}</div>
+            <p class="reveal">{{secao3_p1}}</p>
+            <p class="reveal">{{secao3_p2}}</p>
+
+            <div class="font-serif text-[2.25rem] text-[#142520] mt-[4.5rem] mb-[1.5rem] font-medium reveal leading-[1.2]">{{secao4_h2}}</div>
+            <p class="reveal">{{secao4_p1}}</p>
+
+            <!-- Slot Dinâmico Abidos -->
+            <div class="mt-16 pt-16 border-t border-sage-200/30 reveal">
+                {{area_dinamica_extra}}
+            </div>
+        </article>
+
+        <section class="max-w-3xl mx-auto px-4 pb-32 reveal text-center">
+            <div class="h-px w-full bg-gradient-to-r from-transparent via-sage-200 to-transparent mb-16"></div>
+            
+            <h3 class="font-serif text-3xl text-forest-900 mb-6">{{cta_inferior_titulo}}</h3>
+            <p class="text-slate-500 mb-10 font-light max-w-lg mx-auto">{{cta_inferior_texto}}</p>
+            
+            <button onclick="openDrawer()" class="inline-flex items-center gap-3 bg-forest-900 text-white px-10 py-5 rounded-full font-medium tracking-wide hover:bg-forest-800 transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                {{cta_inferior_botao}}
+                <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
+        </section>
+
+    </main>
+
+    <footer class="bg-forest-950 text-sage-200/60 py-16 text-center text-sm">
+        <div class="max-w-4xl mx-auto px-4 flex flex-col items-center">
+            <div class="flex items-center gap-3 text-sage-200 mb-8 opacity-80">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+                <span class="font-sans font-medium text-sm tracking-[0.2em] uppercase">{{footer_brand}}</span>
+            </div>
+            <p class="font-light tracking-wide mb-2">© {{footer_ano}} | Psicologia Clínica & Neurodiversidade</p>
+            <p class="font-light text-xs max-w-xl opacity-60">{{footer_disclaimer}}</p>
+        </div>
+    </footer>
+
+    <div id="slideDrawer" class="fixed inset-0 z-50 pointer-events-none flex justify-end">
+        <div id="drawerOverlay" class="absolute inset-0 bg-forest-950/40 backdrop-blur-sm opacity-0 pointer-events-none" onclick="closeDrawer()"></div>
+        
+        <div id="drawerPanel" class="bg-cream-50 w-full max-w-md h-full shadow-2xl relative translate-x-full pointer-events-auto flex flex-col">
+            
+            <div class="flex justify-between items-center p-6 border-b border-sage-200/50">
+                <span class="font-sans font-medium text-xs tracking-[0.2em] uppercase text-forest-800">{{drawer_tag}}</span>
+                <button onclick="closeDrawer()" class="text-slate-400 hover:text-forest-900 transition-colors p-2 rounded-full hover:bg-sage-100 focus:outline-none">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="p-8 sm:p-10 flex-grow overflow-y-auto">
+                <h3 class="text-3xl font-serif text-forest-900 mb-4 leading-tight">{{drawer_titulo}}</h3>
+                <p class="text-slate-500 text-sm font-light mb-10 leading-relaxed">
+                    {{drawer_subtitulo}}
+                </p>
+                
+                <form onsubmit="handleFormSubmit(event)" class="space-y-6">
+                    <div>
+                        <label for="name" class="block text-xs font-semibold uppercase tracking-wider text-forest-800 mb-2">Como posso te chamar?</label>
+                        <input type="text" id="name" required class="w-full px-0 py-3 border-b-2 border-sage-200 focus:border-forest-800 outline-none transition-colors bg-transparent text-forest-900 placeholder:text-slate-300 font-sans text-lg" placeholder="Seu nome completo">
+                    </div>
+                    
+                    <div>
+                        <label for="contact" class="block text-xs font-semibold uppercase tracking-wider text-forest-800 mb-2 mt-4">WhatsApp / E-mail</label>
+                        <input type="text" id="contact" required class="w-full px-0 py-3 border-b-2 border-sage-200 focus:border-forest-800 outline-none transition-colors bg-transparent text-forest-900 placeholder:text-slate-300 font-sans text-lg" placeholder="Seu melhor contato">
+                    </div>
+
+                    <div class="pt-8">
+                        <button type="submit" class="w-full bg-forest-900 hover:bg-forest-800 text-white font-medium py-4 rounded-xl transition-all shadow-md flex justify-center items-center gap-2">
+                            {{drawer_botao_submit}}
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="drawerSuccess" class="hidden absolute inset-0 bg-cream-50 z-20 flex flex-col items-center justify-center p-10 text-center">
+                    <div class="w-16 h-16 bg-sage-100 text-forest-800 rounded-full flex items-center justify-center mb-6">
+                        <i data-lucide="check" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-3xl font-serif text-forest-900 mb-4">{{drawer_msg_sucesso_titulo}}</h4>
+                    <p class="text-slate-500 font-light mb-8">{{drawer_msg_sucesso_texto}}</p>
+                    <button onclick="closeDrawer()" class="text-forest-900 text-sm font-semibold uppercase tracking-wider border-b border-forest-900 pb-1">Retornar à leitura</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        const navBrand = document.getElementById('navBrand');
+        const navBtn = document.getElementById('navBtn');
+
+        window.addEventListener('scroll', () => {
+            // Progress Bar
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            document.getElementById("myBar").style.width = scrolled + "%";
+
+            // Navbar Style Switch on Scroll
+            if (window.scrollY > 100) {
+                navbar.classList.add('bg-cream-50/90', 'backdrop-blur-md', 'border-b', 'border-sage-200/50');
+                navbar.classList.remove('bg-transparent', 'py-2');
+                
+                navBrand.classList.remove('text-white');
+                navBrand.classList.add('text-forest-900');
+                
+                navBtn.classList.remove('text-white', 'border-white/30', 'hover:bg-white', 'hover:text-forest-900');
+                navBtn.classList.add('bg-forest-900', 'text-white', 'border-transparent', 'hover:bg-forest-800');
+            } else {
+                navbar.classList.remove('bg-cream-50/90', 'backdrop-blur-md', 'border-b', 'border-sage-200/50');
+                navbar.classList.add('bg-transparent', 'py-2');
+                
+                navBrand.classList.add('text-white');
+                navBrand.classList.remove('text-forest-900');
+                
+                navBtn.classList.add('text-white', 'border-white/30', 'hover:bg-white', 'hover:text-forest-900');
+                navBtn.classList.remove('bg-forest-900', 'text-white', 'border-transparent', 'hover:bg-forest-800');
+            }
+        });
+
+        // Scroll Reveal Observer
+        document.addEventListener("DOMContentLoaded", function() {
+            const reveals = document.querySelectorAll(".reveal");
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("active");
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            reveals.forEach(reveal => observer.observe(reveal));
+        });
+
+        // Drawer Logic
+        const drawerOverlay = document.getElementById('drawerOverlay');
+        const drawerPanel = document.getElementById('drawerPanel');
+        const drawerSuccess = document.getElementById('drawerSuccess');
+        const form = document.querySelector('form');
+
+        function openDrawer() {
+            document.getElementById('slideDrawer').classList.remove('pointer-events-none');
+            drawerOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            drawerOverlay.classList.add('opacity-100', 'pointer-events-auto');
+            
+            setTimeout(() => {
+                drawerPanel.classList.remove('translate-x-full');
+            }, 10);
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeDrawer() {
+            drawerPanel.classList.add('translate-x-full');
+            drawerOverlay.classList.remove('opacity-100', 'pointer-events-auto');
+            drawerOverlay.classList.add('opacity-0', 'pointer-events-none');
+            
+            setTimeout(() => {
+                document.getElementById('slideDrawer').classList.add('pointer-events-none');
+                document.body.style.overflow = '';
+                
+                // Reset form state silently
+                setTimeout(() => {
+                    form.reset();
+                    drawerSuccess.classList.add('hidden');
+                    form.classList.remove('hidden');
+                }, 300);
+            }, 500);
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Processando...';
+            lucide.createIcons();
+            btn.disabled = true;
+
+            setTimeout(() => {
+                form.classList.add('hidden');
+                drawerSuccess.classList.remove('hidden');
+                
+                btn.innerHTML = originalHTML;
+                lucide.createIcons();
+                btn.disabled = false;
+            }, 1200);
+        }
+    </script>
+</body>
+</html>

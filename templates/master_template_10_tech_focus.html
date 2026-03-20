@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{seo_title}}</title>
+    <meta name="description" content="{{seo_description}}">
+    
+    <meta property="og:title" content="{{og_title}}">
+    <meta property="og:image" content="{{og_image_url}}">
+    <link rel="canonical" href="{{seo_canonical_url}}">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                    },
+                    colors: {
+                        nero: '#08080A',
+                        indigo: {
+                            950: '#0B0D17',
+                            900: '#141726',
+                            500: '#6366F1',
+                        },
+                        coral: {
+                            400: '#FB923C',
+                            500: '#F97316',
+                        },
+                        mist: '#E2E8F0',
+                    },
+                    animation: {
+                        'float': 'float 20s ease-in-out infinite',
+                        'pulse-slow': 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+                            '33%': { transform: 'translate(20px, -30px) scale(1.05)' },
+                            '66%': { transform: 'translate(-10px, 20px) scale(0.95)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #08080A; color: #E2E8F0; overflow-x: hidden; }
+
+        /* PADRÃO ABIDOS: Camada de SEO Invisível */
+        .seo-hidden-structure {
+            position: absolute;
+            width: 1px; height: 1px;
+            padding: 0; margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        .custom-cursor {
+            width: 20px; height: 20px;
+            background: rgba(249, 115, 22, 0.3);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+            backdrop-filter: blur(4px);
+        }
+        
+        .focus-mode article { max-width: 850px !important; }
+        .focus-mode .hide-on-focus { opacity: 0; pointer-events: none; }
+
+        .glass-card {
+            background: rgba(20, 23, 38, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .progress-pill {
+            height: 4px;
+            background: linear-gradient(90deg, #6366F1, #F97316);
+            width: 0%;
+            border-radius: 2px;
+            transition: width 0.1s ease-out;
+        }
+
+        .article-content p { font-size: 1.125rem; line-height: 1.9; margin-bottom: 2.5rem; font-weight: 300; }
+        @media (min-width: 1024px) { .article-content p { font-size: 1.35rem; } }
+
+        .article-content h2 {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 2.5rem; color: #FFFFFF;
+            margin-top: 6rem; margin-bottom: 2rem;
+            font-weight: 700; letter-spacing: -0.04em; line-height: 1.1;
+        }
+
+        .keyword { position: relative; display: inline-block; font-weight: 500; color: #F97316; }
+        .keyword::after {
+            content: ''; position: absolute; bottom: 2px; left: 0;
+            width: 100%; height: 1px; background: currentColor;
+            transform: scaleX(0); transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .keyword:hover::after { transform: scaleX(1); transform-origin: left; }
+
+        .blob { position: absolute; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.15; }
+    </style>
+</head>
+<body class="antialiased font-sans">
+
+    <!-- [SOBERANIA ABIDOS] Camada SEO Invisível (V5) -->
+    <div class="seo-hidden-structure" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+        <h1>{{seo_h1_tecnico}}</h1>
+        <p>{{seo_resumo_indexacao}}</p>
+        <h2>{{secao1_h2}}</h2>
+        <h2>{{secao2_h2}}</h2>
+        <h2>{{secao3_h2}}</h2>
+        <h2>{{secao4_h2}}</h2>
+    </div>
+
+    <div class="custom-cursor hidden lg:block" id="cursor"></div>
+
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="blob w-[500px] h-[500px] bg-indigo-500 top-[-100px] right-[-100px] animate-float"></div>
+        <div class="blob w-[400px] h-[400px] bg-coral-500 bottom-[10%] left-[-50px] animate-pulse-slow"></div>
+    </div>
+
+    <nav class="fixed top-0 w-full z-50 p-6 flex flex-col gap-4 hide-on-focus transition-opacity duration-500">
+        <div class="max-w-7xl mx-auto w-full glass-card rounded-2xl px-6 py-4 flex items-center justify-between shadow-2xl">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white shadow-lg">
+                    <i data-lucide="brain-circuit" class="w-5 h-5"></i>
+                </div>
+                <span class="font-display font-bold text-xl tracking-tighter text-white">{{autor_nome}}</span>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <button onclick="toggleFocusMode()" class="text-xs font-bold uppercase tracking-widest text-mist/40 hover:text-coral-400 transition-colors flex items-center gap-2">
+                    <i data-lucide="eye" class="w-4 h-4"></i>
+                    <span>Modo Foco</span>
+                </button>
+                <div class="h-4 w-px bg-white/10"></div>
+                <button onclick="openBooking()" class="bg-white text-nero font-display font-bold text-sm px-6 py-2.5 rounded-xl hover:bg-coral-500 hover:text-white transition-all transform hover:-translate-y-0.5">
+                    {{nav_cta_botao}}
+                </button>
+            </div>
+        </div>
+        <div class="max-w-2xl mx-auto w-full">
+            <div class="progress-pill" id="progressBar"></div>
+        </div>
+    </nav>
+
+    <main class="relative z-10">
+        
+        <header class="min-h-screen flex flex-col justify-center items-start px-6 lg:px-24 pt-32 pb-24 max-w-7xl mx-auto">
+            <div class="flex items-center gap-4 mb-8 hide-on-focus transition-opacity duration-500">
+                <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">{{ui_hero_tag}}</span>
+                <span class="text-mist/30 text-xs">{{ui_hero_vol}}</span>
+            </div>
+            
+            <div class="font-display text-6xl sm:text-8xl lg:text-[10rem] font-extrabold text-white leading-[0.85] tracking-tighter mb-12">
+                {{ui_titulo_hero}}
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 w-full mt-12">
+                <div class="lg:col-span-6 border-l-2 border-coral-500 pl-8">
+                    <p class="text-2xl sm:text-3xl font-light text-mist leading-relaxed italic">
+                        {{ui_hero_subtitulo}}
+                    </p>
+                </div>
+                <div class="lg:col-span-6 flex flex-col justify-end items-start lg:items-end gap-6 hide-on-focus transition-opacity duration-500">
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <p class="font-display font-bold text-white uppercase tracking-tighter text-lg">{{autor_nome_curto}}</p>
+                            <p class="text-mist/40 text-xs tracking-widest">{{autor_cargo}}</p>
+                        </div>
+                        <img src="{{autor_foto_url}}" alt="{{autor_nome}}" class="w-16 h-16 rounded-2xl object-cover grayscale brightness-110 border border-white/10 rotate-3" onerror="this.outerHTML='<div class=\'w-16 h-16 rounded-2xl bg-indigo-900 flex items-center justify-center text-white font-display\'>{{autor_iniciais}}</div>'">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="px-6 lg:px-0 bg-gradient-to-b from-transparent to-nero/80">
+            <article class="max-w-4xl mx-auto py-24 lg:py-44 article-content transition-all duration-700">
+                
+                <div class="text-3xl sm:text-4xl leading-tight text-white mb-20 font-display font-light">
+                    {{artigo_paragrafo_lead_html}}
+                </div>
+
+                <div class="font-display text-[2.5rem] text-[#FFFFFF] mt-[6rem] mb-[2rem] font-bold tracking-tight leading-[1.1]">{{secao1_h2}}</div>
+                <div class="secao-texto">{{secao1_conteudo_html}}</div>
+
+                <div class="my-32 flex flex-col lg:flex-row gap-8 items-start">
+                    <div class="text-coral-500 text-6xl font-display font-black leading-none opacity-50 select-none">“</div>
+                    <div class="glass-card p-12 lg:p-16 rounded-[3rem] relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                        <blockquote class="text-3xl sm:text-4xl font-display text-white leading-tight font-light m-0 relative z-10">
+                            {{citacao_texto_html}}
+                        </blockquote>
+                    </div>
+                </div>
+
+                <div class="font-display text-[2.5rem] text-[#FFFFFF] mt-[6rem] mb-[2rem] font-bold tracking-tight leading-[1.1]">{{secao2_h2}}</div>
+                <div class="secao-texto">{{secao2_conteudo_html}}</div>
+
+                <div class="font-display text-[2.5rem] text-[#FFFFFF] mt-[6rem] mb-[2rem] font-bold tracking-tight leading-[1.1]">{{secao3_h2}}</div>
+                <div class="secao-texto">{{secao3_conteudo_html}}</div>
+
+                <div class="font-display text-[2.5rem] text-[#FFFFFF] mt-[6rem] mb-[2rem] font-bold tracking-tight leading-[1.1]">{{secao4_h2}}</div>
+                <div class="secao-texto">{{secao4_conteudo_html}}</div>
+
+                <!-- Slot Dinâmico Abidos -->
+                <div class="mt-20 pt-20 border-t border-white/5 transition-all duration-700">
+                    {{area_dinamica_extra}}
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <div class="fixed bottom-10 left-10 z-50 hide-on-focus transition-opacity duration-500">
+        <div class="glass-card p-4 rounded-2xl flex items-center gap-4">
+            <button class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-coral-500 transition-colors">
+                <i data-lucide="share-2" class="w-4 h-4"></i>
+            </button>
+            <button class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-indigo-500 transition-colors">
+                <i data-lucide="bookmark" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+
+    <footer class="py-24 px-6 border-t border-white/5 bg-nero/50 hide-on-focus transition-opacity duration-500">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-12">
+            <div class="flex items-center gap-4">
+                <i data-lucide="brain-circuit" class="w-10 h-10 text-indigo-500"></i>
+                <div class="font-display font-bold text-2xl text-white">{{autor_nome}}</div>
+            </div>
+            <div class="text-mist/30 text-xs uppercase tracking-[0.3em] text-center lg:text-right">
+                © {{footer_ano}} {{autor_nome_curto}} — {{footer_especialidade}}<br>
+                {{footer_disclaimer}}
+            </div>
+        </div>
+    </footer>
+
+    <div id="bookingOverlay" class="fixed inset-0 z-[100] flex justify-end pointer-events-none">
+        <div id="modalBackdrop" class="absolute inset-0 bg-nero/80 backdrop-blur-xl opacity-0 transition-opacity duration-700 pointer-events-none" onclick="closeBooking()"></div>
+        
+        <div id="modalPanel" class="w-full sm:w-[600px] h-full bg-indigo-950 border-l border-white/5 translate-x-full transition-transform duration-700 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-auto flex flex-col">
+            
+            <div class="p-8 flex justify-between items-center border-b border-white/5">
+                <span class="font-display font-black uppercase tracking-widest text-coral-500">{{modal_tag}}</span>
+                <button onclick="closeBooking()" class="text-mist/40 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-8 h-8"></i>
+                </button>
+            </div>
+            
+            <div class="flex-grow p-12 lg:p-20 overflow-y-auto">
+                <h3 class="font-display text-5xl lg:text-7xl font-extrabold text-white mb-10 leading-none tracking-tighter">{{modal_titulo}}</h3>
+                <p class="text-mist/40 text-lg mb-16 font-light">{{modal_subtitulo}}</p>
+                
+                <form id="contactForm" onsubmit="handleFormSubmit(event)" class="space-y-12">
+                    <div class="group">
+                        <label for="name" class="block text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 group-focus-within:text-coral-500 transition-colors">{{modal_input1_label}}</label>
+                        <input type="text" id="name" required class="w-full bg-transparent border-b-2 border-white/10 text-white font-display text-2xl lg:text-4xl py-4 focus:border-coral-500 outline-none transition-colors placeholder:text-white/5" placeholder="{{modal_input1_placeholder}}">
+                    </div>
+                    
+                    <div class="group pt-8">
+                        <label for="contact" class="block text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 group-focus-within:text-coral-500 transition-colors">{{modal_input2_label}}</label>
+                        <input type="text" id="contact" required class="w-full bg-transparent border-b-2 border-white/10 text-white font-display text-2xl lg:text-4xl py-4 focus:border-coral-500 outline-none transition-colors placeholder:text-white/5" placeholder="{{modal_input2_placeholder}}">
+                    </div>
+
+                    <div class="pt-16">
+                        <button type="submit" class="w-full bg-white text-nero rounded-3xl font-display font-black text-xl py-6 hover:bg-coral-500 hover:text-white transition-all shadow-2xl">
+                            {{modal_botao_submit}}
+                        </button>
+                    </div>
+                </form>
+
+                <div id="successState" class="hidden absolute inset-0 bg-indigo-950 flex flex-col items-center justify-center text-center p-12 z-20">
+                    <div class="w-24 h-24 bg-coral-500 rounded-full flex items-center justify-center mb-10 shadow-2xl">
+                        <i data-lucide="check" class="w-12 h-12 text-white"></i>
+                    </div>
+                    <h4 class="font-display text-5xl font-extrabold text-white mb-6 tracking-tighter">Recebido.</h4>
+                    <p class="text-mist/40 text-xl font-light leading-relaxed mb-12">{{modal_sucesso_msg}}</p>
+                    <button onclick="closeBooking()" class="text-coral-500 font-bold uppercase tracking-widest border-b-2 border-coral-500 pb-2">Voltar ao Artigo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.transform = `translate(${e.clientX - 10}px, ${e.clientY - 10}px)`;
+        });
+        function toggleFocusMode() { document.body.classList.toggle('focus-mode'); }
+        window.addEventListener('scroll', () => {
+            const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById("progressBar").style.width = scrolled + "%";
+        });
+        const overlay = document.getElementById('bookingOverlay');
+        const backdrop = document.getElementById('modalBackdrop');
+        const panel = document.getElementById('modalPanel');
+        const success = document.getElementById('successState');
+        const form = document.getElementById('contactForm');
+        function openBooking() {
+            overlay.classList.remove('pointer-events-none');
+            backdrop.classList.add('opacity-100', 'pointer-events-auto');
+            panel.classList.remove('translate-x-full');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeBooking() {
+            panel.classList.add('translate-x-full');
+            backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+            setTimeout(() => {
+                overlay.classList.add('pointer-events-none');
+                document.body.style.overflow = '';
+                form.reset();
+                success.classList.add('hidden');
+            }, 700);
+        }
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = 'A enviar...'; btn.disabled = true;
+            setTimeout(() => { success.classList.remove('hidden'); }, 1200);
+        }
+    </script>
+</body>
+</html>

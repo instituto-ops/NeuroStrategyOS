@@ -19,8 +19,9 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// 1. SERVIR ARQUIVOS ESTÁTICOS (Frontend)
+// 1. SERVIR ARQUIVOS ESTÁTICOS (Frontend & Templates)
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/templates', express.static(path.join(__dirname, '../templates')));
 
 const storage = multer.memoryStorage();
 const upload = multer({ 

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{seo_title}}</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        serif: ['"Instrument Serif"', 'serif'],
+                    },
+                    colors: {
+                        glass: {
+                            100: 'rgba(255, 255, 255, 0.9)',
+                            200: 'rgba(255, 255, 255, 0.7)',
+                            300: 'rgba(255, 255, 255, 0.5)',
+                            border: 'rgba(255, 255, 255, 0.4)',
+                        },
+                        aura: {
+                            blue: '#60A5FA',
+                            indigo: '#818CF8',
+                            purple: '#C084FC',
+                            teal: '#2DD4BF',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 15s infinite',
+                        'blob-reverse': 'blob-reverse 20s infinite',
+                        'fade-in-up': 'fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        'blob-reverse': {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(-30px, 50px) scale(1.1)' },
+                            '66%': { transform: 'translate(20px, -20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: #FAFAFA;
+            color: #0F172A; /* Slate 900 */
+            overflow-x: hidden;
+        }
+        
+        ::selection {
+            background-color: #818CF8;
+            color: #FFFFFF;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+        }
+
+        .glass-button {
+            background: rgba(15, 23, 42, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            transition: all 0.3s ease;
+        }
+        .glass-button:hover {
+            background: rgba(15, 23, 42, 0.9);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
+        }
+
+        /* Typography */
+        .article-content {
+            font-size: 1.125rem;
+            line-height: 1.85;
+            color: #334155; /* Slate 700 */
+            font-weight: 400;
+        }
+        @media (min-width: 1024px) {
+            .article-content { font-size: 1.25rem; line-height: 1.95; }
+        }
+        
+        .article-content p {
+            margin-bottom: 2.25rem;
+        }
+        
+        .article-content h2 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 2.5rem;
+            color: #0F172A;
+            margin-top: 5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+            line-height: 1.1;
+            font-style: italic;
+        }
+        @media (min-width: 1024px) {
+            .article-content h2 { font-size: 3.5rem; }
+        }
+
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Instrument Serif', serif;
+            font-size: 6.5rem;
+            line-height: 5rem;
+            padding-top: 0.5rem;
+            padding-right: 1rem;
+            padding-bottom: 0.5rem;
+            color: #818CF8; /* Indigo */
+            font-style: italic;
+        }
+
+        /* Reading Progress Ring */
+        .progress-ring {
+            transition: stroke-dashoffset 0.1s linear;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Scroll Reveal */
+        .reveal-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal-up.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="antialiased font-sans flex flex-col min-h-screen">
+
+    <!-- [SOBERANIA ABIDOS] Camada SEO Invisível (V5) -->
+    <div class="seo-hidden-structure" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+        <h1>{{seo_h1_tecnico}}</h1>
+        <p>{{seo_resumo_indexacao}}</p>
+        <h2>{{secao1_h2}}</h2>
+        <h2>{{secao2_h2}}</h2>
+        <h2>{{secao3_h2}}</h2>
+        <h2>{{secao4_h2}}</h2>
+    </div>
+
+    <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-aura-purple/20 blur-[120px] animate-blob mix-blend-multiply"></div>
+        <div class="absolute top-[20%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-aura-blue/20 blur-[120px] animate-blob-reverse mix-blend-multiply" style="animation-delay: 2s;"></div>
+        <div class="absolute bottom-[-10%] left-[20%] w-[60vw] h-[60vw] rounded-full bg-aura-teal/15 blur-[120px] animate-blob mix-blend-multiply" style="animation-delay: 4s;"></div>
+    </div>
+
+    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-fit px-4 animate-fade-in-up">
+        <nav class="glass-panel rounded-full px-2 py-2 flex items-center gap-2 sm:gap-6">
+            <div class="relative w-10 h-10 flex items-center justify-center shrink-0 bg-white/50 rounded-full">
+                <svg class="absolute inset-0 w-10 h-10" viewBox="0 0 100 100">
+                    <circle class="text-slate-200/50 stroke-current" stroke-width="6" cx="50" cy="50" r="44" fill="transparent"></circle>
+                    <circle id="navProgressCircle" class="text-aura-indigo progress-ring stroke-current" stroke-width="6" stroke-linecap="round" cx="50" cy="50" r="44" fill="transparent" stroke-dasharray="276.46" stroke-dashoffset="276.46"></circle>
+                </svg>
+                <i data-lucide="sparkles" class="w-4 h-4 text-slate-700 absolute"></i>
+            </div>
+            
+            <div class="hidden sm:flex items-center pr-4">
+                <span class="font-sans font-semibold text-sm tracking-tight text-slate-800">{{nav_brand_nome}}</span>
+            </div>
+            
+            <button onclick="openBooking()" class="bg-slate-900 hover:bg-aura-indigo text-white font-sans font-medium text-sm px-6 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2 shadow-lg shadow-slate-900/10">
+                <span>{{nav_cta_botao}}</span>
+            </button>
+        </nav>
+    </div>
+
+    <main class="flex-grow pt-32 pb-20">
+        
+        <header class="max-w-4xl mx-auto px-6 text-center mb-24 relative">
+            <div class="animate-fade-in-up" style="animation-delay: 0.1s;">
+                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/60 border border-white/80 text-aura-indigo font-semibold text-xs tracking-widest uppercase mb-10 shadow-sm backdrop-blur-md">
+                    {{hero_tag_texto}}
+                </span>
+            </div>
+            
+            <div class="font-serif text-6xl sm:text-7xl lg:text-[7rem] text-slate-900 leading-[0.95] mb-8 animate-fade-in-up" style="animation-delay: 0.2s;">
+                {{ui_titulo_hero}}
+            </div>
+            
+            <p class="text-xl sm:text-2xl text-slate-600 mb-12 max-w-2xl mx-auto font-light leading-relaxed animate-fade-in-up" style="animation-delay: 0.3s;">
+                {{hero_subtitulo}}
+            </p>
+            
+            <div class="flex items-center justify-center gap-4 animate-fade-in-up" style="animation-delay: 0.4s;">
+                <div class="relative">
+                    <img src="{{autor_foto_url}}" alt="{{autor_nome}}" class="w-14 h-14 rounded-full object-cover shadow-md" onerror="this.outerHTML='<div class=\'w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center text-aura-indigo font-serif text-2xl\'>{{autor_iniciais}}</div>'">
+                    <div class="absolute inset-0 rounded-full ring-2 ring-white/80"></div>
+                </div>
+                <div class="text-left">
+                    <p class="font-sans font-semibold text-slate-900 text-sm">{{autor_nome}}</p>
+                    <p class="text-slate-500 text-xs font-medium uppercase tracking-wider mt-0.5">Tempo de leitura: {{tempo_leitura_minutos}} min</p>
+                </div>
+            </div>
+        </header>
+
+        <article class="max-w-[720px] mx-auto px-6 article-content relative z-10">
+            
+            <p class="drop-cap reveal-up">
+                {{artigo_paragrafo_introdutorio}}
+            </p>
+
+            <div class="font-serif text-[2.5rem] lg:text-[3.5rem] text-[#0F172A] mt-[5rem] mb-[1.5rem] font-normal reveal-up leading-[1.1] italic">{{secao1_h2}}</div>
+            <p class="reveal-up">{{secao1_p1}}</p>
+            <p class="reveal-up">{{secao1_p2}}</p>
+
+            <div class="my-20 reveal-up">
+                <div class="glass-panel p-10 sm:p-14 rounded-[2.5rem] relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-aura-blue/20 rounded-full blur-2xl group-hover:bg-aura-blue/30 transition-colors"></div>
+                    <i data-lucide="quote" class="w-10 h-10 text-aura-indigo/40 mb-6 relative z-10"></i>
+                    <p class="text-3xl sm:text-4xl font-serif text-slate-900 m-0 leading-[1.2] relative z-10">
+                        "{{citacao_destaque_texto}}"
+                    </p>
+                </div>
+            </div>
+
+            <div class="font-serif text-[2.5rem] lg:text-[3.5rem] text-[#0F172A] mt-[5rem] mb-[1.5rem] font-normal reveal-up leading-[1.1] italic">{{secao2_h2}}</div>
+            <p class="reveal-up">{{secao2_p1}}</p>
+            <p class="reveal-up">{{secao2_p2}}</p>
+
+            <div class="font-serif text-[2.5rem] lg:text-[3.5rem] text-[#0F172A] mt-[5rem] mb-[1.5rem] font-normal reveal-up leading-[1.1] italic">{{secao3_h2}}</div>
+            <p class="reveal-up">{{secao3_p1}}</p>
+            <p class="reveal-up">{{secao3_p2}}</p>
+
+            <div class="font-serif text-[2.5rem] lg:text-[3.5rem] text-[#0F172A] mt-[5rem] mb-[1.5rem] font-normal reveal-up leading-[1.1] italic">{{secao4_h2}}</div>
+            <p class="reveal-up">{{secao4_p1}}</p>
+            <p class="reveal-up">{{secao4_p2}}</p>
+
+            <div class="mt-24 mb-10 reveal-up cursor-pointer" onclick="openBooking()">
+                <div class="glass-panel p-2 rounded-[2rem] hover:shadow-xl hover:scale-[1.01] transition-all duration-500 group">
+                    <div class="bg-white/50 rounded-[1.5rem] p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-8 justify-between border border-white/60">
+                        <div class="flex-grow text-center sm:text-left">
+                            <h3 class="font-serif text-3xl sm:text-4xl text-slate-900 mb-2">{{cta_interno_titulo}}</h3>
+                            <p class="text-slate-500 font-light max-w-md">{{cta_interno_texto}}</p>
+                        </div>
+                        <div class="shrink-0 w-16 h-16 rounded-full bg-slate-900 text-white flex items-center justify-center group-hover:bg-aura-indigo transition-colors shadow-lg">
+                            <i data-lucide="arrow-right" class="w-6 h-6 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slot Dinâmico Abidos -->
+            <div class="mt-16 pt-16 border-t border-slate-200/50 reveal-up">
+                {{area_dinamica_extra}}
+            </div>
+        </article>
+    </main>
+
+    <footer class="py-12 text-center text-sm relative z-10 mt-auto">
+        <div class="max-w-4xl mx-auto px-6 flex flex-col items-center gap-4">
+            <div class="font-sans font-bold text-lg text-slate-800 tracking-tight">{{footer_brand}}</div>
+            <p class="text-slate-500 font-light max-w-sm">
+                {{footer_disclaimer}} © {{footer_ano}}
+            </p>
+        </div>
+    </footer>
+
+    <div id="bookingOverlay" class="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none p-4 sm:p-6">
+        <div id="modalBackdrop" class="absolute inset-0 bg-slate-900/10 backdrop-blur-sm opacity-0 transition-opacity duration-500 pointer-events-none" onclick="closeBooking()"></div>
+        
+        <div id="modalPanel" class="w-full max-w-4xl glass-panel rounded-[2.5rem] sm:rounded-[3rem] p-2 relative translate-y-10 opacity-0 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-auto flex flex-col lg:flex-row shadow-2xl shadow-slate-900/10 max-h-[95vh] overflow-y-auto">
+            
+            <button onclick="closeBooking()" class="absolute top-6 right-6 z-20 text-slate-500 hover:text-slate-900 bg-white/50 hover:bg-white rounded-full p-2.5 transition-colors focus:outline-none shadow-sm backdrop-blur-md">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            
+            <div class="w-full lg:w-2/5 bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-aura-indigo/30 to-transparent opacity-50"></div>
+                
+                <div class="relative z-10">
+                    <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md border border-white/10">
+                        <i data-lucide="calendar" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h3 class="font-serif text-4xl sm:text-5xl mb-4 leading-tight">{{modal_titulo_linha1}}<br>{{modal_titulo_linha2}}</h3>
+                    <p class="text-slate-400 font-light leading-relaxed mb-8">
+                        {{modal_subtitulo}}
+                    </p>
+                </div>
+                
+                <div class="relative z-10 flex items-center gap-4 border-t border-white/10 pt-6 mt-8">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-aura-teal"></i>
+                    <span class="text-xs text-slate-400 font-medium uppercase tracking-widest">{{modal_tag_confianca}}</span>
+                </div>
+            </div>
+            
+            <div class="w-full lg:w-3/5 p-8 sm:p-12 flex flex-col justify-center bg-white/40 rounded-[2rem] sm:rounded-[2.5rem] mt-2 lg:mt-0 lg:ml-2">
+                <form id="contactForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                    <div>
+                        <label for="name" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 ml-1">{{modal_input1_label}}</label>
+                        <input type="text" id="name" required class="w-full bg-white/60 border border-white border-b-slate-200 text-slate-900 px-5 py-4 rounded-2xl focus:border-aura-indigo focus:bg-white focus:ring-4 focus:ring-aura-indigo/10 outline-none transition-all placeholder:text-slate-400 shadow-sm font-sans" placeholder="{{modal_input1_placeholder}}">
+                    </div>
+                    
+                    <div>
+                        <label for="contact" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 ml-1 mt-6">{{modal_input2_label}}</label>
+                        <input type="text" id="contact" required class="w-full bg-white/60 border border-white border-b-slate-200 text-slate-900 px-5 py-4 rounded-2xl focus:border-aura-indigo focus:bg-white focus:ring-4 focus:ring-aura-indigo/10 outline-none transition-all placeholder:text-slate-400 shadow-sm font-sans" placeholder="{{modal_input2_placeholder}}">
+                    </div>
+
+                    <div class="pt-6">
+                        <button type="submit" class="w-full bg-slate-900 hover:bg-aura-indigo text-white font-sans font-semibold text-lg py-4.5 rounded-2xl transition-all duration-300 shadow-xl shadow-slate-900/10 flex justify-center items-center gap-3">
+                            {{modal_botao_submit}}
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="successState" class="hidden flex-col items-center justify-center text-center py-10 h-full">
+                    <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-inner border border-emerald-200">
+                        <i data-lucide="check" class="w-10 h-10"></i>
+                    </div>
+                    <h4 class="font-serif text-4xl text-slate-900 mb-4">{{modal_sucesso_titulo}}</h4>
+                    <p class="text-slate-500 font-light mb-8 max-w-[280px]">{{modal_sucesso_texto}}</p>
+                    <button onclick="closeBooking()" class="text-aura-indigo font-semibold hover:text-slate-900 transition-colors bg-white px-6 py-2 rounded-full shadow-sm">{{modal_sucesso_botao}}</button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- Circular Progress Logic (Nav Bar) ---
+        const progressCircle = document.getElementById('navProgressCircle');
+        const radius = progressCircle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI; 
+        
+        progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+        progressCircle.style.strokeDashoffset = circumference;
+
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = height > 0 ? (winScroll / height) : 0;
+            if(scrolled > 1) scrolled = 1;
+            if(scrolled < 0) scrolled = 0;
+            
+            const offset = circumference - (scrolled * circumference);
+            progressCircle.style.strokeDashoffset = offset;
+        });
+
+        // --- Scroll Reveal Observer ---
+        document.addEventListener("DOMContentLoaded", function() {
+            const reveals = document.querySelectorAll(".reveal-up");
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("is-visible");
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            reveals.forEach(reveal => observer.observe(reveal));
+        });
+
+        // --- Modal Logic ---
+        const overlay = document.getElementById('bookingOverlay');
+        const backdrop = document.getElementById('modalBackdrop');
+        const panel = document.getElementById('modalPanel');
+        const form = document.getElementById('contactForm');
+        const successState = document.getElementById('successState');
+
+        function openBooking() {
+            overlay.classList.remove('pointer-events-none');
+            backdrop.classList.remove('opacity-0', 'pointer-events-none');
+            backdrop.classList.add('opacity-100', 'pointer-events-auto');
+            setTimeout(() => {
+                panel.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeBooking() {
+            panel.classList.add('translate-y-10', 'opacity-0');
+            backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+            backdrop.classList.add('opacity-0', 'pointer-events-none');
+            
+            setTimeout(() => {
+                overlay.classList.add('pointer-events-none');
+                document.body.style.overflow = ''; 
+                
+                setTimeout(() => {
+                    form.reset();
+                    successState.classList.add('hidden');
+                    successState.classList.remove('flex');
+                    form.classList.remove('hidden');
+                }, 300);
+            }, 500);
+        }
+
+        // --- Form Simulation ---
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = btn.innerHTML;
+            
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> A Processar...';
+            lucide.createIcons();
+            btn.disabled = true;
+
+            setTimeout(() => {
+                form.classList.add('hidden');
+                successState.classList.remove('hidden');
+                successState.classList.add('flex');
+                
+                btn.innerHTML = originalHTML;
+                lucide.createIcons();
+                btn.disabled = false;
+            }, 1200);
+        }
+    </script>
+</body>
+</html>

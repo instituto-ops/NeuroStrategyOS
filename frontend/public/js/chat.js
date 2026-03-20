@@ -24,6 +24,7 @@ window.chatApp = {
     redoStack: [],     // Redo history
     currentKeyword: '', // Store current keyword for AI sync
     lastGeneratedHtml: null, // [AUTO-DNA] Versão original gerada pela IA para comparação
+    auditLog: [], // [GOVERNANÇA] Trilha de Auditoria Clínica
 
     connectSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -64,6 +65,12 @@ window.chatApp = {
         this.addMessage("NeuroEngine AI online. Como posso ajudar com sua estratégia Abidos hoje?");
         this.bindEvents();
         this.connectSocket(); // Conecta ao Mission Control para logs reais
+        
+        // Log de inicialização de sessão (Governabilidade)
+        this.addAuditLog("Psicólogo Victor Lawrence", "Sessão de construção clínica iniciada no AI Studio.", "human");
+        
+        // Inicializa resumo de parâmetros
+        this.updatePreflightSummary();
     },
 
     // --- HISTORY (Undo / Redo) ---
@@ -973,10 +980,87 @@ window.chatApp = {
             } else {
                 throw new Error("Checklist não retornado.");
             }
-        } catch (error) {
-            console.error("Audit Error:", error);
-            this.addMessage("🚨 Erro na auditoria. Verifique a conexão com o node.", false);
+            alert("🚨 Erro na auditoria. Verifique a conexão com o node.");
         }
+        
+        this.addAuditLog("Agente Auditor", "Auditoria de SEO Local e Autoridade (Abidos) concluída.", "ia");
+    },
+
+    // --- GOVERNANCE & AUDIT LOG ---
+    addAuditLog(actor, message, type = 'human') {
+        const timestamp = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        this.auditLog.unshift({ actor, message, type, time: timestamp });
+        if (this.auditLog.length > 20) this.auditLog.pop();
+        this.renderAuditTimeline();
+    },
+
+    renderAuditTimeline() {
+        const container = document.getElementById('audit-timeline');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        if (this.auditLog.length === 0) {
+            container.innerHTML = '<p style="text-align:center; font-size:11px; color:#94a3b8;">Nenhum registro de auditoria nesta sessão.</p>';
+            return;
+        }
+
+        this.auditLog.forEach(log => {
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.innerHTML = `
+                <div class="timeline-dot ${log.type}"></div>
+                <div class="timeline-content">
+                    <div class="timeline-time">${log.time}</div>
+                    <span class="timeline-actor">${log.actor}</span>
+                    <div style="font-size: 11px; color: #475569; line-height: 1.3;">${log.message}</div>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    },
+
+    openAuditModal() {
+        document.getElementById('modal-audit-log').style.display = 'flex';
+        this.renderAuditTimeline();
+    },
+
+    closeAuditModal() {
+        document.getElementById('modal-audit-log').style.display = 'none';
+    },
+
+    // --- UI HELPERS (Chips & Pre-flight) ---
+
+    insertPresetPrompt(type) {
+        const input = document.getElementById('chat-input');
+        const presets = {
+            'Refinar Termos Clínicos': "Reescreva este trecho utilizando terminologia clínica mais precisa, porém acessível, focando em evidências das neurociências.",
+            'Adaptar para Leigo': "Simplifique a linguagem deste parágrafo para que um paciente sem formação técnica compreenda perfeitamente as dores e soluções.",
+            'Revisão Ética CFP': "Revise o conteúdo para garantir total conformidade com o Código de Ética do Psicólogo (CFP), eliminando qualquer tom de promessa de cura.",
+            'Diagnóstico Tardio TEA': "Aprofunde a discussão sobre os desafios do diagnóstico tardio em adultos, mencionando especificamente o fenômeno do Mascaramento (Masking)."
+        };
+        
+        const message = presets[type] || "";
+        if (input.value.trim() === "") {
+            input.value = message;
+        } else {
+            input.value += "\n\n" + message;
+        }
+        input.focus();
+    },
+
+    updatePreflightSummary() {
+        const silo = document.getElementById('seo-silo')?.value || '---';
+        const context = document.getElementById('seo-context')?.value || '---';
+        const keywordSelect = document.getElementById('ai-studio-keyword');
+        const keyword = keywordSelect?.options[keywordSelect.selectedIndex]?.text || '---';
+
+        const siloEl = document.getElementById('preflight-silo');
+        const contextEl = document.getElementById('preflight-context');
+        const keywordEl = document.getElementById('preflight-keyword');
+
+        if (siloEl) siloEl.innerText = silo;
+        if (contextEl) contextEl.innerText = context;
+        if (keywordEl) keywordEl.innerText = keyword;
     },
 
     renderAuditFeedback(checklist) {
@@ -1293,6 +1377,7 @@ window.chatApp = {
         if (titleInput && !titleInput.value) {
             this.suggestTitle();
         }
+        this.updatePreflightSummary();
     },
 
     // --- WP INTEGRATION ---
@@ -1318,8 +1403,9 @@ window.chatApp = {
         itemSelect.innerHTML = '<option value="">-- Selecione para Editar --</option>';
         data.forEach(item => {
             const title = item.title && item.title.rendered ? item.title.rendered : `Sem Título #${item.id}`;
+            const statusLabel = item.status === 'publish' ? '[PUBLICADO]' : '[RASCUNHO]';
             const isSelected = selectedId && parseInt(item.id) === parseInt(selectedId) ? 'selected' : '';
-            itemSelect.innerHTML += `<option value="${item.id}" ${isSelected}>${title}</option>`;
+            itemSelect.innerHTML += `<option value="${item.id}" data-status="${item.status}" data-title="${title}" ${isSelected}>${statusLabel} ${title}</option>`;
         });
         
         document.getElementById('ai-studio-load-btn')?.remove(); // Not needed if we use onchange or separate btn
@@ -1465,22 +1551,48 @@ window.chatApp = {
         const kw = document.getElementById('ai-studio-keyword').value || document.getElementById('seo-context').value;
         if (!kw) return alert("Por favor, selecione um Contexto Ouro ou Keyword primeiro.");
 
-        this.addAgentLog("NeuroEngine", "Raciocinando sobre títulos estratégicos...", false);
+        this.addAgentLog("NeuroEngine", "Raciocinando sobre estratégia de SEO e conversão...", false);
         
-        const prompt = `Gere 1 título único e irresistível para um post/página de psicologia.
-                        METODOLOGIA: Abidos (Foco em Dor, Solução e E-E-A-T).
+        const prompt = `Gere uma estratégia de SEO Abidos para um post/página de psicologia.
                         KEYWORD ALVO: "${kw}".
                         ESPECIALISTA: Dr. Victor Lawrence (Goiânia).
-                        RETORNE APENAS O TEXTO DO TÍTULO, sem aspas.`;
+                        
+                        RETORNE APENAS UM JSON VÁLIDO no seguinte formato:
+                        {
+                          "title": "Um título irresistível focado em dor e solução",
+                          "slug": "url-amigavel-com-keywords",
+                          "titleTag": "Title Tag SEO otimizada (máx 60 caracteres)",
+                          "metaDescription": "Meta Description persuasiva de alta conversão (máx 155 caracteres)"
+                        }
+                        
+                        REGRAS: 
+                        - Aplique o Método Abidos (E-E-A-T, Prova Social implícita, Foco Local).
+                        - Pense como um anúncio de alta performance no Google Ads.
+                        - Não retorne nenhum outro texto fora do JSON.`;
         
         try {
-            const title = await gemini.callAPI(prompt);
-            if (title) {
-                document.getElementById('ai-studio-new-title').value = title.replace(/"/g, '').trim();
-                this.addAgentLog("NeuroEngine", "Título sugerido com sucesso.", true);
+            const rawResponse = await gemini.callAPI(prompt);
+            // Clean response in case AI adds markdown blocks
+            const cleanJson = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+            const data = JSON.parse(cleanJson);
+
+            if (data.title) {
+                document.getElementById('ai-studio-new-title').value = data.title;
+                document.getElementById('seo-slug').value = data.slug || '';
+                document.getElementById('seo-title-tag').value = data.titleTag || '';
+                document.getElementById('seo-meta-desc').value = data.metaDescription || '';
+                
+                this.addAgentLog("NeuroEngine", "Estratégia de SEO sugerida com sucesso.", true);
+                this.addMessage(`🪄 **Estratégia Abidos Gerada!**\n\n📌 **Título:** ${data.title}\n🔗 **Slug:** ${data.slug}\n🔍 **SEO:** Otimizado com foco em Google Ads.`);
             }
         } catch (e) {
-            this.addAgentLog("NeuroEngine", "Erro ao sugerir título.", true);
+            console.error("Erro ao sugerir título:", e);
+            this.addAgentLog("NeuroEngine", "Erro ao processar sugestão estratégica.", true);
+            // Fallback: se falhar o JSON, tenta pegar apenas o texto caso o Gemini tenha retornado algo simples
+            try {
+                const title = await gemini.callAPI(`Retorne APENAS um título curto para a keyword: ${kw}`);
+                document.getElementById('ai-studio-new-title').value = title.trim();
+            } catch (innerE) {}
         }
     },
 
@@ -1488,30 +1600,44 @@ window.chatApp = {
         const title = document.getElementById('ai-studio-new-title').value;
         const kw = document.getElementById('ai-studio-keyword').value || document.getElementById('seo-context').value;
         const type = document.getElementById('ai-studio-type').value;
+        const templateName = document.getElementById('ai-studio-template').value;
 
         if (!title) return alert("Por favor, defina um título para o rascunho.");
+        if (!templateName) return alert("Por favor, selecione um Blueprint de Design.");
 
-        this.addMessage(`🏗️ **Iniciando Construção do Rascunho Abidos...**\nAlvo: **${title}**\nContexto: **${kw || 'Psicologia Clínica'}**`);
+        this.addMessage(`🏗️ **Iniciando Protocolo Headless Assembly (V5)...**\nBlueprint: **${templateName}**\nAlvo: **${title}**\nContexto: **${kw || 'Psicologia Clínica'}**`);
         
         const preview = document.getElementById('live-preview');
-        // Limpa o canvas completamente antes de gerar um novo rascunho
-        preview.innerHTML = '';
-        const placeholder = document.getElementById('canvas-placeholder');
-        if (placeholder) placeholder.remove();
-        
-        preview.innerHTML = '<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:400px; background:white;"><div class="loader"></div><p style="margin-top:20px; font-weight:bold; color:#1e293b; font-family:sans-serif;">🔨 Agente Construtor está levantando as estruturas...</p><p style="font-size:12px; color:#64748b;">(Isso pode levar até 40 segundos conforme a profundidade clínica)</p></div>';
-
-        const prompt = `VOCÊ É O ARQUITETO ABIDOS V4. Construa um ${type === 'pages' ? 'FUNIL DE VENDAS COMPLETO' : 'ARTIGO DE BLOG EDITORIAL'} para: "${title}".
-                        
-                        PROTOCOLO ABIDOS (CRÍTICO):
-                        - H1: Título Primário Unificado (KW + Promessa + Goiânia).
-                        - H2: Identificação da Dor, Explicação Metódica, Autoridade Acadêmica (Victor Lawrence CRP 09/012681, Mestrado UFU) e FAQ.
-                        - H3: Detalhamento granular e quebra de micro-objeções.
-                        - E-E-A-T: Menção explícita ao Mestrado na UFU e clínica em Goiânia.
-                        - CTA: Botões focados em "Falar comigo" ou "Agendar Avaliação" com o WhatsApp: ${this.whatsapp}.
-                        - FORMATAÇÃO: HTML5 + Tailwind. Retorne APENAS o HTML dentro da div abidos-wrapper.`;
+        preview.innerHTML = '<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:400px; background:white;"><div class="loader"></div><p style="margin-top:20px; font-weight:bold; color:#1e293b; font-family:sans-serif;">🔨 Agente de Injeção está processando o Blueprint...</p><p style="font-size:12px; color:#64748b;">(Preenchendo variáveis {{ }} com alta persuasão Abidos)</p></div>';
 
         try {
+            // 1. CARREGA O TEMPLATE
+            const templateResp = await fetch(`/templates/${templateName}`);
+            let templateHtml = await templateResp.text();
+
+            // Extrai variáveis
+            const matches = templateHtml.match(/\{\{([a-zA-Z0-9_-]+)\}\}/g) || [];
+            const uniqueVars = [...new Set(matches.map(m => m.replace(/\{\{|\}\}/g, '')))];
+
+            // 2. SOLICITA À IA APENAS OS TEXTOS (COPY-FIRST)
+            const prompt = `VOCÊ É O AGENTE DE INJEÇÃO ABIDOS V5. Sua missão é preencher as variáveis do template "${templateName}" para o tópico: "${title}".
+                            
+                            DADOS DO CONTEXTO:
+                            - Título: ${title}
+                            - Keyword Alvo: ${kw}
+                            - Tipo: ${type}
+                            
+                            LISTA DE VARIÁVEIS {{ }} IDENTIFICADAS NO TEMPLATE (PREENCHA TODAS):
+                            ${uniqueVars.join(', ')}
+                            
+                            REGRAS DE OURO (PROTOCOLO HEADLESS):
+                            - SEO INVISÍVEL: Preencha as variáveis de SEO (seo_h1, seo_h2_dor, etc) com hierarquia semântica rigorosa (Goiânia inclusa).
+                            - VISUAL ESTÉTICO: Nas variáveis de exibição visual, use apenas <div> e <span>. NÃO use H1-H3.
+                            - CÓDIGO: NÃO gere HTML estrutural. Gere APENAS um JSON plano com os valores para cada variável.
+                            - GATILHOS: Use gatilhos mentais de autoridade, escassez e quebra de objeções clínica.
+                            
+                            Retorne APENAS o JSON plano: { "var1": "valor", "var2": "valor" }`;
+
             const formData = new FormData();
             formData.append('message', prompt);
             formData.append('currentKeyword', kw);
@@ -1523,20 +1649,41 @@ window.chatApp = {
             const data = await response.json();
 
             if (data.reply) {
+                // Tenta extrair o JSON da resposta da IA
+                let varsData = {};
+                try {
+                    const jsonMatch = data.reply.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        varsData = JSON.parse(jsonMatch[0]);
+                    } else {
+                        throw new Error("JSON não encontrado na resposta");
+                    }
+                } catch (e) {
+                    console.error("Erro ao converter resposta em JSON:", e);
+                    this.addMessage("⚠️ **Erro de Injeção:** A IA não retornou o formato JSON esperado. Tentando recuperação...");
+                    return;
+                }
+
+                // 3. ASSEMBLE (MONTAGEM DO HEADLESS)
+                let finalHtml = templateHtml;
+                for (let key in varsData) {
+                    const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+                    finalHtml = finalHtml.replace(regex, varsData[key]);
+                }
+
                 this.saveHistory();
-                preview.innerHTML = data.reply;
-                this.lastGeneratedHtml = data.reply;
+                preview.innerHTML = finalHtml;
+                this.lastGeneratedHtml = finalHtml;
                 this.injectCopyButtons();
                 this.updateAbidusScore();
-                this.addMessage("✅ **Rascunho Concluído!** O Agente Construtor finalizou a escrita. Você já pode revisar e ajustar cada bloco.");
+                this.addMessage("✅ **Assemble Concluído!** O rascunho foi injetado no Blueprint e está pronto para o Transe Visual.");
                 
-                // Rola para o topo do canvas
                 document.getElementById('studio-canvas').scrollTop = 0;
+                this.addAuditLog("Agente de Injeção", `Headless Assembly finalizado usando ${templateName}.`, "ia");
             }
         } catch (e) {
-            console.error(e);
-            this.addAgentLog("Construtor", "Falha crítica na construção.", true);
-            this.addMessage("❌ Erro ao gerar rascunho. Verifique sua conexão ou tente novamente.");
+            console.error("Erro na geração Headless:", e);
+            this.addMessage("❌ **Falha Crítica no Protocolo Headless.** Verifique o console.");
         }
     },
 
@@ -1822,15 +1969,50 @@ RETORNE APENAS O JSON, sem comentários.`;
     },
 
     async publishDirectly() {
+        const itemSelect = document.getElementById('ai-studio-item');
+        const selectedOption = itemSelect ? itemSelect.options[itemSelect.selectedIndex] : null;
+        
+        // Se for novo rascunho sem ID ainda
+        const currentTitle = document.getElementById('ai-studio-new-title').value || (this.currentItemId && selectedOption ? selectedOption.getAttribute('data-title') : "Novo Rascunho");
+        const currentStatus = this.currentItemId && selectedOption ? selectedOption.getAttribute('data-status') : "NOVO";
+        
+        document.getElementById('confirm-wp-title').innerText = currentTitle;
+        const statusLabel = currentStatus === 'publish' ? 'PUBLICADO' : (currentStatus === 'NOVO' ? 'CRIANDO NOVO' : 'RASCUNHO');
+        document.getElementById('confirm-wp-status').innerText = statusLabel;
+        
+        // Reseta checkbox e botão
+        document.getElementById('check-revisao-clinica').checked = false;
+        document.getElementById('btn-export-final').disabled = true;
+        
+        // Abre o modal
+        document.getElementById('modal-confirmacao-wp').style.display = 'flex';
+    },
+
+    closeWPModal() {
+        document.getElementById('modal-confirmacao-wp').style.display = 'none';
+    },
+
+    toggleExportButton() {
+        const checked = document.getElementById('check-revisao-clinica').checked;
+        document.getElementById('btn-export-final').disabled = !checked;
+    },
+
+    async confirmAndSendToWP() {
+        this.closeWPModal();
+        this.addAuditLog("Victor Lawrence", "Revisão clínica aprovada e autorizada para exportação.", "human");
+        await this.executeWPExport();
+    },
+
+    async executeWPExport() {
         const preview = document.getElementById('live-preview');
         const placeholder = document.getElementById('canvas-placeholder');
         if (placeholder) return alert("O mapa está em branco!");
 
-        if (!confirm("Deseja publicar este roteiro diretamente no WordPress agora?")) return;
-
-        const btn = event?.currentTarget || document.querySelector('button[onclick*="publishDirectly"]');
-        const originalText = btn ? btn.innerHTML : "🚀 PUBLICAR";
-        if (btn) { btn.innerHTML = "🚀 Publicando..."; btn.disabled = true; }
+        const btn = document.getElementById('btn-export-final');
+        const stepBtn = document.querySelector('button[onclick*="publishDirectly"]');
+        
+        if (btn) { btn.innerHTML = "🚀 Exportando..."; btn.disabled = true; }
+        if (stepBtn) { stepBtn.disabled = true; }
 
         this.addMessage("🚀 **Iniciado Deploy Abidos...** Extraindo DNA estratégico.");
         
@@ -1844,11 +2026,7 @@ RETORNE APENAS O JSON, sem comentários.`;
         if (!metaTitle) {
             this.addMessage("🪄 **Otimizando Título SEO (Meta Title) Abidos...**");
             const keyword = document.getElementById('ai-studio-keyword').value || "Psicólogo em Goiânia";
-            const prompt = `Gere um Meta Title SEO de alta conversão (50-60 caracteres).
-                            FÓRMULA ABIDOS: Palavra-chave foco nos primeiros 50 caracteres.
-                            FOCO: "${keyword}".
-                            BASEADO EM: "${title}".
-                            SAÍDA: Apenas o texto do título SEO.`;
+            const prompt = `Gere um Meta Title SEO de alta conversão (50-60 caracteres). FÓRMULA ABIDOS: Palavra-chave foco nos primeiros 50 caracteres. FOCO: "${keyword}". BASEADO EM: "${title}". SAÍDA: Apenas o texto do título SEO.`;
             metaTitle = await gemini.callAPI(prompt);
             document.getElementById('seo-title-tag').value = metaTitle;
         }
@@ -1857,9 +2035,7 @@ RETORNE APENAS O JSON, sem comentários.`;
         if (!metaDesc) {
             this.addMessage("🪄 **Gerando Meta Description estratégica...**");
             const cleanText = preview.innerText.substring(0, 1000);
-            const prompt = `Gere uma Meta Description de alta conversão (SEO) para esta página. 
-                            Regras Abidos: Máximo 160 caracteres. Foco em saúde mental e autoridade.
-                            SAÍDA: Apenas o texto da meta description.`;
+            const prompt = `Gere uma Meta Description de alta conversão para esta página. Regras Abidos: Máximo 160 caracteres. Foco em saúde mental e autoridade. SAÍDA: Apenas o texto da meta description.`;
             metaDesc = await gemini.callAPI(prompt);
             document.getElementById('seo-meta-desc').value = metaDesc;
         }
@@ -1868,32 +2044,35 @@ RETORNE APENAS O JSON, sem comentários.`;
             type: document.getElementById('ai-studio-type').value || 'pages',
             title: title,
             content: preview.innerHTML,
-            status: "draft",
+            status: "draft", // FORÇADO como Rascunho para segurança clínica
             slug: document.getElementById('seo-slug').value,
             metaDesc: metaDesc,
             metaTitle: document.getElementById('seo-title-tag').value || title
         };
 
         try {
-            const result = await fetch('/api/content/publish-direct', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).then(r => r.json());
+            // Em vez de fetch direto, vamos usar o wpAPI que é o padrão atual
+            const result = await wpAPI.saveContent(payload.type, payload, this.currentItemId);
+            
+            if (btn) { btn.innerHTML = "Exportar como Rascunho"; btn.disabled = false; }
+            if (stepBtn) { stepBtn.disabled = false; }
 
-            if (result.success) {
-                this.addMessage(`✅ **PUBLICAÇÃO CONCLUÍDA!**\n\nID: #${result.id}\nStatus: Rascunho Seguro Bypass-WAF.`);
-                this.addMessage(`<br><a href="${result.link}" target="_blank" class="btn btn-primary" style="display:inline-block; margin-top:5px; background:#10b981; border:none; color:white;">👁️ Ver no WordPress</a>`);
+            if(result && result.id) {
                 this.currentItemId = result.id;
+                this.addMessage(`✅ **PUBLICAÇÃO CONCLUÍDA NO WP!**\n\nID: #${result.id}\nStatus: Enviado como Rascunho.\nLink: [Ver no Painel WP](${result.link})`);
+                this.addMessage(`<br><a href="${result.link}" target="_blank" class="btn btn-primary" style="display:inline-block; margin-top:5px; background:#10b981; border:none; color:white;">👁️ Ver no WordPress</a>`);
+                alert("Rascunho enviado com sucesso!");
+                this.loadList(result.id);
+                this.addAuditLog("Sistema", `Exportação concluída para WP (ID #${result.id}) como Rascunho Seguro.`, "ia");
             } else {
-                this.addMessage("❌ Erro no deploy: " + (result.error || "WP recusou a injeção via Proxy."));
+                this.addMessage("❌ Erro ao enviar para o WordPress. Verifique o console.");
             }
         } catch (e) {
             console.error(e);
             this.addMessage("🚨 Erro Crítico: A ponte de publicação foi bloqueada ou o servidor está offline.");
         } finally {
-            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
-            // Tenta refinar o DNA do Dr. Victor com base nas edições manuais dele (Aprendizado Passivo)
+            if (btn) { btn.innerHTML = "Exportar como Rascunho"; btn.disabled = false; }
+            if (stepBtn) { stepBtn.disabled = false; }
             this.refineAutoDNA();
         }
     },

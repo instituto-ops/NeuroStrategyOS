@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth bg-[#05080f]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{seo_title}}</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Tipografia Local (Zerar CLS) */
+        @font-face { font-family: 'Inter'; src: local('Inter Regular'), local('Inter-Regular'); font-weight: 300; font-display: swap; }
+        @font-face { font-family: 'Inter'; src: local('Inter Regular'), local('Inter-Regular'); font-weight: 400; font-display: swap; }
+        @font-face { font-family: 'Inter'; src: local('Inter Bold'), local('Inter-Bold'); font-weight: 700; font-display: swap; }
+
+        :root {
+            --abidos-darkest: #05080f; 
+            --abidos-deep: #0b1221;
+            --abidos-teal: #2dd4bf;
+            --abidos-teal-glow: rgba(45, 212, 191, 0.15);
+            --abidos-cream: #faf9f6;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--abidos-darkest);
+            color: #e2e8f0;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        /* Efeitos Hipnóticos e Sóbrios */
+        .glass-panel {
+            background: rgba(250, 249, 246, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-panel-light {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 30px 60px rgba(11, 18, 33, 0.05);
+        }
+
+        /* Animações de Foco */
+        .orb-glow { animation: slowPulse 8s infinite alternate ease-in-out; }
+
+        @keyframes slowPulse {
+            0% { transform: scale(0.8) translate(-5%, -5%); opacity: 0.3; }
+            100% { transform: scale(1.1) translate(5%, 5%); opacity: 0.6; }
+        }
+
+        /* Reveal on Scroll */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+        
+        details > summary { list-style: none; cursor: pointer; }
+        details > summary::-webkit-details-marker { display: none; }
+        details[open] summary ~ * { animation: fadeInDown 0.4s ease-in-out; }
+        
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .wpp-boutique {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(37, 211, 102, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(37, 211, 102, 0.25);
+            z-index: 9999;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .wpp-boutique:hover {
+            transform: translateY(-5px);
+            background: rgba(37, 211, 102, 1);
+            box-shadow: 0 15px 40px rgba(37, 211, 102, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- [SOBERANIA ABIDOS] Camada SEO Invisível (V5) -->
+    <div class="seo-hidden-structure" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+        <h1>{{seo_h1_tecnico}}</h1>
+        <p>{{seo_resumo_indexacao}}</p>
+        <h2>{{secao1_h2}}</h2>
+        <h2>{{secao2_h2}}</h2>
+        <h2>{{secao3_h2}}</h2>
+        <h2>{{secao4_h2}}</h2>
+    </div>
+
+    <a href="https://wa.me/{{whatsapp_numero}}?text={{msg_whatsapp}}" class="wpp-boutique" target="_blank" rel="noopener noreferrer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+        <span>WhatsApp</span>
+    </a>
+
+    <main class="w-full flex flex-col items-center">
+        
+        <!-- HERO SECTION: Gatilho de captura imediata -->
+        <section class="w-full min-h-[95vh] flex flex-col items-center justify-center text-center relative overflow-hidden px-6 pt-32 pb-40 lg:pb-48">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[800px] max-h-[800px] bg-[#2dd4bf] blur-[150px] rounded-full pointer-events-none orb-glow mix-blend-screen opacity-20"></div>
+            
+            <div class="max-w-4xl flex flex-col items-center gap-10 relative z-10 reveal">
+                <div class="inline-flex items-center gap-3 px-5 py-2 glass-panel rounded-full border border-white/10 shadow-2xl">
+                    <span class="w-2 h-2 rounded-full bg-[#2dd4bf] animate-pulse"></span>
+                    <span class="text-slate-300 font-medium text-[10px] md:text-xs uppercase tracking-[0.2em]">
+                        {{hero_tag_localizacao}}
+                    </span>
+                </div>
+                
+                <div class="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight">
+                    {{ui_titulo_hero}}
+                </div>
+                
+                <p class="text-base md:text-xl text-slate-300 font-normal max-w-2xl leading-relaxed reveal delay-100">
+                    {{hero_subtitulo}}
+                </p>
+                
+                <div class="mt-4 md:mt-8 reveal delay-200">
+                    <a href="{{link_agendamento}}" class="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-[#2dd4bf] px-10 py-4 md:px-12 md:py-5 font-bold text-[#05080f] uppercase tracking-widest text-xs md:text-sm transition-all hover:bg-[#14b8a6] hover:shadow-[0_0_40px_rgba(45,212,191,0.3)]">
+                        <span class="relative z-10 transition-transform duration-300 group-hover:scale-105">{{hero_cta_texto}}</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 opacity-60 animate-bounce">
+                <span class="text-[10px] uppercase tracking-[0.3em] text-slate-400 font-normal">Descubra</span>
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            </div>
+        </section>
+
+        <!-- DOR SECTION: Espelhamento da agonia (Pacing) -->
+        <section class="w-full bg-[var(--abidos-cream)] text-slate-900 py-20 lg:py-32 px-6 relative rounded-t-[3rem] -mt-10 z-20 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+            <div class="max-w-7xl mx-auto flex flex-col gap-16 lg:gap-20">
+                <div class="text-center max-w-3xl mx-auto reveal">
+                    <span class="text-[#14b8a6] font-bold tracking-widest uppercase text-xs mb-4 block">{{dor_tag}}</span>
+                    <div class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 tracking-tight">{{dor_h2_titulo}}</div>
+                    <p class="text-slate-700 text-lg font-normal leading-relaxed">
+                        {{dor_descricao}}
+                    </p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="glass-panel-light p-10 lg:p-12 rounded-[2rem] flex flex-col gap-6 reveal delay-100 hover:-translate-y-2 transition-transform duration-500 border border-slate-200">
+                        <svg class="w-10 h-10 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <div>
+                            <div class="font-extrabold text-slate-900 text-xl mb-3">{{dor_card1_titulo}}</div>
+                            <p class="text-slate-700 font-normal text-base leading-relaxed">{{dor_card1_texto}}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-panel-light p-10 lg:p-12 rounded-[2rem] flex flex-col gap-6 reveal delay-200 hover:-translate-y-2 transition-transform duration-500 border border-slate-200">
+                        <svg class="w-10 h-10 text-[#14b8a6]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path></svg>
+                        <div>
+                            <div class="font-extrabold text-slate-900 text-xl mb-3">{{dor_card2_titulo}}</div>
+                            <p class="text-slate-700 font-normal text-base leading-relaxed">{{dor_card2_texto}}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-panel-light p-10 lg:p-12 rounded-[2rem] flex flex-col gap-6 reveal delay-300 hover:-translate-y-2 transition-transform duration-500 border border-slate-200">
+                        <svg class="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        <div>
+                            <div class="font-extrabold text-slate-900 text-xl mb-3">{{dor_card3_titulo}}</div>
+                            <p class="text-slate-700 font-normal text-base leading-relaxed">{{dor_card3_texto}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BENEFÍCIOS SECTION: Apresentação da solução clínica -->
+        <section class="w-full bg-[var(--abidos-darkest)] text-white py-20 lg:py-32 px-6 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(rgba(255,255,255,0.2) 1px, transparent 1px); background-size: 40px 40px;"></div>
+            
+            <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 lg:gap-20 relative z-10">
+                <div class="flex-1 reveal">
+                    <span class="text-[#2dd4bf] font-bold tracking-widest uppercase text-xs mb-6 block">{{beneficios_tag}}</span>
+                    <div class="text-3xl md:text-5xl font-extrabold mb-8 tracking-tight leading-tight">{{beneficios_h2_titulo}}</div>
+                    <p class="text-slate-300 text-lg font-normal leading-relaxed mb-6">
+                        {{beneficios_texto_p1}}
+                    </p>
+                    <p class="text-slate-300 text-lg font-normal leading-relaxed">
+                        {{beneficios_texto_p2}}
+                    </p>
+                </div>
+
+                <div class="flex-1 flex flex-col gap-6">
+                    <div class="glass-panel p-8 lg:p-10 rounded-3xl reveal delay-100 border border-slate-700/50">
+                        <div class="text-xl font-bold text-white mb-3 flex items-center gap-4">
+                            <span class="w-8 h-[2px] bg-[#2dd4bf]"></span> {{beneficios_card1_titulo}}
+                        </div>
+                        <p class="text-slate-300 font-normal text-base leading-relaxed">
+                            {{beneficios_card1_texto}}
+                        </p>
+                    </div>
+
+                    <div class="glass-panel p-8 lg:p-10 rounded-3xl reveal delay-200 border border-slate-700/50">
+                        <div class="text-xl font-bold text-white mb-3 flex items-center gap-4">
+                            <span class="w-8 h-[2px] bg-slate-500"></span> {{beneficios_card2_titulo}}
+                        </div>
+                        <p class="text-slate-300 font-normal text-base leading-relaxed">
+                            {{beneficios_card2_texto}}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slot Dinâmico Abidos -->
+            <div class="max-w-7xl mx-auto px-6">
+                {{area_dinamica_extra}}
+            </div>
+        </section>
+
+        <!-- AUTORIDADE (E-E-A-T): Validação técnica -->
+        <section class="w-full bg-[var(--abidos-cream)] text-slate-900 py-20 lg:py-32 px-6 overflow-hidden">
+            <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 lg:gap-20 items-center">
+                <div class="flex-1 relative w-full reveal">
+                    <div class="relative w-full max-w-md mx-auto">
+                        <img src="{{autoridade_foto_url}}" 
+                             alt="{{autoridade_foto_alt}}" 
+                             class="rounded-[2rem] object-cover aspect-[4/5] shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-10 relative">
+                        
+                        <div class="absolute -bottom-8 -right-4 md:-right-8 bg-[#0b1221]/90 backdrop-blur-md p-6 lg:p-8 rounded-[2rem] shadow-2xl z-20 w-[85%] sm:w-72 reveal delay-300 border border-white/10">
+                            <p class="text-[10px] lg:text-xs text-slate-300 font-bold uppercase tracking-widest mb-4 flex items-center gap-2 lg:gap-3">
+                                <span class="w-2 h-2 rounded-full bg-[#2dd4bf] animate-pulse"></span> Ciência do Rapport
+                            </p>
+                            <div class="w-full h-20 lg:h-24">
+                                <canvas id="rapportChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-1 space-y-6 lg:space-y-8 reveal delay-100">
+                    <div>
+                        <span class="text-slate-500 font-bold uppercase tracking-widest text-xs mb-4 block mt-10 lg:mt-0">Sobre o Profissional</span>
+                        <div class="text-3xl md:text-5xl font-extrabold text-slate-900 leading-[1.1] tracking-tight mb-4">
+                            Victor Lawrence
+                        </div>
+                        <div class="text-slate-600 text-lg font-semibold tracking-wide">{{autoridade_credenciais_curtas}}</div>
+                    </div>
+                    
+                    <div class="space-y-5 lg:space-y-6 text-slate-700 text-base lg:text-lg font-normal leading-relaxed">
+                        <p>{{autoridade_bio_p1}}</p>
+                        <p>{{autoridade_bio_p2}}</p>
+                        
+                        <div class="flex items-center gap-4 pt-6 lg:pt-8 border-t border-slate-300">
+                            <div class="flex text-amber-500 text-xl">★★★★★</div>
+                            <p class="text-[10px] lg:text-xs font-bold text-slate-900 uppercase tracking-widest">{{autoridade_prova_social}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AMBIENTE: Experiência sensorial -->
+        <section class="w-full bg-white py-20 lg:py-32 px-6 border-t border-slate-100">
+            <div class="max-w-7xl mx-auto flex flex-col gap-12 lg:gap-16">
+                <div class="text-left md:text-center max-w-2xl mx-auto reveal">
+                    <div class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 lg:mb-6 tracking-tight">{{ambiente_h2_titulo}}</div>
+                    <p class="text-slate-700 text-lg font-normal leading-relaxed">{{ambiente_descricao}}</p>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full reveal delay-200">
+                    <img src="{{ambiente_foto1_url}}" alt="{{ambiente_foto1_alt}}" class="object-cover aspect-square md:aspect-[4/5] w-full rounded-2xl lg:rounded-3xl grayscale-[15%] hover:grayscale-0 transition-all duration-700 shadow-md" loading="lazy">
+                    <img src="{{ambiente_foto2_url}}" alt="{{ambiente_foto2_alt}}" class="object-cover aspect-square md:aspect-[4/5] w-full rounded-2xl lg:rounded-3xl grayscale-[15%] hover:grayscale-0 transition-all duration-700 mt-0 lg:mt-8 shadow-md" loading="lazy">
+                    <img src="{{ambiente_foto3_url}}" alt="{{ambiente_foto3_alt}}" class="object-cover aspect-square md:aspect-[4/5] w-full rounded-2xl lg:rounded-3xl grayscale-[15%] hover:grayscale-0 transition-all duration-700 shadow-md" loading="lazy">
+                    <img src="{{ambiente_foto4_url}}" alt="{{ambiente_foto4_alt}}" class="object-cover aspect-square md:aspect-[4/5] w-full rounded-2xl lg:rounded-3xl grayscale-[15%] hover:grayscale-0 transition-all duration-700 mt-0 lg:mt-8 shadow-md" loading="lazy">
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ NATIVO: SEO de busca -->
+        <section class="w-full bg-[var(--abidos-cream)] py-20 lg:py-32 px-6">
+            <div class="max-w-4xl mx-auto flex flex-col gap-12 lg:gap-16 reveal">
+                <div class="text-3xl md:text-4xl font-extrabold text-center text-slate-900 tracking-tight">Perguntas Frequentes</div>
+                
+                <div class="space-y-4">
+                    <details class="group border-b border-slate-300 pb-4">
+                        <summary class="py-6 font-bold flex justify-between items-center text-slate-900 text-base md:text-lg tracking-tight hover:text-[#14b8a6] transition-colors">
+                            {{faq_p1_pergunta}}
+                            <span class="text-slate-500 transition-transform group-open:rotate-45 font-light text-2xl">+</span>
+                        </summary>
+                        <div class="pb-6 text-slate-700 font-normal text-sm md:text-base leading-relaxed">{{faq_p1_resposta}}</div>
+                    </details>
+
+                    <details class="group border-b border-slate-300 pb-4">
+                        <summary class="py-6 font-bold flex justify-between items-center text-slate-900 text-base md:text-lg tracking-tight hover:text-[#14b8a6] transition-colors">
+                            {{faq_p2_pergunta}}
+                            <span class="text-slate-500 transition-transform group-open:rotate-45 font-light text-2xl">+</span>
+                        </summary>
+                        <div class="pb-6 text-slate-700 font-normal text-sm md:text-base leading-relaxed">{{faq_p2_resposta}}</div>
+                    </details>
+
+                    <details class="group border-b border-slate-300 pb-4">
+                        <summary class="py-6 font-bold flex justify-between items-center text-slate-900 text-base md:text-lg tracking-tight hover:text-[#14b8a6] transition-colors">
+                            {{faq_p3_pergunta}}
+                            <span class="text-slate-500 transition-transform group-open:rotate-45 font-light text-2xl">+</span>
+                        </summary>
+                        <div class="pb-6 text-slate-700 font-normal text-sm md:text-base leading-relaxed">{{faq_p3_resposta}}</div>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <!-- LINKAGEM INTERNA (Silos): Distribuição de autoridade -->
+        <section class="w-full bg-[var(--abidos-darkest)] py-16 lg:py-20 px-6 border-b border-white/10">
+            <div class="max-w-7xl mx-auto flex flex-col items-center gap-8 lg:gap-10 reveal">
+                <div class="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs">Aprofunde-se nas Especialidades</div>
+                <div class="flex flex-wrap justify-center gap-3 lg:gap-4">
+                    <a href="{{silo1_url}}" class="px-6 py-3 lg:px-8 lg:py-4 glass-panel rounded-full text-slate-200 text-xs lg:text-sm font-bold uppercase tracking-widest hover:bg-[#2dd4bf] hover:text-[#05080f] transition-all">{{silo1_texto}}</a>
+                    <a href="{{silo2_url}}" class="px-6 py-3 lg:px-8 lg:py-4 glass-panel rounded-full text-slate-200 text-xs lg:text-sm font-bold uppercase tracking-widest hover:bg-[#2dd4bf] hover:text-[#05080f] transition-all">{{silo2_texto}}</a>
+                    <a href="{{silo3_url}}" class="px-6 py-3 lg:px-8 lg:py-4 glass-panel rounded-full text-slate-200 text-xs lg:text-sm font-bold uppercase tracking-widest hover:bg-[#2dd4bf] hover:text-[#05080f] transition-all">{{silo3_texto}}</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA FINAL: Gatilho de saída -->
+        <section class="w-full bg-[var(--abidos-darkest)] py-20 lg:py-32 px-6 text-center relative overflow-hidden">
+            <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80vw] h-[200px] bg-[#2dd4bf] blur-[150px] opacity-10 pointer-events-none"></div>
+            
+            <div class="max-w-3xl mx-auto reveal relative z-10">
+                <div class="text-3xl md:text-5xl font-extrabold text-white mb-10 lg:mb-12 tracking-tight leading-tight">
+                    {{cta_final_titulo}}<br> 
+                    <span class="text-slate-400 font-normal text-2xl md:text-4xl block mt-4">{{cta_final_subtitulo}}</span>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center items-center">
+                    <a href="https://wa.me/{{whatsapp_numero}}?text={{msg_whatsapp_agendamento}}" class="inline-flex items-center justify-center bg-[#2dd4bf] hover:bg-white text-[#05080f] font-extrabold py-4 px-10 md:py-5 md:px-12 rounded-full transition-colors uppercase tracking-widest text-xs lg:text-sm w-full sm:w-auto shadow-[0_0_30px_rgba(45,212,191,0.2)]">
+                        {{cta_final_botao1}}
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const reveals = document.querySelectorAll(".reveal");
+            const revealOnScroll = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("active");
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: "0px 0px -100px 0px" });
+
+            reveals.forEach(el => revealOnScroll.observe(el));
+
+            // Gráfico de Rapport Mantido Intacto
+            const ctxRapport = document.getElementById('rapportChart');
+            if (ctxRapport) {
+                new Chart(ctxRapport.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels:['Baixo', 'Médio', 'Alto TEA'],
+                        datasets:[{
+                            label: 'Rapport Inicial',
+                            data:[85, 45, 15],
+                            borderColor: '#2dd4bf',
+                            backgroundColor: 'rgba(45, 212, 191, 0.05)',
+                            fill: true,
+                            tension: 0.5,
+                            borderWidth: 2,
+                            pointBackgroundColor: '#2dd4bf',
+                            pointBorderColor: '#05080f',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { 
+                            y: { display: false },
+                            x: { grid: { display: false }, ticks: { font: { size: 11, family: 'Inter', weight: 400 }, color: '#94a3b8' } }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

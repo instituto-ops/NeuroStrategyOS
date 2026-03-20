@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{seo_title}}</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"DM Sans"', 'sans-serif'],
+                        serif: ['"Cormorant Garamond"', 'serif'],
+                    },
+                    colors: {
+                        midnight: {
+                            950: '#05070A',
+                            900: '#0B0F17',
+                            800: '#131A26',
+                            700: '#1F2A3D',
+                        },
+                        gold: {
+                            400: '#E6C98A',
+                            500: '#D4AF37', 
+                            600: '#AA8C2C',
+                        },
+                        bone: {
+                            50: '#F9F9F8',
+                            100: '#F2F2EF',
+                            200: '#E6E5DF',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 1.5s ease-out forwards',
+                        'slide-up': 'slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(40px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: #05070A; /* Midnight 950 */
+            color: #F2F2EF; /* Bone 100 */
+        }
+        
+        ::selection {
+            background-color: #D4AF37;
+            color: #05070A;
+        }
+
+        /* Reading Progress */
+        .progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 2px;
+            background-color: #D4AF37;
+            width: 0%;
+            z-index: 100;
+            transition: width 0.1s ease-out;
+        }
+
+        /* Cinematic Hero Background - Injetado via Style Inline no HTML */
+        .hero-bg {
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+        .hero-overlay {
+            background: linear-gradient(
+                to bottom,
+                rgba(5, 7, 10, 0.3) 0%,
+                rgba(5, 7, 10, 0.8) 60%,
+                rgba(5, 7, 10, 1) 100%
+            );
+        }
+
+        /* Editorial Typography */
+        .article-content {
+            font-size: 1.125rem;
+            line-height: 1.9;
+            color: #E6E5DF;
+            font-weight: 300;
+        }
+        @media (min-width: 768px) {
+            .article-content { font-size: 1.25rem; line-height: 2; }
+        }
+        
+        .article-content p {
+            margin-bottom: 2.5rem;
+        }
+        
+        .article-content h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            color: #F9F9F8;
+            margin-top: 5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+            line-height: 1.1;
+            font-style: italic;
+        }
+        @media (min-width: 768px) {
+            .article-content h2 { font-size: 3.5rem; }
+        }
+
+        /* Luxury Drop Cap */
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 6.5rem;
+            line-height: 5rem;
+            padding-top: 0.5rem;
+            padding-right: 1.25rem;
+            padding-bottom: 0.5rem;
+            color: #D4AF37; /* Gold */
+            font-weight: 300;
+        }
+
+        /* Subtle scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Glass Sidebar Custom Scrollbar */
+        #bookingPanel::-webkit-scrollbar { width: 4px; }
+        #bookingPanel::-webkit-scrollbar-track { background: transparent; }
+        #bookingPanel::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
+    </style>
+</head>
+<body class="antialiased font-sans flex flex-col min-h-screen">
+
+    <!-- [SOBERANIA ABIDOS] Camada SEO Invisível (V5) -->
+    <div class="seo-hidden-structure" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+        <h1>{{seo_h1_tecnico}}</h1>
+        <p>{{seo_resumo_indexacao}}</p>
+        <h2>{{secao1_h2}}</h2>
+        <h2>{{secao2_h2}}</h2>
+        <h2>{{secao3_h2}}</h2>
+        <h2>{{secao4_h2}}</h2>
+    </div>
+
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav class="fixed w-full top-0 z-40 transition-all duration-500" id="navbar">
+        <div class="max-w-7xl mx-auto px-6 lg:px-12 h-24 flex items-center justify-between">
+            <div class="font-serif italic text-2xl tracking-wider text-bone-50">
+                {{nav_autor_nome}}
+            </div>
+            <button onclick="openBooking()" class="text-xs uppercase tracking-[0.2em] font-medium text-bone-100 hover:text-gold-500 transition-colors flex items-center gap-3 group border border-bone-100/20 hover:border-gold-500/50 px-6 py-3 rounded-full backdrop-blur-sm">
+                {{nav_cta_texto}}
+                <div class="w-1 h-1 rounded-full bg-gold-500 group-hover:scale-150 transition-transform"></div>
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-grow">
+        
+        <header class="hero-bg min-h-screen flex items-end pb-24 lg:pb-32 px-6 lg:px-12 relative" style="background-image: url('{{hero_bg_url}}');">
+            <div class="absolute inset-0 hero-overlay z-0"></div>
+            
+            <div class="max-w-4xl relative z-10 w-full animate-slide-up">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="text-gold-500 font-sans text-xs uppercase tracking-[0.3em] font-medium">{{hero_tag_1}}</span>
+                    <div class="h-px w-12 bg-white/20"></div>
+                    <span class="text-bone-100/50 font-sans text-xs uppercase tracking-[0.3em] font-medium">{{hero_tag_2}}</span>
+                </div>
+                
+                <div class="font-serif text-5xl sm:text-7xl lg:text-[6.5rem] text-bone-50 leading-[0.95] mb-10 font-light animate-slide-up">
+                    {{ui_titulo_hero}}
+                </div>
+                
+                <div class="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-12 border-l border-gold-500/30 pl-6">
+                    <p class="text-xl text-bone-200/70 max-w-md font-light leading-relaxed">
+                        {{hero_subtitulo}}
+                    </p>
+                    <div class="flex items-center gap-4">
+                        <img src="{{autor_foto_url}}" alt="{{autor_nome}}" class="w-12 h-12 rounded-full object-cover grayscale opacity-80 border border-white/10" onerror="this.outerHTML='<div class=\'w-12 h-12 rounded-full bg-midnight-800 flex items-center justify-center text-gold-500 font-serif\'>{{autor_iniciais}}</div>'">
+                        <div>
+                            <p class="font-serif italic text-bone-100 text-lg">{{autor_nome}}</p>
+                            <p class="text-bone-100/40 text-[10px] uppercase tracking-widest mt-0.5">{{autor_especialidade}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce">
+                <span class="text-[10px] uppercase tracking-[0.3em] text-bone-100">{{scroll_label}}</span>
+                <div class="w-px h-8 bg-gradient-to-b from-bone-100 to-transparent"></div>
+            </div>
+        </header>
+
+        <article class="max-w-3xl mx-auto px-6 py-24 lg:py-32 article-content">
+            
+            <p class="drop-cap reveal">
+                {{artigo_paragrafo_introdutorio}}
+            </p>
+
+            <div class="font-serif text-[2.5rem] lg:text-[3.5rem] text-[#F9F9F8] mt-[5rem] mb-[1.5rem] font-normal reveal leading-[1.1] italic">{{secao1_h2}}</div>
+            <p class="reveal">{{secao1_p1}}</p>
+            <p class="reveal">{{secao1_p2}}</p>
+
+            <figure class="my-24 reveal relative">
+                <div class="absolute -top-12 -left-8 text-midnight-800 font-serif text-[12rem] leading-none opacity-50 select-none pointer-events-none">"</div>
+                <div class="relative z-10 border-l border-gold-500 pl-8 sm:pl-12">
+                    <blockquote class="text-3xl sm:text-4xl font-serif text-bone-50 leading-tight italic m-0">
+                        {{citacao_destaque}}
+                    </blockquote>
+                </div>
+            </figure>
+
+            <div class="font-serif text-[2.5rem] lg:text-[3.5rem] text-[#F9F9F8] mt-[5rem] mb-[1.5rem] font-normal reveal leading-[1.1] italic">{{secao2_h2}}</div>
+            <p class="reveal">{{secao2_p1}}</p>
+            <p class="reveal">{{secao2_p2}}</p>
+
+            <div class="font-serif text-[2.5rem] lg:text-[3.5rem] text-[#F9F9F8] mt-[5rem] mb-[1.5rem] font-normal reveal leading-[1.1] italic">{{secao3_h2}}</div>
+            <p class="reveal">{{secao3_p1}}</p>
+            <p class="reveal">{{secao3_p2}}</p>
+
+            <div class="font-serif text-[2.5rem] lg:text-[3.5rem] text-[#F9F9F8] mt-[5rem] mb-[1.5rem] font-normal reveal leading-[1.1] italic">{{secao4_h2}}</div>
+            <p class="reveal">{{secao4_p1}}</p>
+
+            <div class="mt-32 pt-16 border-t border-white/5 reveal text-center">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full border border-gold-500/30 text-gold-500 mb-8">
+                    <i data-lucide="feather" class="w-5 h-5"></i>
+                </div>
+                <h3 class="font-serif text-4xl text-bone-50 mb-6 italic">{{cta_final_titulo}}</h3>
+                <p class="text-bone-200/60 mb-10 max-w-lg mx-auto font-light">
+                    {{cta_final_texto}}
+                </p>
+                <button onclick="openBooking()" class="bg-gold-500 hover:bg-gold-400 text-midnight-950 font-medium text-sm uppercase tracking-[0.2em] px-10 py-4 rounded-full transition-all duration-300 shadow-[0_0_30px_rgba(212,175,55,0.2)] hover:shadow-[0_0_40px_rgba(212,175,55,0.4)]">
+                    {{cta_final_botao}}
+                </button>
+            </div>
+
+            <!-- Slot Dinâmico Abidos -->
+            <div class="mt-16 pt-16 border-t border-white/5 reveal">
+                {{area_dinamica_extra}}
+            </div>
+        </article>
+    </main>
+
+    <footer class="border-t border-white/5 bg-midnight-950 py-16 text-center text-bone-200/40">
+        <div class="max-w-4xl mx-auto px-6 flex flex-col items-center gap-6">
+            <div class="font-serif italic text-2xl text-bone-200/80">{{footer_autor}}</div>
+            <p class="font-light text-xs uppercase tracking-widest max-w-sm leading-relaxed">
+                {{footer_descritivo}}
+            </p>
+            <p class="text-[10px] mt-8 tracking-widest opacity-50">&copy; {{footer_ano}} {{footer_autor}}. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <div id="bookingOverlay" class="fixed inset-0 z-50 flex justify-end pointer-events-none">
+        
+        <div id="modalBackdrop" class="absolute inset-0 bg-midnight-950/60 backdrop-blur-md opacity-0 transition-opacity duration-700 pointer-events-none" onclick="closeBooking()"></div>
+        
+        <div id="modalPanel" class="w-full sm:w-[500px] h-full bg-midnight-900/90 backdrop-blur-xl border-l border-white/5 relative translate-x-full transition-transform duration-700 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-auto overflow-y-auto flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
+            
+            <div class="flex justify-between items-center p-8 sm:p-12 border-b border-white/5 sticky top-0 bg-midnight-900/90 backdrop-blur-md z-10">
+                <span class="text-gold-500 font-sans text-xs uppercase tracking-[0.3em] font-medium">{{panel_tag}}</span>
+                <button onclick="closeBooking()" class="text-bone-200/50 hover:text-bone-50 transition-colors p-2 -mr-2 focus:outline-none">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="p-8 sm:p-12 flex-grow flex flex-col">
+                <div class="mb-12">
+                    <h3 class="font-serif text-4xl sm:text-5xl text-bone-50 mb-6 italic leading-tight">{{panel_titulo_linha1}}<br>{{panel_titulo_linha2}}</h3>
+                    <p class="text-bone-200/60 font-light leading-relaxed text-sm">
+                        {{panel_subtitulo}}
+                    </p>
+                </div>
+                
+                <form id="contactForm" onsubmit="handleFormSubmit(event)" class="space-y-8 flex-grow">
+                    <div class="relative">
+                        <input type="text" id="name" required class="w-full bg-transparent border-b border-white/20 text-bone-50 px-0 py-3 focus:border-gold-500 outline-none transition-colors peer placeholder-transparent font-serif text-xl" placeholder="Nome">
+                        <label for="name" class="absolute left-0 -top-3.5 text-xs font-sans uppercase tracking-widest text-bone-200/40 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-bone-200/40 peer-placeholder-shown:top-3 peer-placeholder-shown:font-serif peer-focus:-top-3.5 peer-focus:text-xs peer-focus:font-sans peer-focus:text-gold-500">
+                            {{panel_input1_label}}
+                        </label>
+                    </div>
+                    
+                    <div class="relative pt-6">
+                        <input type="text" id="contact" required class="w-full bg-transparent border-b border-white/20 text-bone-50 px-0 py-3 focus:border-gold-500 outline-none transition-colors peer placeholder-transparent font-serif text-xl" placeholder="Contacto">
+                        <label for="contact" class="absolute left-0 top-2.5 text-xs font-sans uppercase tracking-widest text-bone-200/40 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-bone-200/40 peer-placeholder-shown:top-9 peer-placeholder-shown:font-serif peer-focus:top-2.5 peer-focus:text-xs peer-focus:font-sans peer-focus:text-gold-500">
+                            {{panel_input2_label}}
+                        </label>
+                    </div>
+
+                    <div class="pt-12 mt-auto">
+                        <button type="submit" class="w-full bg-gold-500 hover:bg-gold-400 text-midnight-950 font-medium text-xs uppercase tracking-[0.2em] py-5 transition-colors flex justify-center items-center gap-3">
+                            {{panel_botao_submit}}
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="successState" class="hidden absolute inset-0 bg-midnight-900/95 backdrop-blur-xl flex-col items-center justify-center text-center p-12 z-20">
+                    <div class="w-16 h-16 rounded-full border border-gold-500/30 text-gold-500 flex items-center justify-center mb-8">
+                        <i data-lucide="check" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="font-serif text-4xl text-bone-50 mb-4 italic">{{panel_sucesso_titulo}}</h4>
+                    <p class="text-bone-200/60 font-light mb-12">{{panel_sucesso_texto}}</p>
+                    <button onclick="closeBooking()" class="text-gold-500 text-xs font-medium uppercase tracking-[0.2em] border-b border-gold-500/30 pb-1 hover:border-gold-500 transition-colors">{{panel_sucesso_botao}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            lucide.createIcons();
+        });
+
+        // Reading Progress Line
+        const progressBar = document.getElementById('progressBar');
+        const navbar = document.getElementById('navbar');
+
+        window.addEventListener('scroll', () => {
+            const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+            if(progressBar) progressBar.style.width = scrolled + "%";
+
+            // Navbar background effect on scroll
+            if (winScroll > 50) {
+                navbar.classList.add('bg-midnight-950/80', 'backdrop-blur-md', 'border-b', 'border-white/5');
+            } else {
+                navbar.classList.remove('bg-midnight-950/80', 'backdrop-blur-md', 'border-b', 'border-white/5');
+            }
+        });
+
+        // Scroll Reveal Animation
+        document.addEventListener("DOMContentLoaded", function() {
+            const reveals = document.querySelectorAll(".reveal");
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("active");
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            reveals.forEach(reveal => observer.observe(reveal));
+        });
+
+        // Modal Logic
+        const overlay = document.getElementById('bookingOverlay');
+        const backdrop = document.getElementById('modalBackdrop');
+        const panel = document.getElementById('modalPanel');
+        const form = document.getElementById('contactForm');
+        const successState = document.getElementById('successState');
+
+        function openBooking() {
+            overlay.classList.remove('pointer-events-none');
+            backdrop.classList.remove('opacity-0', 'pointer-events-none');
+            backdrop.classList.add('opacity-100', 'pointer-events-auto');
+            setTimeout(() => {
+                panel.classList.remove('translate-x-full');
+            }, 10);
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeBooking() {
+            panel.classList.add('translate-x-full');
+            backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+            backdrop.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                overlay.classList.add('pointer-events-none');
+                document.body.style.overflow = ''; 
+                setTimeout(() => {
+                    form.reset();
+                    successState.classList.add('hidden');
+                    successState.classList.remove('flex');
+                }, 300);
+            }, 700);
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> A submeter...';
+            lucide.createIcons();
+            btn.disabled = true;
+            setTimeout(() => {
+                successState.classList.remove('hidden');
+                successState.classList.add('flex');
+                btn.innerHTML = originalHTML;
+                lucide.createIcons();
+                btn.disabled = false;
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

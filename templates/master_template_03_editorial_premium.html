@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{seo_title}}</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Lora', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f4f8f8',
+                            100: '#e3efef',
+                            200: '#c7dfe0',
+                            300: '#9dc8c9',
+                            400: '#6ca8a9',
+                            500: '#4d8c8d',
+                            600: '#3d7172',
+                            700: '#335c5e',
+                            800: '#2b4c4e',
+                            900: '#264041',
+                        },
+                        warm: {
+                            50: '#fdfaf8',
+                            100: '#f9f1eb',
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'fade-in': 'fadeIn 1.2s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scroll progress bar */
+        .progress-container {
+            width: 100%;
+            height: 3px;
+            background: transparent;
+            position: fixed;
+            top: 0;
+            z-index: 100;
+        }
+        .progress-bar {
+            height: 3px;
+            background: #4d8c8d;
+            width: 0%;
+            transition: width 0.1s ease-out;
+        }
+        
+        /* Editorial Typography adjustments */
+        .article-content p {
+            margin-bottom: 2rem;
+            line-height: 1.9;
+            color: #334155; /* slate-700 */
+            font-size: 1.125rem;
+            font-weight: 300;
+        }
+        @media (min-width: 768px) {
+            .article-content p {
+                font-size: 1.25rem; 
+            }
+        }
+        .article-content h2 {
+            font-family: 'Lora', serif;
+            font-size: 2rem;
+            color: #0f172a; /* slate-900 */
+            margin-top: 4rem;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+        
+        /* Drop Cap for the first paragraph */
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Lora', serif;
+            font-size: 5rem;
+            line-height: 4rem;
+            padding-top: 0.25rem;
+            padding-right: 0.75rem;
+            padding-bottom: 0.25rem;
+            color: #2b4c4e; /* brand-800 */
+            font-weight: 400;
+        }
+
+        /* Scroll Reveal Utility */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-warm-50 antialiased font-sans text-slate-800 flex flex-col min-h-screen selection:bg-brand-200 selection:text-brand-900">
+
+    <!-- [SOBERANIA ABIDOS] Camada SEO Invisível (V5) -->
+    <div class="seo-hidden-structure" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+        <h1>{{seo_h1_tecnico}}</h1>
+        <p>{{seo_resumo_indexacao}}</p>
+        <h2>{{secao1_h2}}</h2>
+        <h2>{{secao2_h2}}</h2>
+        <h2>{{secao3_h2}}</h2>
+        <h2>{{secao4_h2}}</h2>
+    </div>
+
+    <div class="progress-container z-50">
+        <div class="progress-bar" id="myBar"></div>
+    </div>
+
+    <nav class="bg-warm-50/90 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200/50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="text-brand-700">
+                    <i data-lucide="brain-circuit" class="w-7 h-7"></i>
+                </div>
+                <span class="font-serif font-semibold text-2xl text-slate-900 tracking-tight">{{autor_nome}}</span>
+            </div>
+            <button onclick="openModal()" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-900 bg-transparent border border-slate-300 hover:border-slate-900 px-6 py-2.5 rounded-full transition-all duration-300 hover:bg-slate-900 hover:text-white">
+                <span>{{nav_cta_botao}}</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-grow">
+        
+        <!-- ARTICLE HEADER: Autoridade e Contexto -->
+        <header class="relative pt-16 pb-20 lg:pt-24 lg:pb-32 overflow-hidden border-b border-slate-200/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                    
+                    <div class="lg:col-span-7 animate-fade-in-up">
+                        <div class="flex items-center gap-4 mb-8">
+                            <span class="text-brand-600 font-semibold text-xs uppercase tracking-widest">{{tag_categoria_1}}</span>
+                            <span class="w-12 h-px bg-slate-300"></span>
+                            <span class="text-slate-500 font-medium text-xs uppercase tracking-wider tracking-widest">{{tag_categoria_2}}</span>
+                        </div>
+                        
+                        <div class="text-4xl sm:text-5xl lg:text-[4rem] font-serif text-slate-900 leading-[1.1] mb-8 font-normal tracking-tight">
+                            {{ui_titulo_hero}}
+                        </div>
+                        
+                        <p class="text-xl text-slate-600 mb-10 max-w-2xl font-light leading-relaxed">
+                            {{artigo_subtitulo}}
+                        </p>
+                        
+                        <div class="flex items-center gap-5 pt-8 border-t border-slate-200/80 max-w-xl">
+                            <img src="{{autor_foto_url}}" alt="{{autor_nome}}" class="w-14 h-14 rounded-full object-cover shadow-sm ring-2 ring-white" onerror="this.outerHTML='<div class=\'w-14 h-14 rounded-full bg-brand-800 flex items-center justify-center text-white font-serif text-xl shadow-sm ring-2 ring-white\'>VL</div>'">
+                            <div>
+                                <p class="font-medium text-slate-900 text-base">{{autor_nome}}</p>
+                                <p class="text-slate-500 text-sm flex items-center gap-2 mt-0.5">
+                                    <span>{{data_publicacao}}</span>
+                                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                    <span>{{tempo_leitura_minutos}} min de leitura</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-5 animate-fade-in" style="animation-delay: 0.3s;">
+                        <div class="relative rounded-[2rem] overflow-hidden aspect-[4/5] shadow-2xl">
+                            <img src="{{hero_imagem_url}}" alt="Abstract representation" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\'w-full h-full bg-gradient-to-br from-brand-300 to-brand-800 flex items-center justify-center\'><i data-lucide=\'layers\' class=\'w-24 h-24 text-white/50\'></i></div>'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                
+                <aside class="hidden lg:block lg:col-span-2 relative">
+                    <div class="sticky top-32 flex flex-col items-center gap-6">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest rotate-180" style="writing-mode: vertical-rl;">Compartilhar</span>
+                        <div class="w-px h-12 bg-slate-200"></div>
+                        <button class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:text-brand-600 hover:border-brand-600 transition-colors bg-white shadow-sm hover:shadow-md">
+                            <i data-lucide="linkedin" class="w-4 h-4"></i>
+                        </button>
+                        <button class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:text-brand-600 hover:border-brand-600 transition-colors bg-white shadow-sm hover:shadow-md">
+                            <i data-lucide="twitter" class="w-4 h-4"></i>
+                        </button>
+                        <button class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:text-brand-600 hover:border-brand-600 transition-colors bg-white shadow-sm hover:shadow-md">
+                            <i data-lucide="link-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </aside>
+
+                <!-- ARTICLE CONTENT: Desenvolvimento Metódico -->
+                <article class="lg:col-span-8 article-content">
+                    
+                    <p class="drop-cap reveal">
+                        {{artigo_paragrafo_introdutorio}}
+                    </p>
+
+                    <div class="font-serif text-[2rem] text-[#0f172a] mt-[4rem] mb-[1.5rem] font-medium tracking-tight leading-[1.3] reveal">{{secao1_h2}}</div>
+                    <p class="reveal">{{secao1_p1}}</p>
+                    <p class="reveal">{{secao1_p2}}</p>
+
+                    <div class="my-16 lg:my-20 reveal">
+                        <div class="border-l-2 border-brand-600 pl-8 lg:pl-12 py-2">
+                            <p class="text-2xl lg:text-3xl font-serif text-slate-900 m-0 leading-tight italic">
+                                "{{citacao_destaque_texto}}"
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="font-serif text-[2rem] text-[#0f172a] mt-[4rem] mb-[1.5rem] font-medium tracking-tight leading-[1.3] reveal">{{secao2_h2}}</div>
+                    <p class="reveal">{{secao2_p1}}</p>
+                    <p class="reveal">{{secao2_p2}}</p>
+
+                    <div class="font-serif text-[2rem] text-[#0f172a] mt-[4rem] mb-[1.5rem] font-medium tracking-tight leading-[1.3] reveal">{{secao3_h2}}</div>
+                    <p class="reveal">{{secao3_p1}}</p>
+                    <p class="reveal">{{secao3_p2}}</p>
+
+                    <div class="font-serif text-[2rem] text-[#0f172a] mt-[4rem] mb-[1.5rem] font-medium tracking-tight leading-[1.3] reveal">{{secao4_h2}}</div>
+                    <p class="reveal">{{secao4_p1}}</p>
+                    <p class="reveal">{{secao4_p2}}</p>
+
+                    <div class="font-serif text-[2rem] text-[#0f172a] mt-[4rem] mb-[1.5rem] font-medium tracking-tight leading-[1.3] reveal">{{secao5_h2}}</div>
+                    <p class="reveal">{{secao5_p1}}</p>
+                    <p class="reveal">{{secao5_p2}}</p>
+
+                    <div class="mt-24 p-8 bg-white border border-slate-200 rounded-2xl flex flex-col sm:flex-row gap-6 items-start shadow-sm reveal">
+                        <img src="{{autor_foto_url}}" alt="{{autor_nome}}" class="w-24 h-24 rounded-full object-cover shrink-0" onerror="this.outerHTML='<div class=\'w-24 h-24 rounded-full bg-brand-800 flex items-center justify-center text-white font-serif text-3xl shrink-0\'>VL</div>'">
+                        <div>
+                            <div class="font-serif text-xl text-slate-900 mb-2">Escrito por {{autor_nome}}</div>
+                            <p class="text-slate-600 text-base mb-4 leading-relaxed">
+                                {{autor_bio_texto}}
+                            </p>
+                            <div class="flex gap-3">
+                                <a href="{{autor_link_artigos}}" class="text-brand-600 hover:text-brand-800 font-medium text-sm transition-colors">Ver todos os artigos →</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slot Dinâmico Abidos -->
+                    <div class="mt-16 pt-16 border-t border-slate-100 reveal">
+                        {{area_dinamica_extra}}
+                    </div>
+                </article>
+
+                <div class="hidden lg:block lg:col-span-2">
+                    </div>
+
+            </div>
+        </div>
+
+        <!-- CTA SECTION: Gatilho de conversão -->
+        <section class="py-20 lg:py-32 px-4 sm:px-6 border-t border-slate-200/50 bg-white relative overflow-hidden">
+            <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#2b4c4e 1px, transparent 1px); background-size: 32px 32px;"></div>
+            
+            <div class="max-w-3xl mx-auto text-center relative z-10 reveal">
+                <span class="text-brand-600 font-semibold text-sm uppercase tracking-widest mb-4 block">{{cta_section_tag}}</span>
+                <div class="text-3xl sm:text-4xl lg:text-5xl font-serif text-slate-900 mb-6 tracking-tight">{{cta_section_titulo}}</div>
+                <p class="text-slate-600 text-lg lg:text-xl mb-12 max-w-2xl mx-auto leading-relaxed font-light">
+                    {{cta_section_texto}}
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <button onclick="openModal()" class="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white rounded-full font-medium text-lg hover:bg-brand-800 transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                        {{cta_botao_primario}}
+                    </button>
+                    <a href="{{cta_link_secundario}}" class="w-full sm:w-auto px-8 py-4 bg-transparent text-slate-700 rounded-full font-medium text-lg hover:bg-slate-100 transition-colors">
+                        {{cta_botao_secundario}}
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-16 text-center text-sm border-t border-slate-800">
+        <div class="max-w-5xl mx-auto px-4 flex flex-col items-center gap-6">
+            <div class="flex items-center gap-3 text-white">
+                <i data-lucide="brain-circuit" class="w-6 h-6"></i>
+                <span class="font-serif font-medium text-xl tracking-tight">{{autor_nome}}</span>
+            </div>
+            <div class="space-y-2 max-w-lg">
+                <p class="text-slate-300">© 2026 {{autor_nome}} - Psicologia Clínica. Todos os direitos reservados.</p>
+                <p class="text-slate-500 font-light text-xs mt-4">Os textos aqui publicados possuem caráter estritamente informativo, psicoeducativo e não substituem, em nenhuma hipótese, avaliação e acompanhamento profissional em saúde mental.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="schedulingModal" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onclick="closeModal()"></div>
+        
+        <div class="bg-white rounded-[2rem] p-8 sm:p-12 max-w-md w-full mx-4 relative z-10 shadow-2xl transform scale-95 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)" id="modalPanel">
+            
+            <button onclick="closeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-full p-2.5 transition-colors focus:outline-none">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            
+            <div class="text-left mb-8 pt-2">
+                <span class="text-brand-600 font-semibold text-xs uppercase tracking-widest mb-2 block">Contato</span>
+                <div class="text-3xl font-serif text-slate-900 mb-3 leading-tight">{{modal_titulo}}</div>
+                <p class="text-slate-500 text-sm font-light">{{modal_subtitulo}}</p>
+            </div>
+            
+            <form onsubmit="handleFormSubmit(event)" class="space-y-6">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-slate-900 mb-2">Seu Nome completo</label>
+                    <input type="text" id="name" required class="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none transition-all bg-slate-50 focus:bg-white text-slate-900 placeholder:text-slate-400" placeholder="Ex: Maria Clara Silva">
+                </div>
+                
+                <div>
+                    <label for="contact" class="block text-sm font-medium text-slate-900 mb-2">Telefone (WhatsApp) ou E-mail</label>
+                    <input type="text" id="contact" required class="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none transition-all bg-slate-50 focus:bg-white text-slate-900 placeholder:text-slate-400" placeholder="Como prefere ser contatado?">
+                </div>
+                
+                <button type="submit" class="w-full bg-slate-900 hover:bg-brand-800 text-white font-medium py-4 rounded-xl shadow-lg transition-all mt-2 flex justify-center items-center gap-2">
+                    {{modal_botao_submit}}
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+            
+            <div id="successMessage" class="hidden absolute inset-0 bg-white rounded-[2rem] flex flex-col items-center justify-center p-8 text-center z-20">
+                <div class="w-20 h-20 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center mb-6">
+                    <i data-lucide="check" class="w-10 h-10"></i>
+                </div>
+                <h4 class="text-3xl font-serif text-slate-900 mb-4 leading-tight">Mensagem<br>Enviada</h4>
+                <p class="text-slate-500 mb-8 max-w-[250px] font-light">{{modal_msg_sucesso}}</p>
+                <button onclick="closeModal()" class="w-full border border-slate-200 text-slate-900 font-medium py-3.5 rounded-xl hover:bg-slate-50 transition-colors">Voltar para o artigo</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        window.onscroll = function() { updateProgressBar() };
+        function updateProgressBar() {
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            document.getElementById("myBar").style.width = scrolled + "%";
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const reveals = document.querySelectorAll(".reveal");
+            const revealObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("active");
+                        observer.unobserve(entry.target); 
+                    }
+                });
+            }, { root: null, threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            reveals.forEach(reveal => revealObserver.observe(reveal));
+        });
+
+        const modal = document.getElementById('schedulingModal');
+        const modalPanel = document.getElementById('modalPanel');
+        const successMessage = document.getElementById('successMessage');
+        const form = document.querySelector('form');
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalPanel.classList.remove('scale-95');
+                modalPanel.classList.add('scale-100');
+            }, 10);
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalPanel.classList.remove('scale-100');
+            modalPanel.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+                
+                setTimeout(() => {
+                    form.reset();
+                    successMessage.classList.add('hidden');
+                    form.classList.remove('hidden');
+                }, 300);
+            }, 300);
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Processando...';
+            lucide.createIcons();
+            btn.disabled = true;
+            btn.classList.add('opacity-90');
+
+            setTimeout(() => {
+                form.classList.add('hidden');
+                successMessage.classList.remove('hidden');
+                btn.innerHTML = originalHTML;
+                lucide.createIcons();
+                btn.disabled = false;
+                btn.classList.remove('opacity-90');
+            }, 1200);
+        }
+    </script>
+</body>
+</html>

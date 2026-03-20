@@ -200,7 +200,7 @@ const app = {
             title: title,
             content: bodyContent,
             excerpt: metaDesc,
-            status: "publish" 
+            status: "draft" // Forçado como Rascunho para segurança clínica
         };
 
         const result = await wpAPI.saveContent(type, payload, id ? id : null);
