@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master 11: Landing Page Abidus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #ffffff;
+            color: #1e293b;
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(226, 232, 240, 1);
+        }
+
+        .reveal {
+            animation: reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes reveal {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn-abidus {
+            background: #4f46e5;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            transition: all 0.3s;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-abidus:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(79, 70, 229, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- [SOBERANIA ABIDOS] Camada SEO Invisível (V5) -->
+    <div class="seo-hidden-structure" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+        <h1>{{seo_h1_tecnico}}</h1>
+        <p>{{seo_resumo_indexacao}}</p>
+        <h2>{{secao1_h2}}</h2>
+        <h2>{{secao2_h2}}</h2>
+        <h2>{{secao3_h2}}</h2>
+        <h2>{{secao4_h2}}</h2>
+    </div>
+
+    <!-- Header -->
+    <header class="glass-header fixed top-0 w-full z-50 py-4 px-6 flex justify-between items-center">
+        <div class="font-extrabold text-xl tracking-tight text-indigo-600">ABIDUS <span class="text-slate-900">CLINICAL</span></div>
+        <div class="hidden md:flex gap-8 text-sm font-semibold text-slate-600">
+            <a href="#">O Método</a>
+            <a href="#">Especialidade</a>
+            <a href="#">Contato</a>
+        </div>
+        <div class="btn-abidus !py-2 !px-6 text-sm">Agendar via WhatsApp</div>
+    </header>
+
+    <main class="pt-32 pb-20">
+        <!-- Visual Layer: Lead focus -->
+        <section class="max-w-5xl mx-auto px-6 text-center reveal">
+            <div class="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest text-indigo-600 uppercase bg-indigo-50 rounded-full">
+                Abordagem Clínica Avançada
+            </div>
+            
+            <div class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight mb-8">
+                {{ui_titulo_hero}}
+            </div>
+
+            <div class="text-lg md:text-xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+                {{ui_descricao_hero}}
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-center gap-4">
+                <a href="https://wa.me/{{whatsapp_numero}}?text={{msg_whatsapp}}" class="btn-abidus">Iniciar Atendimento Agora</a>
+                <a href="#" class="px-8 py-4 text-slate-600 font-bold hover:text-slate-900 transition-colors">Saber mais sobre o tratamento</a>
+            </div>
+        </section>
+
+        <!-- Dynamic Content Section -->
+        <section class="max-w-6xl mx-auto px-6 mt-32 grid md:grid-cols-3 gap-8">
+            <div class="p-8 bg-slate-50 rounded-3xl reveal" style="animation-delay: 0.1s;">
+                <div class="text-indigo-600 mb-4 text-2xl font-bold">01.</div>
+                <div class="text-xl font-bold mb-3">{{secao1_titulo}}</div>
+                <p class="text-slate-600 leading-relaxed">{{secao1_texto}}</p>
+            </div>
+            <div class="p-8 bg-slate-50 rounded-3xl reveal" style="animation-delay: 0.2s;">
+                <div class="text-indigo-600 mb-4 text-2xl font-bold">02.</div>
+                <div class="text-xl font-bold mb-3">{{secao2_titulo}}</div>
+                <p class="text-slate-600 leading-relaxed">{{secao2_texto}}</p>
+            </div>
+            <div class="p-8 bg-slate-50 rounded-3xl reveal" style="animation-delay: 0.3s;">
+                <div class="text-indigo-600 mb-4 text-2xl font-bold">03.</div>
+                <div class="text-xl font-bold mb-3">{{secao3_titulo}}</div>
+                <p class="text-slate-600 leading-relaxed">{{secao3_texto}}</p>
+            </div>
+        </section>
+
+        <!-- Final CTA Area -->
+        <section class="max-w-4xl mx-auto px-6 mt-40 reveal">
+            <div class="bg-slate-900 rounded-[3rem] p-12 text-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent"></div>
+                <div class="relative z-10">
+                    <div class="text-3xl md:text-4xl font-extrabold text-white mb-6">
+                        {{ui_titulo_final}}
+                    </div>
+                    <p class="text-slate-400 mb-10 max-w-xl mx-auto">
+                        Recupere o controle da sua saúde mental com suporte clínico especializado e ético.
+                    </p>
+                    <a href="https://wa.me/{{whatsapp_numero}}?text={{msg_whatsapp}}" class="btn-abidus bg-white !text-slate-900">Agendar Consulta em Goiânia</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="py-12 border-t border-slate-100 text-center">
+        <p class="text-sm text-slate-500">© 2024 Victor Lawrence - CRP 09/012681. Goiânia, Brasil.</p>
+    </footer>
+
+</body>
+</html>

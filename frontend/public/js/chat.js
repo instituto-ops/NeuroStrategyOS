@@ -25,10 +25,9 @@ window.chatApp = {
         const container = existingContainer || document.createElement('div');
         if (!existingContainer) {
             container.id = 'neuro-toast-container';
-            container.style.cssText = 'position:fixed; top:20px; right:20px; z-index:10000; display:flex; flex-direction:column; gap:10px; pointer-events:none;';
+            container.style.cssText = 'position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none;';
             document.body.appendChild(container);
             
-            // Inject animation
             if (!document.getElementById('toast-style')) {
                 const style = document.createElement('style');
                 style.id = 'toast-style';
@@ -38,9 +37,11 @@ window.chatApp = {
         }
 
         const toast = document.createElement('div');
-        const bgColor = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#3b82f6');
-        toast.style.cssText = `background:${bgColor}; color:white; padding:12px 20px; border-radius:8px; font-size:13px; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease-out; pointer-events:auto; cursor:pointer; min-width:200px; display:flex; align-items:center; gap:10px;`;
-        toast.innerHTML = `<span>${type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️')}</span> <span>${message}</span>`;
+        // Cores específicas Protocolo V5: Indigo para info/sucesso comum, Coral para publicação
+        const bgColor = type === 'success' ? '#4f46e5' : (type === 'publish' ? '#ff7f50' : (type === 'error' ? '#ef4444' : '#3b82f6'));
+        
+        toast.style.cssText = `background:${bgColor}; color:white; padding:12px 20px; border-radius:8px; font-size:13px; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease-out; pointer-events:auto; cursor:pointer; min-width:250px; display:flex; align-items:center; gap:10px; border-left: 4px solid rgba(0,0,0,0.2);`;
+        toast.innerHTML = `<span>${type === 'publish' ? '🚀' : (type === 'success' ? '✓' : (type === 'error' ? '❌' : 'ℹ️'))}</span> <span>${message}</span>`;
         
         toast.onclick = () => toast.remove();
         container.appendChild(toast);
@@ -166,7 +167,7 @@ window.chatApp = {
 
     // --- KEYBOARD SHORTCUTS ---
     setupKeyboardShortcuts() {
-        document.addEventListener('keydown', (e) => {
+        document?.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'z') { e.preventDefault(); this.undoHistory(); }
             if (e.ctrlKey && e.key === 'y') { e.preventDefault(); this.redoHistory(); }
             if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedElement && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') {
@@ -369,7 +370,7 @@ window.chatApp = {
                 document.removeEventListener('mousedown', closer);
             }
         };
-        setTimeout(() => document.addEventListener('mousedown', closer), 10);
+        setTimeout(() => document?.addEventListener('mousedown', closer), 10);
         
         // Armazenar referência para inserção
         this.insertTarget = relativeTo;
@@ -400,15 +401,15 @@ window.chatApp = {
         const btnSend = document.getElementById('btn-send-chat');
         const btnSnap = document.getElementById('btn-snap-error');
 
-        btnSend.addEventListener('click', () => this.sendMessage(false));
-        btnSnap.addEventListener('click', () => {
-            if (!chatInput.value.trim()) {
+        btnSend??.addEventListener('click', () => this.sendMessage(false));
+        btnSnap??.addEventListener('click', () => {
+            if (chatInput && !chatInput.value.trim()) {
                 chatInput.value = "Por favor, olhe como a página está ficando. Pode corrigir a formatação?";
             }
             this.sendMessage(true);
         });
 
-        chatInput.addEventListener('keypress', (e) => {
+        chatInput??.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 this.sendMessage(false);
@@ -418,7 +419,7 @@ window.chatApp = {
 
     setupInspector() {
         const preview = document.getElementById('live-preview');
-        preview.addEventListener('click', (e) => {
+        preview?.addEventListener('click', (e) => {
             const validTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'li', 'a', 'strong', 'em', 'button'];
             const tagName = e.target.tagName.toLowerCase();
 
@@ -430,19 +431,21 @@ window.chatApp = {
             // Limpa seleção anterior
             if (this.selectedElement) {
                 this.selectedElement.classList.remove('element-selected', 'outline-blue');
-                this.selectedElement.style.outline = '';
+                if (this.selectedElement.style) this.selectedElement.style.outline = '';
             }
 
             this.selectedElement = e.target;
             this.selectedElement.classList.add('element-selected', 'outline-blue');
-            this.selectedElement.style.outline = '2px dashed #3b82f6';
-            this.selectedElement.style.outlineOffset = '2px';
+            if (this.selectedElement.style) {
+                this.selectedElement.style.outline = '2px dashed #4f46e5';
+                this.selectedElement.style.outlineOffset = '2px';
+            }
 
             this.showMicroCommandsMenu(e.target, e.clientX, e.clientY);
         });
 
         // Clique com botão direito ou segurando ALT para mostrar caixa de comando direto
-        preview.addEventListener('contextmenu', (e) => {
+        preview?.addEventListener('contextmenu', (e) => {
             const valid = ['p', 'h1', 'h2', 'h3', 'span', 'li', 'a', 'section', 'div', 'img'];
             // Impede selecionar o próprio container do preview ou elementos estruturais
             if (valid.includes(e.target.tagName.toLowerCase()) && e.target.id !== 'live-preview') {
@@ -453,7 +456,7 @@ window.chatApp = {
         });
 
         // Permitir seleção de IMAGENS especificamente
-        preview.addEventListener('click', (e) => {
+        preview?.addEventListener('click', (e) => {
             if (e.target.tagName === 'IMG') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -465,7 +468,7 @@ window.chatApp = {
         });
 
         // Fechar menu ao clicar fora
-        document.addEventListener('click', (e) => {
+        document?.addEventListener('click', (e) => {
             if (!e.target.closest('#micro-commands-menu') && !e.target.closest('#live-preview')) {
                 this.hideMicroCommandsMenu();
             }
@@ -771,7 +774,7 @@ window.chatApp = {
         const preview = document.getElementById('live-preview');
         if (!preview) return;
 
-        preview.addEventListener('click', (e) => {
+        preview?.addEventListener('click', (e) => {
             if (e.target.tagName === 'IMG') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -848,7 +851,7 @@ window.chatApp = {
                 document.removeEventListener('mousedown', closer);
             }
         };
-        setTimeout(() => document.addEventListener('mousedown', closer), 10);
+        setTimeout(() => document?.addEventListener('mousedown', closer), 10);
     },
 
     async applyTheme(themeName, isLocal = false) {
@@ -1017,7 +1020,7 @@ window.chatApp = {
             }
         } catch (error) {
             console.error("Audit Error:", error);
-            alert("🚨 Erro na auditoria. Verifique a conexão com o servidor local.");
+            this.showNeuroToast("🚨 Erro na auditoria. Verifique a conexão com o servidor local.", "error");
             this.addMessage("❌ Falha ao rodar Auditoria Abidos.");
         }
         
@@ -1603,7 +1606,7 @@ window.chatApp = {
                 if (previewBtn) previewBtn.style.display = 'block';
                 if (titleHeading) titleHeading.innerText = `Rascunho: ${result.title?.rendered || newTitle}`;
                 
-                this.showNeuroToast("Rascunho salvo no banco de dados local.", "success");
+                this.showNeuroToast("✓ Rascunho clínico armazenado com sucesso.", "success");
                 
                 // Recarrega a lista para o novo rascunho aparecer no dropdown e mantém selecionado
                 this.loadList(result.id);
@@ -1644,6 +1647,15 @@ window.chatApp = {
                         - Pense como um anúncio de alta performance no Google Ads.
                         - Não retorne nenhum outro texto fora do JSON.`;
         
+        // Feedback Visual no botão
+        const btn = document.getElementById('ai-studio-suggest-btn');
+        const originalText = btn ? btn.innerHTML : "🪄 Sugerir";
+        if (btn) {
+            btn.innerHTML = '<i class="animate-spin">⏳</i>';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+        }
+
         try {
             const rawResponse = await gemini.callAPI(prompt);
             
@@ -1652,7 +1664,7 @@ window.chatApp = {
             const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
             const data = JSON.parse(jsonMatch ? jsonMatch[0] : cleanJson);
 
-            if (data?.title) {
+                if (data?.title) {
                 const titleInput = document.getElementById('ai-studio-new-title');
                 const slugInput = document.getElementById('seo-slug');
                 const tagInput = document.getElementById('seo-title-tag');
@@ -1665,15 +1677,25 @@ window.chatApp = {
                 
                 this.addAgentLog("NeuroEngine", "Estratégia de SEO sugerida com sucesso.", true);
                 this.addMessage(`🪄 **Estratégia Abidos Gerada!**\n\n📌 **Título:** ${data.title}\n🔗 **Slug:** ${data.slug}\n🔍 **SEO:** Otimizado com foco em Google Ads.`);
+                this.showNeuroToast("Estratégia SEO e Clínica recalibrada via IA.", "success");
             }
         } catch (e) {
             console.error("Erro ao sugerir título:", e);
+            this.showNeuroToast("Falha ao gerar sugestão de IA. Tente manualmente.", "error");
             this.addAgentLog("NeuroEngine", "Erro ao processar sugestão estratégica.", true);
             try {
                 const title = await gemini.callAPI(`Retorne APENAS um título curto para a keyword: ${kw}`);
-                const titleInput = document.getElementById('ai-studio-new-title');
-                if (titleInput) titleInput.value = title.trim();
+                if (title) {
+                    const titleInput = document.getElementById('ai-studio-new-title');
+                    if (titleInput) titleInput.value = title.trim();
+                }
             } catch (innerE) {}
+        } finally {
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
         }
     },
 
@@ -1683,8 +1705,16 @@ window.chatApp = {
         const type = document.getElementById('ai-studio-type').value;
         const templateName = document.getElementById('ai-studio-template').value;
 
-        if (!title) return alert("Por favor, defina um título para o rascunho.");
-        if (!templateName) return alert("Por favor, selecione um Blueprint de Design.");
+        if (!title) return this.showNeuroToast("Por favor, defina um título para o rascunho.", "error");
+        if (!templateName) return this.showNeuroToast("Por favor, selecione um Blueprint de Design.", "error");
+
+        // Feedback visual no botão
+        const draftBtn = document.getElementById('ai-studio-draft-btn');
+        if (draftBtn) {
+            draftBtn.disabled = true;
+            draftBtn.style.opacity = '0.7';
+            draftBtn.innerHTML = '<i class="animate-spin">⏳</i> Processando...';
+        }
 
         this.addMessage(`🏗️ **Iniciando Protocolo Headless Assembly (V5)...**\nBlueprint: **${templateName}**\nAlvo: **${title}**\nContexto: **${kw || 'Psicologia Clínica'}**`);
         
@@ -1787,6 +1817,13 @@ window.chatApp = {
         } catch (e) {
             console.error("Erro na geração Headless:", e);
             this.showNeuroToast("Falha Crítica no Protocolo Headless.", "error");
+        } finally {
+            const draftBtn = document.getElementById('ai-studio-draft-btn');
+            if (draftBtn) {
+                draftBtn.disabled = false;
+                draftBtn.style.opacity = '1';
+                draftBtn.innerHTML = '🚀 GERAR RASCUNHO COMPLETO';
+            }
         }
     },
 
@@ -2168,7 +2205,7 @@ RETORNE APENAS O JSON, sem comentários.`;
                 this.currentItemId = result.id;
                 this.addMessage(`✅ **PUBLICAÇÃO CONCLUÍDA NO WP!**\n\nID: #${result.id}\nStatus: Enviado como Rascunho.\nLink: [Ver no Painel WP](${result.link})`);
                 this.addMessage(`<br><a href="${result.link}" target="_blank" class="btn btn-primary" style="display:inline-block; margin-top:5px; background:#10b981; border:none; color:white;">👁️ Ver no WordPress</a>`);
-                this.showNeuroToast("Publicado com sucesso! Google já pode indexar.", "success");
+                this.showNeuroToast("🚀 Publicação concluída. O Google iniciou a indexação.", "publish");
                 this.loadList(result.id);
                 this.addAuditLog("Sistema", `Exportação concluída para WP (ID #${result.id}) como Rascunho Seguro.`, "ia");
             } else {
@@ -2440,4 +2477,4 @@ window.injectCode = function(btn) {
     window.chatApp.showNeuroToast("Bloco injetado com sucesso.", "info");
 };
 
-document.addEventListener('DOMContentLoaded', () => window.chatApp.init());
+document?.addEventListener('DOMContentLoaded', () => window.chatApp.init());
