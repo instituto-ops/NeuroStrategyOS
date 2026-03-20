@@ -27,10 +27,22 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB
 });
 
-// Initialize Gemini SDK
+// Initialize Gemini SDK with Shielded JSON configuration
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const VISION_MODEL = 'gemini-1.5-flash'; 
+const modelConfig = { 
+    model: VISION_MODEL,
+    generationConfig: { responseMimeType: "application/json" }
+};
 const draftsDb = []; // In-memory store for newly generated drafts before WP sync
+
+// Helper robust JSON parser
+function extractJSON(text) {
+    try {
+        const match = text.match(/\{[\s\S]*\}/);
+        return match ? JSON.parse(match[0]) : null;
+    } catch { return null; }
+}
 
 // [FASE 5] Módulo Neuro-Training: Memória de Estilo do Dr. Victor
 const getVictorStyle = () => {
@@ -1166,13 +1178,6 @@ app.post('/api/audit', async (req, res) => {
 });
 
 // 🚀 [FASE 5] ENDPOINTS NEURO-TRAINING (DNA CLONE & STYLE MEMORY)
-function extractJSON(text) {
-    try {
-        const match = text.match(/\{[\s\S]*\}/);
-        return match ? JSON.parse(match[0]) : null;
-    } catch { return null; }
-}
-
 app.get('/api/neuro-training/memory', (req, res) => {
     try {
         res.json(getVictorStyle());
@@ -1185,10 +1190,10 @@ app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, 
     try {
         if (!req.file) throw new Error("Aúdio não recebido.");
         const audioBuffer = req.file.buffer;
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        const model = genAI.getGenerativeModel(modelConfig);
         
         const dnaPrompt = `VOCÊ É O 'APRENDIZ DE ABIDOS'. Analise este áudio clínico. EXTRAIA DNA CLÍNICO.
-        RETORNE JSON APENAS: { "new_rules": [{"sintese": "Título 3-5 palavras", "regra": "Descrição"}], "insight": "Feedback" }`;
+        RETORNE JSON: { "new_rules": [{"sintese": "Título 3-5 palavras", "regra": "Descrição"}], "insight": "Feedback" }`;
 
         const result = await model.generateContent([
             { text: dnaPrompt },
@@ -1196,11 +1201,11 @@ app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, 
         ]);
 
         const extracted = extractJSON(result.response.text());
-        if (!extracted) throw new Error("Falha na síntese de DNA via IA.");
+        if (!extracted) throw new Error("IA falhou na síntese de DNA via Áudio.");
 
         const stylePath = path.join(__dirname, 'estilo_victor.json');
         let current = getVictorStyle();
-        const uniqueNew = extracted.new_rules.map(r => ({
+        const uniqueNew = (extracted.new_rules || []).map(r => ({
             sintese: r.sintese || "Padrão de Voz",
             regra: cleanClinicalData(r.regra)
         }));
@@ -1222,7 +1227,7 @@ app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, 
 app.post('/api/neuro-training/chat', async (req, res) => {
     try {
         const { message } = req.body;
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        const model = genAI.getGenerativeModel(modelConfig);
         const chatPrompt = `APRENDIZ DE ABIDOS. Dr. Victor diz: "${message.replace(/"/g, "'")}". 
         Extraia DNA em JSON: { "sintese": "3-5 palavras", "regra": "Descrição" }. Responda em "reply".`;
 
@@ -1261,9 +1266,9 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
             text = req.file.buffer.toString('utf-8');
         }
 
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        const model = genAI.getGenerativeModel(modelConfig);
         const docPrompt = `Análise de Lastro Doc. Texto: "${text.substring(0, 8000).replace(/"/g, "'")}".
-        Extraia DNA em JSON: { "new_rules": [{"sintese": "3-5 palavras", "regra": "Descrição"}], "feedback_analysis": "Feedback" }`;
+        Extraia DNA em JSON: { "new_rules": [{"sintese": "Título 3-5 palavras", "regra": "Descrição"}], "feedback_analysis": "Feedback" }`;
 
         const result = await model.generateContent(docPrompt);
         const extracted = extractJSON(result.response.text());
@@ -1271,7 +1276,7 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
 
         const stylePath = path.join(__dirname, 'estilo_victor.json');
         let current = getVictorStyle();
-        const uniqueNew = extracted.new_rules.map(i => ({
+        const uniqueNew = (extracted.new_rules || []).map(i => ({
             sintese: i.sintese || "Lastro Acadêmico",
             regra: cleanClinicalData(i.regra)
         }));
