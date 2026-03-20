@@ -1380,13 +1380,14 @@ window.chatApp = {
 
         btn.innerText = "⏳..."; btn.disabled = true;
         
-        const prompt = `Atue como um Especialista em Copywriting de Conversão (Método Abidos).
+        const prompt = `Atue como um Especialista em Copywriting de Conversão (Método Abidos V4).
 Sugerir EXATAMENTE UM (1) título de impacto para um(a) ${type === 'pages' ? 'Página' : 'Post'}.
 Foco: "${keyword}".
-REGRAS:
-1. FOCO na DOR ou DESEJO do paciente.
-2. Seja direto e persuasivo.
-3. RETORNE APENAS O TEXTO DO TÍTULO.`;
+REGRAS OBRIGATÓRIAS (PROTOCOLO ABIDOS):
+1. HIERARQUIA: Utilize a fórmula: Palavra-chave Primária Exata + Promessa de Valor/Transformação + Localização (Goiânia).
+2. TAMANHO: Garanta que a palavra-chave foco apareça NOS PRIMEIROS 50 CARACTERES.
+3. CONVERSÃO: Foque na DOR ou DESEJO do paciente.
+4. RETORNE APENAS O TEXTO DO TÍTULO SEM ASPAS.`;
 
         try {
             const suggestion = await gemini.callAPI(prompt);
@@ -1702,13 +1703,25 @@ RETORNE APENAS O JSON, sem comentários.`;
         const title = firstH1 ? firstH1.innerText : (titleInput?.value || "Rascunho AI Studio " + new Date().toLocaleDateString());
 
         // 2. Metadados SEO
+        let metaTitle = document.getElementById('seo-title-tag').value;
+        if (!metaTitle) {
+            this.addMessage("🪄 **Otimizando Título SEO (Meta Title) Abidos...**");
+            const keyword = document.getElementById('ai-studio-keyword').value || "Psicólogo em Goiânia";
+            const prompt = `Gere um Meta Title SEO de alta conversão (50-60 caracteres).
+                            FÓRMULA ABIDOS: Palavra-chave foco nos primeiros 50 caracteres.
+                            FOCO: "${keyword}".
+                            BASEADO EM: "${title}".
+                            SAÍDA: Apenas o texto do título SEO.`;
+            metaTitle = await gemini.callAPI(prompt);
+            document.getElementById('seo-title-tag').value = metaTitle;
+        }
+
         let metaDesc = document.getElementById('seo-meta-desc').value;
         if (!metaDesc) {
             this.addMessage("🪄 **Gerando Meta Description estratégica...**");
             const cleanText = preview.innerText.substring(0, 1000);
             const prompt = `Gere uma Meta Description de alta conversão (SEO) para esta página. 
-                            Resumo do conteúdo: "${cleanText}"
-                            REGRAS: Máximo 160 caracteres. Foco em saúde mental e autoridade.
+                            Regras Abidos: Máximo 160 caracteres. Foco em saúde mental e autoridade.
                             SAÍDA: Apenas o texto da meta description.`;
             metaDesc = await gemini.callAPI(prompt);
             document.getElementById('seo-meta-desc').value = metaDesc;
