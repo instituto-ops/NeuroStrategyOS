@@ -1,14 +1,17 @@
 window.doctoraliaApp = {
     async generateReply() {
-        const question = document.getElementById('doctoralia-question').value;
-        const btn = document.getElementById('btn-generate-doctoralia');
+        const inputField = document.getElementById('doctoralia-input');
+        const question = inputField ? inputField.value : "";
+        const btn = document.getElementById('btn-generate-doctoralia') || event.target;
         const container = document.getElementById('doctoralia-reply-container');
 
         if (!question.trim()) return alert("Por favor, cole a pergunta do paciente.");
 
-        btn.innerHTML = '⚙️ Orquestrando Resposta Clínica...';
-        btn.disabled = true;
-        container.innerHTML = '<p style="color: #94a3b8; text-align: center; margin-top: 150px;">🤖 Processando Protocolo V4...</p>';
+        if (btn) {
+            btn.innerHTML = '⚙️ Orquestrando Resposta Clínica...';
+            btn.disabled = true;
+        }
+        if (container) container.innerHTML = '<p style="color: #94a3b8; text-align: center; margin-top: 150px;">🤖 Processando Protocolo V4...</p>';
 
         try {
             const response = await fetch('/api/doctoralia/generate-reply', {

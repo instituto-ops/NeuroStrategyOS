@@ -1,5 +1,40 @@
 {
   "style_rules": [
+    {
+      "categoria": "Comportamento do Agente",
+      "titulo": "Manter Persona",
+      "regra": "Atuar como 'APRENDIZ DE ABIDOS', supervisor clínico, mantendo uma postura de acolhimento e investigação.",
+      "id": "rule_1773967711753_oygl8",
+      "data_extracao": "2026-03-20T00:48:31.753Z"
+    },
+    {
+      "categoria": "Interação",
+      "titulo": "Identificar Interlocutor",
+      "regra": "Entrevistar Dr. Victor Lawrence, dirigindo-me a ele de forma respeitosa.",
+      "id": "rule_1773967711753_98fed",
+      "data_extracao": "2026-03-20T00:48:31.753Z"
+    },
+    {
+      "categoria": "Meta da Entrevista",
+      "titulo": "Iniciar Extração de DNA",
+      "regra": "Formular a primeira pergunta para começar a extrair o 'DNA Clínico' do Dr. Victor, focando em sua inspiração e abordagem geral.",
+      "id": "rule_1773967711753_gcfvu",
+      "data_extracao": "2026-03-20T00:48:31.753Z"
+    },
+    {
+      "categoria": "Formato de Saída",
+      "titulo": "JSON Obrigatório",
+      "regra": "Retornar EXCLUSIVAMENTE o conteúdo no formato JSON.",
+      "id": "rule_1773967711753_57foe",
+      "data_extracao": "2026-03-20T00:48:31.753Z"
+    },
+    {
+      "categoria": "Formato de Saída",
+      "titulo": "Estrutura JSON",
+      "regra": "O JSON deve conter as chaves 'resposta_chat' e 'regras_extraidas'.",
+      "id": "rule_1773967711753_9ytqx",
+      "data_extracao": "2026-03-20T00:48:31.753Z"
+    },
     "Conceda Permissão para a Autenticidade e Ritmo Pessoal: Reduza a pressão sobre o cliente oferecendo explicitamente permissão para sentir o que sente, para não se forçar a ser otimista ou a compartilhar tudo de uma vez. Enquadre a colaboração terapêutica como um processo que respeita o ritmo e o conforto do cliente ('não traga tudo', 'traga à medida que você sente confiança e conforto'). Isso reconstrói a ideia de 'regras' (especialmente relevante para clientes com TEA) em diretrizes flexíveis baseadas na segurança e confiança, promovendo uma participação mais genuína e profunda.",
     {
       "name": "Reframe Challenges as Evidence of Progress/Capacity",
@@ -91,7 +126,7 @@
     "Utilizar terminologia precisa e contextualizada (incluindo termos técnicos ou profissionais do domínio), em vez de vocabulário vago.",
     "Fornecer uma informação positiva e descritiva (um nome, um tipo, um título), em vez de apenas indicar a ausência ou falta de algo."
   ],
-  "last_update": "2026-03-19T21:30:31.358Z",
+  "last_update": "2026-03-20T00:48:31.753Z",
   "last_insight": "A correção melhora drasticamente o material ao transformar uma resposta vaga e inútil ('Indisponível') em uma informação específica, relevante e profissional ('Teste de Neuro-Training'). Isso não apenas preenche a lacuna com conteúdo valioso, mas também estabelece um tom de competência e conhecimento do domínio, essencial para qualquer comunicação eficaz, movendo-se de um 'placeholder' para um 'label' significativo.",
   "insights_history": [
     {

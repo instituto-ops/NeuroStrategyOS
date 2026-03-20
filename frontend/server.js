@@ -27,13 +27,22 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB
 });
 
-// Initialize Gemini SDK with Shielded JSON configuration
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const VISION_MODEL = 'gemini-1.5-flash'; 
-const modelConfig = { 
-    model: VISION_MODEL,
+// [HEMISFÉRIOS CEREBRAIS DA IA - GERAÇÃO 2026]
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "DUMMY");
+const VISION_MODEL = "gemini-2.5-flash";
+const HEAVY_MODEL = "gemini-2.5-pro";
+
+// Hemisfério Esquerdo (FLASH): Rápido, Multimodal e Estruturado (DNA & Áudio)
+const modelFlash = genAI.getGenerativeModel({ 
+    model: VISION_MODEL, 
     generationConfig: { responseMimeType: "application/json" }
-};
+});
+
+// Hemisfério Direito (PRO): Denso, Analítico e Criativo (Drafts & Doctoralia)
+const modelPro = genAI.getGenerativeModel({ 
+    model: HEAVY_MODEL, 
+    generationConfig: { temperature: 0.7 }
+});
 const draftsDb = []; // In-memory store for newly generated drafts before WP sync
 
 // Helper robust JSON parser
@@ -59,11 +68,7 @@ const getVictorStyle = () => {
     return { style_rules: [] };
 };
 
-// Hemisfério Pro (PRO): Denso, Analítico e Criativo
-const modelPro = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-pro",
-    generationConfig: { temperature: 0.7 }
-});
+// ──────────────────────────────────────────────────────────────────────────────
 
 // FUNÇÃO DE CONSOLIDAÇÃO DE DNA (Hipocampo Digital)
 async function salvarRegrasDeEstilo(novasRegras) {
@@ -859,7 +864,38 @@ app.post('/api/reputation/analyze', async (req, res) => {
 });
 
 // ==============================================================================
-// 6. AGENTES DA ESTEIRA DE PRODUÇÃO (FASE 2: MÁQUINA DE ESTADOS)
+// 6. DOCTORALIA ASSISTANT (ORQUESTRADOR DE RESPOSTAS CLÍNICAS)
+// ==============================================================================
+app.post('/api/doctoralia/generate-reply', async (req, res) => {
+    try {
+        const { question } = req.body;
+        if (!process.env.GEMINI_API_KEY) throw new Error("Chave API não configurada.");
+        
+        console.log(`🩺 [DOCTORALIA] Gerando resposta humanizada para: "${question.substring(0, 50)}..."`);
+        
+        const prompt = `VOCÊ É O ASSISTENTE CLÍNICO DO DR. VICTOR LAWRENCE.
+        TAREFA: Responder uma dúvida de paciente no portal Doctoralia.
+        
+        DIRETRIZES DE OURO:
+        1. Tom Ericksoniano: Acolhedor, permissivo e tecnicamente impecável.
+        2. EEAT-HIGH: Demonstre autoridade (Mestre UFU, CRP 09/012681) sem ser arrogante.
+        3. Sigilo: Nunca confirme diagnósticos sem avaliação. Sempre sugira agendamento.
+        4. Geo-Localização: Mencione que o atendimento especializado ocorre em Goiânia.
+        
+        PERGUNTA DO PACIENTE: "${question}"
+        
+        SAÍDA: Apenas o texto da resposta, pronto para colar.`;
+        
+        const result = await modelPro.generateContent(prompt);
+        res.json({ success: true, reply: result.response.text() });
+    } catch (e) {
+        console.error("❌ [DOCTORALIA ERROR]", e.message);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// ==============================================================================
+// 7. AGENTES DA ESTEIRA DE PRODUÇÃO (FASE 2: MÁQUINA DE ESTADOS)
 // ==============================================================================
 
 async function runConstructor(userInput, feedback = null, waNumber, moodId = "1_introspeccao_profunda", contentType = "pages") {
@@ -1220,8 +1256,9 @@ app.get('/api/neuro-training/memory', (req, res) => {
 
 app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, res) => {
     try {
+        if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY não configurada no servidor.");
         if (!req.file) throw new Error("Aúdio não recebido.");
-        const model = genAI.getGenerativeModel(modelConfig);
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         
         const dnaPrompt = `VOCÊ É O 'APRENDIZ DE ABIDOS'. Analise este áudio do Dr. Victor Lawrence.
         Extraia DNA clínico (UFU, AQ10b, RAS30).
@@ -1249,7 +1286,8 @@ app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, 
 app.post('/api/neuro-training/chat', async (req, res) => {
     try {
         const { message } = req.body;
-        const model = genAI.getGenerativeModel(modelConfig);
+        if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY não configurada.");
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         const chatPrompt = `
             VOCÊ É O 'APRENDIZ DE ABIDOS', um supervisor clínico entrevistando o Dr. Victor Lawrence.
             OBJETIVO: Extrair DNA Clínico e Ericksoniano via entrevista naturalista.
@@ -1289,7 +1327,7 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
             text = req.file.buffer.toString('utf-8');
         }
 
-        const model = genAI.getGenerativeModel(modelConfig);
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         const docPrompt = `ANÁLISE DE LASTRO ABIDOS. Texto: "${text.substring(0, 8000).replace(/"/g, "'")}".
         Extraia DNA em JSON: { "feedback_analysis": "feedback", "regras_extraidas": [{"categoria": "X", "titulo": "Frase 3-5 palavras", "regra": "desc"}] }`;
 

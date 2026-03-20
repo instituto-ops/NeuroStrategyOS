@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-8 h-8">
+    <defs>
+        <linearGradient id="glowHorus" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#2dd4bf;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:1" />
+        </linearGradient>
+        <filter id="horusShadow">
+            <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#2dd4bf" flood-opacity="0.6"/>
+        </filter>
+    </defs>
+    <path d="M95,45 C95,45 75,25 50,25 C25,25 5,45 5,45 C5,45 25,65 50,65 C75,65 95,45 95,45 Z M50,57 C43.37,57 38,51.63 38,45 C38,38.37 43.37,33 50,33 C56.63,33 62,38.37 62,45 C62,51.63 56.63,57 50,57 Z" fill="url(#glowHorus)" filter="url(#horusShadow)"/>
+    <path d="M50,15 C65,15 78,21 85,30" stroke="url(#glowHorus)" stroke-width="4" fill="none" stroke-linecap="round" filter="url(#horusShadow)"/>
+    <path d="M25,55 L25,80 C25,85 30,90 35,90" stroke="url(#glowHorus)" stroke-width="4" fill="none" stroke-linecap="round" filter="url(#horusShadow)"/>
+    <path d="M60,62 C60,62 70,80 85,80" stroke="url(#glowHorus)" stroke-width="4" fill="none" stroke-linecap="round" filter="url(#horusShadow)"/>
+</svg>
