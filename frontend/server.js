@@ -45,11 +45,12 @@ function extractJSON(text) {
 }
 
 // [FASE 5] Módulo Neuro-Training: Memória de Estilo do Dr. Victor
+const MEMORY_FILE_PATH = path.join(__dirname, 'estilo_victor.json');
+
 const getVictorStyle = () => {
     try {
-        const stylePath = path.join(__dirname, 'estilo_victor.json');
-        if (fs.existsSync(stylePath)) {
-            const data = fs.readFileSync(stylePath, 'utf8');
+        if (fs.existsSync(MEMORY_FILE_PATH)) {
+            const data = fs.readFileSync(MEMORY_FILE_PATH, 'utf8');
             return JSON.parse(data);
         }
     } catch (e) {
@@ -57,6 +58,37 @@ const getVictorStyle = () => {
     }
     return { style_rules: [] };
 };
+
+// Hemisfério Pro (PRO): Denso, Analítico e Criativo
+const modelPro = genAI.getGenerativeModel({ 
+    model: "gemini-1.5-pro",
+    generationConfig: { temperature: 0.7 }
+});
+
+// FUNÇÃO DE CONSOLIDAÇÃO DE DNA (Hipocampo Digital)
+async function salvarRegrasDeEstilo(novasRegras) {
+    if (!novasRegras || novasRegras.length === 0) return;
+    try {
+        let current = getVictorStyle();
+        if (!current.style_rules) current.style_rules = [];
+
+        const regrasComMetadados = novasRegras.map(regra => ({
+            categoria: regra.categoria || "DNA",
+            titulo: regra.titulo || regra.sintese || "Padrão Detectado",
+            regra: cleanClinicalData(regra.regra),
+            id: `rule_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            data_extracao: new Date().toISOString()
+        }));
+
+        current.style_rules = [...regrasComMetadados, ...current.style_rules].slice(0, 100);
+        current.last_update = new Date().toISOString();
+        
+        fs.writeFileSync(MEMORY_FILE_PATH, JSON.stringify(current, null, 2));
+        console.log(`🧠 Memória atualizada: +${novasRegras.length} novos insights salvos.`);
+    } catch (e) {
+        console.error("🚨 Falha crítica ao salvar no hipocampo:", e);
+    }
+}
 
 // ==============================================================================
 // 📋 UTILITÁRIO DE ANONIMIZAÇÃO CLÍNICA (BLINDAGEM ÉTICA)
@@ -1189,35 +1221,25 @@ app.get('/api/neuro-training/memory', (req, res) => {
 app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, res) => {
     try {
         if (!req.file) throw new Error("Aúdio não recebido.");
-        const audioBuffer = req.file.buffer;
         const model = genAI.getGenerativeModel(modelConfig);
         
-        const dnaPrompt = `VOCÊ É O 'APRENDIZ DE ABIDOS'. Analise este áudio clínico. EXTRAIA DNA CLÍNICO.
-        RETORNE JSON: { "new_rules": [{"sintese": "Título 3-5 palavras", "regra": "Descrição"}], "insight": "Feedback" }`;
+        const dnaPrompt = `VOCÊ É O 'APRENDIZ DE ABIDOS'. Analise este áudio do Dr. Victor Lawrence.
+        Extraia DNA clínico (UFU, AQ10b, RAS30).
+        RESPONDA EM JSON: { "insight": "Sua resposta analítica", "regras_extraidas": [{"categoria": "X", "titulo": "Frase 3-5 palavras", "regra": "desc"}] }`;
 
         const result = await model.generateContent([
             { text: dnaPrompt },
-            { inlineData: { data: audioBuffer.toString('base64'), mimeType: 'audio/webm' } }
+            { inlineData: { data: req.file.buffer.toString('base64'), mimeType: req.file.mimetype } }
         ]);
 
         const extracted = extractJSON(result.response.text());
         if (!extracted) throw new Error("IA falhou na síntese de DNA via Áudio.");
 
-        const stylePath = path.join(__dirname, 'estilo_victor.json');
-        let current = getVictorStyle();
-        const uniqueNew = (extracted.new_rules || []).map(r => ({
-            sintese: r.sintese || "Padrão de Voz",
-            regra: cleanClinicalData(r.regra)
-        }));
+        if (extracted.regras_extraidas) {
+            await salvarRegrasDeEstilo(extracted.regras_extraidas);
+        }
 
-        current.style_rules = [...current.style_rules, ...uniqueNew].slice(-80);
-        current.last_update = new Date().toISOString();
-        current.last_insight = cleanClinicalData(extracted.insight);
-        if (!current.insights_history) current.insights_history = [];
-        current.insights_history.unshift({ text: current.last_insight, date: current.last_update });
-
-        fs.writeFileSync(stylePath, JSON.stringify(current, null, 2));
-        res.json({ success: true, insights: uniqueNew, summary: current.last_insight });
+        res.json({ success: true, insights: extracted.regras_extraidas, summary: cleanClinicalData(extracted.insight) });
     } catch (e) {
         console.error("❌ [DNA ERROR]", e);
         res.status(500).json({ error: e.message });
@@ -1228,24 +1250,25 @@ app.post('/api/neuro-training/chat', async (req, res) => {
     try {
         const { message } = req.body;
         const model = genAI.getGenerativeModel(modelConfig);
-        const chatPrompt = `APRENDIZ DE ABIDOS. Dr. Victor diz: "${message.replace(/"/g, "'")}". 
-        Extraia DNA em JSON: { "sintese": "3-5 palavras", "regra": "Descrição" }. Responda em "reply".`;
+        const chatPrompt = `
+            VOCÊ É O 'APRENDIZ DE ABIDOS', um supervisor clínico entrevistando o Dr. Victor Lawrence.
+            OBJETIVO: Extrair DNA Clínico e Ericksoniano via entrevista naturalista.
+            
+            REGRAS (CRÍTICO):
+            Retorne EXCLUSIVAMENTE JSON com:
+            1. "resposta_chat": Sua resposta/pergunta para o Dr. Victor.
+            2. "regras_extraidas": Lista de regras detectadas: [{"categoria": "X", "titulo": "Título Curto", "regra": "desc"}].
+            
+            MENSAGEM DELE: "${message.replace(/"/g, "'")}"`;
 
         const result = await model.generateContent(chatPrompt);
         const extracted = extractJSON(result.response.text());
         if (!extracted) throw new Error("IA falhou na entrevista conversacional.");
 
-        if (extracted.insights && extracted.insights.length > 0) {
-            const stylePath = path.join(__dirname, 'estilo_victor.json');
-            let current = getVictorStyle();
-            const uniqueNew = extracted.insights.map(i => ({
-                sintese: i.sintese || "Insight Clínico",
-                regra: cleanClinicalData(i.regra)
-            }));
-            current.style_rules = [...current.style_rules, ...uniqueNew].slice(-80);
-            fs.writeFileSync(stylePath, JSON.stringify(current, null, 2));
+        if (extracted.regras_extraidas && extracted.regras_extraidas.length > 0) {
+            await salvarRegrasDeEstilo(extracted.regras_extraidas);
         }
-        res.json({ reply: cleanClinicalData(extracted.reply), insights: extracted.insights });
+        res.json({ reply: cleanClinicalData(extracted.resposta_chat), insights: extracted.regras_extraidas });
     } catch (e) {
         console.error("❌ [CHAT ERROR]", e);
         res.status(500).json({ error: e.message });
@@ -1267,30 +1290,46 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
         }
 
         const model = genAI.getGenerativeModel(modelConfig);
-        const docPrompt = `Análise de Lastro Doc. Texto: "${text.substring(0, 8000).replace(/"/g, "'")}".
-        Extraia DNA em JSON: { "new_rules": [{"sintese": "Título 3-5 palavras", "regra": "Descrição"}], "feedback_analysis": "Feedback" }`;
+        const docPrompt = `ANÁLISE DE LASTRO ABIDOS. Texto: "${text.substring(0, 8000).replace(/"/g, "'")}".
+        Extraia DNA em JSON: { "feedback_analysis": "feedback", "regras_extraidas": [{"categoria": "X", "titulo": "Frase 3-5 palavras", "regra": "desc"}] }`;
 
         const result = await model.generateContent(docPrompt);
         const extracted = extractJSON(result.response.text());
         if (!extracted) throw new Error("IA falhou na análise de lastro.");
 
-        const stylePath = path.join(__dirname, 'estilo_victor.json');
-        let current = getVictorStyle();
-        const uniqueNew = (extracted.new_rules || []).map(i => ({
-            sintese: i.sintese || "Lastro Acadêmico",
-            regra: cleanClinicalData(i.regra)
-        }));
-
-        const cleanFeedback = cleanClinicalData(extracted.feedback_analysis);
-        current.style_rules = [...current.style_rules, ...uniqueNew].slice(-80);
-        current.last_update = new Date().toISOString();
-        if (!current.insights_history) current.insights_history = [];
-        current.insights_history.unshift({ text: cleanFeedback, date: current.last_update });
-
-        fs.writeFileSync(stylePath, JSON.stringify(current, null, 2));
-        res.json({ success: true, insights: uniqueNew, summary: cleanFeedback });
+        if (extracted.regras_extraidas) {
+            await salvarRegrasDeEstilo(extracted.regras_extraidas);
+        }
+        res.json({ success: true, insights: extracted.regras_extraidas, summary: cleanClinicalData(extracted.feedback_analysis) });
     } catch (e) {
         console.error("❌ [UPLOAD ERROR]", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/studio/gerar-rascunho', async (req, res) => {
+    try {
+        const { tema, formato, publico } = req.body;
+        const memory = getVictorStyle();
+        const dnaRules = (memory.style_rules || []).map(r => `[${r.categoria}]: ${r.titulo} -> ${r.regra}`).join('\n');
+
+        const systemPrompt = `
+        VOCÊ É O AVATAR LITERÁRIO DO DR. VICTOR LAWRENCE (Mestre UFU, Ericksoniano).
+        ESCREVA CONTEÚDO SOBRE: "${tema}" para "${publico}". Formato: ${formato}.
+        
+        Siga estas REGRAS DE DNA extraídas do Dr. Victor:
+        ${dnaRules || "Escreva com tom clínico profissional e empático."}
+        
+        REGRAS UNIVERSAIS:
+        1. Sem promessas de cura.
+        2. Linguagem permissiva Ericksoniana.
+        3. Saída em HTML semântico.
+        `;
+
+        const result = await modelPro.generateContent(systemPrompt);
+        res.json({ rascunho: result.response.text() });
+    } catch (e) {
+        console.error("❌ [PRO ERROR]", e);
         res.status(500).json({ error: e.message });
     }
 });

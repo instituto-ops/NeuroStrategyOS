@@ -74,7 +74,7 @@ window.neuroTraining = {
             }
         } catch (err) {
             console.error(err);
-            this.addMessage('ai', "⚠️ Erro ao processar mensagem. Verifique a conexão.");
+            this.addMessage('ai', "⚠️ Erro ao processar mensagem.");
         }
     },
 
@@ -159,17 +159,20 @@ window.neuroTraining = {
         if (!feed) return;
 
         feed.innerHTML = rules.map(r => {
-            const sintese = (typeof r === 'object' ? (r.sintese || r.categoria || 'SÍNTESE DNA') : 'SÍNTESE DNA').toUpperCase();
-            const regra = typeof r === 'object' ? (r.regra || JSON.stringify(r)) : r;
+            const categoria = (r.categoria || 'DNA').toUpperCase();
+            const titulo = r.titulo || r.sintese || "Padrão Detectado";
+            const regra = r.regra || JSON.stringify(r);
             
             return `
                 <div class="card" style="background: white; border: 1px solid #e2e8f0; border-left: 5px solid #6366f1; padding: 20px; margin-bottom: 8px; border-radius: 8px; animation: slideIn 0.3s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
                         <span style="background: #eef2ff; color: #6366f1; font-size: 9px; font-weight: 900; padding: 4px 10px; border-radius: 4px; letter-spacing: 1px; border: 1px solid #e0e7ff;">
-                            ${sintese}
+                            ${categoria}
                         </span>
+                        <span style="font-size: 10px; color: #94a3b8;">${r.data_extracao ? new Date(r.data_extracao).toLocaleDateString() : ''}</span>
                     </div>
-                    <p style="font-size: 13px; color: #334155; line-height: 1.6; margin: 0; font-weight: 500;">
+                    <h4 style="font-size: 14px; font-weight: 800; color: #1e293b; margin-bottom: 6px;">${titulo}</h4>
+                    <p style="font-size: 13px; color: #475569; line-height: 1.6; margin: 0; font-weight: 500;">
                         ${regra}
                     </p>
                 </div>
