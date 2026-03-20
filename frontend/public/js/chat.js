@@ -19,6 +19,41 @@ window.chatApp = {
             whatsapp: "5562991545295"
         }
     },
+
+    showNeuroToast(message, type = 'info') {
+        const existingContainer = document.getElementById('neuro-toast-container');
+        const container = existingContainer || document.createElement('div');
+        if (!existingContainer) {
+            container.id = 'neuro-toast-container';
+            container.style.cssText = 'position:fixed; top:20px; right:20px; z-index:10000; display:flex; flex-direction:column; gap:10px; pointer-events:none;';
+            document.body.appendChild(container);
+            
+            // Inject animation
+            if (!document.getElementById('toast-style')) {
+                const style = document.createElement('style');
+                style.id = 'toast-style';
+                style.innerHTML = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
+                document.head.appendChild(style);
+            }
+        }
+
+        const toast = document.createElement('div');
+        const bgColor = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#3b82f6');
+        toast.style.cssText = `background:${bgColor}; color:white; padding:12px 20px; border-radius:8px; font-size:13px; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease-out; pointer-events:auto; cursor:pointer; min-width:200px; display:flex; align-items:center; gap:10px;`;
+        toast.innerHTML = `<span>${type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️')}</span> <span>${message}</span>`;
+        
+        toast.onclick = () => toast.remove();
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(() => toast.remove(), 500);
+            }
+        }, 5000);
+    },
     mediaGallery: [], // Cache de mídias para a IA
     historyStack: [],  // Undo history
     redoStack: [],     // Redo history
@@ -1202,7 +1237,6 @@ window.chatApp = {
             }
         }
         
-        // Mantém compatibilidade com o log do chat se o usuário abrir a aba de logs
         const logPanel = document.getElementById('agent-logs-panel');
         if (logPanel) {
             const entry = document.createElement('div');
@@ -1220,22 +1254,21 @@ window.chatApp = {
         if (logPanel) logPanel.style.display = 'block';
         if (content) content.innerHTML = '';
 
-        // No Studio, apenas o CONSTRUTOR trabalha.
         this.addAgentLog("Agente Construtor", "Sintetizando DNA clínico e estruturando rascunho...", false);
 
         const formData = new FormData();
-        
-        const kw = document.getElementById('ai-studio-keyword').value;
+        const kw = document.getElementById('ai-studio-keyword')?.value || 'psicologia';
 
-        // CONSTRUÇÃO DO PROMPT CONSOLIDADO (Equipes Transitórias LangChain Style)
-        let promptContext = `Você é a NeuroEngine AI, Orquestradora do Hub de Agentes Especialistas (Missão Abidos 3.1).
+        // CONSOLIDADO MASTER PROTOCOLO V5 (PREÂMBULO OBRIGATÓRIO)
+        let promptContext = `Você opera no Modo Headless V5. Sua saída DEVE ser exclusivamente um JSON plano. 
+        Não use tags H na UI (apenas div/span estilizados). 
+        Siga o Manual de Governança para escolher o Shell de 01 a 11. 
+        Use Dados E-E-A-T reais de Victor Lawrence.
         
-        DIRETRIZES DOS AGENTES INTERNOS:
-        1. PESQUISA (Gerador): Sintetize dados sobre ${this.authorityContext.name} e Método Abidos.
-        2. ABIDOS (SEO): Garanta Hub-and-Spoke, keyword "${kw || 'psicologia'}" e linkagem para hipnolawrence.com.
-        3. CRÍTICO (Avaliador): Tom acolhedor e Mobile-First. Use verbos táteis ("Toque aqui", "Agende pelo WhatsApp"). Evite jargões frios.
-        4. COMPLIANCE (Ética CFP): Bloqueie promessas de cura, depoimentos comerciais ou fotos antes/depois. Use Validação Acadêmica (Mestrado UFU, AQ10b).
-        5. DESIGN & LAYOUT (Visual): Garanta estética premium (Domínio Ouro). Use Containers Flexbox, tipografia Inter/Outfit e conformidade "Erro Zero". PROIBIDO H1 (O tema Astra já fornece o título). PROIBIDO o wrapper <div class="lw-page-wrapper">. Aplique vidromorfismo, sombras suaves e arredondamento (12px).
+        DIRETRIZES TÉCNICAS:
+        1. SEO INVISÍVEL: Preencha a camada técnica (seo_h1_tecnico, etc) com rigor semântico.
+        2. DESIGN PREMIUM: Vidromorfismo, bordas 12px e tipografia Inter.
+        3. ÉTICA CFP: Bloqueie promessas de cura ou depoimentos.
         
         [DADOS DO USUÁRIO]: ${userMessage}`;
 
@@ -1288,25 +1321,39 @@ window.chatApp = {
                 method: 'POST',
                 body: formData
             });
-            const data = await response.json();
+            const rawData = await response.text();
             
-            // Finaliza logs visualmente
+            // BLINDAGEM JSON: Remove markdown e limpa espaços
+            let cleanJson = rawData.replace(/```json|```/g, "").trim();
+            const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
+            if (jsonMatch) cleanJson = jsonMatch[0];
+
+            let data;
+            try {
+                data = JSON.parse(cleanJson);
+            } catch (e) {
+                console.warn("Retorno da IA não é um JSON padrão. Buscando campo 'reply'...", e);
+                data = { reply: rawData };
+            }
+            
             await this.addAgentLog("NeuroEngine AI", "Decisão Final Tomada", true);
 
-            if (data.reply) {
+            if (data?.reply) {
                 this.addMessage(data.reply, false);
                 if (data.diff) {
-                    document.getElementById('diff-panel').style.display = 'block';
-                    document.getElementById('diff-content').innerHTML = data.diff;
+                    const diffPanel = document.getElementById('diff-panel');
+                    const diffContent = document.getElementById('diff-content');
+                    if (diffPanel) diffPanel.style.display = 'block';
+                    if (diffContent) diffContent.innerHTML = data.diff;
                 }
             } else {
-                this.addMessage("⚠️ IA retornou uma resposta vazia.", false);
+                this.addMessage("⚠️ IA retornou uma resposta sem campo 'reply'.", false);
             }
         } catch (error) {
             console.error(error);
             this.addMessage("❌ Erro na comunicação com os agentes.", false);
         } finally {
-            setTimeout(() => { logPanel.style.display = 'none'; }, 5000);
+            if (logPanel) setTimeout(() => { logPanel.style.display = 'none'; }, 5000);
         }
     },
 
@@ -1521,8 +1568,8 @@ window.chatApp = {
 
         if (isNew && !newTitle) return alert("Digite um título.");
 
-        const htmlContent = document.getElementById('live-preview').innerHTML;
-        const slug = document.getElementById('seo-slug').value.trim();
+        const htmlContent = document.getElementById('live-preview')?.innerHTML;
+        const slug = document.getElementById('seo-slug')?.value?.trim();
         
         const payload = { 
             content: htmlContent, 
@@ -1532,19 +1579,43 @@ window.chatApp = {
         if (isNew) payload.title = newTitle;
         if (slug) payload.slug = slug;
 
-        const result = await wpAPI.saveContent(type, payload, this.currentItemId);
-        
-        if(result && result.id) {
-            this.currentItemId = result.id;
-            this.currentType = type;
-            titleInput.style.display = 'none';
-            document.getElementById('ai-studio-suggest-btn').style.display = 'none';
-            document.getElementById('ai-studio-preview-btn').style.display = 'block';
-            document.getElementById('ai-studio-title').innerText = `Rascunho: ${result.title.rendered || newTitle}`;
-            alert("Rascunho salvo!");
+        // Feedback Visual
+        const saveBtn = document.querySelector('button[onclick*="saveToWP"]');
+        const originalText = saveBtn ? saveBtn.innerHTML : "💾 SALVAR RASCUNHO";
+        if (saveBtn) {
+            saveBtn.innerHTML = '<i class="animate-spin">⏳</i> Salvando...';
+            saveBtn.disabled = true;
+        }
+
+        try {
+            const result = await wpAPI.saveContent(type, payload, this.currentItemId);
             
-            // Recarrega a lista para o novo rascunho aparecer no dropdown e mantém selecionado
-            this.loadList(result.id);
+            if(result && result.id) {
+                this.currentItemId = result.id;
+                this.currentType = type;
+                if (titleInput) titleInput.style.display = 'none';
+                
+                const suggestBtn = document.getElementById('ai-studio-suggest-btn');
+                const previewBtn = document.getElementById('ai-studio-preview-btn');
+                const titleHeading = document.getElementById('ai-studio-title');
+                
+                if (suggestBtn) suggestBtn.style.display = 'none';
+                if (previewBtn) previewBtn.style.display = 'block';
+                if (titleHeading) titleHeading.innerText = `Rascunho: ${result.title?.rendered || newTitle}`;
+                
+                this.showNeuroToast("Rascunho salvo no banco de dados local.", "success");
+                
+                // Recarrega a lista para o novo rascunho aparecer no dropdown e mantém selecionado
+                this.loadList(result.id);
+            }
+        } catch (error) {
+            console.error("Salvar WP Erro:", error);
+            this.showNeuroToast("Falha ao salvar rascunho. Verifique a conexão.", "error");
+        } finally {
+            if (saveBtn) {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
         }
     },
 
@@ -1575,15 +1646,22 @@ window.chatApp = {
         
         try {
             const rawResponse = await gemini.callAPI(prompt);
-            // Clean response in case AI adds markdown blocks
-            const cleanJson = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-            const data = JSON.parse(cleanJson);
+            
+            // BLINDAGEM JSON
+            const cleanJson = rawResponse.replace(/```json|```/g, "").trim();
+            const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
+            const data = JSON.parse(jsonMatch ? jsonMatch[0] : cleanJson);
 
-            if (data.title) {
-                document.getElementById('ai-studio-new-title').value = data.title;
-                document.getElementById('seo-slug').value = data.slug || '';
-                document.getElementById('seo-title-tag').value = data.titleTag || '';
-                document.getElementById('seo-meta-desc').value = data.metaDescription || '';
+            if (data?.title) {
+                const titleInput = document.getElementById('ai-studio-new-title');
+                const slugInput = document.getElementById('seo-slug');
+                const tagInput = document.getElementById('seo-title-tag');
+                const descInput = document.getElementById('seo-meta-desc');
+
+                if (titleInput) titleInput.value = data.title || "";
+                if (slugInput) slugInput.value = data.slug || "";
+                if (tagInput) tagInput.value = data.titleTag || "";
+                if (descInput) descInput.value = data.metaDescription || "";
                 
                 this.addAgentLog("NeuroEngine", "Estratégia de SEO sugerida com sucesso.", true);
                 this.addMessage(`🪄 **Estratégia Abidos Gerada!**\n\n📌 **Título:** ${data.title}\n🔗 **Slug:** ${data.slug}\n🔍 **SEO:** Otimizado com foco em Google Ads.`);
@@ -1591,10 +1669,10 @@ window.chatApp = {
         } catch (e) {
             console.error("Erro ao sugerir título:", e);
             this.addAgentLog("NeuroEngine", "Erro ao processar sugestão estratégica.", true);
-            // Fallback: se falhar o JSON, tenta pegar apenas o texto caso o Gemini tenha retornado algo simples
             try {
                 const title = await gemini.callAPI(`Retorne APENAS um título curto para a keyword: ${kw}`);
-                document.getElementById('ai-studio-new-title').value = title.trim();
+                const titleInput = document.getElementById('ai-studio-new-title');
+                if (titleInput) titleInput.value = title.trim();
             } catch (innerE) {}
         }
     },
@@ -1645,54 +1723,76 @@ window.chatApp = {
             formData.append('message', prompt);
             formData.append('currentKeyword', kw);
             
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await response.json();
+            // Timeout de 15 segundos para resiliência
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-            if (data.reply) {
-                // Tenta extrair o JSON da resposta da IA
-                let varsData = {};
-                try {
-                    const jsonMatch = data.reply.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        varsData = JSON.parse(jsonMatch[0]);
-                    } else {
-                        throw new Error("JSON não encontrado na resposta");
-                    }
-                } catch (e) {
-                    console.error("Erro ao converter resposta em JSON:", e);
-                    this.addMessage("⚠️ **Erro de Injeção:** A IA não retornou o formato JSON esperado. Tentando recuperação...");
-                    return;
-                }
-
-                // 3. ASSEMBLE (MONTAGEM DO HEADLESS)
-                let finalHtml = templateHtml;
-                for (let key in varsData) {
-                    const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-                    finalHtml = finalHtml.replace(regex, varsData[key]);
-                }
-
-                this.saveHistory();
-                preview.innerHTML = finalHtml;
-                this.lastGeneratedHtml = finalHtml;
-                this.injectCopyButtons();
-                this.updateAbidusScore();
-                this.addMessage("✅ **Assemble Concluído!** O rascunho foi injetado no Blueprint e está pronto para o Transe Visual.");
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
                 
-                document.getElementById('studio-canvas').scrollTop = 0;
-                this.addAuditLog("Agente de Injeção", `Headless Assembly finalizado usando ${templateName}.`, "ia");
+                const data = await response.json();
+
+                if (data?.reply) {
+                    // BLINDAGEM JSON
+                    const cleanJson = data.reply.replace(/```json|```/g, "").trim();
+                    const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
+                    let varsData = {};
+                    
+                    try {
+                        varsData = JSON.parse(jsonMatch ? jsonMatch[0] : cleanJson);
+                    } catch (e) {
+                        throw new Error("Agente retornou JSON malformado.");
+                    }
+
+                    // 3. ASSEMBLE (MONTAGEM DO HEADLESS)
+                    let finalHtml = templateHtml;
+                    for (let key in varsData) {
+                        const value = varsData[key] || ""; // Fallback para string vazia
+                        const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+                        finalHtml = finalHtml.replace(regex, value);
+                    }
+
+                    this.saveHistory();
+                    if (preview) {
+                        preview.innerHTML = finalHtml;
+                        this.lastGeneratedHtml = finalHtml;
+                        document.getElementById('studio-canvas')?.scrollTo(0, 0);
+                    }
+                    
+                    this.injectCopyButtons();
+                    this.updateAbidusScore();
+                    this.showNeuroToast("Assemble Concluído! Conteúdo injetado.", "success");
+                    this.addAuditLog("Agente de Injeção", `Headless Assembly finalizado usando ${templateName}.`, "ia");
+                }
+            } catch (fetchError) {
+                clearTimeout(timeoutId);
+                console.error("Timeout ou Erro de Injeção:", fetchError);
+                if (preview) {
+                    preview.innerHTML = `
+                        <div style="text-align:center; padding:60px; color:#ef4444;">
+                            <div style="font-size:40px; margin-bottom:15px;">⚠️</div>
+                            <h3 style="margin-bottom:10px;">Falha na Injeção Abidos</h3>
+                            <p style="font-size:14px; color:#64748b;">O Agente de Injeção encontrou uma instabilidade no Blueprint ou excedeu o tempo de resposta (15s).</p>
+                            <button class="btn btn-primary" style="margin-top:20px;" onclick="window.chatApp.generateDraft()">🔄 Tentar Novamente</button>
+                        </div>
+                    `;
+                }
+                this.showNeuroToast("Instabilidade no Agente de Injeção. Tentando recalibrar...", "error");
             }
         } catch (e) {
             console.error("Erro na geração Headless:", e);
-            this.addMessage("❌ **Falha Crítica no Protocolo Headless.** Verifique o console.");
+            this.showNeuroToast("Falha Crítica no Protocolo Headless.", "error");
         }
     },
 
     toggleChecklist() {
         const panel = document.getElementById('abidus-checklist-panel');
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
     },
 
     updateAbidusScore() {
@@ -1732,8 +1832,10 @@ window.chatApp = {
             }
         });
 
-        document.getElementById('abidus-progress').style.width = score + '%';
-        document.getElementById('abidus-percentage').innerText = score + '%';
+        const progressEl = document.getElementById('abidus-progress');
+        const percentEl = document.getElementById('abidus-percentage');
+        if (progressEl) progressEl.style.width = score + '%';
+        if (percentEl) percentEl.innerText = score + '%';
     },
 
     runQuickPrompt(type) {
@@ -2014,7 +2116,10 @@ RETORNE APENAS O JSON, sem comentários.`;
         const btn = document.getElementById('btn-export-final');
         const stepBtn = document.querySelector('button[onclick*="publishDirectly"]');
         
-        if (btn) { btn.innerHTML = "🚀 Exportando..."; btn.disabled = true; }
+        if (btn) { 
+            btn.innerHTML = '<i class="animate-spin">⏳</i> Exportando...'; 
+            btn.disabled = true; 
+        }
         if (stepBtn) { stepBtn.disabled = true; }
 
         this.addMessage("🚀 **Iniciado Deploy Abidos...** Extraindo DNA estratégico.");
@@ -2060,11 +2165,10 @@ RETORNE APENAS O JSON, sem comentários.`;
             if (btn) { btn.innerHTML = "Exportar como Rascunho"; btn.disabled = false; }
             if (stepBtn) { stepBtn.disabled = false; }
 
-            if(result && result.id) {
                 this.currentItemId = result.id;
                 this.addMessage(`✅ **PUBLICAÇÃO CONCLUÍDA NO WP!**\n\nID: #${result.id}\nStatus: Enviado como Rascunho.\nLink: [Ver no Painel WP](${result.link})`);
                 this.addMessage(`<br><a href="${result.link}" target="_blank" class="btn btn-primary" style="display:inline-block; margin-top:5px; background:#10b981; border:none; color:white;">👁️ Ver no WordPress</a>`);
-                alert("Rascunho enviado com sucesso!");
+                this.showNeuroToast("Publicado com sucesso! Google já pode indexar.", "success");
                 this.loadList(result.id);
                 this.addAuditLog("Sistema", `Exportação concluída para WP (ID #${result.id}) como Rascunho Seguro.`, "ia");
             } else {
@@ -2319,20 +2423,21 @@ window.injectCode = function(btn) {
     const mode = modeSelect ? modeSelect.value : 'replace';
 
     const placeholder = document.getElementById('canvas-placeholder');
-    if (placeholder || preview.innerText.includes('Crie algo novo') || preview.innerText.includes('Comece a escrever')) {
-        preview.innerHTML = '';
+    if (placeholder || (preview && preview.innerText.includes('Crie algo novo')) || (preview && preview.innerText.includes('Comece a escrever'))) {
+        if (preview) preview.innerHTML = '';
     }
 
-    if (mode === 'append') {
+    if (mode === 'append' && preview) {
         preview.insertAdjacentHTML('beforeend', code);
-    } else if (mode === 'prepend') {
+    } else if (mode === 'prepend' && preview) {
         preview.insertAdjacentHTML('afterbegin', code);
-    } else {
+    } else if (preview) {
         preview.innerHTML = code;
         window.chatApp.lastGeneratedHtml = code;
     }
 
     window.chatApp.updateAbidusScore();
+    window.chatApp.showNeuroToast("Bloco injetado com sucesso.", "info");
 };
 
 document.addEventListener('DOMContentLoaded', () => window.chatApp.init());

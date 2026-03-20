@@ -1,0 +1,14 @@
+{
+  "system_mode": "HEADLESS_V5",
+  "seo_layer": "HIDDEN",
+  "ui_layer": "POETIC_DIVS",
+  "required_keys": [
+    "seo_h1_tecnico", 
+    "seo_resumo_indexacao", 
+    "ui_titulo_hero", 
+    "artigo_paragrafo_introdutorio", 
+    "secao1_h2", 
+    "secao1_conteudo_html"
+  ],
+  "error_handling": "SILENT_FAIL_WITH_LOG"
+}
