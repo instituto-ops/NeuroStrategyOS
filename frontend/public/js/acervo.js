@@ -64,7 +64,12 @@ window.acervoManager = {
 
             if (result.success) {
                 const dados = result.data;
-                alert("Página carregada com sucesso! Você será redirecionado para o AI Studio no Modo de Edição.");
+                
+                if (result.warning) {
+                    alert(result.warning);
+                } else {
+                    alert("Página carregada com sucesso! Você será redirecionado para o AI Studio no Modo de Edição.");
+                }
                 
                 // Populate AI Studio
                 if (window.aiStudioTemplate) {

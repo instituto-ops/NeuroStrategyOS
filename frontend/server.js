@@ -278,9 +278,20 @@ app.post('/api/acervo/ler-pagina', (req, res) => {
             
             res.json({ success: true, data: dadosRecuperados });
         } else {
+            // Fallback para Páginas Legadas (Sem DNA)
+            const h1Match = conteudoTsx.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+            const titleMatch = conteudoTsx.match(/title:\s*["']([^"']+)["']/i);
+            
+            const legacyData = {
+                template: "", // Permite ao usuário escolher o novo template
+                seo_title: titleMatch ? titleMatch[1] : "",
+                hero_h1: h1Match ? h1Match[1].replace(/<[^>]+>/g, '').trim() : "Título da Página"
+            };
+
             res.json({ 
-                success: false, 
-                error: 'Esta página é antiga ou não possui o DNA do NeuroEngine (neuroEngineData).' 
+                success: true, 
+                data: legacyData,
+                warning: 'Esta página não possuía o DNA do NeuroEngine. Os dados foram inferidos. Por favor, selecione um template para atualizá-la.' 
             });
         }
 
