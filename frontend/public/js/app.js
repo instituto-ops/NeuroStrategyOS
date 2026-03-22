@@ -132,17 +132,22 @@ const app = {
     },
 
     async loadContentList() {
-        // Carrega pages e posts em paralelo para o dashboard
-        const pagesPromise = wpAPI.fetchContent('pages');
-        const postsPromise = wpAPI.fetchContent('posts');
+        try {
+            // Carrega pages e posts em paralelo para o dashboard
+            const pagesPromise = wpAPI.fetchContent('pages');
+            const postsPromise = wpAPI.fetchContent('posts');
 
-        const [pagesData, postsData] = await Promise.all([pagesPromise, postsPromise]);
-        
-        let allContent = [];
-        if(Array.isArray(pagesData)) allContent = [...allContent, ...pagesData];
-        if(Array.isArray(postsData)) allContent = [...allContent, ...postsData];
+            const [pagesData, postsData] = await Promise.all([pagesPromise, postsPromise]);
+            
+            let allContent = [];
+            if(Array.isArray(pagesData)) allContent = [...allContent, ...pagesData];
+            if(Array.isArray(postsData)) allContent = [...allContent, ...postsData];
 
-        this.renderTable(allContent);
+            this.renderTable(allContent);
+        } catch (e) {
+            console.warn("WP Load ignorado na transição Headless");
+            this.renderTable([]);
+        }
     },
 
     renderTable(data) {

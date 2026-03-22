@@ -50,7 +50,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h3 style="margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #64748b;">📊 Integração Google Analytics 4 (GA4)</h3>
-                            <p style="margin: 3px 0 0 0; font-size: 13px;">Conectado ao WordPress (hipnolawrence.com)</p>
+                            <p style="margin: 3px 0 0 0; font-size: 13px;">Conectado ao Site (Next.js)</p>
                         </div>
                     </div>
                 </div>
@@ -78,7 +78,7 @@
                             <div id="metric-visitors" style="font-size: 20px; font-weight: bold; color: #1e293b;">--</div>
                         </div>
                         <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; text-align: center;">
-                            <span style="font-size: 12px; color: #64748b;">Leads WP</span>
+                            <span style="font-size: 12px; color: #64748b;">Leads do Site</span>
                             <div id="metric-leads" style="font-size: 20px; font-weight: bold; color: #0ea5e9;">--</div>
                         </div>
                         <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; text-align: center;">
@@ -111,7 +111,7 @@
             <section id="content-overview" class="content-section">
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2>Gerenciador de Conteúdo WP</h2>
+                        <h2>Gerenciador de Conteúdo do Site</h2>
                         <div style="display: flex; gap: 10px;">
                             <select id="content-type-filter" class="btn" style="background: white; border: 1px solid #ddd;">
                                 <option value="pages">Páginas</option>
@@ -132,7 +132,7 @@
                                 </tr>
                             </thead>
                             <tbody id="wp-content-list">
-                                <!-- Conteúdo WP -->
+                                <!-- Conteúdo CMS -->
                             </tbody>
                         </table>
                     </div>
@@ -221,7 +221,7 @@
                                 <label for="content-meta">Meta Description / Excerpt</label>
                                 <textarea id="content-meta" style="height: 80px;" placeholder="Resumo SEO para o Google..."></textarea>
                             </div>
-                            <button type="submit" id="btn-save-content" class="btn btn-primary">🚀 Publicar no WordPress</button>
+                            <button type="submit" id="btn-save-content" class="btn btn-primary">🚀 Publicar no Repositório</button>
                         </form>
                     </div>
                     <div class="card">
@@ -262,7 +262,7 @@
                         <button class="btn btn-secondary" onclick="window.aiStudioTemplate.previewLive()" style="background: #fff; border-color: #0284c7; color: #0284c7; font-weight: 800;">
                             👁️ VISUALIZAR LP (PREVIEW)
                         </button>
-                        <button class="btn btn-primary" onclick="alert('Deploy Vercel...')" style="background: #10b981;">🚀 LANÇAR PÁGINA (WP/VERCEL)</button>
+                        <button class="btn btn-primary" onclick="alert('Deploy Vercel...')" style="background: #10b981;">🚀 LANÇAR PÁGINA (NEXT.JS)</button>
                     </div>
                 </div>
 
@@ -436,7 +436,7 @@
                         </div>
                         <div style="display: flex; gap: 10px; margin-top: 20px;">
                             <button class="btn btn-secondary" style="flex: 1;" onclick="window.mediaLibrary.closeModal()">Cancelar</button>
-                            <button class="btn btn-primary" style="flex: 2; background: #6366f1;" onclick="window.mediaLibrary.processUpload()">🚀 Enviar para WordPress</button>
+                            <button class="btn btn-primary" style="flex: 2; background: #6366f1;" onclick="window.mediaLibrary.processUpload()">🚀 Otimizar Mídia Local</button>
                         </div>
                     </div>
                 </div>
@@ -631,7 +631,7 @@
                 <span class="close-modal" style="cursor:pointer; font-size:24px;" onclick="window.chatApp.closeWPModal()">×</span>
             </div>
             <div class="modal-body">
-                <p style="margin-top:0;">Você está prestes a exportar este conteúdo para o ecossistema WordPress.</p>
+                <p style="margin-top:0;">Você está prestes a exportar este conteúdo para o ecossistema do Site Next.js.</p>
                 <div class="info-box" style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; border-radius:8px; margin:15px 0; font-size:13px;">
                     <div style="margin-bottom:5px;"><strong>Alvo:</strong> <span id="confirm-wp-title">---</span></div>
                     <div><strong>Status Atual:</strong> <span id="confirm-wp-status">---</span></div>
@@ -643,7 +643,7 @@
                     </label>
                 </div>
                 <div style="margin-top:20px; font-size:11px; color:#64748b; font-style:italic;">
-                    * Por segurança, o sistema forçará o status como <strong>RASCUNHO (DRAFT)</strong> no WordPress, garantindo uma revisão final no painel administrativo antes do ar entrar em produção.
+                    * Por segurança, o sistema forçará o status como <strong>RASCUNHO (DRAFT)</strong> localmente, garantindo uma revisão final no painel administrativo antes do ar entrar em produção.
                 </div>
             </div>
             <div class="modal-footer" style="padding:20px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:12px;">

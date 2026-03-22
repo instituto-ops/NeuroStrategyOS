@@ -112,7 +112,7 @@ const mediaLibrary = {
             });
 
         } catch (error) { 
-            console.error(error); 
+            console.warn("WP Load ignorado na transição Headless");
             // Se falhar o WP, tenta carregar apenas os locais para não ficar vazio
             this.renderLocalIcons();
         }

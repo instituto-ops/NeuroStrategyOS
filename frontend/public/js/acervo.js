@@ -1,4 +1,4 @@
-const acervoManager = {
+window.acervoManager = {
     init: function() {
         // Only load on tab switch
         const navBtns = document.querySelectorAll('.nav-btn');
@@ -33,16 +33,16 @@ const acervoManager = {
                     const formattedDate = dateObj.toLocaleDateString('pt-BR');
                     
                     const tr = document.createElement('tr');
-                    tr.innerHTML = \`
-                        <td style="font-weight: bold; color: #1e293b;">\${page.slug}</td>
-                        <td style="color: #64748b;">\${formattedDate}</td>
+                    tr.innerHTML = `
+                        <td style="font-weight: bold; color: #1e293b;">${page.slug}</td>
+                        <td style="color: #64748b;">${formattedDate}</td>
                         <td>
                             <span style="background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">PUBLICADO</span>
                         </td>
                         <td>
-                            <button class="btn btn-primary" onclick="acervoManager.editarPagina('\${page.caminhoFisico.replace(/\\\\/g, '\\\\\\\\')}')" style="font-size: 11px; padding: 5px 10px;">📝 EDITAR</button>
+                            <button class="btn btn-primary" onclick="acervoManager.editarPagina('${page.caminhoFisico.replace(/\\/g, '\\\\')}')" style="font-size: 11px; padding: 5px 10px;">📝 EDITAR</button>
                         </td>
-                    \`;
+                    `;
                     tbody.appendChild(tr);
                 });
             } else {
@@ -112,5 +112,5 @@ const acervoManager = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    acervoManager.init();
+    window.acervoManager.init();
 });
