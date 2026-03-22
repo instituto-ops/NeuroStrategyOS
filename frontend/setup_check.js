@@ -10,7 +10,7 @@ async function runSetupCheck() {
     console.log('--- 🛡️ NEUROENGINE SETUP CHECK ---');
 
     // 1. Verificação de Variáveis
-    const required = ['GEMINI_API_KEY', 'WP_URL', 'WP_USERNAME', 'WP_APP_PASSWORD'];
+    const required = ['GEMINI_API_KEY', 'GOOGLE_CLOUD_PROJECT', 'WP_URL', 'WP_USERNAME', 'WP_APP_PASSWORD'];
     let missing = false;
     required.forEach(key => {
         if (!process.env[key]) {
@@ -42,7 +42,7 @@ async function runSetupCheck() {
     console.log('\n--- 🧠 TESTANDO CONEXÃO GEMINI ---');
     try {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const result = await model.generateContent("Diga 'OK' para testar a conexão.");
         console.log(`✅ Gemini respondeu: ${result.response.text().trim()}`);
     } catch (e) {

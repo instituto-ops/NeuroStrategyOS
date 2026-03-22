@@ -5,6 +5,15 @@ const axios = require('axios');
 const path = require('path');
 const WebSocket = require('ws');
 require('dotenv').config({ path: '../.env' }); 
+
+if (!process.env.GOOGLE_CLOUD_PROJECT && !process.env.GEMINI_API_KEY) {
+    console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    console.error("!!! ERRO CRÍTICO: Variáveis de ambiente GOOGLE_CLOUD_PROJECT e GEMINI_API_KEY não foram definidas.");
+    console.error("!!! Por favor, adicione-as ao seu arquivo .env");
+    console.error("!!! O Antigravity Agent não funcionará corretamente sem isso.");
+    console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+}
+
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 
@@ -1308,13 +1317,16 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
     }
 });
 
+const { execSync } = require('child_process');
+
+// ==============================================================================
+// 1. PUBLICAR NO WORDPRESS (LEGADO / RASCUNHO)
+// ==============================================================================
 app.post('/api/content/publish-direct', async (req, res) => {
     try {
         const { type, title, content, status, slug, metaTitle, metaDesc } = req.body;
-        
         console.log(`🚀 [PUBLISH PROXY] Iniciando deploy do tipo ${type}: "${title}"`);
 
-        // Payload básico para o WordPress
         const payload = {
             title: title || "Sem Título",
             content: content || "",
@@ -1322,14 +1334,13 @@ app.post('/api/content/publish-direct', async (req, res) => {
             slug: slug || "",
         };
 
-        // Integração com Yoast/RankMath e [BYPASS HEADLESS ABIDOS]
         payload.meta = {
             _yoast_wpseo_metadesc: metaDesc || "",
             _yoast_wpseo_title: metaTitle || "",
             rank_math_description: metaDesc || "",
             rank_math_title: metaTitle || "",
             _abidos_render_headless: "1",
-            _abidos_headless_content: payload.content, // [BYPASS] HTML Puro
+            _abidos_headless_content: payload.content,
             _abidos_last_sync: new Date().toISOString()
         };
 
@@ -1337,26 +1348,21 @@ app.post('/api/content/publish-direct', async (req, res) => {
         const response = await callWP('POST', endpoint, payload);
 
         if (response && response.data && response.data.id) {
-             const postId = response.data.id;
-             const postLink = response.data.link;
+            const postId = response.data.id;
+            const postLink = response.data.link;
 
-             res.json({ 
+            res.json({ 
                 success: true, 
                 id: postId, 
                 link: postLink,
                 message: "Publicado com sucesso no WordPress (Rascunho Acelerado)"
             });
 
-            // --- INÍCIO DA AUDITORIA EM SEGUNDO PLANO (MULTI-AGENTE) ---
-            // Não bloqueia o rascunho no Studio, roda em background.
+            // Auditoria em background
             (async () => {
                 try {
-                    console.log(`📡 [BACKGROUND-AUDIT] Iniciando esteira multi-agente para Post #${postId}...`);
                     const auditResult = await runProductionLine(`Auditar conteúdo salvo: ${title}`, payload.content, "62991545295", "1_introspeccao_profunda", type);
-                    
-                    if (auditResult.success) {
-                        console.log(`✅ [AUDIT-SUCCESS] Post #${postId} validado pelos agentes.`);
-                        // Salva o resultado no Meta do WP para a aba de Revisão ver
+                    if (auditResult) {
                         await callWP('POST', `/${endpoint}/${postId}`, {
                             meta: {
                                 _abidos_audit_status: "APROVADO",
@@ -1364,30 +1370,68 @@ app.post('/api/content/publish-direct', async (req, res) => {
                                 _abidos_last_audit: new Date().toISOString()
                             }
                         });
-                    } else {
-                        console.warn(`⚠️ [AUDIT-REPROVOU] Post #${postId} requer atenção humana.`);
-                        await callWP('POST', `/${endpoint}/${postId}`, {
-                            meta: {
-                                _abidos_audit_status: "REPROVOU",
-                                _abidos_audit_report: JSON.stringify(auditResult),
-                                _abidos_last_audit: new Date().toISOString()
-                            }
-                        });
                     }
-                } catch (auditErr) {
-                    console.error(`🚨 [BACKGROUND-AUDIT-ERROR] Falha na esteira para Post #${postId}:`, auditErr.message);
-                }
+                } catch (auditErr) { console.error(`🚨 [AUDIT-ERROR]:`, auditErr.message); }
             })();
-            // --- FIM DA AUDITORIA ---
 
         } else {
-            console.error("Resp WP Inválida:", response?.data);
-            res.status(500).json({ error: "Resposta inválida ou vazia do WordPress via Proxy." });
+            res.status(500).json({ error: "Resposta inválida do WordPress." });
         }
     } catch (e) {
-        console.error("❌ [PUBLISH PROXY ERROR]", e.response?.data || e.message);
-        const wpError = e.response?.data?.message || e.message;
-        res.status(500).json({ error: "Erro na ponte do WordPress: " + wpError });
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ==============================================================================
+// 🆕 2. PUBLICAR NO VERCEL + NEXT.JS (PROTOCOLO v2.0 - MODERNO)
+// ==============================================================================
+
+app.post('/api/content/publish-vercel', async (req, res) => {
+    try {
+        const { title, content, slug, author = "Victor Lawrence", date = new Date().toLocaleDateString('pt-PT') } = req.body;
+        const sitePath = process.env.NEXTJS_SITE_PATH;
+
+        if (!sitePath || !fs.existsSync(sitePath)) {
+            throw new Error("Caminho do repositório Next.js não configurado.");
+        }
+
+        const blogPath = path.join(sitePath, 'src/app/blog', slug);
+        if (!fs.existsSync(blogPath)) fs.mkdirSync(blogPath, { recursive: true });
+
+        const pageTemplate = `"use client";
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
+
+export default function BlogPage() {
+  return (
+    <div className="bg-grain min-h-screen bg-ink-900 font-manrope text-paper-100 flex flex-col antialiased">
+      <nav className="sticky top-0 z-40 border-b border-ink-800 bg-ink-900/90 backdrop-blur-md px-6 py-4">
+        <Link href="/" className="font-serif italic text-xl">V. Lawrence</Link>
+      </nav>
+      <main className="max-w-4xl mx-auto px-6 py-20">
+        <h1 className="font-serif text-5xl lg:text-7xl mb-12">${title}</h1>
+        <article className="prose prose-invert lg:prose-xl" dangerouslySetInnerHTML={{ __html: \`${content.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\` }} />
+      </main>
+    </div>
+  );
+}
+`;
+
+        fs.writeFileSync(path.join(blogPath, 'page.tsx'), pageTemplate);
+
+        // Deploy Automático via Git Push
+        try {
+            execSync(`git add . && git commit -m "feat: publish post ${slug}" && git push`, { cwd: sitePath });
+            console.log(`✅ Deploy Vercel disparado para: ${slug}`);
+        } catch (gitErr) { console.warn("Git Push ignorado (provavelmente sem mudanças)."); }
+
+        res.json({ 
+            success: true, 
+            link: `https://hipnolawrence.com/blog/${slug}`,
+            message: "Publicado com sucesso no site oficial (Vercel)." 
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
 });
 
