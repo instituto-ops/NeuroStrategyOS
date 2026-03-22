@@ -11,9 +11,16 @@ window.seoEngine = {
         const selector = document.getElementById('planning-silo-selector');
 
         try {
-            const response = await fetch('/api/seo/analyze-silos');
-            if (!response.ok) throw new Error(`Status ${response.status}`);
-            const data = await response.json();
+            // Mock Data for Silos (Since WP is removed)
+            const data = {
+                silos: [
+                    { hub: "Autismo Adulto", spokes: ["Diagnóstico Tardio", "Sinais Sutis em Mulheres", "Alta Funcionalidade e Burnout", "Relacionamentos e TEA"] },
+                    { hub: "Ansiedade e Burnout", spokes: ["Sintomas Físicos da Ansiedade", "Terapia Estratégica Breve", "Como Parar Ataques de Pânico"] },
+                    { hub: "Hipnose Clínica", spokes: ["O que é Hipnose Clínica", "Hipnose para Fobias", "Mitos e Verdades"] }
+                ],
+                suggestions: []
+            };
+
             this.fullData = data; // Armazena para filtro
 
             // Popula Selector
@@ -31,18 +38,13 @@ window.seoEngine = {
                 this.selectSilo(data.silos[0].hub);
             }
 
-            // Renderiza Grafo (Global)
-            this.renderGraph(data);
+            // Renderiza Grafo (Global) Mockado
+            if(window.cytoscape) {
+                this.renderGraph(data);
+            }
 
         } catch (e) {
-            console.error(e);
-            siloContainer.innerHTML = `
-                <div style="padding: 20px; text-align: center; color: #ef4444;">
-                    <p style="font-weight: bold; margin: 0;">⚠️ Falha na Auditoria Semântica (Silos)</p>
-                    <p style="font-size: 11px; color: #64748b;">Isso pode ocorrer se o WordPress estiver demorando a responder ou bloquear a conexão. Tente recarregar ou verifique os logs.</p>
-                    <button class="btn btn-secondary" style="font-size: 10px; margin-top: 10px;" onclick="window.seoEngine.analyze()">🔄 Tentar Novamente</button>
-                </div>
-            `;
+            console.error("Erro interno no Planejamento:", e);
         }
     },
 

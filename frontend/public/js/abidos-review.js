@@ -8,7 +8,10 @@ window.abidosReview = {
             if(list) list.innerHTML = '<tr><td colspan="5" style="text-align:center;">⌛ Carregando rascunhos do banco de dados do LangGraph...</td></tr>';
             
             const response = await fetch('/api/drafts');
-            this.drafts = await response.json();
+            const data = await response.json();
+            // Evita o erro 'forEach is not a function' se a API retornar objeto em vez de array
+            this.drafts = Array.isArray(data) ? data : (data.drafts || []);
+            
             if(list) this.renderTable();
         } catch (e) {
             console.error("Erro ao carregar drafts", e);

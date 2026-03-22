@@ -110,6 +110,100 @@ const getVictorStyle = () => {
 
 // ──────────────────────────────────────────────────────────────────────────────
 
+// [AI STUDIO NEXT-GEN] Catálogo de Templates Estratégicas
+const TEMPLATE_CATALOG = [
+    { id: "01", filename: "master_template_01_dark_glass.html", name: "01 — Midnight Clinical (Dark Glass)", type: "landing", designSummary: "Dark Glass, Teal-Glow, Luxo Clínico", fonts: "Inter", palette: "Black + Teal + Cream" },
+    { id: "02", filename: "master_template_02_artigo_editorial.html", name: "02 — Artigo Editorial", type: "artigo", designSummary: "Editorial Clean, Tipografia Serif, Foco em Leitura", fonts: "Inter + Lora", palette: "Slate + Teal Brand" },
+    { id: "03", filename: "master_template_03_editorial_premium.html", name: "03 — Editorial Premium", type: "artigo", designSummary: "Premium, Warm Cream, Drop Cap Lora", fonts: "Inter + Lora", palette: "Warm Cream + Teal Brand" },
+    { id: "04", filename: "master_template_04_artigo_imersivo.html", name: "04 — Artigo Imersivo", type: "artigo", designSummary: "Hero Parallax, Forest Theme, Narrativa Visual", fonts: "DM Sans + Playfair", palette: "Forest + Cream + Sage" },
+    { id: "05", filename: "master_template_05_techeditorial.html", name: "05 — TechEditorial", type: "artigo", designSummary: "Tech-Modern, Fundo Escuro, Estilo Documentação", fonts: "Mono + Sans", palette: "Dark Tech" },
+    { id: "06", filename: "master_template_06_artigo_organico.html", name: "06 — Artigo Orgânico", type: "artigo", designSummary: "Tons Terrosos, Design Natural, Legibilidade", fonts: "Editorial Serif", palette: "Orgânico / Earth" },
+    { id: "07", filename: "master_template_07_ensaio_vintage.html", name: "07 — Ensaio Vintage", type: "artigo", designSummary: "Vintage Editorial, Grain, Estética Jornalística", fonts: "Fraunces + Manrope", palette: "Ink + Paper + Rust" },
+    { id: "08", filename: "master_template_08_ethereal_glass.html", name: "08 — Ethereal Glass", type: "artigo", designSummary: "Glassmorphism Etéreo, Cristalino, Futurista", fonts: "Plus Jakarta", palette: "Ethereal / White" },
+    { id: "09", filename: "master_template_09_luxury_dark.html", name: "09 — Luxury Dark", type: "artigo", designSummary: "Luxuoso Escuro, Dourado/Champagne, Tipografia Elite", fonts: "Premium Serif", palette: "Black + Gold" },
+    { id: "10", filename: "master_template_10_tech_focus.html", name: "10 — Tech Focus", type: "artigo", designSummary: "Minimalismo Tech, Foco em Dados, Blue/Slate", fonts: "Geometric Sans", palette: "Blue Tech" },
+    { id: "11", filename: "master_template_11_landing_abidos.html", name: "11 — Landing Page Abidos", type: "landing", designSummary: "SaaS Moderno, Clean White, Botões 3D", fonts: "Plus Jakarta", palette: "White + Indigo" }
+];
+
+// Helper: Tenta agrupar variáveis em módulos semânticos (Lógica do Studio Next)
+function getModuleForVar(varName) {
+    const modules = {
+        seo: { order: 0, title: "Fundação SEO & Meta" },
+        ui_titulo: { order: 1, title: "Hero / Título Visual" },
+        hero: { order: 1, title: "Hero / Título Visual" },
+        nav: { order: 1, title: "Navegação" },
+        dor: { order: 2, title: "Identificação da Dor" },
+        beneficios: { order: 3, title: "Benefícios & Método" },
+        autoridade: { order: 4, title: "Autoridade (E-E-A-T)" },
+        faq: { order: 5, title: "FAQ" },
+        silo: { order: 5, title: "Silos & Links" },
+        cta: { order: 6, title: "CTA & Conversão" },
+        whatsapp: { order: 6, title: "WhatsApp" },
+        autor: { order: 7, title: "Autor & Dados" },
+        artigo: { order: 2, title: "Corpo do Artigo" },
+        secao: { order: 3, title: "Seções do Artigo" }
+    };
+    const parts = varName.split("_");
+    for (let i = parts.length; i >= 1; i--) {
+        const prefix = parts.slice(0, i).join("_");
+        if (modules[prefix]) return modules[prefix];
+    }
+    return { order: 99, title: "Outras Variáveis" };
+}
+
+// [API] Listar Catálogo
+app.get('/api/templates', (req, res) => {
+    res.json({ templates: TEMPLATE_CATALOG });
+});
+
+// [API] Detalhes e Variáveis da Template
+app.get('/api/templates/:id', async (req, res) => {
+    const entry = TEMPLATE_CATALOG.find(t => t.id === req.params.id);
+    if (!entry) return res.status(404).json({ error: "Template não encontrada" });
+
+    try {
+        const filePath = path.join(__dirname, '../templates', entry.filename);
+        const html = fs.readFileSync(filePath, "utf-8");
+        const regex = /\{\{(\w+)\}\}/g;
+        const seen = new Set();
+        const allVars = [];
+        let match;
+        while ((match = regex.exec(html)) !== null) {
+            if (!seen.has(match[1])) {
+                seen.add(match[1]);
+                allVars.push(match[1]);
+            }
+        }
+        const modules = {};
+        allVars.forEach(v => {
+            const mod = getModuleForVar(v);
+            if (!modules[mod.title]) modules[mod.title] = { ...mod, variables: [] };
+            modules[mod.title].variables.push(v);
+        });
+        const sorted = Object.values(modules).sort((a,b) => a.order - b.order);
+        res.json({ template: entry, totalVariables: allVars.length, modules: sorted });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// [API] Gerar Preview Final (Processador de Variáveis)
+app.post('/api/templates/preview', async (req, res) => {
+    const { templateId, values } = req.body;
+    const entry = TEMPLATE_CATALOG.find(t => t.id === templateId);
+    if (!entry) return res.status(404).json({ error: "Template não encontrada" });
+
+    try {
+        const filePath = path.join(__dirname, '../templates', entry.filename);
+        let html = fs.readFileSync(filePath, "utf-8");
+        
+        for (const [key, value] of Object.entries(values || {})) {
+            const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+            html = html.replace(regex, value || "");
+        }
+        html = html.replace(/\{\{\w+\}\}/g, "");
+        res.send(html);
+    } catch (e) { res.status(500).send("Erro ao gerar preview."); }
+});
+
 // ============================================================================
 // 🧬 COMPILADOR DE DNA — Converte style_rules em diretivas autoritárias para IA
 // ============================================================================

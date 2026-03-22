@@ -79,7 +79,7 @@ window.taskSystem = {
                 };
                 const target = targets[p1];
                 if (target) {
-                    return `<a href="#" onclick="document.querySelector('[data-target=${target}]').click(); return false;" style="color: #6366f1; text-decoration: none; font-weight: bold;">[${p1}]</a>`;
+                    return `<a href="#" onclick="document.querySelector('[data-target=${target}]').click(); return false;" style="color: #6366f1; text-decoration: none; font-weight: bold;">${p1}</a>`;
                 }
                 return match;
             });
