@@ -39,8 +39,10 @@ window.acervoManager = {
                         <td>
                             <span style="background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">PUBLICADO</span>
                         </td>
-                        <td>
+                        <td style="display: flex; gap: 5px;">
                             <button class="btn btn-primary" onclick="acervoManager.editarPagina('${page.caminhoFisico.replace(/\\/g, '\\\\')}')" style="font-size: 11px; padding: 5px 10px;">📝 EDITAR</button>
+                            <a href="http://localhost:3001${page.slug}" target="_blank" class="btn btn-secondary" style="font-size: 11px; padding: 5px 10px; text-decoration: none; color: #475569; border-color: #cbd5e1;" title="Testar Vercel Local">👁️ LOCAL</a>
+                            <a href="https://hipnolawrence.com${page.slug}" target="_blank" class="btn btn-secondary" style="font-size: 11px; padding: 5px 10px; text-decoration: none; color: #0284c7; border-color: #bae6fd; background: #f0f9ff;" title="Ver Site em Produção">🌍 PROD</a>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -75,27 +77,31 @@ window.acervoManager = {
                 if (window.aiStudioTemplate) {
                     window.aiStudioTemplate.values = dados;
                     
+                    const selectEl = document.getElementById('ai-studio-template');
                     // Try to guess template if saved
-                    if (dados.template) {
-                        const selectEl = document.getElementById('ai-studio-template');
-                        if (selectEl) {
-                            // Find the option text that matches the template name partially
-                            Array.from(selectEl.options).forEach(opt => {
-                                if (opt.text.includes(dados.template) || opt.value === dados.template) {
-                                    opt.selected = true;
-                                    window.aiStudioTemplate.selectedId = opt.value;
-                                }
-                            });
-                        }
+                    if (dados.template && selectEl) {
+                        // Find the option text that matches the template name partially
+                        Array.from(selectEl.options).forEach(opt => {
+                            if (opt.text.includes(dados.template) || opt.value === dados.template) {
+                                opt.selected = true;
+                                window.aiStudioTemplate.selectedId = opt.value;
+                            }
+                        });
                     }
 
-                    // Reload the studio interface 
+                    // Se continua sem template (fallback/páginas antigas), atribui o primeiro do dropdown
+                    if (!window.aiStudioTemplate.selectedId && selectEl && selectEl.options.length > 0) {
+                        selectEl.selectedIndex = 0;
+                        window.aiStudioTemplate.selectedId = selectEl.options[0].value;
+                    }
+
+                    // Força a recriação da interface do Studio (que preenche os campos do form internamente)
                     if (window.aiStudioTemplate.selectedId) {
                         window.aiStudioTemplate.loadTemplateDetails(window.aiStudioTemplate.selectedId);
                     }
                     
                     // Muda status label 
-                    const statusLabel = document.querySelector('#ai-studio div[style*="STATUS: DRAFT EM CONSTRUÇÃO"]');
+                    const statusLabel = document.getElementById('ai-studio-status-label');
                     if (statusLabel) {
                         statusLabel.textContent = "STATUS: MODO DE EDIÇÃO ATIVO";
                         statusLabel.style.color = "#ea580c";

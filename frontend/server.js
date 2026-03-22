@@ -284,8 +284,8 @@ app.post('/api/acervo/ler-pagina', (req, res) => {
             
             const legacyData = {
                 template: "", // Permite ao usuário escolher o novo template
-                seo_title: titleMatch ? titleMatch[1] : "",
-                hero_h1: h1Match ? h1Match[1].replace(/<[^>]+>/g, '').trim() : "Título da Página"
+                SEO_TITLE: titleMatch ? titleMatch[1] : "",
+                SEO_H1_TECNICO: h1Match ? h1Match[1].replace(/<[^>]+>/g, '').trim() : "Título da Página"
             };
 
             res.json({ 
