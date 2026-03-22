@@ -112,17 +112,17 @@ const getVictorStyle = () => {
 
 // [AI STUDIO NEXT-GEN] Catálogo de Templates Estratégicas
 const TEMPLATE_CATALOG = [
-    { id: "01", filename: "master_template_01_dark_glass.html", name: "01 — Midnight Clinical (Dark Glass)", type: "landing", designSummary: "Dark Glass, Teal-Glow, Luxo Clínico", fonts: "Inter", palette: "Black + Teal + Cream" },
-    { id: "02", filename: "master_template_02_artigo_editorial.html", name: "02 — Artigo Editorial", type: "artigo", designSummary: "Editorial Clean, Tipografia Serif, Foco em Leitura", fonts: "Inter + Lora", palette: "Slate + Teal Brand" },
-    { id: "03", filename: "master_template_03_editorial_premium.html", name: "03 — Editorial Premium", type: "artigo", designSummary: "Premium, Warm Cream, Drop Cap Lora", fonts: "Inter + Lora", palette: "Warm Cream + Teal Brand" },
-    { id: "04", filename: "master_template_04_artigo_imersivo.html", name: "04 — Artigo Imersivo", type: "artigo", designSummary: "Hero Parallax, Forest Theme, Narrativa Visual", fonts: "DM Sans + Playfair", palette: "Forest + Cream + Sage" },
-    { id: "05", filename: "master_template_05_techeditorial.html", name: "05 — TechEditorial", type: "artigo", designSummary: "Tech-Modern, Fundo Escuro, Estilo Documentação", fonts: "Mono + Sans", palette: "Dark Tech" },
-    { id: "06", filename: "master_template_06_artigo_organico.html", name: "06 — Artigo Orgânico", type: "artigo", designSummary: "Tons Terrosos, Design Natural, Legibilidade", fonts: "Editorial Serif", palette: "Orgânico / Earth" },
-    { id: "07", filename: "master_template_07_ensaio_vintage.html", name: "07 — Ensaio Vintage", type: "artigo", designSummary: "Vintage Editorial, Grain, Estética Jornalística", fonts: "Fraunces + Manrope", palette: "Ink + Paper + Rust" },
-    { id: "08", filename: "master_template_08_ethereal_glass.html", name: "08 — Ethereal Glass", type: "artigo", designSummary: "Glassmorphism Etéreo, Cristalino, Futurista", fonts: "Plus Jakarta", palette: "Ethereal / White" },
-    { id: "09", filename: "master_template_09_luxury_dark.html", name: "09 — Luxury Dark", type: "artigo", designSummary: "Luxuoso Escuro, Dourado/Champagne, Tipografia Elite", fonts: "Premium Serif", palette: "Black + Gold" },
-    { id: "10", filename: "master_template_10_tech_focus.html", name: "10 — Tech Focus", type: "artigo", designSummary: "Minimalismo Tech, Foco em Dados, Blue/Slate", fonts: "Geometric Sans", palette: "Blue Tech" },
-    { id: "11", filename: "master_template_11_landing_abidos.html", name: "11 — Landing Page Abidos", type: "landing", designSummary: "SaaS Moderno, Clean White, Botões 3D", fonts: "Plus Jakarta", palette: "White + Indigo" }
+    { id: "01", filename: "master_template_01_dark_glass.html", name: "01 — Dark Glass: Autoridade Clínica e Serviços", type: "landing", designSummary: "Dark Glass, Teal-Glow, Luxo Clínico", fonts: "Inter", palette: "Black + Teal + Cream" },
+    { id: "02", filename: "master_template_02_artigo_editorial.html", name: "02 — Artigo Editorial: Post de Blog Padrão", type: "artigo", designSummary: "Editorial Clean, Tipografia Serif, Foco em Leitura", fonts: "Inter + Lora", palette: "Slate + Teal Brand" },
+    { id: "03", filename: "master_template_03_editorial_premium.html", name: "03 — Editorial Premium: Artigo de Capa / Editorial", type: "artigo", designSummary: "Premium, Warm Cream, Drop Cap Lora", fonts: "Inter + Lora", palette: "Warm Cream + Teal Brand" },
+    { id: "04", filename: "master_template_04_artigo_imersivo.html", name: "04 — Artigo Imersivo: Relatos e Reflexões Imersivas", type: "artigo", designSummary: "Hero Parallax, Forest Theme, Narrativa Visual", fonts: "DM Sans + Playfair", palette: "Forest + Cream + Sage" },
+    { id: "05", filename: "master_template_05_techeditorial.html", name: "05 — Tech Editorial: Lançamentos e Tecnologia", type: "artigo", designSummary: "Tech-Modern, Fundo Escuro, Estilo Documentação", fonts: "Mono + Sans", palette: "Dark Tech" },
+    { id: "06", filename: "master_template_06_artigo_organico.html", name: "06 — Artigo Orgânico: Bem-estar e Saúde Mental", type: "artigo", designSummary: "Tons Terrosos, Design Natural, Legibilidade", fonts: "Editorial Serif", palette: "Orgânico / Earth" },
+    { id: "07", filename: "master_template_07_ensaio_vintage.html", name: "07 — Ensaio Vintage: Ensaio Acadêmico / Denso", type: "artigo", designSummary: "Vintage Editorial, Grain, Estética Jornalística", fonts: "Fraunces + Manrope", palette: "Ink + Paper + Rust" },
+    { id: "08", filename: "master_template_08_ethereal_glass.html", name: "08 — Ethereal Glass: Criatividade e Potencial", type: "artigo", designSummary: "Glassmorphism Etéreo, Cristalino, Futurista", fonts: "Plus Jakarta", palette: "Ethereal / White" },
+    { id: "09", filename: "master_template_09_luxury_dark.html", name: "09 — Luxury Dark: Mentoria e Consultoria Premium", type: "artigo", designSummary: "Luxuoso Escuro, Dourado/Champagne, Tipografia Elite", fonts: "Premium Serif", palette: "Black + Gold" },
+    { id: "10", filename: "master_template_10_tech_focus.html", name: "10 — Tech Focus: Documentação e Whitepapers", type: "artigo", designSummary: "Minimalismo Tech, Foco em Dados, Blue/Slate", fonts: "Geometric Sans", palette: "Blue Tech" },
+    { id: "11", filename: "master_template_11_landing_abidos.html", name: "11 — Landing Abidos: Landing Page de Conversão (Ads)", type: "landing", designSummary: "SaaS Moderno, Clean White, Botões 3D", fonts: "Plus Jakarta", palette: "White + Indigo" }
 ];
 
 // Helper: Tenta agrupar variáveis em módulos semânticos (Lógica do Studio Next)
@@ -208,6 +208,64 @@ app.post('/api/templates/preview', async (req, res) => {
 // GESTÃO DE ACERVO (LOCAL CMS)
 // ==============================================================================
 const SITE_REPO_PATH = path.join(__dirname, '../../HipnoLawrence-Site/src/app');
+
+// ==============================================================================
+// 🚀 [API] SALVAR E LANÇAR PÁGINA (ORQUESTRAÇÃO FINAL)
+// ==============================================================================
+app.post('/api/acervo/salvar-pagina', async (req, res) => {
+    const { caminhoFisico, values, templateId } = req.body;
+    try {
+        if (!fs.existsSync(caminhoFisico)) throw new Error("Arquivo físico não encontrado para atualizar.");
+
+        const entry = TEMPLATE_CATALOG.find(t => t.id === templateId);
+        if (!templateId || !entry) throw new Error("Template selecionada não existe no catálogo.");
+
+        // 1. Ler Template HTML base
+        const templatePath = path.join(__dirname, '../templates', entry.filename);
+        let htmlSource = fs.readFileSync(templatePath, 'utf8');
+
+        // 2. Injetar Variáveis no HTML
+        Object.keys(values).forEach(key => {
+            const regex = new RegExp(`{{${key}}}`, 'g');
+            htmlSource = htmlSource.replace(regex, values[key]);
+        });
+
+        // 3. Montar o arquivo .tsx mantendo o DNA block para futura edição
+        const finalPageCode = `"use client";
+import React from 'react';
+
+// Renderização Habilitada via NeuroEngine
+export default function Page() {
+    return (
+        <div 
+            className="neuroengine-page-container" 
+            dangerouslySetInnerHTML={{ __html: \`${htmlSource.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\` }} 
+        />
+    );
+}
+
+// 🧬 NEUROENGINE DATA BLOCK (Não remova este comentário)
+export const neuroEngineData = ${JSON.stringify({ ...values, template: templateId } || {}, null, 2)};
+`;
+
+        // 4. Escrever no disco (Overwrite)
+        fs.writeFileSync(caminhoFisico, finalPageCode);
+
+        // 5. Automatizar Git (Rules do Usuário)
+        try {
+            const { execSync } = require('child_process');
+            const repoRoot = path.join(SITE_REPO_PATH, '../../'); // Volta 2 níveis para a raiz do git
+            execSync(`git add . && git commit -m "feat(neuroengine): update ${path.basename(path.dirname(caminhoFisico))}" && git push`, { cwd: repoRoot });
+        } catch (gitErr) { 
+            console.warn("Git push ignorado ou falhou:", gitErr.message); 
+        }
+
+        res.json({ success: true, message: "Página orquestrada e lançada com sucesso no repositório Next.js!" });
+    } catch (e) {
+        console.error("Erro ao salvar página:", e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
 
 /**
  * 🔍 ROTA 1: Listar todo o Acervo

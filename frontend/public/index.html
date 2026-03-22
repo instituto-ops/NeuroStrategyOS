@@ -262,7 +262,25 @@
                         <button class="btn btn-secondary" onclick="window.aiStudioTemplate.previewLive()" style="background: #fff; border-color: #0284c7; color: #0284c7; font-weight: 800;">
                             👁️ VISUALIZAR LP (PREVIEW)
                         </button>
-                        <button class="btn btn-primary" onclick="alert('Deploy Vercel...')" style="background: #10b981;">🚀 LANÇAR PÁGINA (NEXT.JS)</button>
+                        <button class="btn btn-primary" onclick="window.aiStudioTemplate.publishPage()" style="background: #10b981;">🚀 LANÇAR PÁGINA (NEXT.JS)</button>
+                    </div>
+                </div>
+
+                <!-- Corpo do Studio: Painel de Contexto IA (Brainstorming) -->
+                <div class="brainstorm-panel" style="background: #f8fafc; padding: 20px; border-bottom: 2px solid #e2e8f0;">
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div>
+                            <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">🧠 TEMA CENTRAL / PALAVRA-CHAVE (OBRIGATÓRIO PARA IA)</label>
+                            <input type="text" id="ai-studio-theme" placeholder="Ex: Avaliação Neuropsicológica para Adultos com TEA em Goiânia..." 
+                                   style="width: 100%; padding: 12px 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-weight: 600; font-size: 15px; background: white; transition: border-color 0.2s;"
+                                   onchange="window.aiStudioTemplate.values.tema = this.value">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">📝 RASCUNHO DE IDEIAS & CONTEXTO EXTRA (OPCIONAL)</label>
+                            <textarea id="ai-studio-context" placeholder="Cole aqui seus rascunhos, notas clínicas ou o que deseja que a IA 'saiba' para escrever melhor... (Ex: focar na dificuldade diagnóstica em mulheres adultas e mascaramento social)." 
+                                      style="width: 100%; height: 80px; padding: 12px 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white; resize: vertical; transition: border-color 0.2s;"
+                                      onchange="window.aiStudioTemplate.values.contexto = this.value"></textarea>
+                        </div>
                     </div>
                 </div>
 

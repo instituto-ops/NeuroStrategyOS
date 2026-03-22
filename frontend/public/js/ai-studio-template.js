@@ -7,6 +7,7 @@ window.aiStudioTemplate = {
     selectedId: "01",
     modules: [],
     values: {},
+    caminhoFisico: null,
 
     init: async function() {
         console.log("🎨 Inicializando AI Studio Template Engine...");
@@ -60,6 +61,12 @@ window.aiStudioTemplate = {
                     <strong>Tipografia:</strong> ${data.template.fonts} | <strong>Cores:</strong> ${data.template.palette}
                 `;
             }
+
+            // [NOVO] Sync Global Theme & Context inputs with this.values
+            const themeInput = document.getElementById('ai-studio-theme');
+            const contextInput = document.getElementById('ai-studio-context');
+            if (themeInput) themeInput.value = this.values.tema || "";
+            if (contextInput) contextInput.value = this.values.contexto || "";
         } catch (e) {
             container.innerHTML = `<div class="error">Erro ao carregar detalhes: ${e.message}</div>`;
         }
@@ -180,7 +187,19 @@ window.aiStudioTemplate = {
         if(btn) { btn.innerText = "⏳ Gerando (Gemini)..."; btn.disabled = true; }
 
         try {
-            const prompt = `Atue como um Especialista em Copywriting Clínico (Método Abidos). O usuário está construindo uma página e precisa preencher um bloco/módulo focado em "${moduleTitle}". Gere conteúdo persuasivo explorando dor, autoridade e CTA. As variáveis que você deve preencher são: ${mod.variables.join(', ')}. Retorne APENAS um JSON válido (sem \`\`\`json) no formato exato: { "chave_da_variavel": "valor gerado" }`;
+            const globalTheme = document.getElementById('ai-studio-theme')?.value || "";
+            const extraContext = document.getElementById('ai-studio-context')?.value || "";
+
+            let prompt = `Atue como um Especialista em Copywriting Clínico (Método Abidos). O usuário está construindo uma página e precisa preencher um bloco/módulo focado em "${moduleTitle}". Gere conteúdo persuasivo explorando dor, autoridade e CTA. `;
+            
+            if (globalTheme) {
+                prompt += `O TEMA CENTRAL desta página é: "${globalTheme}". Respeite este tema rigorosamente no vocabulário. `;
+            }
+            if (extraContext) {
+                prompt += `O autor forneceu o seguinte CONTEXTO ADICIONAL / RASCUNHO que deve servir de base para os detalhes: "${extraContext}". `;
+            }
+
+            prompt += `As variáveis que você deve preencher são: ${mod.variables.join(', ')}. Retorne APENAS um JSON válido (sem \`\`\`json) no formato exato: { "chave_da_variavel": "valor gerado" }`;
 
             const res = await fetch('/api/ai/generate', {
                 method: "POST",
@@ -298,6 +317,44 @@ window.aiStudioTemplate = {
             // Recarrega os detalhes da tela
             this.loadTemplateDetails(this.selectedId);
             alert(`Rascunho "${draft.name}" carregado!`);
+        }
+    },
+
+    publishPage: async function() {
+        if (!this.caminhoFisico) {
+            alert("Erro: Nenhuma página carregada para publicação. Use o Acervo primeiro.");
+            return;
+        }
+
+        if (!confirm("Deseja realmente LANÇAR estas alterações diretamente no site oficial? (Isso executará o Git Push automatizado)")) {
+            return;
+        }
+
+        const btn = document.querySelector('button[onclick*="publishPage"]');
+        if (btn) { btn.innerText = "🚀 PUBLICANDO..."; btn.disabled = true; }
+
+        try {
+            const res = await fetch('/api/acervo/salvar-pagina', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    caminhoFisico: this.caminhoFisico,
+                    values: this.values,
+                    templateId: this.selectedId
+                })
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                alert("SUCESSO! " + result.message);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (e) {
+            console.error("Erro na publicação:", e);
+            alert("Falha no Lançamento: " + e.message);
+        } finally {
+            if (btn) { btn.innerText = "🚀 LANÇAR PÁGINA (NEXT.JS)"; btn.disabled = false; }
         }
     }
 };

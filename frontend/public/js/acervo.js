@@ -107,6 +107,9 @@ window.acervoManager = {
                         statusLabel.style.color = "#ea580c";
                     }
 
+                    // Update current file path for publishing
+                    window.aiStudioTemplate.caminhoFisico = caminhoFisico;
+
                     // Trigger the UI navigation switch
                     const studioBtn = document.querySelector('.nav-btn[data-target="ai-studio"]');
                     if (studioBtn) {
