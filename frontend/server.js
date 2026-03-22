@@ -204,6 +204,91 @@ app.post('/api/templates/preview', async (req, res) => {
     } catch (e) { res.status(500).send("Erro ao gerar preview."); }
 });
 
+// ==============================================================================
+// GESTÃO DE ACERVO (LOCAL CMS)
+// ==============================================================================
+const SITE_REPO_PATH = path.join(__dirname, '../../HipnoLawrence-Site/src/app');
+
+/**
+ * 🔍 ROTA 1: Listar todo o Acervo
+ * Varre a pasta src/app do site e encontra todos os arquivos page.tsx
+ */
+app.get('/api/acervo/listar', (req, res) => {
+    try {
+        const pages = [];
+
+        // Função recursiva para ler subpastas (ex: /blog/ansiedade)
+        function scanDirectory(directory) {
+            const files = fs.readdirSync(directory);
+            
+            for (const file of files) {
+                const fullPath = path.join(directory, file);
+                const stat = fs.statSync(fullPath);
+
+                if (stat.isDirectory()) {
+                    scanDirectory(fullPath); // Entra na subpasta
+                } else if (file === 'page.tsx') {
+                    // Calcula a URL (Slug) baseada no nome da pasta
+                    let slug = fullPath.replace(SITE_REPO_PATH, '').replace(/\\page\.tsx$/, '').replace(/\/page\.tsx$/, '');
+                    if (!slug) slug = '/';
+                    slug = slug.replace(/\\/g, '/'); // Corrige barras no Windows
+
+                    pages.push({
+                        slug: slug,
+                        caminhoFisico: fullPath,
+                        ultimaAtualizacao: stat.mtime
+                    });
+                }
+            }
+        }
+
+        if (fs.existsSync(SITE_REPO_PATH)) {
+            scanDirectory(SITE_REPO_PATH);
+        }
+
+        res.json({ success: true, count: pages.length, paginas: pages });
+
+    } catch (error) {
+        console.error("Erro ao ler acervo:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * 📖 ROTA 2: Carregar os Dados de uma Página para o Studio
+ * Lê o arquivo .tsx e extrai o JSON do neuroEngineData
+ */
+app.post('/api/acervo/ler-pagina', (req, res) => {
+    const { caminhoFisico } = req.body;
+
+    try {
+        if (!fs.existsSync(caminhoFisico)) {
+            return res.status(404).json({ success: false, error: 'Arquivo não encontrado' });
+        }
+
+        const conteudoTsx = fs.readFileSync(caminhoFisico, 'utf-8');
+
+        // Regex cirúrgico para extrair apenas o bloco JSON do neuroEngineData
+        const regexData = /export const neuroEngineData = ({[\s\S]*?});/;
+        const match = conteudoTsx.match(regexData);
+
+        if (match && match[1]) {
+            // Converte o texto extraído de volta para um Objeto JavaScript
+            const dadosRecuperados = JSON.parse(match[1]);
+            
+            res.json({ success: true, data: dadosRecuperados });
+        } else {
+            res.json({ 
+                success: false, 
+                error: 'Esta página é antiga ou não possui o DNA do NeuroEngine (neuroEngineData).' 
+            });
+        }
+
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // ============================================================================
 // 🧬 COMPILADOR DE DNA — Converte style_rules em diretivas autoritárias para IA
 // ============================================================================
@@ -1482,7 +1567,7 @@ app.post('/api/content/publish-direct', async (req, res) => {
 
 app.post('/api/content/publish-vercel', async (req, res) => {
     try {
-        const { title, content, slug, author = "Victor Lawrence", date = new Date().toLocaleDateString('pt-PT') } = req.body;
+        const { title, content, slug, author = "Victor Lawrence", date = new Date().toLocaleDateString('pt-PT'), neuroEngineData = {} } = req.body;
         const sitePath = process.env.NEXTJS_SITE_PATH;
 
         if (!sitePath || !fs.existsSync(sitePath)) {
@@ -1509,6 +1594,11 @@ export default function BlogPage() {
     </div>
   );
 }
+
+// ==========================================
+// 🧬 NEUROENGINE DATA BLOCK
+// ==========================================
+export const neuroEngineData = ${JSON.stringify(neuroEngineData || {}, null, 2)};
 `;
 
         fs.writeFileSync(path.join(blogPath, 'page.tsx'), pageTemplate);

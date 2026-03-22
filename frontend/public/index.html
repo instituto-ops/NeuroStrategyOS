@@ -27,6 +27,7 @@
                 <button class="nav-btn" data-target="doctoralia-assistant">🩺 <span>Doctoralia Assistant</span></button>
                 <button class="nav-btn" data-target="media-library">🖼️ <span>Biblioteca de Mídia</span></button>
                 <hr style="border-color: #374151; margin: 5px 0;">
+                <button class="nav-btn" data-target="acervo-publicacoes">🏛️ <span>Acervo e Gestão</span></button>
 
             </nav>
         </aside>
@@ -285,6 +286,39 @@
                     <div id="studio-sidebar" class="studio-sidebar"></div>
                     <div id="chat-history"></div>
                 </div>
+
+            <!-- Section: Acervo de Publicações (Local CMS) -->
+            <section id="acervo-publicacoes" class="content-section">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h2 style="margin: 0;">🏛️ Acervo & Gestão de Conteúdo (Next.js)</h2>
+                            <p style="color: #64748b; font-size: 14px; margin-top: 5px;">
+                                Gerenciamento local das suas páginas estáticas hiper-otimizadas do Protocolo Abidos.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="acervoManager.loadAcervo()">🔄 Sincronizar Arquivos</button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>URL / Slug da Página</th>
+                                    <th>Última Modificação</th>
+                                    <th>Status Interno</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="acervo-list-body">
+                                <tr><td colspan="4" style="text-align: center;">Selecione esta aba para carregar.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
 
             <!-- Section: Neuro-Training (Em Construção) -->
             <section id="neuro-training" class="content-section">
@@ -555,6 +589,7 @@
     <script src="js/gemini.js"></script>
     <script src="js/api.js"></script>
     <script src="js/ai-studio-template.js?v=6"></script>
+    <script src="js/acervo.js"></script>
     <script>
         // Inicialização Global do Novo Engine
         document.addEventListener('DOMContentLoaded', () => {
