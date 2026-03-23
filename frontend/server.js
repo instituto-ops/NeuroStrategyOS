@@ -210,10 +210,173 @@ app.post('/api/templates/preview', async (req, res) => {
 const SITE_REPO_PATH = path.join(__dirname, '../../HipnoLawrence-Site/src/app');
 
 // ==============================================================================
+// 🌳 SISTEMA DE NAVEGAÇÃO DESACOPLADA (MENUS.JSON)
+// ==============================================================================
+const MENUS_FILE = path.join(__dirname, 'menus.json');
+
+// [API] Listar Menus
+app.get('/api/menus', (req, res) => {
+    try {
+        if (!fs.existsSync(MENUS_FILE)) {
+            // Criar esqueleto default se não existir
+            const defaultMenu = [{
+                id: "menu_principal_01",
+                name: "Menu Principal",
+                items: [
+                    { label: "Início", url: "/", status: "published", children: [] },
+                    { label: "Contato", url: "/contato", status: "published", children: [] }
+                ]
+            }];
+            fs.writeFileSync(MENUS_FILE, JSON.stringify(defaultMenu, null, 2));
+        }
+        res.json(JSON.parse(fs.readFileSync(MENUS_FILE, 'utf8')));
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// [API] Salvar Menus
+app.post('/api/menus', (req, res) => {
+    try {
+        fs.writeFileSync(MENUS_FILE, JSON.stringify(req.body, null, 2));
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// 🏭 RENDERIZADOR DE MENUS DEDICADO POR TEMPLATE
+function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
+    if (!menuId || !fs.existsSync(MENUS_FILE)) return '';
+    const menus = JSON.parse(fs.readFileSync(MENUS_FILE, 'utf8'));
+    const menu = menus.find(m => m.id === menuId);
+    if (!menu) return '';
+
+    const { slug, title } = pageContext;
+
+    // Função para tratar links dinâmicos e CTAs
+    const processUrl = (url) => {
+        let finalUrl = url;
+        // Injetar contexto se placeholder estiver presente
+        if (slug) finalUrl = finalUrl.replace('{{slug}}', slug);
+        
+        // Auto-parametrizar WhatsApp se for link de contato
+        if (finalUrl.includes('api.whatsapp.com') || finalUrl.includes('wa.me')) {
+            const contextMsg = encodeURIComponent(`\n\n(Vim da página: ${title || slug})`);
+            if (finalUrl.includes('text=')) {
+                finalUrl += contextMsg;
+            } else {
+                finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'text=' + contextMsg;
+            }
+        }
+        return finalUrl;
+    };
+
+    // Filtrar drafts
+    const filterDrafts = (items) => items.filter(i => i.status !== 'draft').map(i => ({ ...i, children: i.children ? filterDrafts(i.children) : [] }));
+    const validItems = filterDrafts(menu.items || []);
+    if (validItems.length === 0) return '';
+
+    let html = '';
+
+    // Lógica por Arquétipo de Template
+    if (templateId === '01' || templateId === '08') { // Dark Glass / Ethereal Glass
+        html += `<nav class="sticky top-4 z-50 mx-6 mt-4 glass-panel rounded-full px-6 py-4 flex items-center justify-between">`;
+        html += `<a href="/" class="font-bold tracking-widest text-[#2dd4bf] uppercase text-sm">V.LAWRENCE</a><ul class="flex gap-6 items-center">`;
+        validItems.forEach(item => {
+            html += `<li class="relative group">`;
+            html += `<a href="${processUrl(item.url)}" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">${item.label}</a>`;
+            if (item.children && item.children.length > 0) {
+                html += `<ul class="absolute top-full left-0 mt-2 w-48 glass-panel rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col gap-2 p-3">`;
+                item.children.forEach(sub => {
+                    html += `<li><a href="${processUrl(sub.url)}" class="text-xs text-slate-300 hover:text-white block px-2 py-1">${sub.label}</a></li>`;
+                });
+                html += `</ul>`;
+            }
+            html += `</li>`;
+        });
+        html += `</ul></nav>`;
+    } else if (templateId === '02' || templateId === '03' || templateId === '07') { // Templates Editoriais
+        html += `<nav class="w-full bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-5 shadow-sm">`;
+        html += `<div class="max-w-7xl mx-auto flex items-center justify-between">`;
+        html += `<a href="/" class="font-serif italic text-2xl text-slate-900">Lawrence.</a><div class="flex gap-8 items-center">`;
+        validItems.forEach(item => {
+            html += `<div class="group relative">`;
+            html += `<a href="${processUrl(item.url)}" class="text-sm font-medium text-slate-600 hover:text-slate-900 uppercase tracking-widest">${item.label}</a>`;
+            if (item.children && item.children.length > 0) {
+                html += `<div class="absolute top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all"><div class="bg-white border border-slate-100 shadow-xl rounded-lg p-4 w-56 flex flex-col gap-3">`;
+                item.children.forEach(sub => {
+                    html += `<a href="${processUrl(sub.url)}" class="text-sm text-slate-600 hover:text-[#14b8a6] border-b border-slate-50 pb-2 last:border-0">${sub.label}</a>`;
+                });
+                html += `</div></div>`;
+            }
+            html += `</div>`;
+        });
+        html += `</div></div></nav>`;
+    } else { // Fallback e Tech (10, 11...)
+        html += `<nav class="w-full bg-[#05080f] text-slate-200 border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 z-50">`;
+        html += `<a href="/" class="font-mono font-bold text-[#14b8a6]">VL::System</a><div class="flex gap-6">`;
+        validItems.forEach(item => {
+            html += `<div class="group relative">`;
+            html += `<a href="${processUrl(item.url)}" class="text-sm hover:text-white tracking-widest">${item.label}</a>`;
+            // Simplified sub-nav for tech
+            if (item.children && item.children.length > 0) {
+                html += `<div class="absolute top-full left-0 mt-2 bg-[#0b1221] border border-white/10 p-3 hidden group-hover:flex flex-col gap-2 rounded">`;
+                item.children.forEach(sub => {
+                    html += `<a href="${processUrl(sub.url)}" class="text-xs hover:text-[#14b8a6] whitespace-nowrap">${sub.label}</a>`;
+                });
+                html += `</div>`;
+            }
+            html += `</div>`;
+        });
+        html += `</div></nav>`;
+    }
+
+    // Gerar Schema.org
+    const schemaOrg = {
+        "@context": "https://schema.org",
+        "@type": "SiteNavigationElement",
+        "name": validItems.map(i => i.label),
+        "url": validItems.map(i => i.url)
+    };
+
+    html += `\n<!-- Schema.org Navigation -->\n<script type="application/ld+json">\n${JSON.stringify(schemaOrg, null, 2)}\n</script>\n`;
+    
+    return html;
+}
+
+// 📖 AUTO-TOC GENERATOR (Sumário Automático das tags H2)
+function generateTOC(htmlContent) {
+    const regex = /<h2[^>]*>(.*?)<\/h2>/gi;
+    let match;
+    let tocItems = [];
+    let modifiedHtml = htmlContent;
+    let index = 1;
+
+    // Acha os H2, cria o link âncora e modifica o HTML original para colocar o id
+    while ((match = regex.exec(htmlContent)) !== null) {
+        // match[1] contém o innerHTML do h2. Vamos limpar tags e quebras.
+        const cleanTitle = match[1].replace(/<[^>]+>/g, '').trim();
+        if (cleanTitle && cleanTitle.length > 5 && !cleanTitle.includes('{{')) {
+            const anchorId = `secao-${index}-${cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+            tocItems.push({ label: cleanTitle, url: `#${anchorId}` });
+            
+            // Substitui o <h2> exacto pela versão com ID
+            const originalH2 = match[0];
+            const newH2 = originalH2.replace('<h2', `<h2 id="${anchorId}"`);
+            modifiedHtml = modifiedHtml.replace(originalH2, newH2);
+            index++;
+        }
+    }
+    
+    return { modifiedHtml, tocItems };
+}
+
+// ==============================================================================
 // 🚀 [API] SALVAR E LANÇAR PÁGINA (ORQUESTRAÇÃO FINAL)
 // ==============================================================================
 app.post('/api/acervo/salvar-pagina', async (req, res) => {
-    const { caminhoFisico, values, templateId } = req.body;
+    const { caminhoFisico, values, templateId, menuId } = req.body;
     try {
         if (!fs.existsSync(caminhoFisico)) throw new Error("Arquivo físico não encontrado para atualizar.");
 
@@ -227,10 +390,45 @@ app.post('/api/acervo/salvar-pagina', async (req, res) => {
         // 2. Injetar Variáveis no HTML
         Object.keys(values).forEach(key => {
             const regex = new RegExp(`{{${key}}}`, 'g');
-            htmlSource = htmlSource.replace(regex, values[key]);
+            htmlSource = htmlSource.replace(regex, values[key] || '');
         });
 
-        // 3. Montar o arquivo .tsx mantendo o DNA block para futura edição
+        // 3. Auto-TOC (Sumário Automático)
+        const { modifiedHtml, tocItems } = generateTOC(htmlSource);
+        htmlSource = modifiedHtml;
+
+        // 4. Injetar Menu Dinâmico
+        let menuHtml = '';
+        if (menuId) {
+            // Extrair slug do caminho físico para o contexto do menu
+            const slug = path.basename(path.dirname(caminhoFisico));
+            menuHtml = generateMenuHtmlForTemplate(menuId, templateId, { slug, title: values.SEO_TITLE || '' });
+            
+            // Auto-TOC append to menu (Se for um artigo longo, penduramos o TOC no fim do menu para UX rápida)
+            if (tocItems.length > 0 && (templateId === '02' || templateId === '03' || templateId === '04' || templateId === '05' || templateId === '06' || templateId === '07' || templateId === '10')) {
+                 const tocMenuHtml = `
+                    <div class="fixed bottom-4 left-4 z-50 glass-panel lg:hidden p-3 rounded-2xl max-w-[200px]">
+                        <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ Tópicos Neste Artigo</div>
+                        <ul class="flex flex-col gap-1">
+                            ${tocItems.map(i => `<li><a href="${i.url}" class="text-xs text-slate-500 hover:text-[#14b8a6] line-clamp-1">${i.label}</a></li>`).join('')}
+                        </ul>
+                    </div>`;
+                 // Append the table of contents floating element
+                 menuHtml += tocMenuHtml;
+            }
+        }
+        
+        // Colocar Nav Menu logo depois do body/inicio da main
+        // Procura a tag <main para injetar o menu antes dela caso o usuário não tenha colocado a tag {{nav_menu_dinamico}}
+        if (htmlSource.includes('{{nav_menu_dinamico}}')) {
+             htmlSource = htmlSource.replace('{{nav_menu_dinamico}}', menuHtml);
+        } else if (htmlSource.includes('<main')) {
+             htmlSource = htmlSource.replace('<main', menuHtml + '\n    <main');
+        } else {
+             htmlSource = menuHtml + htmlSource;
+        }
+
+        // 5. Montar o arquivo .tsx mantendo o DNA block para futura edição
         const finalPageCode = `"use client";
 import React from 'react';
 
@@ -245,13 +443,13 @@ export default function Page() {
 }
 
 // 🧬 NEUROENGINE DATA BLOCK (Não remova este comentário)
-export const neuroEngineData = ${JSON.stringify({ ...values, template: templateId } || {}, null, 2)};
+export const neuroEngineData = ${JSON.stringify({ ...values, template: templateId, menuId: menuId } || {}, null, 2)};
 `;
 
-        // 4. Escrever no disco (Overwrite)
+        // 6. Escrever no disco (Overwrite)
         fs.writeFileSync(caminhoFisico, finalPageCode);
 
-        // 5. Automatizar Git (Rules do Usuário)
+        // 7. Automatizar Git (Rules do Usuário)
         try {
             const { execSync } = require('child_process');
             const repoRoot = path.join(SITE_REPO_PATH, '../../'); // Volta 2 níveis para a raiz do git

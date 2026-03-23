@@ -78,9 +78,8 @@ window.acervoManager = {
                     window.aiStudioTemplate.values = dados;
                     
                     const selectEl = document.getElementById('ai-studio-template');
-                    // Try to guess template if saved
+                    // Tenta detectar a template salva
                     if (dados.template && selectEl) {
-                        // Find the option text that matches the template name partially
                         Array.from(selectEl.options).forEach(opt => {
                             if (opt.text.includes(dados.template) || opt.value === dados.template) {
                                 opt.selected = true;
@@ -88,6 +87,11 @@ window.acervoManager = {
                             }
                         });
                     }
+
+                    // Sincroniza Menu
+                    window.aiStudioTemplate.menuId = dados.menuId || null;
+                    const menuSelect = document.getElementById('ai-studio-menu');
+                    if (menuSelect) menuSelect.value = dados.menuId || "";
 
                     // Se continua sem template (fallback/páginas antigas), atribui o primeiro do dropdown
                     if (!window.aiStudioTemplate.selectedId && selectEl && selectEl.options.length > 0) {

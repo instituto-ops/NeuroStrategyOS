@@ -8,6 +8,7 @@ window.aiStudioTemplate = {
     modules: [],
     values: {},
     caminhoFisico: null,
+    menuId: null,
 
     init: async function() {
         console.log("🎨 Inicializando AI Studio Template Engine...");
@@ -340,7 +341,8 @@ window.aiStudioTemplate = {
                 body: JSON.stringify({
                     caminhoFisico: this.caminhoFisico,
                     values: this.values,
-                    templateId: this.selectedId
+                    templateId: this.selectedId,
+                    menuId: this.menuId
                 })
             });
 

@@ -28,6 +28,7 @@
                 <button class="nav-btn" data-target="media-library">🖼️ <span>Biblioteca de Mídia</span></button>
                 <hr style="border-color: #374151; margin: 5px 0;">
                 <button class="nav-btn" data-target="acervo-publicacoes">🏛️ <span>Acervo e Gestão</span></button>
+                <button class="nav-btn" data-target="menu-manager">🌳 <span>Gestão de Menus (Silos)</span></button>
 
             </nav>
         </aside>
@@ -255,6 +256,13 @@
                                 Selecione uma template para mapear as variáveis.
                             </span>
                         </div>
+                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+                            <label style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">🌳 Menu do Silo:</label>
+                            <select id="ai-studio-menu" style="max-width: 250px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; background: white;" onchange="window.aiStudioTemplate.menuId = this.value">
+                                <option value="">Sem Menu (Default)</option>
+                                <option value="menu_principal_01">Carregando...</option>
+                            </select>
+                        </div>
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-secondary" onclick="window.aiStudioTemplate.saveDraft()" style="background: #f1f5f9; color: #475569; font-weight: bold; border-color: #cbd5e1;">💾 SALVAR RASCUNHO</button>
@@ -334,6 +342,52 @@
                                 <tr><td colspan="4" style="text-align: center;">Selecione esta aba para carregar.</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Gestão de Menus (Decoupled Navigation) -->
+            <section id="menu-manager" class="content-section">
+                <div class="card" style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 style="font-size: 24px; color: var(--color-primary); margin: 0;">🌳 Gestor de Menus e Silos</h2>
+                            <p style="color: #64748b; font-size: 14px; margin-top: 5px;">Configure a estrutura de links. O formato visual será adaptado pelo AI Studio de acordo com o template.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid" style="grid-template-columns: 1fr 2fr; gap: 20px;">
+                    <div class="card" style="align-self: flex-start;">
+                        <h3 style="margin-bottom: 15px; font-size: 14px; text-transform: uppercase;">Lista de Menus</h3>
+                        <ul id="menu-list" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;">
+                            <li><span style="color: #64748b; font-size: 13px;">Carregando menus...</span></li>
+                        </ul>
+                        <button class="btn btn-secondary" style="width: 100%; margin-top: 15px; border: 2px dashed #cbd5e1; background: transparent; color: #64748b;" onclick="window.menuSystem.createNewMenu()">+ Criar Novo Esqueleto de Menu</button>
+                    </div>
+
+                    <div class="card" id="menu-editor-card" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 id="menu-editor-title" style="margin: 0;">Editando Menu...</h3>
+                            <button class="btn btn-primary" onclick="window.menuSystem.saveCurrentMenu()" style="background: #10b981;">💾 Salvar Árvore de Navegação</button>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="font-size: 12px; font-weight: bold; color: #64748b; display: block; margin-bottom: 5px;">Nome do Menu (Uso Interno)</label>
+                            <input type="text" id="menu-editor-name" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <input type="hidden" id="menu-editor-id">
+                        </div>
+
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; min-height: 300px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #cbd5e1;">
+                                <span style="font-weight: bold; font-size: 13px; color: #475569;">Árvore de Links</span>
+                                <button class="btn btn-secondary" style="font-size: 11px; padding: 5px 10px;" onclick="window.menuSystem.addMenuItem()">+ Adicionar Link Nível 1</button>
+                            </div>
+                            
+                            <div id="menu-tree-container" style="display: flex; flex-direction: column; gap: 10px;">
+                                <!-- Itens de menu injetados via JS -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
