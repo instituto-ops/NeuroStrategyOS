@@ -296,6 +296,22 @@ window.neuroTraining = {
         } catch (err) { console.error(err); }
     },
 
+    async deleteRule(id) {
+        if (!confirm("Deseja remover este padrão de fala?")) return;
+        try {
+            const response = await fetch(`/api/neuro-training/memory/${id}`, { method: 'DELETE' });
+            if (response.ok) await this.loadMemory();
+        } catch (err) { console.error(err); }
+    },
+
+    async clearMemory() {
+        if (!confirm("ATENÇÃO: Isso apagará TODOS os padrões aprendidos. Deseja continuar?")) return;
+        try {
+            const response = await fetch('/api/neuro-training/memory/clear', { method: 'POST' });
+            if (response.ok) await this.loadMemory();
+        } catch (err) { console.error(err); }
+    },
+
     renderRules(rules) {
         const feed = document.getElementById('rules-feed');
         if (!feed) return;
@@ -307,13 +323,16 @@ window.neuroTraining = {
             const categoria = (r.categoria || 'PADRÃO DE FALA').toUpperCase();
             const titulo    = r.titulo || r.sintese || "Padrão Detectado";
             const regra     = r.regra  || JSON.stringify(r);
+            const id        = r.id;
+
             return `
-                <div class="card" style="background:white;border:1px solid #e2e8f0;border-left:5px solid #6366f1;padding:20px;margin-bottom:8px;border-radius:8px;animation:slideIn 0.3s ease;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div class="card" style="position:relative; background:white;border:1px solid #e2e8f0;border-left:5px solid #6366f1;padding:20px;margin-bottom:8px;border-radius:8px;animation:slideIn 0.3s ease;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+                    <button onclick="window.neuroTraining.deleteRule('${id}')" style="position:absolute; top:15px; right:15px; background:none; border:none; cursor:pointer; color:#94a3b8; font-size:14px; transition:color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">🗑️</button>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; padding-right: 25px;">
                         <span style="background:#eef2ff;color:#6366f1;font-size:9px;font-weight:900;padding:4px 10px;border-radius:4px;letter-spacing:1px;border:1px solid #e0e7ff;">${categoria}</span>
                         <span style="font-size:10px;color:#94a3b8;">${r.data_extracao ? new Date(r.data_extracao).toLocaleDateString() : ''}</span>
                     </div>
-                    <h4 style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:6px;">${titulo}</h4>
+                    <h4 style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:6px; padding-right: 20px;">${titulo}</h4>
                     <p style="font-size:13px;color:#475569;line-height:1.6;margin:0;font-weight:500;">${regra}</p>
                 </div>`;
         }).join('');

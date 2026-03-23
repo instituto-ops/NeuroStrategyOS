@@ -99,30 +99,30 @@ function extractJSON(text) {
 const MEMORY_FILE_PATH = path.join(__dirname, 'estilo_victor.json');
 
 
-const PROMPT_TREINAMENTO_ISOLADO = `Você é o Agente de Treinamento da NeuroEngine, agora operando como seu Gêmeo Digital Entrevistador.
-Sua missão é clonar a identidade verbal do Dr. Victor Lawrence através de uma conversa ativa e instigante.
+const PROMPT_TREINAMENTO_ISOLADO = `Você é um Analista Linguístico e Forense de Identidade Verbal.
+Sua Missão: Clonar a FORMA e o RITMO da fala do Dr. Victor Lawrence, ignorando 100% o CONTEÚDO.
 
-SUA DINÂMICA DE ENTREVISTA:
-1. NÃO seja apenas um analista passivo. Seja um interlocutor curioso.
-2. Puxe assunto sobre qualquer tema (vida, filosofia, tecnologia, rotina) para que ele fale naturalmente.
-3. Se ele disser algo curto, instigue-o a elaborar: "Isso é interessante, Doutor. Como você explicaria isso para alguém que nunca ouviu falar?"
-4. Sua 'Voz' deve refletir levemente o que você já aprendeu do estilo dele (Pacing).
+[PROTOCOLO DE SEGURANÇA LINGUÍSTICA]
+- É PROIBIDO extrair regras que falem sobre "Pacientes", "Clínica", "Ética", "Relatórios" ou qualquer procedimento médico/psicológico.
+- Se o usuário falar sobre "como fazer um relatório técnico", você IGNORA o relatório e analisa se ele usa frases longas, se é didático, se usa muitas vírgulas ou se é assertivo.
+- NUNCA crie regras de "O que fazer"; Crie regras de "Como escrever/falar".
 
-REGRAS DE EXTRAÇÃO (BACKEND SILENCIOSO):
-- IGNORE o conteúdo clínico (diagnósticos, pacientes).
-- Foque na FORMA: Ritmo, Conectivos, Analogias, Cadência.
-- Se detectar um novo padrão de fala, adicione-o no array 'regras_extraidas'.
+O QUE ANALISAR:
+1. Cadência: Ele é prolixo ou conciso? Usa muitas pausas?
+2. Sintaxe: Prefere a ordem direta ou usa muitas inversões e subordinações?
+3. Conectivos e Cacoetes: Quais palavras ele usa como ponte (ex: "percebe?", "notadamente", "de fato")?
+4. Estrutura de Raciocínio: Ele começa com a conclusão ou constrói o argumento aos poucos?
 
 FORMATO OBRIGATÓRIO (JSON):
 {
   "regras_extraidas": [
     {
-      "categoria": "[Ritmo | Estrutura | Vocabulário | Tom]",
-      "titulo": "Nome curto do padrão",
-      "regra": "Como replicar este padrão de fala."
+      "categoria": "[Ritmo | Sintaxe | Tom | Vocabulário]",
+      "titulo": "Resumo LINGUÍSTICO (ex: Uso de Pausas Dramáticas)",
+      "regra": "Descrição de como clonar a estrutura da frase dele."
     }
   ],
-  "reply": "Sua fala de entrevistador. Deve ser natural, breve e TERMINAR SEMPRE COM UMA PERGUNTA ou provocação para manter o Dr. Victor falando."
+  "reply": "Sua resposta com a persona de Gêmeo Digital. Seja curioso, faça Pacing e termine com uma pergunta instigante."
 }`;
 
 const getVictorStyle = () => {
@@ -1809,6 +1809,32 @@ app.post('/api/audit', async (req, res) => {
 app.get('/api/neuro-training/memory', (req, res) => {
     try {
         res.json(getVictorStyle());
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.delete('/api/neuro-training/memory/:id', (req, res) => {
+    try {
+        const memory = getVictorStyle();
+        memory.style_rules = memory.style_rules.filter(r => r.id !== req.params.id);
+        fs.writeFileSync(MEMORY_FILE_PATH, JSON.stringify(memory, null, 2));
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/neuro-training/memory/clear', (req, res) => {
+    try {
+        const memory = {
+            style_rules: [],
+            last_update: new Date().toISOString(),
+            insights_history: [],
+            scientific_vault: { nota: "Wiped by user request." }
+        };
+        fs.writeFileSync(MEMORY_FILE_PATH, JSON.stringify(memory, null, 2));
+        res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
