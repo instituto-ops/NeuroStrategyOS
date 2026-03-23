@@ -1,6 +1,238 @@
 {
-  "style_rules": [],
-  "last_update": "2026-03-23T02:56:47.830Z",
+  "style_rules": [
+    {
+      "categoria": "Cadência",
+      "titulo": "Enumeração Formal Discursiva",
+      "regra": "Utiliza sequências de orações ou termos nominalizados introduzidas por dois pontos, organizando informações em listas internas ao texto ou itens numerados, o que estabelece um ritmo cadenciado e didático para a apresentação de conceitos.",
+      "id": "rule_1774235533931_0z6s2",
+      "data_extracao": "2026-03-23T03:12:13.931Z"
+    },
+    {
+      "categoria": "Cadência",
+      "titulo": "Cadência Explicativa Ampliada",
+      "regra": "Emprega sentenças declarativas extensas, frequentemente subdivididas por vírgulas e conjunções coordenadas ou subordinadas para acumular detalhes e qualificadores, construindo um fluxo informativo denso e pausado.",
+      "id": "rule_1774235533931_3yvp7",
+      "data_extracao": "2026-03-23T03:12:13.931Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Impessoalidade Construtiva",
+      "regra": "Predomina a voz passiva ou construções com sujeito indeterminado (e.g., 'é feito', 'deve ser'), ou ainda, orações com sujeito abstrato ou nominalizado, promovendo uma apresentação objetiva e focada nos processos e conceitos em detrimento do agente.",
+      "id": "rule_1774235533931_bzvqk",
+      "data_extracao": "2026-03-23T03:12:13.931Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Articulação Contrastiva e Aditiva",
+      "regra": "Utiliza uma gama variada de conectivos adversativos e aditivos (e.g., 'Com exceção de', 'em vez de', 'por outro lado', 'e', 'mas', 'porém', 'Assim') para estabelecer relações lógicas de contraste, oposição e sequenciação, estruturando um argumento detalhado e multifacetado.",
+      "id": "rule_1774235533931_elsfz",
+      "data_extracao": "2026-03-23T03:12:13.931Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Delimitação por Clarificação",
+      "regra": "Integra orações adjetivas e advérbios explicativos em profusão para refinar o significado de termos e sentenças anteriores, assegurando precisão conceitual e eliminando ambiguidades.",
+      "id": "rule_1774235533931_xs5rg",
+      "data_extracao": "2026-03-23T03:12:13.931Z"
+    },
+    {
+      "categoria": "Vocabulário de Identidade",
+      "titulo": "Ancoragem por Estruturas Frasais Introdutórias",
+      "regra": "Reitera o uso de estruturas introdutórias complexas que funcionam como marcadores discursivos para delimitar e qualificar a informação subsequente (e.g., 'Uma das considerações mais importantes para...', 'Em essência, não é mais do que...', 'Independentemente da experiência e habilidade de um...', 'Diferentemente dos...'), conferindo autoridade e especificidade às asserções.",
+      "id": "rule_1774235533931_43wnb",
+      "data_extracao": "2026-03-23T03:12:13.931Z"
+    },
+    {
+      "categoria": "Vocabulário de Identidade",
+      "titulo": "Conectores de Inferência e Exemplificação",
+      "regra": "Emprega termos de ligação que estabelecem relações de consequência, inferência ou exemplificação (e.g., 'Assim para', 'por exemplo'), direcionando a interpretação e aplicação dos conceitos apresentados.",
+      "id": "rule_1774235533931_6w7ks",
+      "data_extracao": "2026-03-23T03:12:13.931Z"
+    },
+    {
+      "categoria": "Tonabilidade Estrutural",
+      "titulo": "Didatismo Esclarecedor",
+      "regra": "Adota uma arquitetura textual que prioriza a definição e a explicação de conceitos desde o início e ao longo do discurso, através de introduções temáticas claras e o desdobramento lógico de ideias, criando uma base de conhecimento sólida para o receptor.",
+      "id": "rule_1774235533931_n1kwj",
+      "data_extracao": "2026-03-23T03:12:13.931Z"
+    },
+    {
+      "categoria": "Tonabilidade Estrutural",
+      "titulo": "Autoridade Sistematizadora",
+      "regra": "A forma da apresentação é construída para transmitir o conhecimento como um sistema organizado e fundamentado, utilizando categorizações explícitas e a exposição de princípios ou passos, o que estabelece uma percepção de domínio e controle sobre o assunto abordado.",
+      "id": "rule_1774235533931_e14mc",
+      "data_extracao": "2026-03-23T03:12:13.931Z"
+    },
+    {
+      "categoria": "Tonabilidade Estrutural",
+      "titulo": "Ênfase na Adaptabilidade Formal",
+      "regra": "Constrói contrastes estruturais entre abordagens inflexíveis e a valorização da singularidade de cada contexto ou indivíduo, expressa pela sintaxe comparativa e pela inversão de expectativas sobre quem deve se adaptar, sugerindo uma perspectiva que prioriza a personalização por meio da própria organização do discurso.",
+      "id": "rule_1774235533931_61vy9",
+      "data_extracao": "2026-03-23T03:12:13.931Z"
+    },
+    {
+      "categoria": "Cadência",
+      "titulo": "Cadência Deliberada por Complexidade Sintática",
+      "regra": "Constrói frases extensas e multipartes, incorporando múltiplas orações subordinadas e coordenadas, separadas por vírgulas e, ocasionalmente, ponto e vírgula, resultando em um ritmo de leitura lento e ponderado.",
+      "id": "rule_1774235387788_1csb3",
+      "data_extracao": "2026-03-23T03:09:47.788Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Estrutura Argumentativa por Gerúndios e Locuções Prepositivas",
+      "regra": "Utiliza gerúndios e locuções prepositivas de meio ou instrumento ('Através de X', 'Por meio de Y', 'Utilizando Z') para introduzir ou expandir as metodologias, justificativas ou consequências de uma ação principal, conectando ideias de forma processual e explicativa.",
+      "id": "rule_1774235387788_ysar5",
+      "data_extracao": "2026-03-23T03:09:47.788Z"
+    },
+    {
+      "categoria": "Vocabulário de Identidade",
+      "titulo": "Marcadores Discursivos de Expansão e Contraste",
+      "regra": "Emprega advérbios e conjunções como 'Além disso', 'Adicionalmente', 'Em contraste com', 'Diferente das abordagens convencionais', para introduzir novas informações, comparações ou oposições, moldando a progressão lógica do discurso.",
+      "id": "rule_1774235387788_jkasl",
+      "data_extracao": "2026-03-23T03:09:47.788Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Predomínio de Sujeito Abstrato e Voz Ativa Formal",
+      "regra": "Articula a maioria das proposições com sujeitos abstratos ou formais (e.g., 'Este artigo', 'A pesquisa', 'O conceito', 'Essa abordagem') em voz ativa, distanciando a autoria direta e mantendo um tom objetivo e acadêmico.",
+      "id": "rule_1774235387788_xtcq5",
+      "data_extracao": "2026-03-23T03:09:47.788Z"
+    },
+    {
+      "categoria": "Tonabilidade Estrutural",
+      "titulo": "Acolhimento por Detalhamento Sistemático",
+      "regra": "Estrutura a descrição de conceitos detalhando exaustivamente seus componentes, interações e nuances, empregando uma linguagem que busca cobrir todos os ângulos (e.g., 'análise multinível', 'compreensão abrangente'), o que confere ao discurso uma densidade informativa que orienta e estabelece autoridade.",
+      "id": "rule_1774235387788_tdvza",
+      "data_extracao": "2026-03-23T03:09:47.788Z"
+    },
+    {
+      "categoria": "Cadência",
+      "titulo": "Pacing Interrogativo",
+      "regra": "Inicia a fala ecoando a última palavra ou conceito do interlocutor, seguido imediatamente por uma série de perguntas de clarificação breves.",
+      "id": "rule_1774235223458_hp3ic",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Cadência",
+      "titulo": "Sequência Retórica Breve",
+      "regra": "Emprega uma série de perguntas retóricas curtas e diretas para desafiar a premissa de uma afirmação, mantendo um ritmo questionador.",
+      "id": "rule_1774235223458_5f4g0",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Cadência",
+      "titulo": "Pausas Deliberadas Conclusivas",
+      "regra": "Utiliza interjeições ou declarações monossilábicas para pontuar transições ou encerrar concisamente um ponto, como 'Tá.' ou 'Sim.'.",
+      "id": "rule_1774235223458_9merd",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Questionamento de Critério",
+      "regra": "Formula perguntas que buscam a definição e os critérios subjacentes a uma afirmação do interlocutor, frequentemente usando 'com base em que?' ou 'comparado ao quê?'.",
+      "id": "rule_1774235223458_bt20r",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Distinção por Estrutura Dual",
+      "regra": "Separa conceitos ou ações similares apresentando-os em uma estrutura de contraste do tipo 'X é uma coisa; Y é outra coisa?'.",
+      "id": "rule_1774235223458_hgzf3",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Desafia a Homogeneidade de Variáveis",
+      "regra": "Analisa a validade de comparações feitas pelo interlocutor, questionando a equivalência das variáveis envolvidas na comparação.",
+      "id": "rule_1774235223458_u0vsc",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Conectivos Lógicos para Transição e Fundamentação",
+      "regra": "Emprega 'Porque' para introduzir a lógica subjacente ou justificativa e 'Então' para apresentar inferências ou transitar para uma nova fase do raciocínio.",
+      "id": "rule_1774235223458_6eexw",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Modulação por Hipótese Condicional",
+      "regra": "Inicia a exploração de cenários alternativos ou a redefinição de pontos de referência com estruturas condicionais (ex: 'Se você for comparar com X...').",
+      "id": "rule_1774235223458_vauz6",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Vocabulário de Identidade",
+      "titulo": "Termos-Âncora de Avaliação Comparativa",
+      "regra": "Reitera termos como 'comparação', 'padrão' e 'critério' para focar a discussão na análise estrutural e nos parâmetros de avaliação.",
+      "id": "rule_1774235223458_83ajc",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Vocabulário de Identidade",
+      "titulo": "Lexicon de Consistência Lógica",
+      "regra": "Utiliza palavras como 'lógico', 'sentido', 'precisa' e 'afirmação' para avaliar a coerência e a exatidão formal das declarações do interlocutor.",
+      "id": "rule_1774235223458_vgwrg",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Vocabulário de Identidade",
+      "titulo": "Verbos de Reestruturação Cognitiva",
+      "regra": "Emprega verbos como 'classificar', 'considerar', 'definir', 'entender' e 'visualizar' para guiar o interlocutor na organização e apreensão dos conceitos.",
+      "id": "rule_1774235223458_demas",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Tonabilidade Estrutural",
+      "titulo": "Convite Colaborativo à Racionalização",
+      "regra": "Envolve o interlocutor na construção lógica do discurso com frases como 'vamos pensar o seguinte' ou 'a gente pode classificar como', promovendo um ambiente de co-análise.",
+      "id": "rule_1774235223458_hsqod",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Tonabilidade Estrutural",
+      "titulo": "Validação da Perspectiva Fenomenológica",
+      "regra": "Reconhece a dimensão subjetiva ao questionar a equivalência de experiências (ex: 'Elas trazem o mesmo sentimento?'), focando na estrutura da percepção do interlocutor.",
+      "id": "rule_1774235223458_84jfm",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Tonabilidade Estrutural",
+      "titulo": "Confirmação Cognitiva Direta",
+      "regra": "Assegura a compreensão mútua através de perguntas diretas sobre a apreensão do raciocínio (ex: 'Faz sentido [o que estou] querendo dizer?', 'Você consegue entender como visualizar [X]?').",
+      "id": "rule_1774235223458_teuk2",
+      "data_extracao": "2026-03-23T03:07:03.458Z"
+    },
+    {
+      "categoria": "Cadência",
+      "titulo": "Início Conversacional Conciso",
+      "regra": "O Dr. Victor inicia o turno de fala com uma sequência de poucas sílabas e entonação de abertura questionadora implícita, estabelecendo um ritmo de entrada rápido e convidativo.",
+      "id": "chat_1774235634755_uvvqf",
+      "data_extracao": "2026-03-23T03:13:54.755Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Construção de Abertura Interjetiva-Interrogativa",
+      "regra": "A frase de abertura é construída pela concatenação de uma interjeição padrão de cumprimento ('Olá') seguida por uma expressão interrogativa idiomática ('tudo bem'), formando uma unidade sintática coesa sem subordinações.",
+      "id": "chat_1774235634755_nkn8p",
+      "data_extracao": "2026-03-23T03:13:54.755Z"
+    },
+    {
+      "categoria": "Vocabulário de Identidade",
+      "titulo": "Ancoragem de Saudação Comum",
+      "regra": "O Dr. Victor utiliza termos de saudação e inquérito socialmente padronizados ('Olá', 'tudo bem') como âncoras lexicais que sinalizam o início da interação e a expectativa de resposta recíproca.",
+      "id": "chat_1774235634755_qj4qw",
+      "data_extracao": "2026-03-23T03:13:54.755Z"
+    },
+    {
+      "categoria": "Tonabilidade Estrutural",
+      "titulo": "Abertura por Convenção Social Simplificada",
+      "regra": "Acolhimento é estabelecido pela escolha de uma fórmula de saudação de alta frequência e baixa complexidade, que, por sua familiaridade cultural, reduz a barreira inicial e projeta uma acessibilidade no registro comunicativo.",
+      "id": "chat_1774235634755_1ps2b",
+      "data_extracao": "2026-03-23T03:13:54.755Z"
+    }
+  ],
+  "last_update": "2026-03-23T03:12:13.931Z",
   "insights_history": [],
   "scientific_vault": {
     "nota": "Wiped by user request."

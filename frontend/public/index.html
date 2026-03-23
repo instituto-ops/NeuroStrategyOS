@@ -437,12 +437,70 @@
                 </div>
             </section>
 
-            <!-- Section: Doctoralia Assistant (Em Construção) -->
+            <!-- Section: Doctoralia Assistant (Restored Protocol V4) -->
             <section id="doctoralia-assistant" class="content-section">
-                <div class="card" style="text-align: center; padding: 60px 20px;">
-                    <span style="font-size: 48px; display: block; margin-bottom: 20px;">🚧</span>
-                    <h2 style="color: #1e293b; margin-bottom: 10px;">Doctoralia Assistant</h2>
-                    <p style="color: #64748b; font-size: 14px;">Módulo em desenvolvimento. Aqui você irá gerenciar avaliações e reputação sincronizada diretamente com o Doctoralia e Instagram.</p>
+                <!-- Header -->
+                <div class="card" style="margin-bottom: 20px; border-left: 5px solid #6366f1; padding: 20px; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; color: #1e293b;">
+                            🩺 Doctoralia Assistant 
+                            <span style="background: #eef2ff; color: #6366f1; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 4px; border: 1px solid #e0e7ff; letter-spacing: 0.5px;">HEMISFÉRIO PRO (DIGITAL TWIN)</span>
+                        </h2>
+                        <p style="font-size: 13px; color: #64748b; margin-top: 5px; font-weight: 500;">Orquestre respostas clínicas humanizadas usando a sua Identidade Verbal mapeada.</p>
+                    </div>
+                </div>
+
+                <!-- Main Split Layout -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 280px); min-height: 500px;">
+                    
+                    <!-- LADO ESQUERDO: ENTRADA (A PERGUNTA) -->
+                    <div class="card" style="display: flex; flex-direction: column; padding: 25px; border-radius: 16px;">
+                        <div style="margin-bottom: 15px;">
+                            <h3 style="font-size: 12px; font-weight: 900; color: #475569; letter-spacing: 1px; margin: 0; margin-bottom: 5px;">ENTRADA DO PACIENTE</h3>
+                            <p style="font-size: 11px; color: #94a3b8; margin: 0;">Cole aqui o comentário do Doctoralia ou Instagram para processamento.</p>
+                        </div>
+                        
+                        <textarea id="doctoralia-input" 
+                            placeholder="Ex: 'Doutor, você atende adultos com suspeita de autismo? Qual a sua abordagem?'" 
+                            style="flex: 1; width: 100%; border-radius: 12px; border: 2px solid #f1f5f9; padding: 20px; font-size: 15px; color: #1e293b; line-height: 1.6; resize: none; background: #f8fafc; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); outline: none; font-family: 'Inter', sans-serif;"
+                            onfocus="this.style.borderColor='#6366f1'; this.style.background='white'; this.style.boxShadow='0 0 0 4px rgba(99, 102, 241, 0.05)';"
+                        ></textarea>
+                        
+                        <button id="btn-generate-doctoralia" class="btn" 
+                            style="width: 100%; margin-top: 20px; padding: 18px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; font-weight: 800; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2); transition: all 0.2s; letter-spacing: 0.5px; border: none; cursor: pointer;" 
+                            onclick="window.doctoraliaApp.generateReply()">
+                            ✨ GERAR RESPOSTA HUMANIZADA (PRO)
+                        </button>
+                    </div>
+
+                    <!-- LADO DIREITO: SAÍDA (A REPOSTA) -->
+                    <div class="card" style="display: flex; flex-direction: column; padding: 25px; background: #f1f5f9; border-radius: 16px; border: 1px solid #e2e8f0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div>
+                                <h3 style="font-size: 12px; font-weight: 900; color: #475569; letter-spacing: 1px; margin: 0;">OUTPUT LITERÁRIO</h3>
+                                <p style="font-size: 10px; color: #94a3b8; margin: 0;">Clinical Plain-Text (Sem formatação)</p>
+                            </div>
+                            <button class="btn" 
+                                style="font-size: 11px; padding: 8px 16px; background: white; color: #6366f1; border: 1.5px solid #6366f1; font-weight: 800; border-radius: 8px; cursor: pointer; transition: all 0.2s;"
+                                onmouseover="this.style.background='#6366f1'; this.style.color='white';"
+                                onmouseout="this.style.background='white'; this.style.color='#6366f1';"
+                                onclick="window.doctoraliaApp.copyReply()">COPIAR TEXTO</button>
+                        </div>
+                        
+                        <div id="doctoralia-reply-container" 
+                            style="flex: 1; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; font-size: 15px; line-height: 1.7; color: #334155; overflow-y: auto; font-family: 'Inter', sans-serif; box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.02);">
+                            <div style="color: #94a3b8; text-align: center; margin-top: 150px; font-size: 14px;">
+                                <span style="font-size: 32px; display: block; margin-bottom: 10px;">🧠</span>
+                                Aguardando entrada para orquestração...
+                            </div>
+                        </div>
+                        
+                        <!-- Footer Info -->
+                        <div style="margin-top: 15px; padding: 12px 16px; background: #ecfdf5; border-radius: 10px; border: 1px solid #10b981; font-size: 11px; color: #065f46; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 8px; h eight: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                            <span>PROTOCOL V4 SECURE: Bloqueio de diagnósticos e formatação markdown.</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
