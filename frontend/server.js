@@ -65,8 +65,9 @@ function reportAgentStatus(agent, status, reason = "", isDone = false) {
 
 // [HEMISFÉRIOS CEREBRAIS DA IA - GERAÇÃO 2026]
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "DUMMY");
-const VISION_MODEL = "gemini-2.5-flash-native-audio-preview-12-2025"; // Alta velocidade com áudio nativo
-const HEAVY_MODEL = "gemini-2.5-pro";                            // O cérebro mais profundo disponível
+const VISION_MODEL = "gemini-2.5-flash-lite"; // Otimizado para escala e latência mínima
+const HEAVY_MODEL = "gemini-2.5-pro";         // O cérebro mais profundo disponível
+const STABLE_MODEL = "gemini-2.0-flash";      // Versão estável anterior
 
 // Hemisfério Esquerdo (FLASH): Rápido, Multimodal e Estruturado
 // Perfeito para ouvir seu áudio em tempo real e cuspir o JSON das regras.
@@ -1641,9 +1642,10 @@ app.post('/api/reputation/analyze', async (req, res) => {
 // 7. AGENTES DA ESTEIRA DE PRODUÇÃO (FASE 2: MÁQUINA DE ESTADOS)
 // ==============================================================================
 
-async function runConstructor(userInput, feedback = null, waNumber, moodId = "1_introspeccao_profunda", contentType = "pages") {
+async function runConstructor(userInput, feedback = null, waNumber, moodId = "1_introspeccao_profunda", contentType = "pages", modelType = 'flash') {
     console.log(`🏗️ [Studio] Gerando rascunho direto: "${userInput.substring(0, 30)}..."`);
-    const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+    const modelId = (modelType && modelType.includes('gemini')) ? modelType : (modelType === 'pro' ? HEAVY_MODEL : VISION_MODEL);
+    const model = genAI.getGenerativeModel({ model: modelId });
     
     const clima = CLIMAS_CLINICOS[moodId] || CLIMAS_CLINICOS["1_introspeccao_profunda"];
     const personalStyle = getVictorStyle();
@@ -1869,7 +1871,7 @@ app.post('/api/chat', upload.single('screenshot'), async (req, res) => {
         reportAgentStatus("Agente Construtor", "Sintetizando DNA clínico e estruturando rascunho...", "", false);
 
         // REGRA DE OURO: No AI Studio, apenas o Construtor trabalha.
-        const html = await runConstructor(userInput, null, waNumber, selectedMood, contentType);
+        const html = await runConstructor(userInput, null, waNumber, selectedMood, contentType, modelType);
         
         reportAgentStatus("Agente Construtor", "Rascunho finalizado com sucesso.", "", true);
         res.json({ reply: html });
@@ -1889,7 +1891,7 @@ app.post('/api/blueprint', upload.none(), async (req, res) => {
         console.log(`\n📐 [BLUEPRINT] Construindo rascunho acelerado: "${theme}"`);
         reportAgentStatus("Agente Construtor", "Orquestrando blueprint estrutural...", "", false);
 
-        const html = await runConstructor(`Criar blueprint completo para o tema: ${theme}`, null, waNumber, selectedMood, contentType);
+        const html = await runConstructor(`Criar blueprint completo para o tema: ${theme}`, null, waNumber, selectedMood, contentType, req.body.modelType || 'flash');
         
         reportAgentStatus("Agente Construtor", "Blueprint entregue.", "", true);
         res.json({ reply: html });
@@ -1901,8 +1903,9 @@ app.post('/api/blueprint', upload.none(), async (req, res) => {
 
 app.post('/api/audit', async (req, res) => {
     try {
-        const { html, keyword } = req.body;
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        const { html, keyword, modelType } = req.body;
+        const modelId = (modelType && modelType.includes('gemini')) ? modelType : VISION_MODEL;
+        const model = genAI.getGenerativeModel({ model: modelId });
         const result = await model.generateContent(`Retorne um JSON array de auditoria SEO para o termo ${keyword}:\n\n${html}`);
         const resp = await result.response;
         res.json({ checklist: JSON.parse(resp.text().replace(/```json|```/g, '').trim()) });
@@ -1952,9 +1955,10 @@ app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, 
     try {
         if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY não configurada no servidor.");
         if (!req.file) throw new Error("Aúdio não recebido.");
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        const modelId = (req.body.modelType && req.body.modelType.includes('gemini')) ? req.body.modelType : VISION_MODEL;
+        const model = genAI.getGenerativeModel({ model: modelId });
         
-        const result = await modelFlash.generateContent([
+        const result = await model.generateContent([
             { text: PROMPT_TREINAMENTO_ISOLADO },
             { inlineData: { data: req.file.buffer.toString('base64'), mimeType: req.file.mimetype } }
         ]);
@@ -1990,8 +1994,9 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
             text = req.file.buffer.toString('utf-8');
         }
 
-        const modelType = req.body.modelType || 'flash';
-        const targetModel = modelType === 'flash' ? modelFlash : modelPro;
+        const modelType = req.body.modelType;
+        const modelId = (modelType && modelType.includes('gemini')) ? modelType : (modelType === 'flash' ? VISION_MODEL : HEAVY_MODEL);
+        const targetModel = genAI.getGenerativeModel({ model: modelId });
 
         const completePrompt = `${PROMPT_TREINAMENTO_ISOLADO}
 
@@ -2254,9 +2259,8 @@ app.post('/api/neuro-training/chat', async (req, res) => {
 app.post('/api/doctoralia/generate-reply', async (req, res) => {
     try {
         const { question, modelType } = req.body;
-        if (!question) return res.status(400).json({ success: false, error: 'Pergunta obrigatória.' });
-
-        const targetModel = modelType === 'flash' ? modelFlash : modelPro;
+        const modelId = (modelType && modelType.includes('gemini')) ? modelType : (modelType === 'flash' ? VISION_MODEL : HEAVY_MODEL);
+        const targetModel = genAI.getGenerativeModel({ model: modelId });
         console.log(`🧠 [DOCTORALIA] Gerando resposta via motor ${modelType}...`);
 
         const dnaInjetado = getDnaContext();
@@ -2292,8 +2296,9 @@ PERGUNTA DO PACIENTE: "${question}"`;
 
 app.post('/api/doctoralia/audit', async (req, res) => {
     try {
-        const { original_message, generated_reply, modelType } = req.body;
-        const targetModel = modelType === 'flash' ? modelFlash : modelPro;
+        const { modelType } = req.body;
+        const modelId = (modelType && modelType.includes('gemini')) ? modelType : (modelType === 'flash' ? VISION_MODEL : HEAVY_MODEL);
+        const targetModel = genAI.getGenerativeModel({ model: modelId });
         
         const systemPrompt = `Você é um Auditor de Compliance Médico e Ético do Conselho Federal de Psicologia (CFP).
 Sua ÚNICA missão é ler a resposta que uma IA gerou para um paciente e procurar por ALUCINAÇÕES ou INFRAÇÕES ÉTICAS.
@@ -2341,7 +2346,8 @@ Sua tarefa é REESCREVER a resposta abaixo aplicando as correções solicitadas 
 - Retorne APENAS o texto corrigido, em parágrafos limpos, sem markdown.
         `;
 
-        const targetModel = req.body.modelType === 'flash' ? modelFlash : modelPro;
+        const modelId = (req.body.modelType && req.body.modelType.includes('gemini')) ? req.body.modelType : (req.body.modelType === 'flash' ? VISION_MODEL : HEAVY_MODEL);
+        const targetModel = genAI.getGenerativeModel({ model: modelId });
         const result = await targetModel.generateContent(refinePrompt);
         const reply = result.response.text()
             .replace(/\*\*/g, '').replace(/###/g, '').replace(/##/g, '')
@@ -2436,7 +2442,9 @@ app.post('/api/dna/auto-refine', async (req, res) => {
         ${editedHtml.substring(0, 5000)}
         `;
 
-        const result = await modelPro.generateContent(refinePrompt);
+        const modelId = (req.body.modelType && req.body.modelType.includes('gemini')) ? req.body.modelType : HEAVY_MODEL;
+        const model = genAI.getGenerativeModel({ model: modelId });
+        const result = await model.generateContent(refinePrompt);
         const newRules = extractJSON(result.response.text()) || [];
 
         if (Array.isArray(newRules) && newRules.length > 0) {
@@ -2579,7 +2587,9 @@ wss.on('connection', (ws) => {
             }`;
 
             // Usando Gemini Pro (Capacidade Multimodal Espelhada)
-            const result = await modelPro.generateContent([
+            const modelId = HEAVY_MODEL; // Live voice defaults to Pro
+            const model = genAI.getGenerativeModel({ model: modelId });
+            const result = await model.generateContent([
                 { inlineData: { data: audioBuffer.toString('base64'), mimeType: 'audio/webm' } },
                 prompt
             ]);

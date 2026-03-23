@@ -1,11 +1,20 @@
 window.doctoraliaApp = {
+    // Modelo padrão inicial
+    currentModel: "gemini-2.5-flash-lite",
+
+    // Função para mudar o modelo via seletor
+    updateModel(newModel) {
+        this.currentModel = newModel;
+        console.log(`🧠 [Studio] Modelo alterado para: ${this.currentModel}`);
+    },
+
     async generateReply() {
         const inputField = document.getElementById('doctoralia-input');
         const question = inputField ? inputField.value : "";
         const btn = document.getElementById('btn-generate-doctoralia') || event.target;
         const container = document.getElementById('doctoralia-reply-container');
 
-        const modelType = document.getElementById('doctoralia-model')?.value || 'pro';
+        const modelType = document.getElementById('doctoralia-model')?.value || this.currentModel;
 
         if (!question.trim()) return alert("Por favor, cole a pergunta do paciente.");
 
@@ -19,7 +28,7 @@ window.doctoraliaApp = {
             const response = await fetch('/api/doctoralia/generate-reply', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question, modelType })
+                body: JSON.stringify({ question, modelType: this.currentModel })
             });
 
             const data = await response.json();
@@ -70,7 +79,7 @@ window.doctoraliaApp = {
         statusBadge.innerText = '⏳ AUDITANDO...';
         feedbackText.innerText = 'Consultando Compliance Clínico (V4 Ethical Engine)...';
 
-        const modelType = document.getElementById('doctoralia-model')?.value || 'pro';
+        const modelType = document.getElementById('doctoralia-model')?.value || this.currentModel;
         try {
             const response = await fetch('/api/doctoralia/audit', {
                 method: 'POST',
@@ -78,7 +87,7 @@ window.doctoraliaApp = {
                 body: JSON.stringify({ 
                     original_message: originalMessage, 
                     generated_reply: generatedReply,
-                    modelType: modelType
+                    modelType: this.currentModel
                 })
             });
 
@@ -118,7 +127,7 @@ window.doctoraliaApp = {
         const container = document.getElementById('doctoralia-reply-container');
         const feedback = document.getElementById('audit-feedback-text').innerText;
         const fixBtn = document.getElementById('btn-fix-doctoralia');
-        const modelType = document.getElementById('doctoralia-model')?.value || 'pro';
+        const modelType = document.getElementById('doctoralia-model')?.value || this.currentModel;
 
         if (!container.innerText || container.innerText.includes('Aguardando')) return;
 
@@ -134,7 +143,7 @@ window.doctoraliaApp = {
                 body: JSON.stringify({ 
                     original_reply: container.innerText, 
                     auditor_feedback: feedback,
-                    modelType: modelType
+                    modelType: this.currentModel
                 })
             });
 
