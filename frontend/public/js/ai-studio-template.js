@@ -9,16 +9,140 @@ window.aiStudioTemplate = {
     values: {},
     modules: [],
     caminhoFisico: null,
+    currentStep: 1,
     currentDraftId: null,
     currentDraftName: null,
+    previewSize: 'mobile',
 
     init: async function() {
-        console.log("🧠 [STUDIO] Inicializando Missão...");
+        console.log("🧠 [STUDIO] Missão Step-by-Step Iniciada...");
         await this.loadTemplates();
+        await this.loadSilos(); // Carrega silos do CMS
+        await this.loadMenus(); // Carrega menus do sistema
         
+        // Dados Padrão (Victor Lawrence - CRP 09/012681)
         this.values.nome_completo = "Dr. Victor Lawrence";
         this.values.crp = "09/012681";
-        this.values.whatsapp = "5562982269799";
+        this.values.whatsapp = "62991545295";
+        this.values.email = "instituto@hipnolawrence.com";
+        this.values.instagram = "https://www.instagram.com/hipnolawrence";
+        this.values.link_agendamento = "www.hipnolawrence.com/agendamento";
+
+        // Setup Event Listeners
+        document.getElementById('ethical-approval-check')?.addEventListener('change', (e) => {
+            const btn = document.getElementById('btn-publish-final');
+            if (btn) btn.disabled = !e.target.checked;
+        });
+    },
+
+    loadSilos: async function() {
+        const select = document.getElementById('ai-studio-silo');
+        if (!select) return;
+        try {
+            const res = await fetch('/api/seo/silos');
+            const data = await res.json();
+            const silos = data.silos || [];
+            select.innerHTML = '<option value="">Sem Silo (Geral)</option>';
+            silos.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.key;
+                opt.innerText = s.title;
+                select.appendChild(opt);
+            });
+        } catch(e) { console.error("Erro Silos:", e); }
+    },
+
+    loadMenus: async function() {
+        const select = document.getElementById('ai-studio-menu');
+        if (!select) return;
+        try {
+            const res = await fetch('/api/menus');
+            const data = await res.json();
+            const menus = data.menus || [];
+            select.innerHTML = '<option value="">Sem Menu (Padrão)</option>';
+            menus.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.innerText = m.name;
+                select.appendChild(opt);
+            });
+        } catch(e) { console.error("Erro Menus:", e); }
+    },
+
+    // ── NAVEGAÇÃO ENTRE ETAPAS (STEPPER) ───────────────────────────────────
+    nextStep: function() {
+        if (this.currentStep === 1) {
+            // Validação Etapa 1
+            const theme = document.getElementById('ai-studio-theme')?.value;
+            if (!theme) return alert("Por favor, defina um Tema Central para o Cérebro da IA.");
+            this.values.tema = theme;
+            this.values.contexto_extra = document.getElementById('ai-studio-context')?.value;
+            this.values.whatsapp = document.getElementById('studio-contact-wa')?.value;
+            this.values.email = document.getElementById('studio-contact-email')?.value;
+            this.values.instagram = document.getElementById('studio-contact-insta')?.value;
+            this.values.link_agendamento = document.getElementById('studio-contact-link')?.value;
+            this.values.objective = document.getElementById('ai-studio-objective')?.value;
+            this.values.silo = document.getElementById('ai-studio-silo')?.value;
+            this.menuId = document.getElementById('ai-studio-menu')?.value;
+        }
+
+        if (this.currentStep < 4) {
+            this.currentStep++;
+            this.updateStepUI();
+        }
+    },
+
+    prevStep: function() {
+        if (this.currentStep > 1) {
+            this.currentStep--;
+            this.updateStepUI();
+        }
+    },
+
+    updateStepUI: function() {
+        // Esconde todos
+        document.querySelectorAll('.studio-step-content').forEach(s => s.style.display = 'none');
+        // Mostra atual
+        const nextStepDiv = document.getElementById(`studio-step-${this.currentStep}`);
+        if(nextStepDiv) nextStepDiv.style.display = (this.currentStep === 2) ? 'flex' : 'block';
+
+        // Atualiza Título
+        const titles = {
+            1: "🟢 1ª ETAPA: CONFIGURAÇÃO E PLANEJAMENTO (O CÉREBRO)",
+            2: "🔵 2ª ETAPA: GERAÇÃO E PREVIEW (A CRIAÇÃO)",
+            3: "🟡 3ª ETAPA: AUDITORIAS E REFINAMENTO (O FILTRO CLÍNICO)",
+            4: "🔴 4ª ETAPA: SALVAR E LANÇAR (O DEPLOY)"
+        };
+        const titleEl = document.getElementById('studio-step-title');
+        if (titleEl) titleEl.innerText = titles[this.currentStep];
+
+        // Toggle botões navegação
+        const btnPrev = document.getElementById('btn-studio-prev');
+        const btnNext = document.getElementById('btn-studio-next');
+        if (btnPrev) btnPrev.style.display = this.currentStep === 1 ? 'none' : 'block';
+        if (btnNext) btnNext.style.display = this.currentStep === 4 ? 'none' : 'block';
+    },
+
+    // ── PREVIEW & DISPOSITIVOS ───────────────────────────────────────────────
+    setPreviewSize: function(type) {
+        this.previewSize = type;
+        const frame = document.getElementById('studio-preview-frame');
+        if (!frame) return;
+
+        document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+        const btn = document.querySelector(`.device-btn[title*="${type.charAt(0).toUpperCase() + type.slice(1)}"]`) || document.querySelector(`.device-btn[onclick*="${type}"]`);
+        if (btn) btn.classList.add('active');
+
+        if (type === 'mobile') {
+            frame.style.width = '375px';
+            frame.style.minHeight = '667px';
+        } else if (type === 'tablet') {
+            frame.style.width = '768px';
+            frame.style.minHeight = '1024px';
+        } else {
+            frame.style.width = '1000px';
+            frame.style.minHeight = '800px';
+        }
     },
 
     loadTemplates: async function() {
@@ -109,9 +233,19 @@ window.aiStudioTemplate = {
         </div>`;
     },
 
-    updateVal: function(k,v) { this.values[k]=v; },
-    removeValue: function(k) { delete this.values[k]; this.renderVariables(); },
-    
+    updateVal: function(k,v) { 
+        this.values[k]=v;
+        if(this.currentStep === 2) this.debouncedPreview();
+    },
+    debouncedPreview: function() {
+        if(this.previewTimeout) clearTimeout(this.previewTimeout);
+        this.previewTimeout = setTimeout(() => this.refreshPreviewFrame(), 1000);
+    },
+    removeValue: function(k) { 
+        delete this.values[k]; 
+        this.renderVariables(); 
+        if(this.currentStep === 2) this.refreshPreviewFrame();
+    },
     handleImageUpload: function(k, i) {
         const reader = new FileReader();
         reader.onload = async (e) => {
@@ -139,7 +273,7 @@ window.aiStudioTemplate = {
         const theme = document.getElementById('ai-studio-theme')?.value;
         const extra = document.getElementById('ai-studio-context')?.value;
         if (!theme) return alert("Defina o Tema Central.");
-        const modelType = document.getElementById('ai-studio-model')?.value || 'pro';
+        const modelType = document.getElementById('ai-studio-model')?.value || 'gemini-2.5-pro';
         this.setProductionProgress(true, `Refinando módulo via GEMINI 2.5 ${modelType.toUpperCase()}...`, 40);
         try {
             const prompt = `[DR VICTOR LAWRENCE]: CRP 09/012681.
@@ -168,6 +302,7 @@ window.aiStudioTemplate = {
                 const el = document.getElementById(`input-${k}`);
                 if(el) { el.value = val; el.classList.add('glow-highlight'); }
             });
+            if(this.currentStep === 2) this.refreshPreviewFrame();
         } catch(e) { console.error(e); alert("Erro na geração: " + e.message); }
         finally { this.setProductionProgress(false, "", 0); }
     },
@@ -187,8 +322,10 @@ window.aiStudioTemplate = {
     },
 
     runFullAudit: async function() {
-        const modelType = document.getElementById('ai-studio-model')?.value || 'pro';
-        this.setProductionProgress(true, `Auditoria Abidos via motor ${modelType.toUpperCase()}...`, 30);
+        const modelType = document.getElementById('ai-studio-model')?.value || 'gemini-2.5-pro';
+        this.setProductionProgress(true, `Executando Auditoria Abidos via GAIA...`, 30);
+        const container = document.getElementById('abidos-audit-results');
+        if(container) container.innerHTML = '<div style="text-align: center; padding: 60px 0;">🚀 Analizando neuromarketing...</div>';
         try {
             const res = await fetch('/api/ai/audit-abidos', {
                 method: "POST", headers: {"Content-Type":"application/json"},
@@ -198,14 +335,23 @@ window.aiStudioTemplate = {
             if(data.error) throw new Error(data.error);
             const score = data.score ?? data.pontuacao ?? "N/A";
             const feedback = data.feedback ?? data.feedback_abidos ?? data.analise ?? JSON.stringify(data);
-            alert(`📊 [SCORE ABIDOS: ${score}/100]\n\nFEEDBACK:\n${feedback}`);
+            
+            if(container) {
+                container.innerHTML = `
+                    <div style="font-size: 24px; font-weight: 900; color: #6366f1; margin-bottom: 15px;">SCORE: ${score}/100</div>
+                    <div style="font-size: 13px; line-height: 1.6; color: #334155;">${feedback.replace(/\n/g, '<br>')}</div>
+                `;
+            }
+            document.getElementById('btn-apply-abidos').style.display = 'block';
         } catch (e) { alert("Falha na auditoria: " + e.message); }
         finally { this.setProductionProgress(false, "", 0); }
     },
 
     runClinicalAudit: async function() {
-        const modelType = document.getElementById('ai-studio-model')?.value || 'pro';
-        this.setProductionProgress(true, `Auditoria Clínica via motor ${modelType.toUpperCase()}...`, 30);
+        const modelType = document.getElementById('ai-studio-model')?.value || 'gemini-2.5-pro';
+        this.setProductionProgress(true, `Auditoria Clínica Ética em curso...`, 30);
+        const container = document.getElementById('clinical-audit-results');
+        if(container) container.innerHTML = '<div style="text-align: center; padding: 60px 0;">🛡️ Validando ética e CRP...</div>';
         try {
             const res = await fetch('/api/ai/audit-clinical', {
                 method: "POST", headers: {"Content-Type":"application/json"},
@@ -215,8 +361,47 @@ window.aiStudioTemplate = {
             if(data.error) throw new Error(data.error);
             const status = data.status ?? data.aprovacao ?? "ALERTA";
             const feedback = data.feedback_clinico ?? data.feedback ?? data.analise ?? JSON.stringify(data);
-            alert(`🛡️ [STATUS: ${status}]\n\n${feedback}`);
+            
+            if(container) {
+                container.innerHTML = `
+                    <div style="font-size: 18px; font-weight: 900; color: ${status==='APROVADO'?'#10b981':'#ef4444'}; margin-bottom: 15px;">STATUS: ${status}</div>
+                    <div style="font-size: 13px; line-height: 1.6; color: #334155;">${feedback.replace(/\n/g, '<br>')}</div>
+                `;
+            }
+            document.getElementById('btn-apply-clinical').style.display = 'block';
         } catch (e) { alert("Falha clínica: " + e.message); }
+        finally { this.setProductionProgress(false, "", 0); }
+    },
+
+    applyAuditSuggestions: async function(type) {
+        const feedback = document.getElementById(`${type}-audit-results`).innerText;
+        const modelType = document.getElementById('ai-studio-model')?.value || 'gemini-2.5-pro';
+        this.setProductionProgress(true, `Aplicando refinamentos da auditoria ${type.toUpperCase()}...`, 50);
+        
+        try {
+            const prompt = `[DR VICTOR LAWRENCE]: Aplique as sugestões da auditoria abaixo no conteúdo atual do site.
+            [AUDITORIA ${type.toUpperCase()}]: ${feedback}
+            [CONTEÚDO ATUAL]: ${JSON.stringify(this.values)}
+            [REGRA]: Mantenha o tom clínico e profissional. Retorne APENAS o JSON atualizado com as correções aplicadas.`;
+
+            const res = await fetch('/api/ai/generate', {
+                method: "POST", headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ prompt, modelType })
+            });
+            const data = await res.json();
+            const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error("Falha ao processar correções.");
+            const result = JSON.parse(jsonMatch[0]);
+
+            Object.keys(result).forEach(k => {
+                if(this.values[k] !== result[k]) {
+                    this.updateVal(k, result[k]);
+                    const el = document.getElementById(`input-${k}`);
+                    if(el) el.value = result[k];
+                }
+            });
+            alert(`✅ Sugestões de ${type.toUpperCase()} aplicadas com sucesso!`);
+        } catch(e) { alert("Erro ao aplicar sugestões: " + e.message); }
         finally { this.setProductionProgress(false, "", 0); }
     },
 
@@ -229,16 +414,40 @@ window.aiStudioTemplate = {
         if(txt) txt.innerText = t;
     },
 
+    newDraft: function() {
+        if(!confirm("Iniciar novo rascunho? Os dados atuais não salvos serão perdidos.")) return;
+        this.values = {
+            nome_completo: "Dr. Victor Lawrence",
+            crp: "09/012681",
+            whatsapp: "62991545295",
+            email: "instituto@hipnolawrence.com",
+            instagram: "https://www.instagram.com/hipnolawrence",
+            link_agendamento: "www.hipnolawrence.com/agendamento"
+        };
+        this.currentDraftId = null;
+        this.currentDraftName = null;
+        this.selectedId = null;
+        document.getElementById('ai-studio-theme').value = "";
+        document.getElementById('ai-studio-context').value = "";
+        document.getElementById('ai-studio-template').value = "";
+        this.renderVariables();
+        alert("Novo projeto iniciado!");
+    },
+
     saveDraft: async function(overwrite) {
         let name = this.currentDraftName;
         if(!overwrite || !name) name = prompt("Nome do Projeto:", this.currentDraftName || "");
         if(!name) return;
-        const draft = { id: overwrite ? this.currentDraftId : Date.now(), name, values: this.values, templateId: this.selectedId };
+        const draft = { id: overwrite && this.currentDraftId ? this.currentDraftId : Date.now(), name, values: this.values, templateId: this.selectedId };
         try {
             const res = await fetch('/api/drafts', { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(draft) });
             const d = await res.json();
             if(d.success) { this.currentDraftId = d.draft.id; this.currentDraftName = d.draft.name; alert("Salvo!"); }
         } catch(e) { alert("Erro ao salvar."); }
+    },
+
+    saveNewDraft: function() {
+        this.saveDraft(false);
     },
 
     loadDraft: async function() {
@@ -260,12 +469,38 @@ window.aiStudioTemplate = {
         } catch(e) { alert("Erro ao carregar."); }
     },
 
-    previewLive: async function() {
+    refreshPreviewFrame: async function() {
+        const frame = document.getElementById('studio-preview-frame');
+        if(!frame || !this.selectedId) return;
         try {
-            const res = await fetch('/api/templates/preview', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({templateId:this.selectedId, values:this.values}) });
+            const res = await fetch('/api/templates/preview', { 
+                method:'POST', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({templateId:this.selectedId, values:this.values}) 
+            });
             const html = await res.text();
-            this.showPreviewModal(html);
-        } catch(e) { alert("Erro no preview."); }
+            
+            // Injeta no iframe do frame de preview
+            let iframe = frame.querySelector('iframe');
+            if(!iframe) {
+                frame.innerHTML = '<iframe style="width:100%; height:100%; border:none; background:white;"></iframe>';
+                iframe = frame.querySelector('iframe');
+            }
+            const doc = iframe.contentWindow.document;
+            doc.open(); doc.write(html); doc.close();
+        } catch(e) { console.error("Erro Refresh Preview:", e); }
+    },
+
+    previewLive: async function() {
+        if(this.currentStep === 2) {
+            this.refreshPreviewFrame();
+        } else {
+            try {
+                const res = await fetch('/api/templates/preview', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({templateId:this.selectedId, values:this.values}) });
+                const html = await res.text();
+                this.showPreviewModal(html);
+            } catch(e) { alert("Erro no preview."); }
+        }
     },
 
     showPreviewModal: function(h) {

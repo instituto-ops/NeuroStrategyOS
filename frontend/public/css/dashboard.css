@@ -1331,3 +1331,33 @@ select:focus {
     animation: glow-pulse 2s ease-out;
     background-color: #f0fdfa !important;
 }
+
+/* AI Studio Stepper - V5 Visual Enhancements */
+.studio-step-content {
+    display: none !important;
+}
+.studio-step-content.active {
+    display: flex !important;
+}
+#studio-preview-frame {
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), height 0.4s ease;
+}
+.device-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 8px;
+    color: #64748b;
+    border-radius: 6px;
+    transition: all 0.2s;
+    font-weight: 800;
+}
+.device-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+.device-btn.active {
+    background: #6366f1;
+    color: white;
+}
