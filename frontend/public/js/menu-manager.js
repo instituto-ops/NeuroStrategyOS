@@ -15,11 +15,29 @@ window.menuSystem = {
     },
 
     loadMenus: async function() {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const listContainer = document.getElementById('menu-list');
+
         try {
-            const res = await fetch('/api/menus');
+            const res = await fetch('/api/menus', { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
             this.menus = await res.json();
+            this.renderMenuList();
         } catch (e) {
-            console.error("Erro ao carregar menus:", e);
+            clearTimeout(timeoutId);
+            console.error("❌ Erro ao carregar menus:", e);
+            
+            if (listContainer) {
+                listContainer.innerHTML = `
+                    <div class="error-state" style="padding: 20px; text-align: center; color: #ef4444; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">
+                        <p style="font-size: 13px; margin-bottom: 10px;">⚠️ Servidor offline ou falha de conexão.</p>
+                        <button onclick="window.menuSystem.loadMenus()" class="btn btn-secondary" style="font-size: 11px;">🔄 Tentar Novamente</button>
+                    </div>
+                `;
+            }
         }
     },
 
@@ -180,22 +198,39 @@ window.menuSystem = {
     },
 
     saveCurrentMenu: async function() {
-        this.currentMenu.name = document.getElementById('menu-editor-name').value;
-        
+        if (!this.currentMenu) return;
+
+        const btn = document.getElementById('btn-save-menu');
+        const originalText = btn?.innerText || "💾 Salvar Árvore de Navegação";
+        if (btn) { btn.innerText = "⏳ PROCESSANDO..."; btn.disabled = true; }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos
+
         try {
+            this.currentMenu.name = document.getElementById('menu-editor-name').value;
+            
             const res = await fetch('/api/menus', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(this.menus)
+                body: JSON.stringify(this.menus),
+                signal: controller.signal
             });
-            const result = await res.json();
-            if (result.success) {
-                alert("Menu salvo com sucesso!");
-                this.renderMenuList();
-                this.loadMenusIntoStudio();
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.details || errorData.error || "Erro no servidor (Status: " + res.status + ")");
             }
+
+            alert("✅ SUCESSO! Menu e Silos persistidos com segurança.");
+            this.renderMenuList();
         } catch (e) {
-            alert("Erro ao salvar: " + e.message);
+            console.error("Erro na persistência de menus:", e);
+            alert("⚠️ " + e.message);
+        } finally {
+            clearTimeout(timeoutId);
+            if (btn) { btn.innerText = originalText; btn.disabled = false; }
+            this.loadMenusIntoStudio(); // Atualiza dropdown do AI Studio
         }
     }
 };

@@ -136,15 +136,23 @@ window.aiStudioTemplate = {
     },
 
     renderField: function(key) {
+        if (key === 'nav_menu_dinamico') return ''; // Silenciar campo dinâmico no editor visual
+
         const labelText = key.replace(/_/g, ' ').toUpperCase();
         const label = `<strong>${labelText}</strong> <code>{{${key}}}</code>`;
         
         let val = this.values[key] || "";
         
-        // Auto-fill WhatsApp se vazio
-        if(key.toLowerCase().includes('whatsapp') && !val) {
-            val = "62991545295";
-            this.values[key] = val;
+        // [IDENTIDADE DR. VICTOR] Auto-fill inteligente
+        if (!val) {
+            const lowerKey = key.toLowerCase();
+            if (lowerKey.includes('whatsapp')) val = "62991545295";
+            else if (lowerKey.includes('nome_completo')) val = "Dr. Victor Lawrence";
+            else if (lowerKey.includes('autoridade_titulo')) val = "Psicólogo Clínico | Mestrando em Ciências da Saúde";
+            else if (lowerKey.includes('cidade')) val = "Goiânia";
+            else if (lowerKey.includes('crp')) val = "09/012681";
+            
+            if (val) this.values[key] = val;
         }
 
         const isImage = key.toLowerCase().includes('img') || key.toLowerCase().includes('imagem') || key.toLowerCase().includes('foto') || key.toLowerCase().includes('icon');
@@ -347,8 +355,8 @@ window.aiStudioTemplate = {
     },
 
     publishPage: async function() {
-        if (!this.caminhoFisico) {
-            alert("Erro: Nenhuma página carregada para publicação. Use o Acervo primeiro.");
+        if (!this.selectedId) {
+            alert("Erro: Selecione um template primeiro.");
             return;
         }
 
@@ -357,9 +365,29 @@ window.aiStudioTemplate = {
         }
 
         const btn = document.querySelector('button[onclick*="publishPage"]');
-        if (btn) { btn.innerText = "🚀 PUBLICANDO..."; btn.disabled = true; }
+        if (btn) { btn.innerText = "🚀 PROCESSANDO MENU..."; btn.disabled = true; }
 
         try {
+            // 1. Capturar ID do Menu e Contexto
+            const menuEl = document.getElementById('ai-studio-menu');
+            const menuId = menuEl ? menuEl.value : null;
+            const pageTheme = document.getElementById('ai-studio-theme')?.value || "";
+
+            // 2. Gerar Menu HTML e Schema (Ponte Final / Motor de Renderização)
+            // pageContent formatado conforme expectativa do MenuMapper
+            const pageContent = { 
+                slug: this.values.slug || 'pagina-gerada',
+                SEO_TITLE: this.values.seo_h1_tecnico || ''
+            };
+
+            const { html: menuHtml, schema: menuSchema } = await window.MenuMapper.generate(
+                menuId, 
+                this.selectedId, 
+                pageContent, 
+                pageTheme
+            );
+
+            // 3. Enviar para a API de Persistência (Backend orquestra a substituição final)
             const res = await fetch('/api/acervo/salvar-pagina', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -367,19 +395,21 @@ window.aiStudioTemplate = {
                     caminhoFisico: this.caminhoFisico,
                     values: this.values,
                     templateId: this.selectedId,
-                    menuId: this.menuId
+                    menuId: menuId,
+                    menuHtml: menuHtml,     // Passando HTML processado
+                    menuSchema: menuSchema  // Passando Schema processado
                 })
             });
 
             const result = await res.json();
             if (result.success) {
-                alert("SUCESSO! " + result.message);
+                alert("🎉 SUCESSO! " + result.message);
             } else {
                 throw new Error(result.error);
             }
         } catch (e) {
             console.error("Erro na publicação:", e);
-            alert("Falha no Lançamento: " + e.message);
+            alert("❌ Falha no Lançamento: " + e.message);
         } finally {
             if (btn) { btn.innerText = "🚀 LANÇAR PÁGINA (NEXT.JS)"; btn.disabled = false; }
         }

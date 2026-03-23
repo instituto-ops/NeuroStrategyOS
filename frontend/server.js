@@ -139,6 +139,7 @@ function getModuleForVar(varName) {
         silo: { order: 5, title: "Silos & Links" },
         cta: { order: 6, title: "CTA & Conversão" },
         whatsapp: { order: 6, title: "WhatsApp" },
+        ambiente: { order: 4, title: "Autoridade (E-E-A-T)" },
         autor: { order: 7, title: "Autor & Dados" },
         artigo: { order: 2, title: "Corpo do Artigo" },
         secao: { order: 3, title: "Seções do Artigo" }
@@ -195,8 +196,9 @@ app.post('/api/templates/preview', async (req, res) => {
         const filePath = path.join(__dirname, '../templates', entry.filename);
         let html = fs.readFileSync(filePath, "utf-8");
         
-        // 1. Injetar Variáveis
+        // 1. Injetar Variáveis (exceto o menu dinâmico que tem lógica própria)
         for (const [key, value] of Object.entries(values || {})) {
+            if (key === 'nav_menu_dinamico') continue; 
             const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
             html = html.replace(regex, value || "");
         }
@@ -244,39 +246,35 @@ app.post('/api/templates/preview', async (req, res) => {
 // ==============================================================================
 const SITE_REPO_PATH = path.join(__dirname, '../../HipnoLawrence-Site/src/app');
 
-// ==============================================================================
-// 🌳 SISTEMA DE NAVEGAÇÃO DESACOPLADA (MENUS.JSON)
-// ==============================================================================
 const MENUS_FILE = path.join(__dirname, 'menus.json');
 
 // [API] Listar Menus
 app.get('/api/menus', (req, res) => {
     try {
         if (!fs.existsSync(MENUS_FILE)) {
-            // Criar esqueleto default se não existir
-            const defaultMenu = [{
-                id: "menu_principal_01",
-                name: "Menu Principal",
-                items: [
-                    { label: "Início", url: "/", status: "published", children: [] },
-                    { label: "Contato", url: "/contato", status: "published", children: [] }
-                ]
-            }];
-            fs.writeFileSync(MENUS_FILE, JSON.stringify(defaultMenu, null, 2));
+            fs.writeFileSync(MENUS_FILE, JSON.stringify([], null, 2));
+            return res.json([]);
         }
-        res.json(JSON.parse(fs.readFileSync(MENUS_FILE, 'utf8')));
+        const content = fs.readFileSync(MENUS_FILE, 'utf8');
+        res.json(JSON.parse(content || '[]'));
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        console.error("❌ Erro Crítico GET /api/menus:", e);
+        res.status(500).json({ error: "Falha na persistência de menus", details: e.message });
     }
 });
 
 // [API] Salvar Menus
 app.post('/api/menus', (req, res) => {
     try {
-        fs.writeFileSync(MENUS_FILE, JSON.stringify(req.body, null, 2));
-        res.json({ success: true });
+        const menusData = req.body;
+        if (!Array.isArray(menusData)) {
+            throw new Error("Payload inválido: esperado um array de menus.");
+        }
+        fs.writeFileSync(MENUS_FILE, JSON.stringify(menusData, null, 2));
+        res.status(200).json({ success: true, message: "Menus persistidos com sucesso!" });
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        console.error("❌ Erro Crítico POST /api/menus:", e);
+        res.status(500).json({ success: false, error: e.message });
     }
 });
 
@@ -290,15 +288,10 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
     const { slug, title } = pageContext;
     const currentPath = slug ? (slug.startsWith('/') ? slug : `/${slug}`) : '/';
 
-    // Função para tratar links dinâmicos e CTAs
     const processUrl = (url) => {
+        if (!url) return '/';
         let finalUrl = url;
         if (slug) finalUrl = finalUrl.replace('{{slug}}', slug);
-        
-        if (finalUrl.includes('api.whatsapp.com') || finalUrl.includes('wa.me')) {
-            const contextMsg = encodeURIComponent(`\n\n(Vim da página: ${title || slug})`);
-            finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'text=' + contextMsg;
-        }
         return finalUrl;
     };
 
@@ -307,9 +300,9 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
         return processed === currentPath || processed === slug;
     };
 
-    // Filtrar drafts
     const filterItems = (items) => items.filter(i => i.status !== 'draft').map(i => ({ 
         ...i, 
+        label: i.name || i.label || i.text || i.nome || 'Menu Item',
         active: isLinkActive(i.url),
         children: i.children ? filterItems(i.children) : [] 
     }));
@@ -318,6 +311,9 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
     if (validItems.length === 0) return '';
 
     let html = '';
+    const waNumber = "5562991545295";
+    const waText = encodeURIComponent("Olá Dr. Victor, vi seu site e gostaria de saber mais sobre a Hipnose Clínica e como marcar uma primeira sessão.");
+    const waLink = `https://wa.me/${waNumber}?text=${waText}`;
 
     // --- RENDERIZAÇÃO POR DESIGN SYSTEM ---
 
@@ -329,18 +325,11 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
         html += `<nav class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-fit px-4 animate-fade-in-up">`;
         html += `<div class="glass-panel rounded-full px-2 py-2 flex items-center gap-2 sm:gap-6 shadow-2xl">`;
         
-        // Brand/Progress Section
         if (isEthereal) {
-            html += `
-                <div class="relative w-10 h-10 flex items-center justify-center shrink-0 bg-white/50 rounded-full">
-                    <svg class="absolute inset-0 w-10 h-10" viewBox="0 0 100 100">
-                        <circle class="text-slate-200/50 stroke-current" stroke-width="6" cx="50" cy="50" r="44" fill="transparent"></circle>
-                        <circle id="navProgressCircle" class="${accentColor} progress-ring stroke-current" stroke-width="6" stroke-linecap="round" cx="50" cy="50" r="44" fill="transparent" stroke-dasharray="276.46" stroke-dashoffset="276.46"></circle>
-                    </svg>
-                    <i data-lucide="${brand}" class="w-4 h-4 text-slate-700 absolute"></i>
-                </div>`;
+            html += `<div class="w-10 h-10 bg-white/50 rounded-full flex items-center justify-center shrink-0"><i data-lucide="${brand}" class="w-4 h-4 text-slate-700"></i></div>`;
         } else {
-            html += `<div class="w-10 h-10 bg-black/20 rounded-full flex items-center justify-center"><i data-lucide="${brand}" class="w-5 h-5 ${accentColor}"></i></div>`;
+            // Removido ícone redundante para evitar "blobs" no topo
+            html += `<div class="font-bold text-white tracking-widest uppercase text-[10px] ml-2">Dr. Victor</div>`;
         }
 
         html += `<ul class="hidden md:flex items-center gap-6 pr-4 border-r border-white/10 ml-2">`;
@@ -358,71 +347,71 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
             html += `</li>`;
         });
         html += `</ul>`;
-        html += `<button onclick="openBooking()" class="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-tighter px-6 py-2.5 rounded-full hover:bg-black transition-all">Agendar Consultoria</button>`;
+        html += `<a href="${waLink}" target="_blank" class="bg-[#2dd4bf] text-[#05080f] px-6 py-2.5 text-[10px] font-extrabold uppercase tracking-widest rounded-full hover:bg-white transition-all shadow-lg shadow-cyan-900/20">Agendar Consulta</a>`;
         html += `</div></nav>`;
 
     } else if (templateId === '02' || templateId === '03' || templateId === '07') { // EDITORIAL SYSTEMS
         const isVintage = templateId === '07';
         const bgClass = isVintage ? 'bg-[#fcf8f1]' : 'bg-white/95';
-        const fontClass = isVintage ? 'font-serif' : 'font-sans';
 
         html += `<nav class="w-full ${bgClass} border-b border-slate-200 sticky top-0 z-50 px-6 py-4 backdrop-blur-md">`;
         html += `<div class="max-w-7xl mx-auto flex items-center justify-between">`;
-        html += `<a href="/" class="font-serif italic text-2xl text-slate-900 tracking-tighter">NeuroEngine<span class="text-[#14b8a6]">.</span></a>`;
-        html += `<div class="flex gap-8 items-center">`;
+        html += `<a href="/" class="font-serif italic text-2xl text-slate-900 tracking-tighter">Lawrence<span class="text-[#14b8a6]">.</span></a>`;
+        html += `<ul class="hidden md:flex gap-8 items-center">`;
         validItems.forEach(item => {
             const activeClass = item.active ? 'text-slate-900 border-b-2 border-[#14b8a6]' : 'text-slate-500 hover:text-slate-900';
-            html += `<div class="group relative py-2">`;
-            html += `<a href="${processUrl(item.url)}" class="text-xs uppercase font-bold tracking-[0.2em] transition-all ${activeClass}">${item.label}</a>`;
+            html += `<li class="relative group">`;
+            html += `<a href="${processUrl(item.url)}" class="text-xs uppercase font-extrabold tracking-widest transition-all ${activeClass}">${item.label}</a>`;
             if (item.children.length > 0) {
-                html += `<div class="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">`;
-                html += `<div class="bg-white border border-slate-100 shadow-2xl rounded p-4 w-56 flex flex-col gap-3">`;
+                html += `<div class="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all"><div class="bg-white border border-slate-100 shadow-2xl rounded p-4 w-56 flex flex-col gap-3">`;
                 item.children.forEach(sub => {
                     html += `<a href="${processUrl(sub.url)}" class="text-xs text-slate-500 hover:text-[#14b8a6] pb-2 border-b border-slate-50 last:border-0">${sub.label}</a>`;
                 });
                 html += `</div></div>`;
             }
-            html += `</div>`;
+            html += `</li>`;
         });
-        html += `<button onclick="openBooking()" class="hidden lg:block bg-slate-900 text-white px-6 py-2 text-xs font-bold uppercase tracking-widest rounded hover:bg-[#14b8a6] transition-all">Contato</button>`;
-        html += `</div></div></nav>`;
+        html += `</ul>`;
+        html += `<a href="${waLink}" target="_blank" class="bg-slate-900 text-white px-6 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-[#14b8a6] transition-all">Agendar Consulta</a>`;
+        html += `</div></nav>`;
 
     } else if (templateId === '09') { // LUXURY DARK
-        html += `<nav class="fixed w-full top-0 z-40 transition-all duration-500 bg-midnight-950/20 backdrop-blur-sm hover:bg-midnight-950/80 border-b border-white/5" id="navbar">`;
+        html += `<nav class="fixed w-full top-0 z-40 transition-all duration-500 bg-midnight-950/20 backdrop-blur-sm border-b border-white/5" id="navbar">`;
         html += `<div class="max-w-7xl mx-auto px-6 lg:px-12 h-24 flex items-center justify-between">`;
-        html += `<div class="font-serif italic text-2xl tracking-wider text-bone-50">L<span class="text-gold-500">.</span> System</div>`;
+        html += `<div class="font-serif italic text-2xl tracking-wider text-bone-50">Dr<span class="text-gold-500">.</span> Victor</div>`;
         html += `<ul class="hidden lg:flex gap-10 items-center">`;
         validItems.forEach(item => {
             const activeClass = item.active ? 'text-gold-500' : 'text-bone-200/60 hover:text-gold-500';
             html += `<li><a href="${processUrl(item.url)}" class="text-[10px] uppercase tracking-[0.3em] font-medium transition-colors ${activeClass}">${item.label}</a></li>`;
         });
         html += `</ul>`;
-        html += `<button onclick="openBooking()" class="text-[10px] uppercase tracking-[0.2em] font-medium text-bone-100 hover:text-gold-500 transition-colors flex items-center gap-3 group border border-bone-100/20 hover:border-gold-500/50 px-6 py-3 rounded-full backdrop-blur-sm">`;
-        html += `Agendar Reserva <div class="w-1 h-1 rounded-full bg-gold-500 group-hover:scale-150 transition-transform"></div></button>`;
+        html += `<a href="${waLink}" target="_blank" class="text-[10px] uppercase tracking-[0.2em] font-medium text-bone-100 hover:text-gold-500 transition-colors flex items-center gap-3 group border border-bone-100/20 hover:border-gold-500/50 px-6 py-3 rounded-full backdrop-blur-sm">`;
+        html += `Agendar Consulta <div class="w-1 h-1 rounded-full bg-gold-500 group-hover:scale-150 transition-transform"></div></a>`;
         html += `</div></nav>`;
 
     } else if (templateId === '10' || templateId === '04' || templateId === '05') { // TECH / MINIMALIST
-        html += `<nav class="fixed top-0 w-full z-50 p-6 flex flex-col gap-4 hide-on-focus transition-opacity duration-500">`;
+        html += `<nav class="fixed top-0 w-full z-50 p-6 flex flex-col gap-4 transition-opacity duration-500">`;
         html += `<div class="max-w-7xl mx-auto w-full glass-card rounded-2xl px-6 py-4 flex items-center justify-between shadow-2xl backdrop-blur-xl border border-white/5">`;
-        html += `<div class="flex items-center gap-3"><div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white"><i data-lucide="zap" class="w-5 h-5"></i></div><span class="font-bold text-white tracking-tighter">TECH::FOCUS</span></div>`;
-        html += `<div class="flex items-center gap-8">`;
+        html += `<div class="flex items-center gap-3"><div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white"><i data-lucide="zap" class="w-5 h-5"></i></div><span class="font-bold text-white tracking-tighter uppercase text-xs">Acesso Rápido</span></div>`;
+        html += `<ul class="hidden md:flex items-center gap-8">`;
         validItems.forEach(item => {
             const activeClass = item.active ? 'text-orange-500 font-bold' : 'text-mist/40 hover:text-white';
-            html += `<a href="${processUrl(item.url)}" class="text-xs uppercase tracking-widest transition-colors ${activeClass}">${item.label}</a>`;
+            html += `<li><a href="${processUrl(item.url)}" class="text-[10px] font-bold uppercase tracking-widest transition-colors ${activeClass}">${item.label}</a></li>`;
         });
-        html += `<button onclick="openBooking()" class="bg-white text-black font-bold text-[10px] px-6 py-2.5 rounded-xl hover:bg-orange-500 hover:text-white transition-all">CONSULTA</button>`;
-        html += `</div></div></nav>`;
+        html += `</ul>`;
+        html += `<a href="${waLink}" target="_blank" class="bg-white text-black font-extrabold text-[10px] px-6 py-2.5 rounded-xl hover:bg-orange-500 hover:text-white transition-all uppercase">Agendar</a>`;
+        html += `</div></nav>`;
 
-    } else { // FALLBACK / ORGANIC / LANDING (06, 11)
+    } else { // FALLBACK / LANDING (06, 11)
         html += `<header class="fixed top-0 w-full z-50 py-4 px-6 flex justify-between items-center bg-white/80 backdrop-blur-lg border-b border-slate-100">`;
-        html += `<div class="font-extrabold text-xl tracking-tight text-indigo-600">CLINIC<span class="text-slate-900">OS</span></div>`;
-        html += `<div class="hidden md:flex gap-8 text-[11px] font-bold uppercase tracking-widest text-slate-500">`;
+        html += `<div class="font-extrabold text-xl tracking-tight text-indigo-600">DR<span class="text-slate-900">. VICTOR</span></div>`;
+        html += `<nav class="hidden md:flex gap-8">`;
         validItems.forEach(item => {
-            const activeClass = item.active ? 'text-indigo-600' : 'hover:text-indigo-600';
-            html += `<a href="${processUrl(item.url)}" class="transition-colors ${activeClass}">${item.label}</a>`;
+            const activeClass = item.active ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-600';
+            html += `<a href="${processUrl(item.url)}" class="text-[11px] font-bold uppercase tracking-widest transition-colors ${activeClass}">${item.label}</a>`;
         });
-        html += `</div>`;
-        html += `<button onclick="openBooking()" class="bg-indigo-600 text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-indigo-200">Agendar Agora</button>`;
+        html += `</nav>`;
+        html += `<a href="${waLink}" target="_blank" class="bg-indigo-600 text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-indigo-200">Agendar Consulta</a>`;
         html += `</header>`;
     }
 
@@ -470,9 +459,9 @@ function generateTOC(htmlContent) {
 // 🚀 [API] SALVAR E LANÇAR PÁGINA (ORQUESTRAÇÃO FINAL)
 // ==============================================================================
 app.post('/api/acervo/salvar-pagina', async (req, res) => {
-    const { caminhoFisico, values, templateId, menuId } = req.body;
+    const { caminhoFisico, values, templateId, menuId, menuHtml: incomingMenuHtml, menuSchema: incomingMenuSchema } = req.body;
     try {
-        if (!fs.existsSync(caminhoFisico)) throw new Error("Arquivo físico não encontrado para atualizar.");
+        if (!caminhoFisico || !fs.existsSync(caminhoFisico)) throw new Error("Arquivo físico não encontrado para atualizar.");
 
         const entry = TEMPLATE_CATALOG.find(t => t.id === templateId);
         if (!templateId || !entry) throw new Error("Template selecionada não existe no catálogo.");
@@ -491,35 +480,42 @@ app.post('/api/acervo/salvar-pagina', async (req, res) => {
         const { modifiedHtml, tocItems } = generateTOC(htmlSource);
         htmlSource = modifiedHtml;
 
-        // 4. Injetar Menu Dinâmico
-        let menuHtml = '';
-        if (menuId) {
-            // Extrair slug do caminho físico para o contexto do menu
+        // 4. Orquestrar Menu Dinâmico e Schema
+        let menuHtml = incomingMenuHtml || '';
+        let menuSchema = incomingMenuSchema || '';
+
+        if (!menuHtml && menuId) {
+            // Fallback: Lógica legada do servidor caso o front não envie processado
             const slug = path.basename(path.dirname(caminhoFisico));
             menuHtml = generateMenuHtmlForTemplate(menuId, templateId, { slug, title: values.SEO_TITLE || '' });
-            
-            // Auto-TOC append to menu (Se for um artigo longo, penduramos o TOC no fim do menu para UX rápida)
-            if (tocItems.length > 0 && (templateId === '02' || templateId === '03' || templateId === '04' || templateId === '05' || templateId === '06' || templateId === '07' || templateId === '10')) {
-                 const tocMenuHtml = `
+        }
+
+        // Injetar Schema no <head> se presente
+        if (menuSchema && htmlSource.includes('</head>')) {
+            htmlSource = htmlSource.replace('</head>', `${menuSchema}\n</head>`);
+        } else if (menuSchema) {
+            htmlSource = menuSchema + htmlSource;
+        }
+
+        // Auto-TOC append to menu
+        if (tocItems.length > 0 && ['02', '03', '04', '05', '06', '07', '10'].includes(templateId)) {
+            const tocMenuHtml = `
                     <div class="fixed bottom-4 left-4 z-50 glass-panel lg:hidden p-3 rounded-2xl max-w-[200px]">
                         <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ Tópicos Neste Artigo</div>
                         <ul class="flex flex-col gap-1">
                             ${tocItems.map(i => `<li><a href="${i.url}" class="text-xs text-slate-500 hover:text-[#14b8a6] line-clamp-1">${i.label}</a></li>`).join('')}
                         </ul>
                     </div>`;
-                 // Append the table of contents floating element
-                 menuHtml += tocMenuHtml;
-            }
+            menuHtml += tocMenuHtml;
         }
-        
-        // Colocar Nav Menu logo depois do body/inicio da main
-        // Procura a tag <main para injetar o menu antes dela caso o usuário não tenha colocado a tag {{nav_menu_dinamico}}
+
+        // 5. Injetar Nav Menu na posição {{nav_menu_dinamico}}
         if (htmlSource.includes('{{nav_menu_dinamico}}')) {
-             htmlSource = htmlSource.replace('{{nav_menu_dinamico}}', menuHtml);
+            htmlSource = htmlSource.replace('{{nav_menu_dinamico}}', menuHtml);
         } else if (htmlSource.includes('<main')) {
-             htmlSource = htmlSource.replace('<main', menuHtml + '\n    <main');
+            htmlSource = htmlSource.replace('<main', menuHtml + '\n    <main');
         } else {
-             htmlSource = menuHtml + htmlSource;
+            htmlSource = menuHtml + htmlSource;
         }
 
         // 5. Montar o arquivo .tsx mantendo o DNA block para futura edição
@@ -1199,7 +1195,6 @@ app.get('/api/drafts', async (req, res) => {
                 });
             } catch(e) {}
         }
-
         res.json(drafts);
     } catch (e) {
         console.warn("⚠️ [API DRAFTS ERROR] Prevenido crash na pasta de rascunhos. Retornando vazio:", e.message);

@@ -519,3 +519,106 @@ window.AbidosBlocks = {
     },
 
 }; // end AbidosBlocks
+
+/**
+ * 🌳 MenuMapper - Motor de Renderização de Navegação Dinâmica
+ * Transforma o JSON de menus nos designs específicos de cada template.
+ */
+window.MenuMapper = {
+    async generate(menuId, templateId, pageContent = {}, pageTheme = '') {
+        if (!menuId) return { html: '', schema: '' };
+
+        try {
+            const res = await fetch('/api/menus');
+            const menus = await res.json();
+            const menu = menus.find(m => m.id === menuId);
+            if (!menu) return { html: '', schema: '' };
+
+            const slug = pageContent.slug || 'pagina-gerada';
+            const title = pageContent.SEO_TITLE || '';
+            const currentPath = slug.startsWith('/') ? slug : `/${slug}`;
+
+            const processUrl = (url) => {
+                let finalUrl = url.replace('{{slug}}', slug);
+                if (finalUrl.includes('wa.me') || finalUrl.includes('api.whatsapp.com')) {
+                    const msg = encodeURIComponent(`\n\n(Vim da página: ${title || slug})`);
+                    finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'text=' + msg;
+                }
+                return finalUrl;
+            };
+
+            const filterItems = (items) => items.filter(i => i.status !== 'draft').map(i => ({
+                ...i,
+                active: processUrl(i.url) === currentPath,
+                children: i.children ? filterItems(i.children) : []
+            }));
+
+            const validItems = filterItems(menu.items || []);
+            let html = '';
+
+            // --- RENDERIZAÇÃO POR DESIGN SYSTEM (Sincronizado com server.js) ---
+            if (templateId === '01' || templateId === '08') {
+                const isEthereal = templateId === '08';
+                const accent = isEthereal ? 'text-aura-indigo' : 'text-cyan-400';
+                html += `<nav class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-fit px-4 animate-fade-in-up"><div class="glass-panel rounded-full px-2 py-2 flex items-center gap-2 sm:gap-6 shadow-2xl">`;
+                if (isEthereal) {
+                    html += `<div class="relative w-10 h-10 flex items-center justify-center shrink-0 bg-white/50 rounded-full"><svg class="absolute inset-0 w-10 h-10" viewBox="0 0 100 100"><circle class="text-slate-200/50 stroke-current" stroke-width="6" cx="50" cy="50" r="44" fill="transparent"></circle><circle id="navProgressCircle" class="${accent} progress-ring stroke-current" stroke-width="6" stroke-linecap="round" cx="50" cy="50" r="44" fill="transparent" stroke-dasharray="276.46" stroke-dashoffset="276.46"></circle></svg><i data-lucide="sparkles" class="w-4 h-4 text-slate-700 absolute"></i></div>`;
+                } else {
+                    html += `<div class="w-10 h-10 bg-black/20 rounded-full flex items-center justify-center"><i data-lucide="brain" class="w-5 h-5 ${accent}"></i></div>`;
+                }
+                html += `<ul class="hidden md:flex items-center gap-6 pr-4 border-r border-white/10 ml-2">`;
+                validItems.forEach(item => {
+                    const active = item.active ? 'text-white font-bold' : 'text-slate-400 hover:text-white';
+                    html += `<li class="relative group"><a href="${processUrl(item.url)}" class="text-xs uppercase tracking-widest transition-all ${active}">${item.label}</a>`;
+                    if (item.children.length > 0) {
+                        html += `<ul class="absolute top-full left-0 mt-4 w-48 glass-panel rounded-2xl p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col gap-2">`;
+                        item.children.forEach(s => html += `<li><a href="${processUrl(s.url)}" class="text-[10px] uppercase text-slate-400 hover:text-white block px-2 py-1">${s.label}</a></li>`);
+                        html += `</ul>`;
+                    }
+                    html += `</li>`;
+                });
+                html += `</ul><button onclick="openBooking()" class="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-tighter px-6 py-2.5 rounded-full hover:bg-black transition-all">Agendar Consultoria</button></div></nav>`;
+            } else if (['02', '03', '07'].includes(templateId)) {
+                const isVintage = templateId === '07';
+                const bg = isVintage ? 'bg-[#fcf8f1]' : 'bg-white/95';
+                html += `<nav class="w-full ${bg} border-b border-slate-200 sticky top-0 z-50 px-6 py-4 backdrop-blur-md"><div class="max-w-7xl mx-auto flex items-center justify-between"><a href="/" class="font-serif italic text-2xl text-slate-900 tracking-tighter">NeuroEngine<span class="text-[#14b8a6]">.</span></a><div class="flex gap-8 items-center">`;
+                validItems.forEach(item => {
+                    const active = item.active ? 'text-slate-900 border-b-2 border-[#14b8a6]' : 'text-slate-500 hover:text-slate-900';
+                    html += `<div class="group relative py-2"><a href="${processUrl(item.url)}" class="text-xs uppercase font-bold tracking-[0.2em] transition-all ${active}">${item.label}</a>`;
+                    if (item.children.length > 0) {
+                        html += `<div class="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all"><div class="bg-white border border-slate-100 shadow-2xl rounded p-4 w-56 flex flex-col gap-3">`;
+                        item.children.forEach(s => html += `<a href="${processUrl(s.url)}" class="text-xs text-slate-500 hover:text-[#14b8a6] pb-2 border-b border-slate-50 last:border-0">${s.label}</a>`);
+                        html += `</div></div>`;
+                    }
+                    html += `</div>`;
+                });
+                html += `<button onclick="openBooking()" class="hidden lg:block bg-slate-900 text-white px-6 py-2 text-xs font-bold uppercase tracking-widest rounded hover:bg-[#14b8a6] transition-all">Contato</button></div></div></nav>`;
+            } else if (templateId === '09') {
+                html += `<nav class="fixed w-full top-0 z-40 transition-all duration-500 bg-midnight-950/20 backdrop-blur-sm hover:bg-midnight-950/80 border-b border-white/5" id="navbar"><div class="max-w-7xl mx-auto px-6 lg:px-12 h-24 flex items-center justify-between"><div class="font-serif italic text-2xl tracking-wider text-bone-50">L<span class="text-gold-500">.</span> System</div><ul class="hidden lg:flex gap-10 items-center">`;
+                validItems.forEach(item => html += `<li><a href="${processUrl(item.url)}" class="text-[10px] uppercase tracking-[0.3em] font-medium transition-colors ${item.active ? 'text-gold-500' : 'text-bone-200/60 hover:text-gold-500'}">${item.label}</a></li>`);
+                html += `</ul><button onclick="openBooking()" class="text-[10px] uppercase tracking-[0.2em] font-medium text-bone-100 hover:text-gold-500 transition-colors flex items-center gap-3 group border border-bone-100/20 hover:border-gold-500/50 px-6 py-3 rounded-full backdrop-blur-sm">Agendar Reserva <div class="w-1 h-1 rounded-full bg-gold-500 group-hover:scale-150 transition-transform"></div></button></div></nav>`;
+            } else if (['10', '04', '05'].includes(templateId)) {
+                html += `<nav class="fixed top-0 w-full z-50 p-6 flex flex-col gap-4 hide-on-focus transition-opacity duration-500"><div class="max-w-7xl mx-auto w-full glass-card rounded-2xl px-6 py-4 flex items-center justify-between shadow-2xl backdrop-blur-xl border border-white/5"><div class="flex items-center gap-3"><div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white"><i data-lucide="zap" class="w-5 h-5"></i></div><span class="font-bold text-white tracking-tighter">TECH::FOCUS</span></div><div class="flex items-center gap-8">`;
+                validItems.forEach(item => html += `<a href="${processUrl(item.url)}" class="text-xs uppercase tracking-widest transition-colors ${item.active ? 'text-orange-500 font-bold' : 'text-mist/40 hover:text-white'}">${item.label}</a>`);
+                html += `<button onclick="openBooking()" class="bg-white text-black font-bold text-[10px] px-6 py-2.5 rounded-xl hover:bg-orange-500 hover:text-white transition-all">CONSULTA</button></div></div></nav>`;
+            } else {
+                html += `<header class="fixed top-0 w-full z-50 py-4 px-6 flex justify-between items-center bg-white/80 backdrop-blur-lg border-b border-slate-100"><div class="font-extrabold text-xl tracking-tight text-indigo-600">CLINIC<span class="text-slate-900">OS</span></div><div class="hidden md:flex gap-8 text-[11px] font-bold uppercase tracking-widest text-slate-500">`;
+                validItems.forEach(item => html += `<a href="${processUrl(item.url)}" class="transition-colors ${item.active ? 'text-indigo-600' : 'hover:text-indigo-600'}">${item.label}</a>`);
+                html += `</div><button onclick="openBooking()" class="bg-indigo-600 text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-indigo-200">Agendar Agora</button></header>`;
+            }
+
+            const schema = `<script type="application/ld+json">\n${JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "SiteNavigationElement",
+                "name": validItems.map(i => i.label),
+                "url": validItems.map(i => processUrl(i.url))
+            }, null, 2)}\n</script>`;
+
+            return { html, schema };
+
+        } catch (e) {
+            console.error("❌ Erro no MenuMapper:", e);
+            return { html: '', schema: '' };
+        }
+    }
+};

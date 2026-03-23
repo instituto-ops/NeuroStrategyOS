@@ -1,0 +1,36 @@
+[
+  {
+    "id": "principal",
+    "name": "Principal",
+    "items": [
+      {
+        "id": "it_1",
+        "name": "Início",
+        "url": "https://hipnolawrence.com/",
+        "status": "published",
+        "children": []
+      },
+      {
+        "id": "it_2",
+        "name": "Sobre",
+        "url": "https://hipnolawrence.com/sobre",
+        "status": "published",
+        "children": []
+      },
+      {
+        "id": "it_3",
+        "name": "Serviços",
+        "url": "https://hipnolawrence.com/servicos",
+        "status": "published",
+        "children": []
+      },
+      {
+        "id": "it_4",
+        "name": "Contato",
+        "url": "https://hipnolawrence.com/contato",
+        "status": "published",
+        "children": []
+      }
+    ]
+  }
+]

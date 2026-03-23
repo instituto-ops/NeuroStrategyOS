@@ -369,7 +369,7 @@
                     <div class="card" id="menu-editor-card" style="display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                             <h3 id="menu-editor-title" style="margin: 0;">Editando Menu...</h3>
-                            <button class="btn btn-primary" onclick="window.menuSystem.saveCurrentMenu()" style="background: #10b981;">💾 Salvar Árvore de Navegação</button>
+                            <button class="btn btn-primary" id="btn-save-menu" onclick="window.menuSystem.saveCurrentMenu()" style="background: #10b981;">💾 Salvar Árvore de Navegação</button>
                         </div>
 
                         <div style="margin-bottom: 20px;">
@@ -392,12 +392,45 @@
                 </div>
             </section>
 
-            <!-- Section: Neuro-Training (Em Construção) -->
+            <!-- Section: Neuro-Training (Aprendiz de Abidos) -->
             <section id="neuro-training" class="content-section">
-                <div class="card" style="text-align: center; padding: 60px 20px;">
-                    <span style="font-size: 48px; display: block; margin-bottom: 20px;">🚧</span>
-                    <h2 style="color: #1e293b; margin-bottom: 10px;">Módulo Neuro-Training</h2>
-                    <p style="color: #64748b; font-size: 14px;">Esta funcionalidade está em construção. Em breve você poderá treinar a IA com base no seu conhecimento clínico e referências diretas do seu consultório.</p>
+                <div class="grid" style="grid-template-columns: 1fr 380px; gap: 20px; height: calc(100vh - 180px);">
+                    <!-- LADO ESQUERDO: CHAT & ESTADO -->
+                    <div class="card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0; border: none; box-shadow: var(--shadow-sm);">
+                        <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                            <h2 style="margin: 0; font-size: 16px; font-weight: 800;">🧬 Aprendiz de Abidos (Neuro-Training)</h2>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-secondary" style="background: white; border: 1px solid #e2e8f0; color: #6366f1; font-weight: 800; font-size: 11px;" onclick="window.neuroTraining.toggleMode('voice')">🎙️ INICIAR ENTREVISTA DE DNA</button>
+                                <label class="btn btn-secondary" style="background: white; border: 1px solid #e2e8f0; cursor: pointer; font-size: 11px;">
+                                    📁 ENVIAR ARQUIVO
+                                    <input type="file" id="file-upload-neuro" style="display: none;" onchange="window.neuroTraining.handleFileUpload(event)">
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="nt-chat-messages" style="flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 12px; background: #ffffff;">
+                            <div class="msg ai shimmer">Carregando contexto do consultório...</div>
+                        </div>
+
+                        <div style="padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+                            <div style="display: flex; gap: 10px; position: relative;">
+                                <input type="text" id="nt-chat-input" placeholder="Digite uma diretriz clínica ou técnica..." style="flex: 1; padding: 15px 120px 15px 20px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                <button id="btn-mic-stt" style="position: absolute; right: 110px; top: 14px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">🎙️</button>
+                                <button class="btn btn-primary" style="background: #6366f1; border-radius: 10px; padding: 0 25px; font-weight: 800; font-size: 12px;" onclick="window.neuroTraining.sendMessage()">ENVIAR</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LADO DIREITO: MEMÓRIA ATIVA -->
+                    <div class="card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0; border: none; box-shadow: var(--shadow-sm);">
+                        <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 12px; font-weight: 900; color: #64748b; letter-spacing: 1px;">🧠 DNA CLÍNICO (HIPOCAMPO)</h3>
+                            <span id="memory-last-update" style="font-size: 10px; color: #94a3b8; font-weight: 700;">---</span>
+                        </div>
+                        <div id="rules-feed" style="flex: 1; overflow-y: auto; padding: 15px; background: #f1f5f9; display: flex; flex-direction: column; gap: 10px;">
+                            <p style="color:#64748b;font-size:13px;text-align:center;padding:40px 0;">Sincronizando padrões...</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -679,6 +712,7 @@
     <script src="js/task-system.js"></script>
     <script src="js/goal-system.js"></script>
     <script src="js/neuro-training.js"></script>
+    <script src="js/menu-manager.js"></script>
     <script src="js/doctoralia.js"></script>
     <!-- [MODAL] Media Picker Abidos -->
     <div id="media-picker-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:20000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
@@ -832,5 +866,20 @@
             window.neuroStepper.init();
         });
     </script>
+    <!-- VOICE OVERLAY (MODO ENTREVISTA v2.0) -->
+    <div id="voice-mode-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:100000; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(25px); transition: all 0.5s ease;">
+        <div id="voice-mode-mic" style="width:180px; height:180px; border-radius:50%; background:#ef4444; display:flex; align-items:center; justify-content:center; box-shadow:0 0 50px rgba(239,68,68,0.3); transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer; position:relative;" onclick="window.neuroTraining.toggleMute()">
+            <span id="voice-mic-icon" style="font-size:70px;">🎙️</span>
+            <div style="position:absolute; inset:-15px; border-radius:50%; border:2px solid rgba(255,255,255,0.1); animation:pulseRing 2s infinite;"></div>
+        </div>
+        <div style="margin-top:60px; text-align:center;">
+            <h2 id="voice-status-text" style="color:white; font-size:36px; font-weight:900; letter-spacing:-1.5px; margin-bottom:10px; font-family: 'Inter', sans-serif;">Ouvindo Dr. Victor...</h2>
+            <p style="color:rgba(255,255,255,0.5); font-size:16px; font-weight:500;">O DNA do seu consultório está sendo extraído em tempo real.</p>
+        </div>
+        <div style="margin-top:80px; display:flex; gap:20px;">
+            <button id="btn-mute-voice" class="btn" style="padding:18px 40px; border-radius:50px; font-weight:800; background:#f1f5f9; color:#1e293b; font-size:14px;" onclick="window.neuroTraining.toggleMute()">🔇 PAUSAR ESCUTA</button>
+            <button class="btn" style="padding:18px 40px; border-radius:50px; font-weight:800; background:#ef4444; color:white; border:none; font-size:14px; box-shadow: 0 10px 20px rgba(239,68,68,0.2);" onclick="window.neuroTraining.toggleMode('text')">ENCERRAR SESSÃO</button>
+        </div>
+    </div>
 </body>
 </html>
