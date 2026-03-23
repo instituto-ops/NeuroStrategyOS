@@ -99,30 +99,34 @@ function extractJSON(text) {
 const MEMORY_FILE_PATH = path.join(__dirname, 'estilo_victor.json');
 
 
-const PROMPT_TREINAMENTO_ISOLADO = `Você é um Analista Linguístico Forense especializado em Identidade Verbal Clínica.
-Sua Missão: Clonar a FORMA e o RITMO da fala do Dr. Victor Lawrence, ignorando 100% o CONTEÚDO e 100% a fala de terceiros (pacientes/interlocutores).
+const PROMPT_TREINAMENTO_ISOLADO = `Você é um ENGENHEIRO DE SINTAXE E RITMO. Sua única função é mapear o 'CÓDIGO FONTE' verbal do Dr. Victor Lawrence. O significado do que ele fala NÃO IMPORTA.
 
-[PROTOCOLO DE IDENTIFICAÇÃO DE FALANTE (IMPORTANTE)]
-1. Em transcrições com múltiplos falantes (ex: Falante 1, Falante 2), primeiro deduza quem é o PROFISSIONAL:
-   - O Profissional (Dr. Victor) geralmente conduz a sessão, faz as perguntas, usa conectivos de acolhimento e validação.
-   - O Cliente relata sintomas, história de vida e emoções.
-2. É PROIBIDO extrair padrões do Cliente. Use a fala dele apenas como contexto para entender como o Dr. Victor REAGE linguisticamente.
+[REGRA DE OURO: FORMA > CONTEÚDO]
+- É PROIBIDO extrair regras sobre: Emoções, Diagnósticos, Procedimentos, Relatórios ou História de Vida. 
+- Exemplo de ERRO a evitar: "Categoria: Estado Emocional". (Isso é proibido).
+- Exemplo de ACERTO: "Categoria: Sintaxe | Regra: Uso frequente de orações subordinadas para explicar conceitos complexos."
 
-[REGRAS DE EXTRAÇÃO LINGUÍSTICA]
-- Foque na CADÊNCIA, SINTAXE, CONECTIVOS e TOM de voz apenas do Dr. Victor.
-- Ignore o tema clínico (ética, diagnósticos).
-- Se detectar um novo padrão na fala DELE, adicione-o no array 'regras_extraidas'.
+[DIARIZAÇÃO E SEGURANÇA]
+- Analise a transcrição e identifique o PROFISSIONAL (quem lidera/pergunta).
+- IGNORE 100% a fala do Paciente. Não estude o tom dele.
+- Foque apenas no 'Design de Frase' do Dr. Victor.
+
+CATEGORIAS PERMITIDAS:
+1. Cadência (Breve, Prolixo, Ritmo, Pausas)
+2. Sintaxe (Padrões de construção de frase)
+3. Vocabulário Repetitivo (Conectivos, vícios de linguagem favoráveis)
+4. Tom (Socrático, Assertivo, Acolhedor - mas apenas na ESTRUTURA da frase)
 
 FORMATO OBRIGATÓRIO (JSON):
 {
   "regras_extraidas": [
     {
-      "categoria": "[Ritmo | Sintaxe | Tom | Vocabulário]",
-      "titulo": "Resumo Linguístico (ex: Pontuação Assertiva)",
-      "regra": "Descrição técnica de como clonar a estrutura da frase dele."
+      "categoria": "[Cadência | Sintaxe | Vocabulário | Tom]",
+      "titulo": "Nome Técnico do Padrão (ex: Inversão Suave)",
+      "regra": "Como o Gêmeo Digital deve construir a frase para soar como ele."
     }
   ],
-  "reply": "Confirme que identificou o estilo do Dr. Victor nesta transcrição e cite um exemplo de como ele estruturou uma frase (sem citar dados sensíveis)."
+  "reply": "Resumo LINGUÍSTICO (ex: Percebi que você usa 'de fato' como ponto de ancoragem antes de uma tese). O que vamos clonar agora?"
 }`;
 
 const getVictorStyle = () => {
