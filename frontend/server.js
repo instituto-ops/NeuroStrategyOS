@@ -89,9 +89,23 @@ const draftsDb = []; // In-memory store for newly generated drafts before WP syn
 
 // Helper robust JSON parser
 function extractJSON(text) {
+    if (!text) return null;
     try {
+        // Tenta encontrar o maior bloco {...} possível
         const match = text.match(/\{[\s\S]*\}/);
-        return match ? JSON.parse(match[0]) : null;
+        if (!match) return null;
+        let parsed = JSON.parse(match[0]);
+        
+        // CORREÇÃO DE SEGURANÇA: Se a IA encapsulou as regras dentro do 'reply' como string
+        if (parsed.reply && typeof parsed.reply === 'string' && parsed.reply.includes('"regras_extraidas"')) {
+            const subMatch = parsed.reply.match(/\{[\s\S]*\}/);
+            if (subMatch) {
+                const subParsed = JSON.parse(subMatch[0]);
+                parsed.regras_extraidas = subParsed.regras_extraidas || parsed.regras_extraidas;
+                parsed.reply = subParsed.reply || parsed.reply;
+            }
+        }
+        return parsed;
     } catch { return null; }
 }
 
@@ -99,30 +113,31 @@ function extractJSON(text) {
 const MEMORY_FILE_PATH = path.join(__dirname, 'estilo_victor.json');
 
 
-const PROMPT_TREINAMENTO_ISOLADO = `[MODO: ENGENHEIRO DE SINTAXE DIGITAL]
-Sua única função é CLONAR O CÓDIGO FONTE VERBAL do Dr. Victor Lawrence. 
-O conteúdo (o que é dito) é IRRELEVANTE. A forma (como é dito) é TUDO.
+const PROMPT_TREINAMENTO_ISOLADO = `[SISTEMA DE CLONAGEM DE SINTAXE - MODO DIGITAL TWIN]
+Missão: Extrair as REGRAS ESTRUTURAIS da fala do Dr. Victor Lawrence (P2).
+Proibição Absoluta: Não comente, não resuma e não extraia regras sobre CONTEÚDO (sentimentos, grávidas, prazos, trabalho, psiquiatria).
 
-[REGRAS DE OURO]
-1. IGNORE SENTIMENTOS: Se o texto diz "estou triste", ignore a tristeza. Analise se a frase é curta, se usa reticências, se é passiva ou ativa.
-2. IDENTIFICAÇÃO DE ALVO: Em diálogos (P1, P2, etc.), seu alvo é o PROFISSIONAL (quem conduz, valida ou questiona). IGNORE 100% o interlocutor/paciente.
-3. CATEGORIAS LINGUÍSTICAS APENAS: [Cadência | Sintaxe | Vocabulário | Tom Estrutural]. 
-4. PROIBIDO: Extrair qualquer "insight" sobre o progresso do paciente ou temas da sessão.
+[DIRETRIZES DE RECONHECIMENTO]
+1. Identifique o Falante Alvo: P2 (Profissional). Ignore P1 (Paciente).
+2. Proibição Semântica: Se a regra contiver palavras do texto original que não sejam termos linguísticos, ela está ERRADA.
+3. Foco Estrutural: Analise como as frases são unidas. (Ex: "Usa o 'Pacing' repetindo a última palavra do interlocutor antes de uma pergunta socrática").
 
-[EXEMPLO DE EXTRAÇÃO CORRETA]
-- Texto: "Entendo. Mas veja, comparado a quê? Qual o padrão?"
-- Extração: { "categoria": "Sintaxe", "titulo": "Interrogação Dialética", "regra": "Usa perguntas curtas em cascata para forçar a redefinição de conceitos pelo interlocutor." }
+[CATEGORIAS OBRIGATÓRIAS]
+- Cadência (Ritmo e Pontuação)
+- Sintaxe (Estrutura de Frases e Conectivos)
+- Vocabulário de Identidade (Palavras-âncora estruturais)
+- Tonabilidade Estrutural (Acolhimento via forma, não via palavras)
 
 FORMATO OBRIGATÓRIO (JSON):
 {
   "regras_extraidas": [
     {
-      "categoria": "...",
-      "titulo": "Nome Técnico LINGUÍSTICO",
-      "regra": "Descrição de como clonar a estrutura."
+      "categoria": "[Categorias Acima]",
+      "titulo": "Nome LINGUÍSTICO (ex: Ancoragem de Sintaxe)",
+      "regra": "Descrição técnica para o Gêmeo Digital clonar."
     }
   ],
-  "reply": "Confirmação técnica: Identifiquei o padrão de construção [NOME] do Dr. Victor."
+  "reply": "REPORTE TÉCNICO: Mapeei o padrão [TÍTULO] do Dr. Victor. Ele agora faz parte do núcleo de identidade verbal."
 }`;
 
 const getVictorStyle = () => {
@@ -1831,9 +1846,13 @@ app.post('/api/neuro-training/memory/clear', (req, res) => {
             style_rules: [],
             last_update: new Date().toISOString(),
             insights_history: [],
-            scientific_vault: { nota: "Wiped by user request." }
+            scientific_vault: { 
+                nota: "Sistema resetado em " + new Date().toLocaleString('pt-BR'),
+                status: "Linguística Pura Ativada"
+            }
         };
         fs.writeFileSync(MEMORY_FILE_PATH, JSON.stringify(memory, null, 2));
+        console.log("🧹 [NEURO-MEMORY] Memória de Estilo limpa com sucesso.");
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: e.message });
