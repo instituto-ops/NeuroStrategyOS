@@ -2228,7 +2228,8 @@ REGRAS DE REPROVAÇÃO (CRITÉRIOS DE FALHA):
 Sua saída deve ser ESTRITAMENTE um JSON neste formato:
 {
   "status": "[APROVADO | REPROVADO | APROVADO_COM_RESSALVAS]",
-  "feedback_auditoria": "Sua análise curta e direta explicando o motivo do status. Se reprovado, aponte a frase exata que causou a falha."
+  "feedback_auditoria": "Sua análise curta e direta explicando o motivo do status.",
+  "sugestao_correcao": "Instrução técnica para a IA corrigir o texto (ex: 'Remova a promessa de cura no parágrafo 2')."
 }`;
 
         const prompt = `Mensagem do Paciente:\n"${original_message}"\n\nResposta Gerada a ser Auditada:\n"${generated_reply}"`;
@@ -2239,10 +2240,41 @@ Sua saída deve ser ESTRITAMENTE um JSON neste formato:
         ]);
 
         const parsed = extractJSON(result.response.text());
-        res.json(parsed || { status: "REPROVADO", feedback_auditoria: "Falha crítica no parser de auditoria." });
+        res.json(parsed || { status: "REPROVADO", feedback_auditoria: "Falha crítica no parser de auditoria.", sugestao_correcao: "" });
     } catch (error) {
         console.error('❌ [ERRO AUDITORIA DOCTORALIA]', error);
         res.status(500).json({ error: 'Falha ao auditar a resposta.' });
+    }
+});
+
+app.post('/api/doctoralia/refine-reply', async (req, res) => {
+    try {
+        const { original_reply, auditor_feedback } = req.body;
+        
+        const refinePrompt = `
+Você é o Revisor de Compliance do Dr. Victor Lawrence.
+Sua tarefa é REESCREVER a resposta abaixo aplicando as correções solicitadas pelo Auditor Ético.
+
+[TEXTO ORIGINAL COM ERRO]:
+"${original_reply}"
+
+[FEEDBACK DO AUDITOR]:
+"${auditor_feedback}"
+
+[DIRETRIZES DE REESCRITA]:
+- Mantenha o DNA de voz do Dr. Victor (acolhedor, técnico, fenomenológico).
+- Remova EXATAMENTE o que o auditor apontou como perigoso ou falso.
+- Retorne APENAS o texto corrigido, em parágrafos limpos, sem markdown.
+        `;
+
+        const result = await modelPro.generateContent(refinePrompt);
+        const reply = result.response.text()
+            .replace(/\*\*/g, '').replace(/###/g, '').replace(/##/g, '')
+            .replace(/#/g, '').replace(/\*/g, '').trim();
+
+        res.json({ success: true, reply });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
 });
 

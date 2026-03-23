@@ -74,22 +74,26 @@ window.doctoraliaApp = {
             });
 
             const data = await response.json();
+            const fixBtn = document.getElementById('btn-fix-doctoralia');
 
             if (data.status === 'APROVADO') {
                 auditPanel.style.background = '#ecfdf5'; 
                 auditPanel.style.borderColor = '#10b981';
                 statusBadge.style.color = '#047857';
                 statusBadge.innerText = '✅ SEGURO:';
+                if (fixBtn) fixBtn.style.display = 'none';
             } else if (data.status === 'REPROVADO') {
                 auditPanel.style.background = '#fef2f2'; 
                 auditPanel.style.borderColor = '#ef4444';
                 statusBadge.style.color = '#b91c1c';
                 statusBadge.innerText = '❌ ALERTA ÉTICO:';
+                if (fixBtn) fixBtn.style.display = 'block';
             } else {
                 auditPanel.style.background = '#fffbeb'; 
                 auditPanel.style.borderColor = '#f59e0b';
                 statusBadge.style.color = '#b45309';
                 statusBadge.innerText = '⚠️ ATENÇÃO:';
+                if (fixBtn) fixBtn.style.display = 'block';
             }
             
             feedbackText.innerText = data.feedback_auditoria || "Análise concluída.";
@@ -98,6 +102,46 @@ window.doctoraliaApp = {
             console.error(err);
             statusBadge.innerText = '❌ ERRO DE CONEXÃO';
             feedbackText.innerText = 'O Auditor cerebral está offline.';
+        }
+    },
+
+    async fixWithAI() {
+        const container = document.getElementById('doctoralia-reply-container');
+        const feedback = document.getElementById('audit-feedback-text').innerText;
+        const fixBtn = document.getElementById('btn-fix-doctoralia');
+
+        if (!container.innerText || container.innerText.includes('Aguardando')) return;
+
+        if (fixBtn) {
+            fixBtn.innerText = '⏳ Refinando...';
+            fixBtn.disabled = true;
+        }
+
+        try {
+            const response = await fetch('/api/doctoralia/refine-reply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    original_reply: container.innerText, 
+                    auditor_feedback: feedback 
+                })
+            });
+
+            const data = await response.json();
+            if (data.success && data.reply) {
+                container.innerText = data.reply;
+                // Esconde o botão de erro após corrigir
+                if (fixBtn) fixBtn.style.display = 'none';
+                document.getElementById('doctoralia-audit-panel').style.display = 'none';
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Erro ao refinar resposta.");
+        } finally {
+            if (fixBtn) {
+                fixBtn.innerText = '🪄 CORRIGIR COM IA';
+                fixBtn.disabled = false;
+            }
         }
     }
 };
