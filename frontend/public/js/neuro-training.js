@@ -156,7 +156,7 @@ window.neuroTraining = {
             }
 
             this.setMuteState(false); // Começa ouvindo
-            this.speak("Modo de entrevista contínua ativado. Pode começar a falar, Doutor.");
+            this.speak("O seu Gêmeo Digital está pronto. Sobre o que vamos conversar hoje, Doutor? Me conte algo que tem ocupado seus pensamentos ultimamente.");
 
         } else {
             overlay.style.display = 'none';
