@@ -2203,6 +2203,49 @@ PERGUNTA DO PACIENTE:
     }
 });
 
+// =======================================================================
+// ROTA: AUDITOR FACTUAL E ÉTICO (DOCTORALIA / INSTAGRAM)
+// =======================================================================
+app.post('/api/doctoralia/audit', async (req, res) => {
+    try {
+        const { original_message, generated_reply } = req.body;
+        
+        const systemPrompt = `Você é um Auditor de Compliance Médico e Ético do Conselho Federal de Psicologia (CFP).
+Sua ÚNICA missão é ler a resposta que uma IA gerou para um paciente e procurar por ALUCINAÇÕES ou INFRAÇÕES ÉTICAS.
+
+DADOS IMUTÁVEIS DO PROFISSIONAL (VERDADE ABSOLUTA):
+- Nome: Victor Lawrence
+- Registro: CRP 09/012681
+- Titulação: Mestrando em Ciências da Saúde (UFU), Especialista em TEA em Adultos, Hipnose Clínica.
+- Abordagem: Fenomenologia, Hipnose Ericksoniana, Avaliação Neuropsicológica.
+
+REGRAS DE REPROVAÇÃO (CRITÉRIOS DE FALHA):
+1. A resposta promete cura, garantia de resultados ou prazos para melhora? (PROIBIDO pelo CFP).
+2. A resposta inventou alguma titulação, faculdade ou técnica que não está nos dados acima?
+3. A resposta fez um diagnóstico online ou prescreveu tratamento diretamente pelo chat? (PROIBIDO).
+4. O tom é robótico ou de "bot de atendimento"?
+
+Sua saída deve ser ESTRITAMENTE um JSON neste formato:
+{
+  "status": "[APROVADO | REPROVADO | APROVADO_COM_RESSALVAS]",
+  "feedback_auditoria": "Sua análise curta e direta explicando o motivo do status. Se reprovado, aponte a frase exata que causou a falha."
+}`;
+
+        const prompt = `Mensagem do Paciente:\n"${original_message}"\n\nResposta Gerada a ser Auditada:\n"${generated_reply}"`;
+        
+        const result = await modelFlash.generateContent([
+            { text: systemPrompt },
+            { text: prompt }
+        ]);
+
+        const parsed = extractJSON(result.response.text());
+        res.json(parsed || { status: "REPROVADO", feedback_auditoria: "Falha crítica no parser de auditoria." });
+    } catch (error) {
+        console.error('❌ [ERRO AUDITORIA DOCTORALIA]', error);
+        res.status(500).json({ error: 'Falha ao auditar a resposta.' });
+    }
+});
+
 app.post('/api/studio/gerar-rascunho', async (req, res) => {
     try {
         const { tema, formato, publico } = req.body;

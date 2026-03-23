@@ -37,11 +37,67 @@ window.doctoraliaApp = {
     },
 
     copyReply() {
-        const text = document.getElementById('doctoralia-reply-container').innerText;
-        if (text.includes('A resposta gerada')) return;
+        const textArea = document.getElementById('doctoralia-reply-container');
+        const text = textArea ? textArea.innerText : "";
+        if (text.includes('Aguardando entrada')) return;
         
         navigator.clipboard.writeText(text).then(() => {
             alert("✅ Resposta copiada para a área de transferência!");
         });
+    },
+
+    async auditReply() {
+        const originalMessage = document.getElementById('doctoralia-input').value; 
+        const container = document.getElementById('doctoralia-reply-container');
+        const generatedReply = container ? container.innerText : "";
+        
+        const auditPanel = document.getElementById('doctoralia-audit-panel');
+        const statusBadge = document.getElementById('audit-status-badge');
+        const feedbackText = document.getElementById('audit-feedback-text');
+
+        if (!generatedReply || generatedReply.includes('Aguardando entrada')) {
+            return alert("Gere uma resposta antes de auditar.");
+        }
+
+        auditPanel.style.display = 'block';
+        auditPanel.style.background = '#f8fafc';
+        auditPanel.style.borderColor = '#cbd5e1';
+        statusBadge.style.color = '#475569';
+        statusBadge.innerText = '⏳ AUDITANDO...';
+        feedbackText.innerText = 'Consultando Compliance Clínico (V4 Ethical Engine)...';
+
+        try {
+            const response = await fetch('/api/doctoralia/audit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ original_message: originalMessage, generated_reply: generatedReply })
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'APROVADO') {
+                auditPanel.style.background = '#ecfdf5'; 
+                auditPanel.style.borderColor = '#10b981';
+                statusBadge.style.color = '#047857';
+                statusBadge.innerText = '✅ SEGURO:';
+            } else if (data.status === 'REPROVADO') {
+                auditPanel.style.background = '#fef2f2'; 
+                auditPanel.style.borderColor = '#ef4444';
+                statusBadge.style.color = '#b91c1c';
+                statusBadge.innerText = '❌ ALERTA ÉTICO:';
+            } else {
+                auditPanel.style.background = '#fffbeb'; 
+                auditPanel.style.borderColor = '#f59e0b';
+                statusBadge.style.color = '#b45309';
+                statusBadge.innerText = '⚠️ ATENÇÃO:';
+            }
+            
+            feedbackText.innerText = data.feedback_auditoria || "Análise concluída.";
+
+        } catch (err) {
+            console.error(err);
+            statusBadge.innerText = '❌ ERRO DE CONEXÃO';
+            feedbackText.innerText = 'O Auditor cerebral está offline.';
+        }
     }
 };

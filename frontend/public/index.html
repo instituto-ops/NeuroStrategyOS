@@ -494,6 +494,18 @@
                                 Aguardando entrada para orquestração...
                             </div>
                         </div>
+
+                        <!-- Painel de Auditoria (Dinâmico) -->
+                        <div id="doctoralia-audit-panel" style="display: none; margin-top: 15px; padding: 15px; border-radius: 10px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 13px; line-height: 1.5; transition: all 0.3s ease;">
+                            <strong id="audit-status-badge" style="display: block; margin-bottom: 4px; font-weight: 800; font-size: 11px; letter-spacing: 0.5px;">⏳ AUDITANDO...</strong>
+                            <span id="audit-feedback-text" style="color: #475569;">Verificando compliance com CFP e dados factuais...</span>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+                            <button class="btn" onclick="window.doctoraliaApp.auditReply()" style="background: white; color: #1e293b; border: 1px solid #cbd5e1; font-weight: 700; font-size: 11px; padding: 12px; border-radius: 8px;">🛡️ AUDITAR RISCO</button>
+                            <button class="btn btn-primary" onclick="window.doctoraliaApp.copyReply()" style="font-size: 11px; padding: 12px; border-radius: 8px;">📋 COPIAR RESPOSTA</button>
+                        </div>
                         
                         <!-- Footer Info -->
                         <div style="margin-top: 15px; padding: 12px 16px; background: #ecfdf5; border-radius: 10px; border: 1px solid #10b981; font-size: 11px; color: #065f46; font-weight: 700; display: flex; align-items: center; gap: 10px;">
