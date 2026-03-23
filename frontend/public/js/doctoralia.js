@@ -35,7 +35,8 @@ window.doctoraliaApp = {
         } finally {
             if (btn) {
                 btn.innerHTML = '✨ GERAR RESPOSTA HUMANIZADA';
-            btn.disabled = false;
+                btn.disabled = false;
+            }
         }
     },
 
@@ -155,3 +156,6 @@ window.doctoraliaApp = {
         }
     }
 };
+
+// Alias para compatibilidade e facilidade de referência
+window.Doctoralia = window.doctoraliaApp;

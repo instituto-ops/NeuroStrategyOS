@@ -507,7 +507,7 @@
                         
                         <button id="btn-generate-doctoralia" class="btn" 
                             style="width: 100%; margin-top: 20px; padding: 18px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; font-weight: 800; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2); transition: all 0.2s; letter-spacing: 0.5px; border: none; cursor: pointer;" 
-                            onclick="window.doctoraliaApp.generateReply()">
+                            onclick="window.Doctoralia?.generateReply()">
                             ✨ GERAR RESPOSTA HUMANIZADA (PRO)
                         </button>
                     </div>
@@ -523,7 +523,7 @@
                                 style="font-size: 11px; padding: 8px 16px; background: white; color: #6366f1; border: 1.5px solid #6366f1; font-weight: 800; border-radius: 8px; cursor: pointer; transition: all 0.2s;"
                                 onmouseover="this.style.background='#6366f1'; this.style.color='white';"
                                 onmouseout="this.style.background='white'; this.style.color='#6366f1';"
-                                onclick="window.doctoraliaApp.copyReply()">COPIAR TEXTO</button>
+                                onclick="window.Doctoralia?.copyReply()">COPIAR TEXTO</button>
                         </div>
                         
                         <div id="doctoralia-reply-container" 
@@ -538,15 +538,15 @@
                         <div id="doctoralia-audit-panel" style="display: none; margin-top: 15px; padding: 15px; border-radius: 10px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 13px; line-height: 1.5; transition: all 0.3s ease;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
                                 <strong id="audit-status-badge" style="font-weight: 800; font-size: 11px; letter-spacing: 0.5px;">⏳ AUDITANDO...</strong>
-                                <button id="btn-fix-doctoralia" onclick="window.doctoraliaApp.fixWithAI()" style="display: none; background: #f59e0b; color: white; border: none; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 4px; cursor: pointer;">🪄 CORRIGIR COM IA</button>
+                                <button id="btn-fix-doctoralia" onclick="window.Doctoralia?.fixWithAI()" style="display: none; background: #f59e0b; color: white; border: none; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 4px; cursor: pointer;">🪄 CORRIGIR COM IA</button>
                             </div>
                             <span id="audit-feedback-text" style="color: #475569;">Verificando compliance com CFP e dados factuais...</span>
                         </div>
                         
                         <!-- Actions -->
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-                            <button class="btn" onclick="window.doctoraliaApp.auditReply()" style="background: white; color: #1e293b; border: 1px solid #cbd5e1; font-weight: 700; font-size: 11px; padding: 12px; border-radius: 8px;">🛡️ AUDITAR RISCO</button>
-                            <button class="btn btn-primary" onclick="window.doctoraliaApp.copyReply()" style="font-size: 11px; padding: 12px; border-radius: 8px;">📋 COPIAR RESPOSTA</button>
+                            <button class="btn" onclick="window.Doctoralia?.auditReply()" style="background: white; color: #1e293b; border: 1px solid #cbd5e1; font-weight: 700; font-size: 11px; padding: 12px; border-radius: 8px;">🛡️ AUDITAR RISCO</button>
+                            <button class="btn btn-primary" onclick="window.Doctoralia?.copyReply()" style="font-size: 11px; padding: 12px; border-radius: 8px;">📋 COPIAR RESPOSTA</button>
                         </div>
                         
                         <!-- Footer Info -->
@@ -816,6 +816,7 @@
             if (window.aiStudioTemplate) window.aiStudioTemplate.init();
         });
     </script>
+    <script src="js/doctoralia.js"></script>
     <script src="js/app.js"></script>
     <script src="js/blocks.js"></script>
     <script src="js/chat.js"></script>
@@ -828,7 +829,6 @@
     <script src="js/goal-system.js"></script>
     <script src="js/neuro-training.js"></script>
     <script src="js/menu-manager.js"></script>
-    <script src="js/doctoralia.js"></script>
     <!-- [MODAL] Media Picker Abidos -->
     <div id="media-picker-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:20000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
         <div style="background:white; width:90%; max-width:800px; height:80%; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 30px 60px rgba(0,0,0,0.5);">
