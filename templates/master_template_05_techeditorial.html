@@ -147,18 +147,7 @@
         <h2>{{secao4_h2}}</h2>
     </div>
 
-    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-50 animate-slide-up" style="animation-delay: 0.5s;">
-        <nav class="bg-white/70 backdrop-blur-xl border border-white/50 shadow-sm shadow-slate-200/50 rounded-full px-2 py-2 flex items-center gap-2 sm:gap-6">
-            <div class="flex items-center gap-2 pl-4 pr-2">
-                <i data-lucide="activity" class="w-5 h-5 text-accent-600"></i>
-                <span class="font-display font-semibold text-sm tracking-tight text-dark-950 hidden sm:block">{{nav_brand_nome}}</span>
-            </div>
-            <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
-            <button onclick="toggleOverlay()" class="bg-dark-950 hover:bg-accent-600 text-white font-display font-medium text-sm px-6 py-2.5 rounded-full transition-colors duration-300 flex items-center gap-2">
-                <span>{{nav_cta_botao}}</span>
-            </button>
-        </nav>
-    </div>
+    {{nav_menu_dinamico}}
 
     <main class="flex-grow">
         

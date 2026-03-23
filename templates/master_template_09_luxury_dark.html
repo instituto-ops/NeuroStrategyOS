@@ -168,17 +168,7 @@
 
     <div class="progress-bar" id="progressBar"></div>
 
-    <nav class="fixed w-full top-0 z-40 transition-all duration-500" id="navbar">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12 h-24 flex items-center justify-between">
-            <div class="font-serif italic text-2xl tracking-wider text-bone-50">
-                {{nav_autor_nome}}
-            </div>
-            <button onclick="openBooking()" class="text-xs uppercase tracking-[0.2em] font-medium text-bone-100 hover:text-gold-500 transition-colors flex items-center gap-3 group border border-bone-100/20 hover:border-gold-500/50 px-6 py-3 rounded-full backdrop-blur-sm">
-                {{nav_cta_texto}}
-                <div class="w-1 h-1 rounded-full bg-gold-500 group-hover:scale-150 transition-transform"></div>
-            </button>
-        </div>
-    </nav>
+    {{nav_menu_dinamico}}
 
     <main class="flex-grow">
         

@@ -13,6 +13,7 @@ window.aiStudioTemplate = {
     init: async function() {
         console.log("🎨 Inicializando AI Studio Template Engine...");
         await this.loadTemplates();
+        await this.loadMenus();
         this.setupTemplateSwitcher();
     },
 
@@ -29,6 +30,24 @@ window.aiStudioTemplate = {
                 this.loadTemplateDetails(this.selectedId);
             }
         } catch (e) { console.error("Erro ao carregar templates:", e); }
+    },
+
+    loadMenus: async function() {
+        try {
+            const res = await fetch('/api/menus');
+            const data = await res.json();
+            const select = document.getElementById('ai-studio-menu');
+            if (select && Array.isArray(data)) {
+                select.innerHTML = '<option value="">Sem Menu (Default)</option>' + 
+                    data.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+                
+                // Tenta selecionar o primeiro menu por padrão (opcional)
+                if (data.length > 0) {
+                    this.menuId = data[0].id;
+                    select.value = this.menuId;
+                }
+            }
+        } catch (e) { console.error("Erro ao carregar menus:", e); }
     },
 
     setupTemplateSwitcher: function() {
@@ -239,7 +258,8 @@ window.aiStudioTemplate = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     templateId: this.selectedId,
-                    values: this.values
+                    values: this.values,
+                    menuId: this.menuId
                 })
             });
             const html = await res.text();
@@ -287,6 +307,7 @@ window.aiStudioTemplate = {
             id: Date.now(),
             name: draftName,
             templateId: this.selectedId,
+            menuId: this.menuId,
             values: this.values,
             date: new Date().toISOString()
         };
@@ -314,6 +335,10 @@ window.aiStudioTemplate = {
             const selectEl = document.getElementById('ai-studio-template');
             if (selectEl) selectEl.value = this.selectedId;
             
+            this.menuId = draft.menuId || null;
+            const menuEl = document.getElementById('ai-studio-menu');
+            if (menuEl) menuEl.value = this.menuId || "";
+
             this.values = draft.values;
             // Recarrega os detalhes da tela
             this.loadTemplateDetails(this.selectedId);

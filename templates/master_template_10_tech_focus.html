@@ -137,30 +137,7 @@
         <div class="blob w-[400px] h-[400px] bg-coral-500 bottom-[10%] left-[-50px] animate-pulse-slow"></div>
     </div>
 
-    <nav class="fixed top-0 w-full z-50 p-6 flex flex-col gap-4 hide-on-focus transition-opacity duration-500">
-        <div class="max-w-7xl mx-auto w-full glass-card rounded-2xl px-6 py-4 flex items-center justify-between shadow-2xl">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white shadow-lg">
-                    <i data-lucide="brain-circuit" class="w-5 h-5"></i>
-                </div>
-                <span class="font-display font-bold text-xl tracking-tighter text-white">{{autor_nome}}</span>
-            </div>
-            
-            <div class="flex items-center gap-6">
-                <button onclick="toggleFocusMode()" class="text-xs font-bold uppercase tracking-widest text-mist/40 hover:text-coral-400 transition-colors flex items-center gap-2">
-                    <i data-lucide="eye" class="w-4 h-4"></i>
-                    <span>Modo Foco</span>
-                </button>
-                <div class="h-4 w-px bg-white/10"></div>
-                <button onclick="openBooking()" class="bg-white text-nero font-display font-bold text-sm px-6 py-2.5 rounded-xl hover:bg-coral-500 hover:text-white transition-all transform hover:-translate-y-0.5">
-                    {{nav_cta_botao}}
-                </button>
-            </div>
-        </div>
-        <div class="max-w-2xl mx-auto w-full">
-            <div class="progress-pill" id="progressBar"></div>
-        </div>
-    </nav>
+    {{nav_menu_dinamico}}
 
     <main class="relative z-10">
         

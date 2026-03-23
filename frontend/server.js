@@ -187,7 +187,7 @@ app.get('/api/templates/:id', async (req, res) => {
 
 // [API] Gerar Preview Final (Processador de Variáveis)
 app.post('/api/templates/preview', async (req, res) => {
-    const { templateId, values } = req.body;
+    const { templateId, values, menuId } = req.body;
     const entry = TEMPLATE_CATALOG.find(t => t.id === templateId);
     if (!entry) return res.status(404).json({ error: "Template não encontrada" });
 
@@ -195,13 +195,48 @@ app.post('/api/templates/preview', async (req, res) => {
         const filePath = path.join(__dirname, '../templates', entry.filename);
         let html = fs.readFileSync(filePath, "utf-8");
         
+        // 1. Injetar Variáveis
         for (const [key, value] of Object.entries(values || {})) {
             const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
             html = html.replace(regex, value || "");
         }
+
+        // 2. Auto-TOC
+        const { modifiedHtml, tocItems } = generateTOC(html);
+        html = modifiedHtml;
+
+        // 3. Injetar Menu Dinâmico
+        let menuHtml = '';
+        if (menuId) {
+            menuHtml = generateMenuHtmlForTemplate(menuId, templateId, { slug: "preview", title: values.SEO_TITLE || '' });
+            
+            // Auto-TOC append (preview mode)
+            if (tocItems.length > 0 && (templateId === '02' || templateId === '03' || templateId === '04' || templateId === '05' || templateId === '06' || templateId === '07' || templateId === '10')) {
+                 const tocMenuHtml = `
+                    <div class="fixed bottom-4 left-4 z-50 glass-panel lg:hidden p-3 rounded-2xl max-w-[200px]">
+                        <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ Tópicos Neste Artigo</div>
+                        <ul class="flex flex-col gap-1">
+                            ${tocItems.map(i => `<li><a href="${i.url}" class="text-xs text-slate-500 hover:text-[#14b8a6] line-clamp-1">${i.label}</a></li>`).join('')}
+                        </ul>
+                    </div>`;
+                 menuHtml += tocMenuHtml;
+            }
+        }
+
+        if (html.includes('{{nav_menu_dinamico}}')) {
+             html = html.replace('{{nav_menu_dinamico}}', menuHtml);
+        } else if (html.includes('<main')) {
+             html = html.replace('<main', menuHtml + '\n    <main');
+        } else {
+             html = menuHtml + html;
+        }
+
         html = html.replace(/\{\{\w+\}\}/g, "");
         res.send(html);
-    } catch (e) { res.status(500).send("Erro ao gerar preview."); }
+    } catch (e) { 
+        console.error(e);
+        res.status(500).send("Erro ao gerar preview."); 
+    }
 });
 
 // ==============================================================================
@@ -253,91 +288,150 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
     if (!menu) return '';
 
     const { slug, title } = pageContext;
+    const currentPath = slug ? (slug.startsWith('/') ? slug : `/${slug}`) : '/';
 
     // Função para tratar links dinâmicos e CTAs
     const processUrl = (url) => {
         let finalUrl = url;
-        // Injetar contexto se placeholder estiver presente
         if (slug) finalUrl = finalUrl.replace('{{slug}}', slug);
         
-        // Auto-parametrizar WhatsApp se for link de contato
         if (finalUrl.includes('api.whatsapp.com') || finalUrl.includes('wa.me')) {
             const contextMsg = encodeURIComponent(`\n\n(Vim da página: ${title || slug})`);
-            if (finalUrl.includes('text=')) {
-                finalUrl += contextMsg;
-            } else {
-                finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'text=' + contextMsg;
-            }
+            finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'text=' + contextMsg;
         }
         return finalUrl;
     };
 
+    const isLinkActive = (url) => {
+        const processed = processUrl(url);
+        return processed === currentPath || processed === slug;
+    };
+
     // Filtrar drafts
-    const filterDrafts = (items) => items.filter(i => i.status !== 'draft').map(i => ({ ...i, children: i.children ? filterDrafts(i.children) : [] }));
-    const validItems = filterDrafts(menu.items || []);
+    const filterItems = (items) => items.filter(i => i.status !== 'draft').map(i => ({ 
+        ...i, 
+        active: isLinkActive(i.url),
+        children: i.children ? filterItems(i.children) : [] 
+    }));
+    
+    const validItems = filterItems(menu.items || []);
     if (validItems.length === 0) return '';
 
     let html = '';
 
-    // Lógica por Arquétipo de Template
-    if (templateId === '01' || templateId === '08') { // Dark Glass / Ethereal Glass
-        html += `<nav class="sticky top-4 z-50 mx-6 mt-4 glass-panel rounded-full px-6 py-4 flex items-center justify-between">`;
-        html += `<a href="/" class="font-bold tracking-widest text-[#2dd4bf] uppercase text-sm">V.LAWRENCE</a><ul class="flex gap-6 items-center">`;
+    // --- RENDERIZAÇÃO POR DESIGN SYSTEM ---
+
+    if (templateId === '01' || templateId === '08') { // GLASS SYSTEMS
+        const isEthereal = templateId === '08';
+        const accentColor = isEthereal ? 'text-aura-indigo' : 'text-cyan-400';
+        const brand = isEthereal ? 'sparkles' : 'brain';
+
+        html += `<nav class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-fit px-4 animate-fade-in-up">`;
+        html += `<div class="glass-panel rounded-full px-2 py-2 flex items-center gap-2 sm:gap-6 shadow-2xl">`;
+        
+        // Brand/Progress Section
+        if (isEthereal) {
+            html += `
+                <div class="relative w-10 h-10 flex items-center justify-center shrink-0 bg-white/50 rounded-full">
+                    <svg class="absolute inset-0 w-10 h-10" viewBox="0 0 100 100">
+                        <circle class="text-slate-200/50 stroke-current" stroke-width="6" cx="50" cy="50" r="44" fill="transparent"></circle>
+                        <circle id="navProgressCircle" class="${accentColor} progress-ring stroke-current" stroke-width="6" stroke-linecap="round" cx="50" cy="50" r="44" fill="transparent" stroke-dasharray="276.46" stroke-dashoffset="276.46"></circle>
+                    </svg>
+                    <i data-lucide="${brand}" class="w-4 h-4 text-slate-700 absolute"></i>
+                </div>`;
+        } else {
+            html += `<div class="w-10 h-10 bg-black/20 rounded-full flex items-center justify-center"><i data-lucide="${brand}" class="w-5 h-5 ${accentColor}"></i></div>`;
+        }
+
+        html += `<ul class="hidden md:flex items-center gap-6 pr-4 border-r border-white/10 ml-2">`;
         validItems.forEach(item => {
+            const activeClass = item.active ? `text-white font-bold` : `text-slate-400 hover:text-white`;
             html += `<li class="relative group">`;
-            html += `<a href="${processUrl(item.url)}" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">${item.label}</a>`;
-            if (item.children && item.children.length > 0) {
-                html += `<ul class="absolute top-full left-0 mt-2 w-48 glass-panel rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col gap-2 p-3">`;
+            html += `<a href="${processUrl(item.url)}" class="text-xs uppercase tracking-widest transition-all ${activeClass}">${item.label}</a>`;
+            if (item.children.length > 0) {
+                html += `<ul class="absolute top-full left-0 mt-4 w-48 glass-panel rounded-2xl p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col gap-2">`;
                 item.children.forEach(sub => {
-                    html += `<li><a href="${processUrl(sub.url)}" class="text-xs text-slate-300 hover:text-white block px-2 py-1">${sub.label}</a></li>`;
+                    html += `<li><a href="${processUrl(sub.url)}" class="text-[10px] uppercase text-slate-400 hover:text-white block px-2 py-1">${sub.label}</a></li>`;
                 });
                 html += `</ul>`;
             }
             html += `</li>`;
         });
-        html += `</ul></nav>`;
-    } else if (templateId === '02' || templateId === '03' || templateId === '07') { // Templates Editoriais
-        html += `<nav class="w-full bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-5 shadow-sm">`;
+        html += `</ul>`;
+        html += `<button onclick="openBooking()" class="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-tighter px-6 py-2.5 rounded-full hover:bg-black transition-all">Agendar Consultoria</button>`;
+        html += `</div></nav>`;
+
+    } else if (templateId === '02' || templateId === '03' || templateId === '07') { // EDITORIAL SYSTEMS
+        const isVintage = templateId === '07';
+        const bgClass = isVintage ? 'bg-[#fcf8f1]' : 'bg-white/95';
+        const fontClass = isVintage ? 'font-serif' : 'font-sans';
+
+        html += `<nav class="w-full ${bgClass} border-b border-slate-200 sticky top-0 z-50 px-6 py-4 backdrop-blur-md">`;
         html += `<div class="max-w-7xl mx-auto flex items-center justify-between">`;
-        html += `<a href="/" class="font-serif italic text-2xl text-slate-900">Lawrence.</a><div class="flex gap-8 items-center">`;
+        html += `<a href="/" class="font-serif italic text-2xl text-slate-900 tracking-tighter">NeuroEngine<span class="text-[#14b8a6]">.</span></a>`;
+        html += `<div class="flex gap-8 items-center">`;
         validItems.forEach(item => {
-            html += `<div class="group relative">`;
-            html += `<a href="${processUrl(item.url)}" class="text-sm font-medium text-slate-600 hover:text-slate-900 uppercase tracking-widest">${item.label}</a>`;
-            if (item.children && item.children.length > 0) {
-                html += `<div class="absolute top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all"><div class="bg-white border border-slate-100 shadow-xl rounded-lg p-4 w-56 flex flex-col gap-3">`;
+            const activeClass = item.active ? 'text-slate-900 border-b-2 border-[#14b8a6]' : 'text-slate-500 hover:text-slate-900';
+            html += `<div class="group relative py-2">`;
+            html += `<a href="${processUrl(item.url)}" class="text-xs uppercase font-bold tracking-[0.2em] transition-all ${activeClass}">${item.label}</a>`;
+            if (item.children.length > 0) {
+                html += `<div class="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">`;
+                html += `<div class="bg-white border border-slate-100 shadow-2xl rounded p-4 w-56 flex flex-col gap-3">`;
                 item.children.forEach(sub => {
-                    html += `<a href="${processUrl(sub.url)}" class="text-sm text-slate-600 hover:text-[#14b8a6] border-b border-slate-50 pb-2 last:border-0">${sub.label}</a>`;
+                    html += `<a href="${processUrl(sub.url)}" class="text-xs text-slate-500 hover:text-[#14b8a6] pb-2 border-b border-slate-50 last:border-0">${sub.label}</a>`;
                 });
                 html += `</div></div>`;
             }
             html += `</div>`;
         });
+        html += `<button onclick="openBooking()" class="hidden lg:block bg-slate-900 text-white px-6 py-2 text-xs font-bold uppercase tracking-widest rounded hover:bg-[#14b8a6] transition-all">Contato</button>`;
         html += `</div></div></nav>`;
-    } else { // Fallback e Tech (10, 11...)
-        html += `<nav class="w-full bg-[#05080f] text-slate-200 border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 z-50">`;
-        html += `<a href="/" class="font-mono font-bold text-[#14b8a6]">VL::System</a><div class="flex gap-6">`;
+
+    } else if (templateId === '09') { // LUXURY DARK
+        html += `<nav class="fixed w-full top-0 z-40 transition-all duration-500 bg-midnight-950/20 backdrop-blur-sm hover:bg-midnight-950/80 border-b border-white/5" id="navbar">`;
+        html += `<div class="max-w-7xl mx-auto px-6 lg:px-12 h-24 flex items-center justify-between">`;
+        html += `<div class="font-serif italic text-2xl tracking-wider text-bone-50">L<span class="text-gold-500">.</span> System</div>`;
+        html += `<ul class="hidden lg:flex gap-10 items-center">`;
         validItems.forEach(item => {
-            html += `<div class="group relative">`;
-            html += `<a href="${processUrl(item.url)}" class="text-sm hover:text-white tracking-widest">${item.label}</a>`;
-            // Simplified sub-nav for tech
-            if (item.children && item.children.length > 0) {
-                html += `<div class="absolute top-full left-0 mt-2 bg-[#0b1221] border border-white/10 p-3 hidden group-hover:flex flex-col gap-2 rounded">`;
-                item.children.forEach(sub => {
-                    html += `<a href="${processUrl(sub.url)}" class="text-xs hover:text-[#14b8a6] whitespace-nowrap">${sub.label}</a>`;
-                });
-                html += `</div>`;
-            }
-            html += `</div>`;
+            const activeClass = item.active ? 'text-gold-500' : 'text-bone-200/60 hover:text-gold-500';
+            html += `<li><a href="${processUrl(item.url)}" class="text-[10px] uppercase tracking-[0.3em] font-medium transition-colors ${activeClass}">${item.label}</a></li>`;
         });
+        html += `</ul>`;
+        html += `<button onclick="openBooking()" class="text-[10px] uppercase tracking-[0.2em] font-medium text-bone-100 hover:text-gold-500 transition-colors flex items-center gap-3 group border border-bone-100/20 hover:border-gold-500/50 px-6 py-3 rounded-full backdrop-blur-sm">`;
+        html += `Agendar Reserva <div class="w-1 h-1 rounded-full bg-gold-500 group-hover:scale-150 transition-transform"></div></button>`;
         html += `</div></nav>`;
+
+    } else if (templateId === '10' || templateId === '04' || templateId === '05') { // TECH / MINIMALIST
+        html += `<nav class="fixed top-0 w-full z-50 p-6 flex flex-col gap-4 hide-on-focus transition-opacity duration-500">`;
+        html += `<div class="max-w-7xl mx-auto w-full glass-card rounded-2xl px-6 py-4 flex items-center justify-between shadow-2xl backdrop-blur-xl border border-white/5">`;
+        html += `<div class="flex items-center gap-3"><div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white"><i data-lucide="zap" class="w-5 h-5"></i></div><span class="font-bold text-white tracking-tighter">TECH::FOCUS</span></div>`;
+        html += `<div class="flex items-center gap-8">`;
+        validItems.forEach(item => {
+            const activeClass = item.active ? 'text-orange-500 font-bold' : 'text-mist/40 hover:text-white';
+            html += `<a href="${processUrl(item.url)}" class="text-xs uppercase tracking-widest transition-colors ${activeClass}">${item.label}</a>`;
+        });
+        html += `<button onclick="openBooking()" class="bg-white text-black font-bold text-[10px] px-6 py-2.5 rounded-xl hover:bg-orange-500 hover:text-white transition-all">CONSULTA</button>`;
+        html += `</div></div></nav>`;
+
+    } else { // FALLBACK / ORGANIC / LANDING (06, 11)
+        html += `<header class="fixed top-0 w-full z-50 py-4 px-6 flex justify-between items-center bg-white/80 backdrop-blur-lg border-b border-slate-100">`;
+        html += `<div class="font-extrabold text-xl tracking-tight text-indigo-600">CLINIC<span class="text-slate-900">OS</span></div>`;
+        html += `<div class="hidden md:flex gap-8 text-[11px] font-bold uppercase tracking-widest text-slate-500">`;
+        validItems.forEach(item => {
+            const activeClass = item.active ? 'text-indigo-600' : 'hover:text-indigo-600';
+            html += `<a href="${processUrl(item.url)}" class="transition-colors ${activeClass}">${item.label}</a>`;
+        });
+        html += `</div>`;
+        html += `<button onclick="openBooking()" class="bg-indigo-600 text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-indigo-200">Agendar Agora</button>`;
+        html += `</header>`;
     }
 
-    // Gerar Schema.org
+    // Geração do Schema.org para SEO Técnico
     const schemaOrg = {
         "@context": "https://schema.org",
         "@type": "SiteNavigationElement",
         "name": validItems.map(i => i.label),
-        "url": validItems.map(i => i.url)
+        "url": validItems.map(i => processUrl(i.url))
     };
 
     html += `\n<!-- Schema.org Navigation -->\n<script type="application/ld+json">\n${JSON.stringify(schemaOrg, null, 2)}\n</script>\n`;
