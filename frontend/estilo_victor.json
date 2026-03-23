@@ -1,6 +1,91 @@
 {
-  "style_rules": [],
-  "last_update": "2026-03-22T23:45:00.000Z",
+  "style_rules": [
+    {
+      "categoria": "Autoavaliação",
+      "titulo": "Melhorei um pouco",
+      "regra": "Expressão da Participante 1 sobre seu estado de melhora inicial (00:00).",
+      "id": "rule_1774233960114_0s9vu",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    },
+    {
+      "categoria": "Estado Emocional/Físico",
+      "titulo": "sendo um pouco difícil",
+      "regra": "Descrição da Participante 1 sobre a dificuldade da situação atual (gravidez e trabalho) (00:47).",
+      "id": "rule_1774233960114_7ow1c",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    },
+    {
+      "categoria": "Processo de Aceitação",
+      "titulo": "conseguindo aceitar mais",
+      "regra": "Indica o progresso da Participante 1 em lidar psicologicamente com a gravidez (00:51).",
+      "id": "rule_1774233960114_ux9ra",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    },
+    {
+      "categoria": "Consequência Emocional",
+      "titulo": "me gerará uma certa ansiedade",
+      "regra": "Sentimento de ansiedade decorrente da sobrecarga de trabalho e desorganização (02:23).",
+      "id": "rule_1774233960114_cltkw",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    },
+    {
+      "categoria": "Capacidade Percebida",
+      "titulo": "não tô dando conta",
+      "regra": "Expressão da Participante 1 sobre sua incapacidade de gerenciar a situação atual devido à falta de energia (03:23).",
+      "id": "rule_1774233960114_vzopb",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    },
+    {
+      "categoria": "Desafio Linguístico",
+      "titulo": "afirmar que tá desorganizado",
+      "regra": "Participante 2 questiona a precisão do termo usado pela Participante 1 para descrever sua situação (06:03).",
+      "id": "rule_1774233960114_vtxep",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    },
+    {
+      "categoria": "Metodologia de Análise",
+      "titulo": "padrão de comparação",
+      "regra": "Conceito introduzido pela Participante 2 para avaliar a validade das comparações da Participante 1 (04:31).",
+      "id": "rule_1774233960114_1w0bm",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    },
+    {
+      "categoria": "Clarificação de Contexto",
+      "titulo": "A rotina não grávida?",
+      "regra": "Participante 2 busca entender o ponto de referência da Participante 1 para a 'desorganização' (04:49).",
+      "id": "rule_1774233960114_1s94a",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    },
+    {
+      "categoria": "Lógica de Comparação",
+      "titulo": "variáveis deles as iguais",
+      "regra": "Critério estabelecido pela Participante 2 para uma comparação válida entre momentos diferentes (06:48).",
+      "id": "rule_1774233960114_jgwm1",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    },
+    {
+      "categoria": "Reclassificação de Sentimento",
+      "titulo": "tudo muito confuso, sabe",
+      "regra": "Participante 1 oferece uma alternativa para 'desorganizado', focando na confusão de seu estado (10:59).",
+      "id": "rule_1774233960114_6e57q",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    },
+    {
+      "categoria": "Procura por Emoção",
+      "titulo": "Que sentimento é isso?",
+      "regra": "Participante 2 busca a emoção subjacente às descrições da Participante 1 sobre confusão/desorganização (11:45).",
+      "id": "rule_1774233960114_ug90d",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    },
+    {
+      "categoria": "Questionamento Crítico",
+      "titulo": "Considerando qual estado?",
+      "regra": "Pergunta final da Participante 2 sobre a base da comparação da Participante 1, focando no seu estado físico/mental atual (12:46).",
+      "id": "rule_1774233960114_wt6g8",
+      "data_extracao": "2026-03-23T02:46:00.114Z"
+    }
+  ],
+  "last_update": "2026-03-23T02:46:00.114Z",
   "insights_history": [],
   "scientific_vault": {
     "nota": "Final Wipe: AGRESSIVE LINGUISTIC FILTER ACTIVE."

@@ -99,34 +99,30 @@ function extractJSON(text) {
 const MEMORY_FILE_PATH = path.join(__dirname, 'estilo_victor.json');
 
 
-const PROMPT_TREINAMENTO_ISOLADO = `Você é um ENGENHEIRO DE SINTAXE E RITMO. Sua única função é mapear o 'CÓDIGO FONTE' verbal do Dr. Victor Lawrence. O significado do que ele fala NÃO IMPORTA.
+const PROMPT_TREINAMENTO_ISOLADO = `[MODO: ENGENHEIRO DE SINTAXE DIGITAL]
+Sua única função é CLONAR O CÓDIGO FONTE VERBAL do Dr. Victor Lawrence. 
+O conteúdo (o que é dito) é IRRELEVANTE. A forma (como é dito) é TUDO.
 
-[REGRA DE OURO: FORMA > CONTEÚDO]
-- É PROIBIDO extrair regras sobre: Emoções, Diagnósticos, Procedimentos, Relatórios ou História de Vida. 
-- Exemplo de ERRO a evitar: "Categoria: Estado Emocional". (Isso é proibido).
-- Exemplo de ACERTO: "Categoria: Sintaxe | Regra: Uso frequente de orações subordinadas para explicar conceitos complexos."
+[REGRAS DE OURO]
+1. IGNORE SENTIMENTOS: Se o texto diz "estou triste", ignore a tristeza. Analise se a frase é curta, se usa reticências, se é passiva ou ativa.
+2. IDENTIFICAÇÃO DE ALVO: Em diálogos (P1, P2, etc.), seu alvo é o PROFISSIONAL (quem conduz, valida ou questiona). IGNORE 100% o interlocutor/paciente.
+3. CATEGORIAS LINGUÍSTICAS APENAS: [Cadência | Sintaxe | Vocabulário | Tom Estrutural]. 
+4. PROIBIDO: Extrair qualquer "insight" sobre o progresso do paciente ou temas da sessão.
 
-[DIARIZAÇÃO E SEGURANÇA]
-- Analise a transcrição e identifique o PROFISSIONAL (quem lidera/pergunta).
-- IGNORE 100% a fala do Paciente. Não estude o tom dele.
-- Foque apenas no 'Design de Frase' do Dr. Victor.
-
-CATEGORIAS PERMITIDAS:
-1. Cadência (Breve, Prolixo, Ritmo, Pausas)
-2. Sintaxe (Padrões de construção de frase)
-3. Vocabulário Repetitivo (Conectivos, vícios de linguagem favoráveis)
-4. Tom (Socrático, Assertivo, Acolhedor - mas apenas na ESTRUTURA da frase)
+[EXEMPLO DE EXTRAÇÃO CORRETA]
+- Texto: "Entendo. Mas veja, comparado a quê? Qual o padrão?"
+- Extração: { "categoria": "Sintaxe", "titulo": "Interrogação Dialética", "regra": "Usa perguntas curtas em cascata para forçar a redefinição de conceitos pelo interlocutor." }
 
 FORMATO OBRIGATÓRIO (JSON):
 {
   "regras_extraidas": [
     {
-      "categoria": "[Cadência | Sintaxe | Vocabulário | Tom]",
-      "titulo": "Nome Técnico do Padrão (ex: Inversão Suave)",
-      "regra": "Como o Gêmeo Digital deve construir a frase para soar como ele."
+      "categoria": "...",
+      "titulo": "Nome Técnico LINGUÍSTICO",
+      "regra": "Descrição de como clonar a estrutura."
     }
   ],
-  "reply": "Resumo LINGUÍSTICO (ex: Percebi que você usa 'de fato' como ponto de ancoragem antes de uma tese). O que vamos clonar agora?"
+  "reply": "Confirmação técnica: Identifiquei o padrão de construção [NOME] do Dr. Victor."
 }`;
 
 const getVictorStyle = () => {
@@ -1888,7 +1884,11 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
 
         const result = await modelFlash.generateContent([
             { text: PROMPT_TREINAMENTO_ISOLADO },
-            { text: `TEXTO DO DR. VICTOR: "${text.substring(0, 8000).replace(/"/g, "'")}"` }
+            { text: `CONTEXTO: O PROFISSIONAL (Dr. Victor Lawrence) é o PARTICIPANTE 2 (P2). 
+                     O PARTICIPANTE 1 (P1) é o CLIENTE/PACIENTE.
+                     IGNORE P1 e extraia a sintaxe exclusivamente de P2.
+                     
+                     TEXTO: "${text.substring(0, 8000).replace(/"/g, "'")}"` }
         ]);
         const extracted = extractJSON(result.response.text());
         if (!extracted) throw new Error("IA falhou na análise de lastro.");
