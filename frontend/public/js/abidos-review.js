@@ -31,15 +31,17 @@ window.abidosReview = {
         this.drafts.forEach(draft => {
             const tr = document.createElement('tr');
             
-            const abidosIcon = draft.validacoes_automatizadas.metodo_abidos ? '🟢' : '🔴';
-            const complianceIcon = draft.validacoes_automatizadas.compliance_etico ? '⚖️' : '⚠️';
+            const abidosIcon = (draft.validacoes_automatizadas && draft.validacoes_automatizadas.metodo_abidos) ? '🟢' : '🔴';
+            const complianceIcon = (draft.validacoes_automatizadas && draft.validacoes_automatizadas.compliance_etico) ? '⚖️' : '⚠️';
             const statusStr = `<span style="font-size: 11px;">${abidosIcon} Abidos<br>${complianceIcon} CFP</span>`;
 
+            const fontesRag = Array.isArray(draft.fontes_rag_utilizadas) ? draft.fontes_rag_utilizadas.join('\\n') : 'Nenhuma fonte';
+            
             tr.innerHTML = `
                 <td><strong>${draft.draft_id}</strong><br><span style="font-size:11px; color:#64748b;">${new Date(draft.data_submissao).toLocaleDateString()}</span></td>
                 <td>${draft.tema_foco}</td>
                 <td>${statusStr}</td>
-                <td><span style="font-size:11px; color:#3b82f6; cursor:pointer;" onclick="alert('Fontes:\\n' + '${draft.fontes_rag_utilizadas.join('\\n')}')">Ver Fontes (RAG)</span></td>
+                <td><span style="font-size:11px; color:#3b82f6; cursor:pointer;" onclick="alert('Fontes:\\n' + '${fontesRag}')">Ver Fontes (RAG)</span></td>
                 <td style="display: flex; gap: 5px;">
                     <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="window.abidosReview.openModal('${draft.draft_id}')">✏️ Revisar</button>
                     <button class="btn" style="padding: 5px 10px; font-size: 12px; background: #10b981; color: white;" onclick="window.abidosReview.quickApprove('${draft.draft_id}')">✅ Publicar</button>

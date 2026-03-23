@@ -1,393 +1,290 @@
 /**
- * AI Studio Template Engine - NeuroEngine OS
- * Controla a nova interface de templates baseada em blocos e variáveis dinâmicas.
+ * NeuroEngine AI Studio - Mission Control (V4.8)
+ * Orquestrador de Conteúdo Abidos V4 - High Integrity + Rate Limit Protection
  */
 
 window.aiStudioTemplate = {
-    selectedId: "01",
-    modules: [],
-    values: {},
-    caminhoFisico: null,
+    selectedId: null,
     menuId: null,
+    values: {},
+    modules: [],
+    caminhoFisico: null,
+    currentDraftId: null,
+    currentDraftName: null,
 
     init: async function() {
-        console.log("🎨 Inicializando AI Studio Template Engine...");
+        console.log("🧠 [STUDIO] Inicializando Missão...");
         await this.loadTemplates();
-        await this.loadMenus();
-        this.setupTemplateSwitcher();
+        
+        this.values.nome_completo = "Dr. Victor Lawrence";
+        this.values.crp = "09/012681";
+        this.values.whatsapp = "5562982269799";
     },
 
     loadTemplates: async function() {
+        const select = document.getElementById('ai-studio-template');
+        if (!select) return;
         try {
             const res = await fetch('/api/templates');
             const data = await res.json();
-            const select = document.getElementById('ai-studio-template');
-            if (select && data.templates) {
-                select.innerHTML = data.templates.map(t => 
-                    `<option value="${t.id}">${t.name}</option>`
-                ).join('');
-                this.selectedId = data.templates[0].id;
-                this.loadTemplateDetails(this.selectedId);
-            }
-        } catch (e) { console.error("Erro ao carregar templates:", e); }
-    },
-
-    loadMenus: async function() {
-        try {
-            const res = await fetch('/api/menus');
-            const data = await res.json();
-            const select = document.getElementById('ai-studio-menu');
-            if (select && Array.isArray(data)) {
-                select.innerHTML = '<option value="">Sem Menu (Default)</option>' + 
-                    data.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-                
-                // Tenta selecionar o primeiro menu por padrão (opcional)
-                if (data.length > 0) {
-                    this.menuId = data[0].id;
-                    select.value = this.menuId;
-                }
-            }
-        } catch (e) { console.error("Erro ao carregar menus:", e); }
-    },
-
-    setupTemplateSwitcher: function() {
-        const select = document.getElementById('ai-studio-template');
-        if (select) {
-            select.addEventListener('change', (e) => {
-                this.selectedId = e.target.value;
-                this.values = {}; // Reseta variáveis ao trocar de design
-                this.loadTemplateDetails(this.selectedId);
+            const templates = data.templates || [];
+            select.innerHTML = '<option value="">Selecione uma Estrutura...</option>';
+            templates.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.innerText = `${t.id} — ${t.name}`;
+                select.appendChild(opt);
             });
-        }
+        } catch (e) { console.error("Erro Catálogo:", e); }
     },
 
     loadTemplateDetails: async function(id) {
-        const container = document.getElementById('template-variables-container');
-        if (!container) return;
-
-        container.innerHTML = '<div class="loading-spinner">Carregando variáveis...</div>';
-
+        if (!id) return;
+        this.selectedId = id;
         try {
             const res = await fetch(`/api/templates/${id}`);
             const data = await res.json();
-            this.modules = data.modules;
-            this.renderModules();
-            
-            // Update Design Summary info
-            const infoBox = document.getElementById('template-design-info');
-            if (infoBox && data.template) {
-                infoBox.innerHTML = `
-                    <strong>Design:</strong> ${data.template.designSummary}<br>
-                    <strong>Tipografia:</strong> ${data.template.fonts} | <strong>Cores:</strong> ${data.template.palette}
-                `;
-            }
-
-            // [NOVO] Sync Global Theme & Context inputs with this.values
-            const themeInput = document.getElementById('ai-studio-theme');
-            const contextInput = document.getElementById('ai-studio-context');
-            if (themeInput) themeInput.value = this.values.tema || "";
-            if (contextInput) contextInput.value = this.values.contexto || "";
-        } catch (e) {
-            container.innerHTML = `<div class="error">Erro ao carregar detalhes: ${e.message}</div>`;
-        }
+            this.modules = data.modules || [];
+            this.caminhoFisico = data.template?.caminhoFisico;
+            const info = document.getElementById('template-design-info');
+            if (info) info.innerText = `Design: ${data.template?.name} | Módulos: ${this.modules.length}`;
+            this.renderVariables();
+        } catch (e) { console.error(e); }
     },
 
-    renderModules: function() {
+    renderVariables: function() {
         const container = document.getElementById('template-variables-container');
-        if (!container) return;
+        if (!container || !this.modules.length) {
+            if(container) container.innerHTML = '<div style="text-align:center; padding:100px; color:#cbd5e1;">Selecione uma template...</div>';
+            return;
+        }
 
-        // E: Diferenciar visualmente os módulos
-        const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#3b82f6', '#8b5cf6', '#14b8a6', '#f43f5e'];
-
-        container.innerHTML = this.modules.map((mod, idx) => {
-            const modColor = colors[idx % colors.length];
-            return `
-            <div class="studio-module-card" id="mod-${idx}" style="border-left: 4px solid ${modColor}; width: 100%;">
-                <div class="module-header" onclick="window.aiStudioTemplate.toggleModule(${idx})">
+        container.innerHTML = this.modules.map((mod, idx) => `
+            <div class="studio-module-card" style="border-left: 6px solid ${this.getModuleColor(mod.title)}; margin-bottom: 25px;">
+                <div class="module-header" onclick="let b=this.nextElementSibling; b.style.display=b.style.display==='none'?'block':'none'">
                     <div class="module-title">
-                        <span class="module-number" style="background: ${modColor}22; color: ${modColor}; min-width: 40px; display: flex; justify-content: center; align-items: center;">${idx + 1}</span>
-                        <div>
-                            <h4>${mod.title}</h4>
-                            <p>${mod.variables.length} variáveis mapeadas</p>
-                        </div>
+                        <div class="module-number" style="background:${this.getModuleColor(mod.title)}22; color:${this.getModuleColor(mod.title)}">${idx+1}</div>
+                        <div><h4>${mod.title}</h4><p>${mod.variables.length} variáveis mapeadas</p></div>
                     </div>
-                    <span class="chevron">▼</span>
+                    <div style="color: #64748b; font-size: 11px; font-weight: bold;">ABRIR/FECHAR ▼</div>
                 </div>
-                <div class="module-body" id="body-${idx}" style="display: block;">
-                    <div class="module-actions">
-                        <button id="btn-ai-${idx}" class="btn btn-ask-ai" onclick="window.aiStudioTemplate.generateWithIA('${mod.title}', ${idx})">
-                            🪄 Preencher este módulo com IA
-                        </button>
-                    </div>
-                    <div class="variable-grid" style="display: flex; flex-direction: column; gap: 20px;">
-                        ${mod.variables.map(v => this.renderField(v)).join('')}
-                    </div>
+                <div class="module-body" style="display:block;">
+                    <button class="btn btn-secondary" onclick="event.stopPropagation(); window.aiStudioTemplate.generateWithIA('${mod.title}', ${idx})" style="margin-bottom:15px; font-size:11px;">🪄 Refinar com IA</button>
+                    <div class="variable-grid">${mod.variables.map(v => this.renderVariable(v)).join('')}</div>
                 </div>
             </div>
-            `;
-        }).join('');
+        `).join('');
     },
 
-    toggleModule: function(idx) {
-        const body = document.getElementById(`body-${idx}`);
-        if (body) {
-            body.style.display = body.style.display === 'none' ? 'block' : 'none';
+    getModuleColor: function(t) {
+        t = t.toLowerCase();
+        if(t.includes('seo')) return '#6366f1';
+        if(t.includes('hero')) return '#10b981';
+        if(t.includes('dor')) return '#ef4444';
+        if(t.includes('autoridade')) return '#f59e0b';
+        if(t.includes('cta')) return '#22c55e';
+        return '#94a3b8';
+    },
+
+    renderVariable: function(key) {
+        const val = this.values[key] || "";
+        const lower = key.toLowerCase();
+        const isImg = (lower.includes('img') || lower.includes('foto')) && !lower.includes('alt');
+        const isText = key.includes('texto') || key.includes('bio') || key.includes('desc') || key.includes('p1') || key.includes('p2') || key.includes('artigo');
+
+        if (isImg) {
+            return `<div class="var-field-group">
+                <label>${key.replace(/_/g,' ')} <code>{{${key}}}</code></label>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="file" id="f-${key}" style="display:none" onchange="window.aiStudioTemplate.handleImageUpload('${key}', this)">
+                    <button class="btn btn-secondary" onclick="document.getElementById('f-${key}').click()">📸 Subir Foto</button>
+                    ${val ? `<button class="btn btn-secondary" onclick="window.aiStudioTemplate.removeValue('${key}')" style="color:red">🗑️ Remover</button>` : ''}
+                    <div id="p-${key}" style="font-size:10px; flex:1;">${val ? '✅ Imagem Carregada' : 'Nenhuma imagem'}</div>
+                </div>
+            </div>`;
         }
+        return `<div class="var-field-group">
+            <label>${key.replace(/_/g,' ')} <code>{{${key}}}</code></label>
+            ${isText ? `<textarea id="input-${key}" oninput="window.aiStudioTemplate.updateVal('${key}',this.value)" rows="3">${val}</textarea>` : `<input type="text" id="input-${key}" oninput="window.aiStudioTemplate.updateVal('${key}',this.value)" value="${val}">`}
+        </div>`;
     },
 
-    renderField: function(key) {
-        if (key === 'nav_menu_dinamico') return ''; // Silenciar campo dinâmico no editor visual
-
-        const labelText = key.replace(/_/g, ' ').toUpperCase();
-        const label = `<strong>${labelText}</strong> <code>{{${key}}}</code>`;
-        
-        let val = this.values[key] || "";
-        
-        // [IDENTIDADE DR. VICTOR] Auto-fill inteligente
-        if (!val) {
-            const lowerKey = key.toLowerCase();
-            if (lowerKey.includes('whatsapp')) val = "62991545295";
-            else if (lowerKey.includes('nome_completo')) val = "Dr. Victor Lawrence";
-            else if (lowerKey.includes('autoridade_titulo')) val = "Psicólogo Clínico | Mestrando em Ciências da Saúde";
-            else if (lowerKey.includes('cidade')) val = "Goiânia";
-            else if (lowerKey.includes('crp')) val = "09/012681";
+    updateVal: function(k,v) { this.values[k]=v; },
+    removeValue: function(k) { delete this.values[k]; this.renderVariables(); },
+    
+    handleImageUpload: function(k, i) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            this.updateVal(k, e.target.result);
+            this.renderVariables();
             
-            if (val) this.values[key] = val;
-        }
-
-        const isImage = key.toLowerCase().includes('img') || key.toLowerCase().includes('imagem') || key.toLowerCase().includes('foto') || key.toLowerCase().includes('icon');
-        const isTextArea = !isImage && (key.includes('texto') || key.includes('bio') || key.includes('desc') || key.includes('p1') || key.includes('p2') || key.includes('artigo'));
-        const placeholder = `Ex: Valor para ${labelText}`;
-
-        if (isImage) {
-            return `
-                <div class="var-field-group">
-                    <label style="display:flex; justify-content:space-between;">${label}</label>
-                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
-                        <input type="file" id="file-${key}" accept="image/*" onchange="window.aiStudioTemplate.handleImageUpload('${key}', this)" style="display: none;">
-                        <button class="btn btn-secondary" onclick="document.getElementById('file-${key}').click()" style="padding: 10px; font-size: 11px;">📸 Escolher Imagem</button>
-                        <div id="preview-${key}" style="flex: 1; min-height: 40px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; display: flex; align-items: center; padding: 0 10px; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            ${val ? `<img src="${val}" style="height: 30px; object-fit: contain; margin-right: 10px;"> Imagem carregada` : 'Nenhuma imagem selecionada'}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        return `
-            <div class="var-field-group">
-                <label style="display:flex; justify-content:space-between;">${label}</label>
-                ${isTextArea ? 
-                    `<textarea id="input-${key}" oninput="window.aiStudioTemplate.updateVal('${key}', this.value)" rows="3" placeholder="${placeholder}">${val}</textarea>` :
-                    `<input type="text" id="input-${key}" oninput="window.aiStudioTemplate.updateVal('${key}', this.value)" value="${val}" placeholder="${placeholder}">`
-                }
-            </div>
-        `;
+            // Auto-ALT
+            const altKey = k.replace('_url', '_alt').replace('foto', 'foto_alt');
+            const targetAlt = this.modules.flatMap(m => m.variables).find(v => v.toLowerCase().includes(altKey.toLowerCase()));
+            if (targetAlt) {
+                try {
+                    const res = await fetch('/api/ai/describe-image', {
+                        method: "POST", headers:{"Content-Type":"application/json"},
+                        body: JSON.stringify({ image: e.target.result, context: targetAlt })
+                    });
+                    const d = await res.json();
+                    if(d.alt) { this.updateVal(targetAlt, d.alt); const el=document.getElementById(`input-${targetAlt}`); if(el) el.value=d.alt; }
+                } catch(err) {} 
+            }
+        };
+        reader.readAsDataURL(i.files[0]);
     },
 
-    handleImageUpload: function(key, inputElement) {
-        if(inputElement.files && inputElement.files[0]) {
-            const file = inputElement.files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const b64 = e.target.result;
-                this.updateVal(key, b64);
-                const prev = document.getElementById(`preview-${key}`);
-                if(prev) {
-                    prev.innerHTML = `<img src="${b64}" style="height: 30px; object-fit: contain; margin-right: 10px;"> ${file.name}`;
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-    },
-
-    updateVal: function(key, val) {
-        this.values[key] = val;
-    },
-
-    generateWithIA: async function(moduleTitle, idx) {
-        console.log(`🪄 Gerando conteúdo para ${moduleTitle}...`);
-        
-        const mod = this.modules[idx];
-        if(!mod) return;
-
-        const btn = document.getElementById(`btn-ai-${idx}`);
-        if(btn) { btn.innerText = "⏳ Gerando (Gemini)..."; btn.disabled = true; }
-
+    generateWithIA: async function(title, idx) {
+        const theme = document.getElementById('ai-studio-theme')?.value;
+        const extra = document.getElementById('ai-studio-context')?.value;
+        if (!theme) return alert("Defina o Tema Central.");
+        const modelType = document.getElementById('ai-studio-model')?.value || 'pro';
+        this.setProductionProgress(true, `Refinando módulo via GEMINI 2.5 ${modelType.toUpperCase()}...`, 40);
         try {
-            const globalTheme = document.getElementById('ai-studio-theme')?.value || "";
-            const extraContext = document.getElementById('ai-studio-context')?.value || "";
-
-            let prompt = `Atue como um Especialista em Copywriting Clínico (Método Abidos). O usuário está construindo uma página e precisa preencher um bloco/módulo focado em "${moduleTitle}". Gere conteúdo persuasivo explorando dor, autoridade e CTA. `;
-            
-            if (globalTheme) {
-                prompt += `O TEMA CENTRAL desta página é: "${globalTheme}". Respeite este tema rigorosamente no vocabulário. `;
-            }
-            if (extraContext) {
-                prompt += `O autor forneceu o seguinte CONTEXTO ADICIONAL / RASCUNHO que deve servir de base para os detalhes: "${extraContext}". `;
-            }
-
-            prompt += `As variáveis que você deve preencher são: ${mod.variables.join(', ')}. Retorne APENAS um JSON válido (sem \`\`\`json) no formato exato: { "chave_da_variavel": "valor gerado" }`;
+            const prompt = `[DR VICTOR LAWRENCE]: CRP 09/012681.
+            [OBJETIVO]: Gerar conteúdo para o bloco "${title}" da página.
+            [TEMA]: "${theme}"
+            [DRAFT]: "${extra}"
+            [REGRA]: Use plain-text (sem markdown). CTAs: www.hipnolawrence.com.
+            RETORNE JSON: { ${this.modules[idx].variables.join(', ')} }`;
 
             const res = await fetch('/api/ai/generate', {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: prompt, config: { temperature: 0.7 } })
+                method: "POST", headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ prompt, modelType })
             });
-            
-            if(!res.ok) throw new Error("Erro no servidor AI");
-
             const data = await res.json();
-            let jsonString = data.text.replace(/```json|```/gi, '').trim();
-            const result = JSON.parse(jsonString);
-
-            for (const key of Object.keys(result)) {
-                if(mod.variables.includes(key)) {
-                    this.updateVal(key, result[key]);
-                    const input = document.getElementById(`input-${key}`);
-                    if (input) input.value = result[key];
-                }
-            }
+            if(data.error) throw new Error(data.error);
             
-            alert(`Módulo "${moduleTitle}" preenchido com IA com sucesso!`);
-        } catch (e) {
-            console.error("Erro na integração Gemini:", e);
-            alert(`Erro ao gerar conteúdo para ${moduleTitle}. Verifique o log do console.`);
-        } finally {
-            if(btn) { btn.innerText = "🪄 Gerar Novamente (IA)"; btn.disabled = false; }
+            // Extração Robusta de JSON (Anti-Markdown)
+            const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error("A IA não retornou um formato JSON válido. Tente Refinar novamente.");
+            const result = JSON.parse(jsonMatch[0]);
+
+            Object.keys(result).forEach(k => {
+                let val = String(result[k]).replace(/\*\*/g, '').replace(/\*/g, '');
+                if ((k.includes('cta') || k.includes('secao5')) && !val.includes('hipnolawrence.com')) val += "\n\nSaiba mais: www.hipnolawrence.com";
+                this.updateVal(k, val);
+                const el = document.getElementById(`input-${k}`);
+                if(el) { el.value = val; el.classList.add('glow-highlight'); }
+            });
+        } catch(e) { console.error(e); alert("Erro na geração: " + e.message); }
+        finally { this.setProductionProgress(false, "", 0); }
+    },
+
+    generateAllWithIA: async function() {
+        const theme = document.getElementById('ai-studio-theme')?.value;
+        if(!theme) return alert("Tema obrigatório.");
+        const btn = document.querySelector('button[onclick*="generateAllWithIA"]');
+        if(btn) btn.disabled = true;
+
+        for(let i=0; i<this.modules.length; i++) {
+            await this.generateWithIA(this.modules[i].title, i);
+            // Delay para evitar Rate Limit (429)
+            await new Promise(r => setTimeout(r, 800));
         }
+        if(btn) btn.disabled = false;
+    },
+
+    runFullAudit: async function() {
+        const modelType = document.getElementById('ai-studio-model')?.value || 'pro';
+        this.setProductionProgress(true, `Auditoria Abidos via motor ${modelType.toUpperCase()}...`, 30);
+        try {
+            const res = await fetch('/api/ai/audit-abidos', {
+                method: "POST", headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ values: this.values, modelType })
+            });
+            const data = await res.json();
+            if(data.error) throw new Error(data.error);
+            const score = data.score ?? data.pontuacao ?? "N/A";
+            const feedback = data.feedback ?? data.feedback_abidos ?? data.analise ?? JSON.stringify(data);
+            alert(`📊 [SCORE ABIDOS: ${score}/100]\n\nFEEDBACK:\n${feedback}`);
+        } catch (e) { alert("Falha na auditoria: " + e.message); }
+        finally { this.setProductionProgress(false, "", 0); }
+    },
+
+    runClinicalAudit: async function() {
+        const modelType = document.getElementById('ai-studio-model')?.value || 'pro';
+        this.setProductionProgress(true, `Auditoria Clínica via motor ${modelType.toUpperCase()}...`, 30);
+        try {
+            const res = await fetch('/api/ai/audit-clinical', {
+                method: "POST", headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ values: this.values, modelType })
+            });
+            const data = await res.json();
+            if(data.error) throw new Error(data.error);
+            const status = data.status ?? data.aprovacao ?? "ALERTA";
+            const feedback = data.feedback_clinico ?? data.feedback ?? data.analise ?? JSON.stringify(data);
+            alert(`🛡️ [STATUS: ${status}]\n\n${feedback}`);
+        } catch (e) { alert("Falha clínica: " + e.message); }
+        finally { this.setProductionProgress(false, "", 0); }
+    },
+
+    setProductionProgress: function(s, t, p) {
+        const line = document.getElementById('studio-production-line');
+        const bar = document.getElementById('production-bar');
+        const txt = document.getElementById('production-status-text');
+        if(line) line.style.display = s ? 'block' : 'none';
+        if(bar) bar.style.width = p + '%';
+        if(txt) txt.innerText = t;
+    },
+
+    saveDraft: async function(overwrite) {
+        let name = this.currentDraftName;
+        if(!overwrite || !name) name = prompt("Nome do Projeto:", this.currentDraftName || "");
+        if(!name) return;
+        const draft = { id: overwrite ? this.currentDraftId : Date.now(), name, values: this.values, templateId: this.selectedId };
+        try {
+            const res = await fetch('/api/drafts', { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(draft) });
+            const d = await res.json();
+            if(d.success) { this.currentDraftId = d.draft.id; this.currentDraftName = d.draft.name; alert("Salvo!"); }
+        } catch(e) { alert("Erro ao salvar."); }
+    },
+
+    loadDraft: async function() {
+        try {
+            const res = await fetch('/api/drafts');
+            const data = await res.json();
+            const list = data.map((d,i) => `${i+1}. ${d.name}`).join('\n');
+            const choice = prompt("Escolha o projeto:\n" + list);
+            if(!choice) return;
+            const d = data[parseInt(choice)-1];
+            if(d) {
+                this.values = d.values;
+                this.selectedId = d.templateId;
+                this.currentDraftId = d.id;
+                this.currentDraftName = d.name;
+                document.getElementById('ai-studio-template').value = this.selectedId;
+                await this.loadTemplateDetails(this.selectedId);
+            }
+        } catch(e) { alert("Erro ao carregar."); }
     },
 
     previewLive: async function() {
-        console.log("👀 Abrindo Preview Visual...");
         try {
-            const res = await fetch('/api/templates/preview', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    templateId: this.selectedId,
-                    values: this.values,
-                    menuId: this.menuId
-                })
-            });
+            const res = await fetch('/api/templates/preview', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({templateId:this.selectedId, values:this.values}) });
             const html = await res.text();
-            
-            // Criar um Iframe Modal para o Preview
             this.showPreviewModal(html);
-        } catch (e) { alert("Erro ao gerar preview: " + e.message); }
+        } catch(e) { alert("Erro no preview."); }
     },
 
-    showPreviewModal: function(html) {
-        let modal = document.getElementById('preview-template-modal');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'preview-template-modal';
-            modal.className = 'studio-full-modal';
-            document.body.appendChild(modal);
-        }
-
-        modal.innerHTML = `
-            <div class="modal-content-full">
-                <div class="modal-header">
-                    <h3>Visualização Real da Página</h3>
-                    <div class="modal-actions">
-                        <button class="btn btn-secondary" onclick="document.getElementById('preview-template-modal').style.display='none'">Fechar X</button>
-                    </div>
-                </div>
-                <iframe id="preview-frame" style="width:100%; height: calc(100vh - 60px); border:none;"></iframe>
-            </div>
-        `;
-        modal.style.display = 'flex';
-        
-        const frame = modal.querySelector('iframe');
-        const doc = frame.contentWindow.document;
-        doc.open();
-        doc.write(html);
-        doc.close();
-    },
-
-    saveDraft: function() {
-        if (!this.selectedId) return;
-        const draftName = prompt("De um nome para este rascunho (ex: Página Autismo Adulto):");
-        if (!draftName) return;
-
-        const draft = {
-            id: Date.now(),
-            name: draftName,
-            templateId: this.selectedId,
-            menuId: this.menuId,
-            values: this.values,
-            date: new Date().toISOString()
-        };
-
-        let drafts = JSON.parse(localStorage.getItem('ai_studio_drafts') || '[]');
-        drafts.push(draft);
-        localStorage.setItem('ai_studio_drafts', JSON.stringify(drafts));
-        alert(`Rascunho "${draftName}" salvo com sucesso!`);
-    },
-
-    loadDraft: function() {
-        let drafts = JSON.parse(localStorage.getItem('ai_studio_drafts') || '[]');
-        if (drafts.length === 0) {
-            alert("Nenhum rascunho salvo encontrado.");
-            return;
-        }
-
-        const draftList = drafts.map((d, i) => `${i + 1}. ${d.name} (${new Date(d.date).toLocaleDateString()})`).join('\n');
-        const choice = prompt(`Qual rascunho deseja carregar?\n\n${draftList}\n\nDigite o número desejado:`);
-        
-        const idx = parseInt(choice) - 1;
-        if (!isNaN(idx) && drafts[idx]) {
-            const draft = drafts[idx];
-            this.selectedId = draft.templateId;
-            const selectEl = document.getElementById('ai-studio-template');
-            if (selectEl) selectEl.value = this.selectedId;
-            
-            this.menuId = draft.menuId || null;
-            const menuEl = document.getElementById('ai-studio-menu');
-            if (menuEl) menuEl.value = this.menuId || "";
-
-            this.values = draft.values;
-            // Recarrega os detalhes da tela
-            this.loadTemplateDetails(this.selectedId);
-            alert(`Rascunho "${draft.name}" carregado!`);
-        }
+    showPreviewModal: function(h) {
+        let m = document.getElementById('preview-template-modal') || document.createElement('div');
+        m.id = 'preview-template-modal'; m.className = 'studio-full-modal';
+        document.body.appendChild(m);
+        m.innerHTML = `<div class="modal-content-full">
+            <div class="modal-header"><h3>Preview Abidos V4</h3><button class="btn btn-secondary" onclick="document.getElementById('preview-template-modal').style.display='none'">X Fechar</button></div>
+            <iframe style="width:100%; height:100%; border:none; background:white;"></iframe>
+        </div>`;
+        m.style.display = 'flex';
+        const doc = m.querySelector('iframe').contentWindow.document;
+        doc.open(); doc.write(h); doc.close();
     },
 
     publishPage: async function() {
-        if (!this.selectedId) {
-            alert("Erro: Selecione um template primeiro.");
-            return;
-        }
-
-        if (!confirm("Deseja realmente LANÇAR estas alterações diretamente no site oficial? (Isso executará o Git Push automatizado)")) {
-            return;
-        }
-
-        const btn = document.querySelector('button[onclick*="publishPage"]');
-        if (btn) { btn.innerText = "🚀 PROCESSANDO MENU..."; btn.disabled = true; }
-
+        if (!confirm("🚀 Confirmar lançamento oficial da página Abidos?")) return;
+        this.setProductionProgress(true, "Orquestrando Lançamento Final...", 80);
         try {
-            // 1. Capturar ID do Menu e Contexto
-            const menuEl = document.getElementById('ai-studio-menu');
-            const menuId = menuEl ? menuEl.value : null;
-            const pageTheme = document.getElementById('ai-studio-theme')?.value || "";
-
-            // 2. Gerar Menu HTML e Schema (Ponte Final / Motor de Renderização)
-            // pageContent formatado conforme expectativa do MenuMapper
-            const pageContent = { 
-                slug: this.values.slug || 'pagina-gerada',
-                SEO_TITLE: this.values.seo_h1_tecnico || ''
-            };
-
-            const { html: menuHtml, schema: menuSchema } = await window.MenuMapper.generate(
-                menuId, 
-                this.selectedId, 
-                pageContent, 
-                pageTheme
-            );
-
-            // 3. Enviar para a API de Persistência (Backend orquestra a substituição final)
             const res = await fetch('/api/acervo/salvar-pagina', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -395,23 +292,22 @@ window.aiStudioTemplate = {
                     caminhoFisico: this.caminhoFisico,
                     values: this.values,
                     templateId: this.selectedId,
-                    menuId: menuId,
-                    menuHtml: menuHtml,     // Passando HTML processado
-                    menuSchema: menuSchema  // Passando Schema processado
+                    menuId: document.getElementById('ai-studio-menu')?.value
                 })
             });
-
-            const result = await res.json();
-            if (result.success) {
-                alert("🎉 SUCESSO! " + result.message);
+            const resData = await res.json();
+            if (resData.success) {
+                alert("✨ LANÇADO COM SUCESSO!\nA página foi criada no repositório do site e o Git Push foi realizado.");
             } else {
-                throw new Error(result.error);
+                throw new Error(resData.error || "Erro desconhecido no servidor.");
             }
-        } catch (e) {
-            console.error("Erro na publicação:", e);
-            alert("❌ Falha no Lançamento: " + e.message);
+        } catch (e) { 
+            console.error("Erro Lançamento:", e);
+            alert("❌ FALHA NO LANÇAMENTO: " + e.message); 
         } finally {
-            if (btn) { btn.innerText = "🚀 LANÇAR PÁGINA (NEXT.JS)"; btn.disabled = false; }
+            this.setProductionProgress(false, "", 0);
         }
     }
 };
+
+window.aiStudioTemplate.init();

@@ -5,33 +5,36 @@ window.doctoraliaApp = {
         const btn = document.getElementById('btn-generate-doctoralia') || event.target;
         const container = document.getElementById('doctoralia-reply-container');
 
+        const modelType = document.getElementById('doctoralia-model')?.value || 'pro';
+
         if (!question.trim()) return alert("Por favor, cole a pergunta do paciente.");
 
         if (btn) {
             btn.innerHTML = '⚙️ Orquestrando Resposta Clínica...';
             btn.disabled = true;
         }
-        if (container) container.innerHTML = '<p style="color: #94a3b8; text-align: center; margin-top: 150px;">🤖 Processando Protocolo V4...</p>';
+        if (container) container.innerHTML = '<p style="color: #94a3b8; text-align: center; margin-top: 150px;">🤖 Processando Protocolo V5...</p>';
 
         try {
             const response = await fetch('/api/doctoralia/generate-reply', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question })
+                body: JSON.stringify({ question, modelType })
             });
 
-            const data = await response.json().catch(() => ({ success: false, error: "Resposta inválida do servidor." }));
-            if (data.success && data.reply) {
+            const data = await response.json();
+            if (data.reply) {
                 container.innerText = data.reply;
             } else {
-                alert("Erro: " + (data.error || "A IA não conseguiu gerar uma resposta."));
-                container.innerHTML = '<p style="color: #ef4444; text-align: center; margin-top: 150px;">Falha na geração (Mission Control V4).</p>';
+                throw new Error(data.error || "A IA não retornou um texto válido.");
             }
         } catch (e) {
             console.error(e);
             alert("Erro de conexão ao Mission Control: " + e.message);
+            if (container) container.innerHTML = '<p style="color: #ef4444; text-align: center; margin-top: 150px;">Falha na geração (Mission Control V5).</p>';
         } finally {
-            btn.innerHTML = '✨ GERAR RESPOSTA HUMANIZADA';
+            if (btn) {
+                btn.innerHTML = '✨ GERAR RESPOSTA HUMANIZADA';
             btn.disabled = false;
         }
     },
@@ -66,11 +69,16 @@ window.doctoraliaApp = {
         statusBadge.innerText = '⏳ AUDITANDO...';
         feedbackText.innerText = 'Consultando Compliance Clínico (V4 Ethical Engine)...';
 
+        const modelType = document.getElementById('doctoralia-model')?.value || 'pro';
         try {
             const response = await fetch('/api/doctoralia/audit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ original_message: originalMessage, generated_reply: generatedReply })
+                body: JSON.stringify({ 
+                    original_message: originalMessage, 
+                    generated_reply: generatedReply,
+                    modelType: modelType
+                })
             });
 
             const data = await response.json();
@@ -109,6 +117,7 @@ window.doctoraliaApp = {
         const container = document.getElementById('doctoralia-reply-container');
         const feedback = document.getElementById('audit-feedback-text').innerText;
         const fixBtn = document.getElementById('btn-fix-doctoralia');
+        const modelType = document.getElementById('doctoralia-model')?.value || 'pro';
 
         if (!container.innerText || container.innerText.includes('Aguardando')) return;
 
@@ -123,7 +132,8 @@ window.doctoraliaApp = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     original_reply: container.innerText, 
-                    auditor_feedback: feedback 
+                    auditor_feedback: feedback,
+                    modelType: modelType
                 })
             });
 

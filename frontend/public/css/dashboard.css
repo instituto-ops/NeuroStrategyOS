@@ -1319,3 +1319,15 @@ select:focus {
     border: 2px solid rgba(255,255,255,0.05);
     animation: pulseRing 1.5s infinite ease-in-out;
 }
+
+/* [AUTO-GEN] Feedback Visual para Campos Preenchidos por IA */
+@keyframes glow-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.4); border-color: #2dd4bf; }
+    70% { box-shadow: 0 0 15px 5px rgba(45, 212, 191, 0); border-color: #2dd4bf; }
+    100% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0); }
+}
+
+.glow-highlight {
+    animation: glow-pulse 2s ease-out;
+    background-color: #f0fdfa !important;
+}

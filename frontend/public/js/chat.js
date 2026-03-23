@@ -1438,6 +1438,8 @@ window.chatApp = {
     async loadList(selectedId = null) {
         const typeSelect = document.getElementById('ai-studio-type');
         const itemSelect = document.getElementById('ai-studio-item');
+        if (!typeSelect || !itemSelect) return; // Segurança contra domínios onde o Studio não está ativo
+        
         const type = typeSelect.value;
         
         itemSelect.innerHTML = '<option>Carregando...</option>';

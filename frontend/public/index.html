@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeuroEngine - Mission Control (Psysi Dashboard)</title>
     <link rel="stylesheet" href="css/dashboard.css?v=6">
-    <link rel="icon" href="https://hipnolawrence.com/wp-content/uploads/2024/02/favicon.png">
+    <link rel="icon" href="/favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
 </head>
 <body>
@@ -248,9 +248,9 @@
                     <div style="flex: 1;">
                         <h2 style="font-size: 14px; color: var(--color-primary); margin-bottom: 5px;">🎨 SETUP VISUAL DO LANÇAMENTO</h2>
                         <div style="display: flex; gap: 10px; align-items: center;">
-                            <select id="ai-studio-template" style="max-width: 350px; border-color: var(--color-secondary); font-weight: bold; background: #f0f9ff;">
-                                <!-- Injetado via window.aiStudioTemplate.js -->
-                                <option value="">Carregando catálogo...</option>
+                            <select id="ai-studio-template" style="max-width: 350px; border-color: var(--color-secondary); font-weight: bold; background: #f0f9ff;" 
+                                    onchange="window.aiStudioTemplate.loadTemplateDetails(this.value)">
+                                <option value="">Selecione uma Estrutura...</option>
                             </select>
                             <span id="template-design-info" style="font-size: 11px; color: #64748b;">
                                 Selecione uma template para mapear as variáveis.
@@ -265,35 +265,61 @@
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-secondary" onclick="window.aiStudioTemplate.saveDraft()" style="background: #f1f5f9; color: #475569; font-weight: bold; border-color: #cbd5e1;">💾 SALVAR RASCUNHO</button>
+                        <button class="btn btn-secondary" id="studio-btn-save" onclick="window.aiStudioTemplate.saveDraft(true)" style="background: #f1f5f9; color: #475569; font-weight: bold; border-color: #cbd5e1;">💾 SALVAR ATUAL</button>
+                        <button class="btn btn-secondary" id="studio-btn-save-new" onclick="window.aiStudioTemplate.saveDraft(false)" style="background: #f1f5f9; color: #475569; font-weight: bold; border-color: #cbd5e1;">➕ SALVAR NOVO</button>
                         <button class="btn btn-secondary" onclick="window.aiStudioTemplate.loadDraft()" style="background: #f1f5f9; color: #475569; font-weight: bold; border-color: #cbd5e1;">📂 CARREGAR</button>
                         <button class="btn btn-secondary" onclick="window.aiStudioTemplate.previewLive()" style="background: #fff; border-color: #0284c7; color: #0284c7; font-weight: 800;">
-                            👁️ VISUALIZAR LP (PREVIEW)
+                            👁️ PREVIEW
                         </button>
-                        <button class="btn btn-primary" onclick="window.aiStudioTemplate.publishPage()" style="background: #10b981;">🚀 LANÇAR PÁGINA (NEXT.JS)</button>
+                        <button class="btn btn-primary" onclick="window.aiStudioTemplate.runFullAudit()" style="background: #6366f1; border: none;">⚖️ AUDITAR ABIDOS</button>
+                        <button class="btn btn-primary" onclick="window.aiStudioTemplate.runClinicalAudit()" style="background: #0ea5e9; border: none;">🛡️ AUDITORIA CLÍNICA</button>
+                        <button class="btn btn-primary" onclick="window.aiStudioTemplate.publishPage()" style="background: #10b981;">🚀 LANÇAR PÁGINA</button>
+                    </div>
+                </div>
+
+                <!-- [NOVO] Barra de Progresso da Esteira de Produção (Workflow Feedback) -->
+                <div id="studio-production-line" style="background: #fff; border-bottom: 1px solid #e2e8f0; padding: 10px 20px; display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <span id="production-status-text" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">Aguardando Início...</span>
+                        <span id="production-percent" style="font-size: 11px; font-weight: 900; color: #6366f1;">0%</span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: #f1f5f9; border-radius: 10px; overflow: hidden;">
+                        <div id="production-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #6366f1, #2dd4bf); transition: width 0.4s ease;"></div>
                     </div>
                 </div>
 
                 <!-- Corpo do Studio: Painel de Contexto IA (Brainstorming) -->
                 <div class="brainstorm-panel" style="background: #f8fafc; padding: 20px; border-bottom: 2px solid #e2e8f0;">
                     <div style="display: flex; flex-direction: column; gap: 15px;">
-                        <div>
-                            <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">🧠 TEMA CENTRAL / PALAVRA-CHAVE (OBRIGATÓRIO PARA IA)</label>
-                            <input type="text" id="ai-studio-theme" placeholder="Ex: Avaliação Neuropsicológica para Adultos com TEA em Goiânia..." 
-                                   style="width: 100%; padding: 12px 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-weight: 600; font-size: 15px; background: white; transition: border-color 0.2s;"
-                                   onchange="window.aiStudioTemplate.values.tema = this.value">
+                        <div style="display: flex; gap: 15px; align-items: flex-end;">
+                            <div style="flex: 1;">
+                                <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase;">🧠 TEMA CENTRAL / PALAVRA-CHAVE (OBRIGATÓRIO)</label>
+                                <input type="text" id="ai-studio-theme" placeholder="Ex: Avaliação Neuropsicológica para Adultos com TEA..." 
+                                       style="width: 100%; padding: 12px 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-weight: 600; font-size: 15px;"
+                                       onchange="window.aiStudioTemplate.values.tema = this.value">
+                            </div>
+                            <div style="width: 220px;">
+                                <label style="display: block; font-size: 11px; font-weight: 800; color: #6366f1; margin-bottom: 8px; text-transform: uppercase;">🤖 MOTOR DE INTELIGÊNCIA</label>
+                                <select id="ai-studio-model" style="width: 100%; padding: 12px; border: 2px solid #6366f122; border-radius: 8px; font-weight: 900; background: #6366f111; color: #6366f1; font-size: 12px; cursor: pointer;">
+                                    <option value="flash">⚡ GEMINI 2.5 FLASH (Veloz)</option>
+                                    <option value="pro" selected>🧠 GEMINI 2.5 PRO (Cérebro Denso)</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
                             <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">📝 RASCUNHO DE IDEIAS & CONTEXTO EXTRA (OPCIONAL)</label>
-                            <textarea id="ai-studio-context" placeholder="Cole aqui seus rascunhos, notas clínicas ou o que deseja que a IA 'saiba' para escrever melhor... (Ex: focar na dificuldade diagnóstica em mulheres adultas e mascaramento social)." 
-                                      style="width: 100%; height: 80px; padding: 12px 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white; resize: vertical; transition: border-color 0.2s;"
-                                      onchange="window.aiStudioTemplate.values.contexto = this.value"></textarea>
+                            <textarea id="ai-studio-context" placeholder="Ex: Focar na abordagem de Hipnose Ericksoniana para mudança de hábitos e alívio de dor..." 
+                                      style="width: 100%; height: 80px; padding: 12px 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-weight: 500; font-size: 14px; background: white; transition: border-color 0.2s;"
+                                      onchange="window.aiStudioTemplate.values.contexto_extra = this.value"></textarea>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end;">
+                            <button id="btn-generate-all" class="btn btn-primary" onclick="window.aiStudioTemplate.generateAllWithIA()" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); font-weight: 800; padding: 12px 25px; border-radius: 30px; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);">GERAR TUDO COM IA 🪄</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Corpo do Studio: Variáveis agrupadas em Módulos -->
-                <div id="template-variables-container">
+                <div id="template-variables-container" style="flex: 1; overflow-y: auto; padding: 20px; background: white;">
                     <div style="text-align: center; padding: 100px 0; color: #cbd5e1;">
                         <span style="font-size: 40px; display: block; margin-bottom: 10px;">🪄</span>
                         <p>Escolha uma template acima para começar a orquestrar o conteúdo clínico.</p>
@@ -398,10 +424,16 @@
                     <!-- LADO ESQUERDO: CHAT & ESTADO -->
                     <div class="card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0; border: none; box-shadow: var(--shadow-sm);">
                         <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                            <h2 style="margin: 0; font-size: 16px; font-weight: 800;">🎙️ Treinamento de Identidade Verbal</h2>
-                            <div style="display: flex; gap: 10px;">
-                                <button class="btn btn-secondary" style="background: white; border: 1px solid #e2e8f0; color: #6366f1; font-weight: 800; font-size: 11px;" onclick="window.neuroTraining.toggleMode('voice')">🎙️ INICIAR ENTREVISTA DE VOZ</button>
-                                <label class="btn btn-secondary" style="background: white; border: 1px solid #e2e8f0; cursor: pointer; font-size: 11px;">
+                            <h2 style="margin: 0; font-size: 16px; font-weight: 800; color: #1e293b;">🎙️ Treinamento de Identidade Verbal</h2>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <div style="width: 180px;">
+                                    <select id="neuro-training-model" style="width: 100%; padding: 8px; border: 2px solid #6366f122; border-radius: 6px; font-weight: 800; background: #6366f111; color: #6366f1; font-size: 10px; cursor: pointer;">
+                                        <option value="flash">⚡ FLASH (Treino Rápido)</option>
+                                        <option value="pro" selected>🧠 PRO (Deep Training)</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-secondary" style="background: white; border: 1px solid #6366f144; color: #6366f1; font-weight: 800; font-size: 11px; padding: 8px 15px;" onclick="window.neuroTraining.toggleMode('voice')">🎙️ INICIAR ENTREVISTA DE VOZ</button>
+                                <label class="btn btn-secondary" style="background: white; border: 1px solid #e2e8f0; cursor: pointer; font-size: 11px; padding: 8px 15px; margin: 0;">
                                     📁 ENVIAR ARQUIVO
                                     <input type="file" id="file-upload-neuro" style="display: none;" onchange="window.neuroTraining.handleFileUpload(event)">
                                 </label>
@@ -440,13 +472,20 @@
             <!-- Section: Doctoralia Assistant (Restored Protocol V4) -->
             <section id="doctoralia-assistant" class="content-section">
                 <!-- Header -->
-                <div class="card" style="margin-bottom: 20px; border-left: 5px solid #6366f1; padding: 20px; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center;">
+                <div class="card" style="margin-bottom: 20px; border-left: 5px solid #6366f1; padding: 20px; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
                         <h2 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; color: #1e293b;">
                             🩺 Doctoralia Assistant 
-                            <span style="background: #eef2ff; color: #6366f1; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 4px; border: 1px solid #e0e7ff; letter-spacing: 0.5px;">HEMISFÉRIO PRO (DIGITAL TWIN)</span>
+                            <span style="background: #eef2ff; color: #6366f1; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 4px; border: 1px solid #e0e7ff; letter-spacing: 0.5px;">DIGITAL TWIN V5</span>
                         </h2>
                         <p style="font-size: 13px; color: #64748b; margin-top: 5px; font-weight: 500;">Orquestre respostas clínicas humanizadas usando a sua Identidade Verbal mapeada.</p>
+                    </div>
+                    <div style="width: 220px;">
+                        <label style="display: block; font-size: 10px; font-weight: 800; color: #6366f1; margin-bottom: 5px; text-transform: uppercase;">🤖 MOTOR DE INTELIGÊNCIA</label>
+                        <select id="doctoralia-model" style="width: 100%; padding: 8px; border: 2px solid #6366f122; border-radius: 6px; font-weight: 800; background: #6366f111; color: #6366f1; font-size: 11px; cursor: pointer;">
+                            <option value="flash">⚡ GEMINI 2.5 FLASH (Respostas curtas)</option>
+                            <option value="pro" selected>🧠 GEMINI 2.5 PRO (Respostas clínicas complexas)</option>
+                        </select>
                     </div>
                 </div>
 
@@ -769,7 +808,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="js/gemini.js"></script>
     <script src="js/api.js"></script>
-    <script src="js/ai-studio-template.js?v=6"></script>
+    <script src="js/ai-studio-template.js?v=16"></script>
     <script src="js/acervo.js"></script>
     <script>
         // Inicialização Global do Novo Engine
@@ -956,6 +995,11 @@
             <button id="btn-mute-voice" class="btn" style="padding:18px 40px; border-radius:50px; font-weight:800; background:#f1f5f9; color:#1e293b; font-size:14px;" onclick="window.neuroTraining.toggleMute()">🔇 PAUSAR ESCUTA</button>
             <button class="btn" style="padding:18px 40px; border-radius:50px; font-weight:800; background:#ef4444; color:white; border:none; font-size:14px; box-shadow: 0 10px 20px rgba(239,68,68,0.2);" onclick="window.neuroTraining.toggleMode('text')">ENCERRAR SESSÃO</button>
         </div>
-    </div>
+    <!-- WhatsApp Floating Button -->
+    <a href="https://wa.me/5562991545295?text=Ol%C3%A1%20Dr.%20Victor%2C%20estou%20no%20NeuroEngine%20OS%20e%20preciso%20de%20suporte." 
+       target="_blank" 
+       style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #25d366; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 10px 25px rgba(37,211,102,0.3); z-index: 10000; transition: all 0.3s ease; text-decoration: none;">
+       <span style="filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));">💬</span>
+    </a>
 </body>
 </html>

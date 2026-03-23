@@ -215,11 +215,12 @@ window.neuroTraining = {
 
     // ── PROCESSAMENTO: VOZ → GEMINI → VOZ ────────────────────────────────────
     async processConversation(text) {
+        const modelType = document.getElementById('neuro-training-model')?.value || 'pro';
         try {
             const response = await fetch('/api/neuro-training/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text })
+                body: JSON.stringify({ message: text, modelType })
             });
 
             if (!response.ok) throw new Error(`Server error ${response.status}`);
@@ -254,6 +255,8 @@ window.neuroTraining = {
         const input = document.getElementById('nt-chat-input');
         const text  = input.value.trim();
         if (!text) return;
+        
+        const modelType = document.getElementById('neuro-training-model')?.value || 'pro';
 
         this.addMessage('user', text);
         input.value = '';
@@ -262,7 +265,7 @@ window.neuroTraining = {
             const response = await fetch('/api/neuro-training/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text })
+                body: JSON.stringify({ message: text, modelType })
             });
             const data = await response.json();
             if (data.reply) {
@@ -342,11 +345,13 @@ window.neuroTraining = {
         const file = event.target.files[0];
         if (!file) return;
 
+        const modelType = document.getElementById('neuro-training-model')?.value || 'pro';
         this.addMessage('user', `📁 Enviando documento: ${file.name}`);
-        this.addMessage('ai', "⌛ Analisando a estrutura do texto para mapear seu padrão de comunicação...");
+        this.addMessage('ai', `⌛ Analisando a estrutura do texto via motor ${modelType.toUpperCase()} para mapear seu padrão de comunicação...`);
 
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('modelType', modelType);
 
         try {
             const response = await fetch('/api/neuro-training/upload', { method: 'POST', body: formData });

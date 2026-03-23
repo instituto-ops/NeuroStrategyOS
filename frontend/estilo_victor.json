@@ -2,6 +2,48 @@
   "style_rules": [
     {
       "categoria": "Cadência",
+      "titulo": "Cadência de Fluxo de Consciência",
+      "regra": "Constrói frases longas e segmentadas por múltiplas vírgulas, emulando um processo de pensamento em tempo real com frequentes auto-interrupções, repetições e reformulações.",
+      "id": "rule_1774281642123_fsste",
+      "data_extracao": "2026-03-23T16:00:42.123Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Conectivo Sequencial 'Aí'",
+      "regra": "Utiliza a partícula 'aí' ou a locução 'e aí' como principal conector entre cláusulas para indicar progressão temporal ou consequência, encadeando eventos de forma linear.",
+      "id": "rule_1774281642123_quzbo",
+      "data_extracao": "2026-03-23T16:00:42.123Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Justificativa Antecipatória",
+      "regra": "Inicia blocos de fala com uma justificativa ou explicação antes mesmo de a pergunta ser completada, demonstrando um padrão de se adiantar a possíveis questionamentos.",
+      "id": "rule_1774281642123_wkbb8",
+      "data_extracao": "2026-03-23T16:00:42.123Z"
+    },
+    {
+      "categoria": "Vocabulário de Identidade",
+      "titulo": "Marcadores Discursivos de Validação e Preenchimento",
+      "regra": "Emprega de forma recorrente as partículas 'né?', 'assim' e 'tipo' para buscar confirmação, preencher pausas cognitivas e modular a assertividade das declarações.",
+      "id": "rule_1774281642123_5hpsb",
+      "data_extracao": "2026-03-23T16:00:42.123Z"
+    },
+    {
+      "categoria": "Tonabilidade Estrutural",
+      "titulo": "Ancoragem com Respostas Monossilábicas",
+      "regra": "Inicia respostas a perguntas diretas com monossílabos ou palavras curtas (ex: 'Oi.', 'Não.') antes de desenvolver o raciocínio completo, criando um ponto de partida claro e direto.",
+      "id": "rule_1774281642123_h57ab",
+      "data_extracao": "2026-03-23T16:00:42.123Z"
+    },
+    {
+      "categoria": "Sintaxe",
+      "titulo": "Reforço por Dupla Negação",
+      "regra": "Utiliza estruturas com negação duplicada (ex: 'não achou ruim, não') para reforçar a ausência de uma ação ou estado, em vez de usar uma única negação.",
+      "id": "rule_1774281642123_i5niu",
+      "data_extracao": "2026-03-23T16:00:42.123Z"
+    },
+    {
+      "categoria": "Cadência",
       "titulo": "Enumeração Formal Discursiva",
       "regra": "Utiliza sequências de orações ou termos nominalizados introduzidas por dois pontos, organizando informações em listas internas ao texto ou itens numerados, o que estabelece um ritmo cadenciado e didático para a apresentação de conceitos.",
       "id": "rule_1774235533931_0z6s2",
@@ -218,13 +260,6 @@
       "data_extracao": "2026-03-23T03:13:54.755Z"
     },
     {
-      "categoria": "Vocabulário de Identidade",
-      "titulo": "Ancoragem de Saudação Comum",
-      "regra": "O Dr. Victor utiliza termos de saudação e inquérito socialmente padronizados ('Olá', 'tudo bem') como âncoras lexicais que sinalizam o início da interação e a expectativa de resposta recíproca.",
-      "id": "chat_1774235634755_qj4qw",
-      "data_extracao": "2026-03-23T03:13:54.755Z"
-    },
-    {
       "categoria": "Tonabilidade Estrutural",
       "titulo": "Abertura por Convenção Social Simplificada",
       "regra": "Acolhimento é estabelecido pela escolha de uma fórmula de saudação de alta frequência e baixa complexidade, que, por sua familiaridade cultural, reduz a barreira inicial e projeta uma acessibilidade no registro comunicativo.",
@@ -232,7 +267,7 @@
       "data_extracao": "2026-03-23T03:13:54.755Z"
     }
   ],
-  "last_update": "2026-03-23T03:12:13.931Z",
+  "last_update": "2026-03-23T16:00:42.123Z",
   "insights_history": [],
   "scientific_vault": {
     "nota": "Wiped by user request."
