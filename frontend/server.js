@@ -4,6 +4,8 @@ const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
 const WebSocket = require('ws');
+const textToSpeech = require('@google-cloud/text-to-speech');
+const ttsClient = new textToSpeech.TextToSpeechClient();
 require('dotenv').config({ path: '../.env' }); 
 
 if (!process.env.GOOGLE_CLOUD_PROJECT && !process.env.GEMINI_API_KEY) {
@@ -95,6 +97,33 @@ function extractJSON(text) {
 
 // [FASE 5] Módulo Neuro-Training: Memória de Estilo do Dr. Victor
 const MEMORY_FILE_PATH = path.join(__dirname, 'estilo_victor.json');
+
+
+const PROMPT_TREINAMENTO_ISOLADO = `Você é um Agente de Treinamento de Inteligência Artificial isolado do resto do sistema. Sua ÚNICA função é atuar como um Linguista Computacional.
+Sua missão é mapear e clonar o estilo de comunicação, a sintaxe e o ritmo do Dr. Victor Lawrence.
+
+REGRAS ABSOLUTAS (O que IGNORAR):
+- IGNORE completamente o conteúdo clínico (diagnósticos, sintomas, métodos como Hipnose ou método Abidos).
+- IGNORE currículo, nomes de faculdades (UFU), escalas (AQ10b) ou pacientes.
+- NUNCA extraia fatos; extraia apenas FORMAS.
+
+O QUE VOCÊ DEVE EXTRAIR (O que ANALISAR):
+1. Ritmo e Cadência (ex: usa frases curtas e incisivas? ou frases longas e reflexivas?)
+2. Estrutura Narrativa (ex: responde perguntas com analogias? usa gatilhos de concordância no início da frase?)
+3. Vocabulário Comportamental (ex: quais conectivos, cacoetes ou advérbios ele mais repete?)
+4. Tom de Voz (ex: assertivo, acolhedor, acadêmico, socrático?)
+
+Sempre que identificar um padrão claro de comunicação na fala do usuário, extraia no formato JSON:
+{
+  "regras_extraidas": [
+    {
+      "categoria": "[Ritmo | Estrutura | Vocabulário | Tom]",
+      "titulo": "Resumo curto do padrão linguístico",
+      "regra": "Descrição detalhada de como replicar essa characteristic na escrita."
+    }
+  ],
+  "reply": "Sua resposta curta, como analista, confirmando o que você percebeu sobre a FORMA que ele falou (nunca sobre o tema)."
+}`;
 
 const getVictorStyle = () => {
     try {
@@ -1791,12 +1820,8 @@ app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, 
         if (!req.file) throw new Error("Aúdio não recebido.");
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         
-        const dnaPrompt = `VOCÊ É O 'APRENDIZ DE ABIDOS'. Analise este áudio do Dr. Victor Lawrence.
-        Extraia DNA clínico (UFU, AQ10b, RAS30).
-        RESPONDA EM JSON: { "insight": "Sua resposta analítica", "regras_extraidas": [{"categoria": "X", "titulo": "Frase 3-5 palavras", "regra": "desc"}] }`;
-
-        const result = await model.generateContent([
-            { text: dnaPrompt },
+        const result = await modelFlash.generateContent([
+            { text: PROMPT_TREINAMENTO_ISOLADO },
             { inlineData: { data: req.file.buffer.toString('base64'), mimeType: req.file.mimetype } }
         ]);
 
@@ -1831,11 +1856,10 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
             text = req.file.buffer.toString('utf-8');
         }
 
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
-        const docPrompt = `ANÁLISE DE LASTRO ABIDOS. Texto: "${text.substring(0, 8000).replace(/"/g, "'")}".
-        Extraia DNA em JSON: { "feedback_analysis": "feedback", "regras_extraidas": [{"categoria": "X", "titulo": "Frase 3-5 palavras", "regra": "desc"}] }`;
-
-        const result = await model.generateContent(docPrompt);
+        const result = await modelFlash.generateContent([
+            { text: PROMPT_TREINAMENTO_ISOLADO },
+            { text: `TEXTO DO DR. VICTOR: "${text.substring(0, 8000).replace(/"/g, "'")}"` }
+        ]);
         const extracted = extractJSON(result.response.text());
         if (!extracted) throw new Error("IA falhou na análise de lastro.");
 
@@ -2054,38 +2078,9 @@ app.post('/api/neuro-training/chat', async (req, res) => {
         const { message } = req.body;
         if (!message) return res.status(400).json({ error: 'Mensagem vazia.' });
 
-        const dnaExistente = getDnaContext();
-
-        const systemPrompt = `
-Você é o Engenheiro de Prompt e Analista de Tom de Voz (Copywriting DNA) do sistema Abidos.
-Sua ÚNICA missão é clonar a identidade verbal, a cadência e o estilo de escrita do Dr. Victor Lawrence.
-
-[DIRETRIZ DE SEGURANÇA MÁXIMA — FILTRO DE CONTEÚDO]
-Você deve atuar como um filtro seletivo:
-1. FOCO NA FORMA (Como ele fala): Conectivos, ritmo, metáforas, pausas, tamanho das frases, tom (acolhedor, técnico, ericksoniano).
-2. DESPREZO PELO CONTEÚDO (O que ele fala): IGNORE nomes de pacientes, queixas clínicas, diagnósticos (TEA, TDAH, Ansiedade), tratamentos ou história de vida.
-3. PROIBIÇÃO ABSOLUTA: Nunca extraia uma regra que mencione "Paciente", "Consulta", "Déficit", "Tratamento" ou nomes próprios.
-4. TRANSLATAÇÃO: Se ele falar "Atendi uma paciente com TEA e ela estava ansiosa", você extrai: "Uso de adjetivos de estado emocional para validar o interlocutor" (Estilo), e NÃO "Atendimento de TEA" (Conteúdo).
-
-DNA LITERÁRIO APRENDIDO:
-${dnaExistente || 'Nenhum padrão registrado ainda.'}
-
-FORMATO OBRIGATÓRIO — Retorne EXCLUSIVAMENTE JSON válido:
-{
-  "reply": "Sua resposta conversacional — engaje o doutor em sua técnica de escrita, sem markdown e sem citar o paciente",
-  "regras_extraidas": [
-    {
-      "categoria": "Vocabulário | Ritmo | Tom | Estrutura",
-      "titulo": "Nome curto do padrão",
-      "regra": "Instrução técnica de escrita."
-    }
-  ]
-}
-`;
-
         const result = await modelFlash.generateContent([
-            systemPrompt,
-            `FALA DO DR. VICTOR: "${message}"`
+            PROMPT_TREINAMENTO_ISOLADO,
+            `FALA DO DR. VICTOR-Ouvinte: "${message}"`
         ]);
 
         const responseText = result.response.text();
@@ -2332,4 +2327,33 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => console.log("🎙️ [NEURO-LIVE] Canal de voz encerrado."));
+});
+
+// =======================================================================
+// ROTA: GERADOR DE VOZ PREMIUM (GOOGLE TTS NEURAL)
+// =======================================================================
+app.post('/api/neuro-training/tts', async (req, res) => {
+    try {
+        const { text } = req.body;
+        if (!text) return res.status(400).json({ error: 'Texto vazio.' });
+
+        const request = {
+            input: { text: text },
+            // Voz pt-BR-Neural2-B (Masculina, natural, excelente cadência)
+            voice: { languageCode: 'pt-BR', name: 'pt-BR-Neural2-B' }, 
+            audioConfig: { 
+                audioEncoding: 'MP3',
+                speakingRate: 1.05, // Ligeiramente acelerado para tom coloquial
+                pitch: -1.0         // Tom ligeiramente mais grave
+            },
+        };
+
+        const [response] = await ttsClient.synthesizeSpeech(request);
+        
+        res.set('Content-Type', 'audio/mpeg');
+        res.send(response.audioContent);
+    } catch (error) {
+        console.error('❌ [ERRO GOOGLE TTS]', error);
+        res.status(500).json({ error: 'Falha ao gerar voz neural' });
+    }
 });

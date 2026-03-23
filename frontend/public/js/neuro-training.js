@@ -170,44 +170,47 @@ window.neuroTraining = {
         }
     },
 
-    // ── MOTOR TTS COM AUTO-MUTE ───────────────────────────────────────────────
-    speak(text) {
-        if (!window.speechSynthesis) return;
+    // ── MOTOR TTS PREMIUM (GOOGLE NEURAL) COM AUTO-MUTE ───────────────────────
+    async speak(text) {
+        // Interrompe áudio anterior se houver
+        if (this.currentAudio) {
+            this.currentAudio.pause();
+            this.currentAudio = null;
+        }
 
-        window.speechSynthesis.cancel();
+        // Auto-Mute visual: Fica azul indicando que a IA está falando
+        if (!this.isManuallyMuted) this.setMuteState(true, 'tts');
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang  = 'pt-BR';
-        utterance.rate  = 1.05;
-        utterance.pitch = 0.9;
+        try {
+            const response = await fetch('/api/neuro-training/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
 
-        // Carrega vozes (podem demorar no Chrome)
-        const trySetVoice = () => {
-            const voices  = window.speechSynthesis.getVoices();
-            const ptVoice = voices.find(v =>
-                v.lang.includes('pt-BR') &&
-                (v.name.includes('Premium') || v.name.includes('Google') || v.name.includes('Daniel'))
-            );
-            if (ptVoice) utterance.voice = ptVoice;
-        };
-        trySetVoice();
+            if (!response.ok) throw new Error("Falha no servidor de voz premium");
 
-        // Gatilho: IA começa a falar → Auto-Mute Azul
-        utterance.onstart = () => {
-            if (!this.isManuallyMuted) this.setMuteState(true, 'tts');
-        };
+            const blob = await response.blob();
+            const audioUrl = URL.createObjectURL(blob);
+            this.currentAudio = new Audio(audioUrl);
 
-        // Gatilho: IA termina → Microfone volta ao vermelho
-        utterance.onend = () => {
+            // Quando terminar de falar, o microfone volta a ficar vermelho (ouvindo)
+            this.currentAudio.onended = () => {
+                if (!this.isManuallyMuted) this.setMuteState(false, 'auto');
+                URL.revokeObjectURL(audioUrl);
+            };
+
+            this.currentAudio.onerror = () => {
+                if (!this.isManuallyMuted) this.setMuteState(false, 'auto');
+            };
+
+            await this.currentAudio.play();
+
+        } catch (err) {
+            console.error("Erro na síntese de voz Google:", err);
+            // Em caso de erro, devolve o microfone para o navegador utilizar o fallback nativo (opcional) ou apenas libera
             if (!this.isManuallyMuted) this.setMuteState(false, 'auto');
-        };
-
-        // Segurança se o utterance for cancelado
-        utterance.onerror = () => {
-            if (!this.isManuallyMuted) this.setMuteState(false, 'auto');
-        };
-
-        window.speechSynthesis.speak(utterance);
+        }
     },
 
     // ── PROCESSAMENTO: VOZ → GEMINI → VOZ ────────────────────────────────────
@@ -227,7 +230,7 @@ window.neuroTraining = {
                 this.speak(data.reply); // Responde em voz (aciona auto-mute blue)
 
                 if (data.regras_extraidas && data.regras_extraidas.length > 0) {
-                    this.addMessage('ai', `🧬 ${data.regras_extraidas.length} novo(s) padrão(s) de DNA extraído(s).`);
+                    this.addMessage('ai', `🧬 ${data.regras_extraidas.length} novo(s) padrão(s) de fala extraído(s).`);
                     await this.loadMemory();
                 }
             }
@@ -301,7 +304,7 @@ window.neuroTraining = {
             return;
         }
         feed.innerHTML = rules.map(r => {
-            const categoria = (r.categoria || 'DNA').toUpperCase();
+            const categoria = (r.categoria || 'PADRÃO DE FALA').toUpperCase();
             const titulo    = r.titulo || r.sintese || "Padrão Detectado";
             const regra     = r.regra  || JSON.stringify(r);
             return `
@@ -321,7 +324,7 @@ window.neuroTraining = {
         if (!file) return;
 
         this.addMessage('user', `📁 Enviando documento: ${file.name}`);
-        this.addMessage('ai', "⌛ Analisando material técnico para extrair padrões de DNA clínico...");
+        this.addMessage('ai', "⌛ Analisando a estrutura do texto para mapear seu padrão de comunicação...");
 
         const formData = new FormData();
         formData.append('file', file);

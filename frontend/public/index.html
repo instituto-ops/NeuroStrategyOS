@@ -398,9 +398,9 @@
                     <!-- LADO ESQUERDO: CHAT & ESTADO -->
                     <div class="card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0; border: none; box-shadow: var(--shadow-sm);">
                         <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                            <h2 style="margin: 0; font-size: 16px; font-weight: 800;">🧬 Aprendiz de Abidos (Neuro-Training)</h2>
+                            <h2 style="margin: 0; font-size: 16px; font-weight: 800;">🎙️ Treinamento de Identidade Verbal</h2>
                             <div style="display: flex; gap: 10px;">
-                                <button class="btn btn-secondary" style="background: white; border: 1px solid #e2e8f0; color: #6366f1; font-weight: 800; font-size: 11px;" onclick="window.neuroTraining.toggleMode('voice')">🎙️ INICIAR ENTREVISTA DE DNA</button>
+                                <button class="btn btn-secondary" style="background: white; border: 1px solid #e2e8f0; color: #6366f1; font-weight: 800; font-size: 11px;" onclick="window.neuroTraining.toggleMode('voice')">🎙️ INICIAR ENTREVISTA DE VOZ</button>
                                 <label class="btn btn-secondary" style="background: white; border: 1px solid #e2e8f0; cursor: pointer; font-size: 11px;">
                                     📁 ENVIAR ARQUIVO
                                     <input type="file" id="file-upload-neuro" style="display: none;" onchange="window.neuroTraining.handleFileUpload(event)">
@@ -409,12 +409,12 @@
                         </div>
                         
                         <div id="nt-chat-messages" style="flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 12px; background: #ffffff;">
-                            <div class="msg ai shimmer">Carregando contexto do consultório...</div>
+                            <div class="msg ai shimmer">Ouvindo sua estrutura linguística...</div>
                         </div>
 
                         <div style="padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
                             <div style="display: flex; gap: 10px; position: relative;">
-                                <input type="text" id="nt-chat-input" placeholder="Digite uma diretriz clínica ou técnica..." style="flex: 1; padding: 15px 120px 15px 20px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                <input type="text" id="nt-chat-input" placeholder="Digite ou cole um texto para análise de estilo..." style="flex: 1; padding: 15px 120px 15px 20px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                                 <button id="btn-mic-stt" style="position: absolute; right: 110px; top: 14px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">🎙️</button>
                                 <button class="btn btn-primary" style="background: #6366f1; border-radius: 10px; padding: 0 25px; font-weight: 800; font-size: 12px;" onclick="window.neuroTraining.sendMessage()">ENVIAR</button>
                             </div>
@@ -424,11 +424,11 @@
                     <!-- LADO DIREITO: MEMÓRIA ATIVA -->
                     <div class="card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0; border: none; box-shadow: var(--shadow-sm);">
                         <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
-                            <h3 style="margin: 0; font-size: 12px; font-weight: 900; color: #64748b; letter-spacing: 1px;">🧠 DNA CLÍNICO (HIPOCAMPO)</h3>
+                            <h3 style="margin: 0; font-size: 12px; font-weight: 900; color: #64748b; letter-spacing: 1px;">🧠 MEMÓRIA DE ESTILO (DIGITAL TWIN)</h3>
                             <span id="memory-last-update" style="font-size: 10px; color: #94a3b8; font-weight: 700;">---</span>
                         </div>
                         <div id="rules-feed" style="flex: 1; overflow-y: auto; padding: 15px; background: #f1f5f9; display: flex; flex-direction: column; gap: 10px;">
-                            <p style="color:#64748b;font-size:13px;text-align:center;padding:40px 0;">Sincronizando padrões...</p>
+                            <p style="color:#64748b;font-size:13px;text-align:center;padding:40px 0;">Sincronizando seu ritmo de fala...</p>
                         </div>
                     </div>
                 </div>
@@ -874,7 +874,7 @@
         </div>
         <div style="margin-top:60px; text-align:center;">
             <h2 id="voice-status-text" style="color:white; font-size:36px; font-weight:900; letter-spacing:-1.5px; margin-bottom:10px; font-family: 'Inter', sans-serif;">Ouvindo Dr. Victor...</h2>
-            <p style="color:rgba(255,255,255,0.5); font-size:16px; font-weight:500;">O DNA do seu consultório está sendo extraído em tempo real.</p>
+            <p style="color:rgba(255,255,255,0.5); font-size:16px; font-weight:500;">Sua identidade verbal está sendo mapeada em tempo real.</p>
         </div>
         <div style="margin-top:80px; display:flex; gap:20px;">
             <button id="btn-mute-voice" class="btn" style="padding:18px 40px; border-radius:50px; font-weight:800; background:#f1f5f9; color:#1e293b; font-size:14px;" onclick="window.neuroTraining.toggleMute()">🔇 PAUSAR ESCUTA</button>
