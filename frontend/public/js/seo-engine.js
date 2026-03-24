@@ -159,60 +159,80 @@ window.seoEngine = {
         // Adiciona Sugestões Extras (Segurança Abidos V5.4)
         if (data && data.suggestions && data.suggestions.forEach) {
             data.suggestions.forEach(sug => {
-            elements.push({ 
-                data: { 
-                    source: `Page #${sug.from_id}`, 
-                    target: `Page #${sug.to_id}`,
-                    label: sug.anchor_text
-                } 
+                elements.push({ 
+                    data: { 
+                        source: `Page #${sug.from_id}`, 
+                        target: `Page #${sug.to_id}`,
+                        label: sug.anchor_text
+                    } 
+                });
             });
-        });
         }
 
-        const cy = cytoscape({
+        this.cy = cytoscape({
             container: document.getElementById('cy-map'),
             elements: elements,
             style: [
                 {
                     selector: 'node',
                     style: {
-                        'background-color': '#6366f1',
+                        'background-color': '#475569',
                         'label': 'data(label)',
-                        'color': '#ffffff',
+                        'color': '#cbd5e1',
                         'font-size': '10px',
-                        'width': '20px',
-                        'height': '20px',
+                        'width': '22px',
+                        'height': '22px',
                         'text-outline-width': 1,
-                        'text-outline-color': '#020617'
+                        'text-outline-color': '#020617',
+                        'text-valign': 'center',
+                        'text-halign': 'center',
+                        'font-weight': '600'
                     }
                 },
                 {
                     selector: 'node[type="hub"]',
                     style: {
-                        'background-color': '#2dd4bf',
-                        'width': '40px',
-                        'height': '40px',
+                        'background-color': '#38bdf8',
+                        'width': '45px',
+                        'height': '45px',
                         'font-weight': 'bold',
-                        'font-size': '12px'
+                        'font-size': '11px',
+                        'color': '#fff',
+                        'border-width': 2,
+                        'border-color': 'rgba(56, 189, 248, 0.4)'
                     }
                 },
                 {
                     selector: 'edge',
                     style: {
                         'width': 2,
-                        'line-color': '#334155',
-                        'target-arrow-color': '#334155',
+                        'line-color': '#1e293b',
+                        'target-arrow-color': '#1e293b',
                         'target-arrow-shape': 'triangle',
                         'curve-style': 'bezier',
-                        'opacity': 0.6
+                        'opacity': 0.5
                     }
                 }
             ],
             layout: {
                 name: 'cose',
-                animate: true
+                animate: true,
+                padding: 30
             }
         });
+    },
+
+    resetGraph() {
+        if (this.cy) {
+            this.cy.fit();
+            this.cy.center();
+        }
+    },
+
+    reorganizeGraph() {
+        if (this.cy) {
+            this.cy.layout({ name: 'cose', animate: true }).run();
+        }
     },
 
     // --- PAUTA DE CONTEÚDO ---

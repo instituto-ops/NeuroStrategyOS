@@ -65,6 +65,11 @@ const app = {
                 if (targetId === 'manager-agent' && window.managerAgent) {
                     window.managerAgent.loadInitialStatus();
                 }
+
+                // [NOVO] Auto-load Acervo when entering
+                if (targetId === 'acervo-publicacoes' && window.acervoManager) {
+                    window.acervoManager.loadAcervo();
+                }
             });
         });
 

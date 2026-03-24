@@ -773,6 +773,7 @@ app.get('/api/acervo/listar', (req, res) => {
 
         // Função recursiva para ler subpastas (ex: /blog/ansiedade)
         function scanDirectory(directory) {
+            if (!fs.existsSync(directory)) return;
             const files = fs.readdirSync(directory);
             
             for (const file of files) {
@@ -780,15 +781,33 @@ app.get('/api/acervo/listar', (req, res) => {
                 const stat = fs.statSync(fullPath);
 
                 if (stat.isDirectory()) {
-                    scanDirectory(fullPath); // Entra na subpasta
+                    // Ignora pastas de sistema do Next.js ou rascunhos se necessário
+                    if (file.startsWith('.') || file === 'api' || file === 'components') continue;
+                    scanDirectory(fullPath); 
                 } else if (file === 'page.tsx') {
-                    // Calcula a URL (Slug) baseada no nome da pasta
                     let slug = fullPath.replace(SITE_REPO_PATH, '').replace(/\\page\.tsx$/, '').replace(/\/page\.tsx$/, '');
                     if (!slug) slug = '/';
-                    slug = slug.replace(/\\/g, '/'); // Corrige barras no Windows
+                    slug = slug.replace(/\\/g, '/');
+
+                    // Tenta extrair o título do neuroEngineData
+                    let title = "Sem Título";
+                    let status = "PUBLICADO"; // Default
+                    try {
+                        const content = fs.readFileSync(fullPath, 'utf8');
+                        const dnaMatch = content.match(/export const neuroEngineData = (\{[\s\S]*?\});/);
+                        if (dnaMatch) {
+                            const dna = JSON.parse(dnaMatch[1]);
+                            title = dna.SEO_TITLE || dna.H1 || dna.THEME || "Página Abidos";
+                            status = dna.STATUS || "PUBLICADO";
+                        }
+                    } catch (e) {
+                        console.warn(`[ACERVO] Falha ao ler DNA de ${slug}:`, e.message);
+                    }
 
                     pages.push({
                         slug: slug,
+                        title: title,
+                        status: status,
                         caminhoFisico: fullPath,
                         ultimaAtualizacao: stat.mtime
                     });
@@ -848,6 +867,52 @@ app.post('/api/media/update-item', (req, res) => {
         fs.writeFileSync(ACERVO_MEDIA_FILE, JSON.stringify(data, null, 2));
         res.json({ success: true, item });
     } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// [API] Alterar Slug (URL) de uma Página Existente
+app.post('/api/acervo/alterar-slug', async (req, res) => {
+    try {
+        const { caminhoFisico, novoSlug } = req.body;
+        if(!caminhoFisico || !novoSlug) throw new Error("Dados incompletos.");
+
+        const cleanSlug = novoSlug.replace(/^\/|\/$/g, '').replace(/[^a-z0-9-]/g, '-').toLowerCase();
+        const oldPath = path.dirname(caminhoFisico);
+        const newPath = path.join(SITE_REPO_PATH, cleanSlug);
+
+        if (fs.existsSync(newPath)) throw new Error("Essa URL (Slug) já existe.");
+
+        fs.renameSync(oldPath, newPath);
+        res.json({ success: true, novoCaminho: path.join(newPath, 'page.tsx'), novoSlug: '/' + cleanSlug });
+
+    } catch (e) {
+        console.error("Erro ao alterar slug:", e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// [API] Alterar Status (DRAFT/PUBLICADO) de uma Página
+app.post('/api/acervo/alterar-status', async (req, res) => {
+    try {
+        const { caminhoFisico, novoStatus } = req.body;
+        if(!caminhoFisico) throw new Error("Caminho físico não informado.");
+
+        const content = fs.readFileSync(caminhoFisico, 'utf8');
+        const dnaMatch = content.match(/export const neuroEngineData = (\{[\s\S]*?\});/);
+        
+        if (dnaMatch) {
+            let dna = JSON.parse(dnaMatch[1]);
+            dna.STATUS = novoStatus;
+            const newDNAString = `export const neuroEngineData = ${JSON.stringify(dna, null, 2)};`;
+            const newContent = content.replace(/export const neuroEngineData = \{[\s\S]*?\};/, newDNAString);
+            fs.writeFileSync(caminhoFisico, newContent);
+        }
+
+        res.json({ success: true, status: novoStatus });
+
+    } catch (e) {
+        console.error("Erro ao alterar status:", e);
+        res.status(500).json({ success: false, error: e.message });
+    }
 });
 
 // [API] Pick Intelligent: O Agente solicita uma imagem estratégica para um bloco

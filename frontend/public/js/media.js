@@ -301,6 +301,70 @@ const mediaLibrary = {
         alert("O Antimater Watchdog está monitorando a pasta 'midia_local'. Ao arrastar arquivos aqui ou colocar diretamente na pasta, eles serão processados automaticamente pelo servidor e enviados ao Cloudinary.");
         // O upload real deve ser feito enviando o arquivo para /api/media/upload
         // Por enquanto, instruímos o usuário a usar a pasta monitorada para máxima performance Abidos.
+    },
+
+    async recommendMediaDemand() {
+        const btn = document.getElementById('btn-analyze-media-demand');
+        const container = document.getElementById('media-demand-table');
+        if(!container) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Analisando Psicologia das Cores e Lacunas Visuais...';
+        container.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px;">🔍 Agente Abidos está escaneando rascunhos e posts publicados...</td></tr>';
+
+        try {
+            // Analisamos o que falta (simulado com lógica de lacunas baseada em categorias/silos)
+            const demandRes = await fetch('/api/media/analyze-demand');
+            const data = await demandRes.json();
+            
+            if (data.demanda && data.demanda.length > 0) {
+                container.innerHTML = data.demanda.map(item => {
+                    const nanoPrompt = this.generateNanoPrompt(item.descricao, item.categoria);
+                    return `
+                        <tr>
+                            <td style="font-weight: bold; color: var(--color-text); font-size: 13px;">${item.descricao}</td>
+                            <td>
+                                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-size: 11px; color: var(--color-secondary); font-family: monospace; border: 1px solid var(--color-border);">
+                                    ${nanoPrompt}
+                                </div>
+                            </td>
+                            <td style="text-align: center; color: var(--color-text-light); font-size: 11px;">${item.frequencia || 'Alta'}</td>
+                            <td>
+                                <button class="btn btn-secondary" onclick="window.mediaLibrary.copyPrompt(this, '${nanoPrompt.replace(/'/g, "\\'")}')" style="font-size: 10px; padding: 5px 10px;">📋 COPIAR</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--color-success);">✅ Seu acervo visual cobre todas as demandas estratégicas atuais.</td></tr>';
+            }
+        } catch(e) {
+            console.error(e);
+            container.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--color-error);">Falha ao conectar com o motor de análise de mídia.</td></tr>';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '🚀 Analisar Demanda Visual e Gerar Prompts';
+        }
+    },
+
+    generateNanoPrompt(desc, cat) {
+        const core = `[CLINICAL PHOTOGRAPHY] High-end therapeutic environment, cinematic soft lighting, hyper-realistic 8k textures, natural daylight, soft bokeh, professional psychology clinic, minimalist interior.`;
+        const subject = `Focus: ${desc}.`;
+        const tech = `Tech: Shot on Fujifilm GFX 100 with 80mm f/1.7 lens, shallow depth of field, subtle chromatic aberration, highly detailed skin textures, no distortion, neutral and professional tones.`;
+        const atmosphere = `Mood: Empathy, safety, clinical authority, calm blues and gray-slate palette. [ULTRA-HD] --ar 16:9 --v 6.1 --stylize 250 --chaos 5`;
+        
+        return `${core} ${subject} ${tech} ${atmosphere}`;
+    },
+
+    copyPrompt(btn, text) {
+        navigator.clipboard.writeText(text);
+        const original = btn.innerText;
+        btn.innerText = '✅ COPIADO';
+        btn.style.color = 'var(--color-success)';
+        setTimeout(() => {
+            btn.innerText = original;
+            btn.style.color = '';
+        }, 2000);
     }
 };
 
