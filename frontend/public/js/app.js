@@ -132,11 +132,12 @@ const app = {
             if(lEl) lEl.innerText = data.leads || 32;
 
         } catch (e) {
+            console.error("Erro na Auditoria de Dados GA4:", e);
             if (dashboard) {
-                dashboard.innerHTML = `<div class="card">Métricas renderizadas via dados mockados. Backend WP desconectado.</div>`;
+                dashboard.innerHTML = `<div class="card" style="border-color: var(--color-error) !important;">Conexão com o Ecossistema Lawrence Offline. Verifique credenciais.</div>`;
             }
-            if(vEl) vEl.innerText = 849; // Mock data
-            if(lEl) lEl.innerText = 32;
+            if(vEl) vEl.innerText = '--'; 
+            if(lEl) lEl.innerText = '--';
         }
     },
 
