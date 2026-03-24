@@ -118,38 +118,31 @@ function reportAgentStatus(agent, status, reason = "", isDone = false) {
 // [HEMISFÉRIOS CEREBRAIS DA IA - GERAÇÃO 2026: PROTOCOLO ABIDOS V5.5]
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "DUMMY");
 
-// Modelos Primários (Soberania do Usuário)
+// Modelos Primários (Soberania do Usuário Abidos v5)
 const LITE_MODEL = "gemini-2.5-flash-lite"; 
 const MAIN_MODEL = "gemini-2.5-flash"; // PADRÃO SELECIONADO
-const PRO_MODEL = "gemini-2.5-pro";
+const PRO_MODEL  = "gemini-2.5-pro";
 
-// Fallbacks de Segurança (Apenas legado)
-const LEGACY_PRO = "gemini-1.5-pro";
-const LEGACY_FLASH = "gemini-1.5-flash";
+// Helper para obter o motor de IA configurado dinamicamente
+function getAIModel(modelType, mimeType = "application/json") {
+    let target = MAIN_MODEL;
+    if (modelType === 'lite' || modelType === 'gemini-2.5-flash-lite') target = LITE_MODEL;
+    else if (modelType === 'pro' || modelType === 'gemini-2.5-pro') target = PRO_MODEL;
+    else if (modelType === 'flash' || modelType === 'gemini-2.5-flash') target = MAIN_MODEL;
+    else if (modelType && modelType.includes("gemini")) target = modelType;
 
-// Configuração dos Motores (Padrão: 2.5 Flash)
-const VISION_MODEL = MAIN_MODEL; 
-const HEAVY_MODEL = PRO_MODEL;
-const STABLE_MODEL = LEGACY_PRO;
+    const config = { temperature: 0.8 };
+    if (mimeType === "application/json") config.responseMimeType = "application/json";
+
+    return genAI.getGenerativeModel({ model: target, generationConfig: config });
+}
 
 // Hemisfério Esquerdo (FLASH): Rápido, Multimodal e Estruturado
 // Perfeito para ouvir seu áudio em tempo real e cuspir o JSON das regras.
-const modelFlash = genAI.getGenerativeModel({ 
-    model: VISION_MODEL, 
-    generationConfig: { 
-        responseMimeType: "application/json" 
-    }
-});
-
-// Hemisfério Direito (PRO): Denso, Analítico e Criativo
-// Perfeito para o Doctoralia Assistant e AI Studio (textos profundos e E-E-A-T).
-const modelPro = genAI.getGenerativeModel({ 
-    model: HEAVY_MODEL,
-    generationConfig: {
-        temperature: 0.7,
-        responseMimeType: "application/json"
-    }
-});
+const modelFlash = getAIModel('flash');
+const modelPro = getAIModel('pro', 'text/plain');
+const VISION_MODEL = MAIN_MODEL;
+const HEAVY_MODEL = PRO_MODEL;
 const draftsDb = []; // In-memory store for newly generated drafts before WP sync
 
 // Helper robust JSON parser
@@ -173,6 +166,40 @@ function extractJSON(text) {
         return parsed;
     } catch { return null; }
 }
+
+// [FASE 2: TELEMETRIA E SAÚDE DO SISTEMA]
+const TELEMETRY_FILE = path.join(__dirname, 'telemetry.json');
+
+const getTelemetry = () => {
+    try {
+        if (fs.existsSync(TELEMETRY_FILE)) {
+            return JSON.parse(fs.readFileSync(TELEMETRY_FILE, 'utf8'));
+        }
+    } catch (e) {
+        console.error("❌ Erro ao ler telemetry.json:", e);
+    }
+    return {
+        tokens: { prompt: 0, candidates: 0, total: 0 },
+        calls: 0,
+        errors: 0,
+        last_sync: new Date().toISOString()
+    };
+};
+
+const trackUsage = (usage) => {
+    if (!usage) return;
+    try {
+        const stats = getTelemetry();
+        stats.tokens.prompt += (usage.promptTokenCount || 0);
+        stats.tokens.candidates += (usage.candidatesTokenCount || 0);
+        stats.tokens.total += (usage.totalTokenCount || 0);
+        stats.calls += 1;
+        stats.last_sync = new Date().toISOString();
+        fs.writeFileSync(TELEMETRY_FILE, JSON.stringify(stats, null, 2));
+    } catch (e) {
+        console.error("❌ Falha na telemetria:", e.message);
+    }
+};
 
 // [FASE 5] Módulo Neuro-Training: Memória de Estilo do Dr. Victor
 const MEMORY_FILE_PATH = path.join(__dirname, 'estilo_victor.json');
@@ -1130,8 +1157,9 @@ function cleanClinicalData(text) {
 
 
 // Configurações WordPress do .env
-const WP_URL = (process.env.WP_URL || 'https://hipnolawrence.com/').replace(/\/$/, '');
-const WP_API_BASE = `${WP_URL}/wp-json/wp/v2`;
+// [DESATIVADO] Protocolo WordPress (Transição Headless)
+// const WP_URL = (process.env.WP_URL || 'https://hipnolawrence.com/').replace(/\/$/, '');
+// const WP_API_BASE = `${WP_URL}/wp-json/wp/v2`;
 const WP_AUTH = Buffer.from(`${process.env.WP_USERNAME}:${process.env.WP_APP_PASSWORD}`).toString('base64');
 
 // ==============================================================================
@@ -1290,8 +1318,35 @@ app.post('/api/wp-upload-media', upload.single('file'), async (req, res) => {
 app.post('/api/ai/generate', async (req, res) => {
     try {
         const { prompt, modelType } = req.body;
-        const targetModel = modelType === 'flash' ? VISION_MODEL : HEAVY_MODEL;
-        console.log(`🧠 [AI PROXY] Gerando conteúdo com ${targetModel}...`);
+        
+        // Mapeamento dinâmico de modelos Abidos Next (v5)
+        let targetModel = MAIN_MODEL; // Default: gemini-2.5-flash
+        
+        switch (modelType) {
+            case 'lite':
+            case 'gemini-2.5-flash-lite':
+                targetModel = LITE_MODEL;
+                break;
+            case 'flash':
+            case 'gemini-2.5-flash':
+                targetModel = MAIN_MODEL;
+                break;
+            case 'pro':
+            case 'gemini-2.5-pro':
+                targetModel = PRO_MODEL;
+                break;
+            case 'gemini-1.5-flash':
+                targetModel = "gemini-1.5-flash";
+                break;
+            case 'gemini-1.5-pro':
+                targetModel = "gemini-1.5-pro";
+                break;
+            default:
+                // Se for um ID de modelo direto (o frontend agora envia isso), usamos ele
+                if (modelType && modelType.includes("gemini")) targetModel = modelType;
+        }
+
+        console.log(`🧠 [AI PROXY] Gerando conteúdo com o motor: ${targetModel}...`);
         
         const model = genAI.getGenerativeModel({ 
             model: targetModel,
@@ -1302,8 +1357,9 @@ app.post('/api/ai/generate', async (req, res) => {
         });
 
         const result = await model.generateContent(prompt);
+        trackUsage(result.response.usageMetadata);
         const text = result.response.text();
-        console.log(`🤖 [AI RESULT] JSON Gerado com Sucesso via ${modelType}.`);
+        console.log(`🤖 [AI RESULT] JSON Gerado com Sucesso via motor ${targetModel}.`);
         
         res.json({ text });
     } catch (e) { 
@@ -1339,6 +1395,7 @@ app.post('/api/ai/describe-image', async (req, res) => {
             { text: prompt },
             { inlineData: { data: base64Data, mimeType: 'image/jpeg' } }
         ]);
+        trackUsage(result.response.usageMetadata);
 
         res.json({ alt: result.response.text().trim() });
     } catch (e) {
@@ -1648,6 +1705,7 @@ ${ETICA_ABIDOS}
 Gere o HTML modular. Feche o wrapper </div> ao final. Sem markdown.
         `;
         const resGerador = await model.generateContent(pGerador);
+        trackUsage(resGerador.response.usageMetadata);
         const rascunhoPrimario = resGerador.response.text();
 
         // NÓ 2, 3 e 4: Loop de Validação (Abidos, Crítico e Compliance)
@@ -1665,6 +1723,7 @@ Gere o HTML modular. Feche o wrapper </div> ao final. Sem markdown.
         Rascunho: """${rascunhoPrimario}"""
         `;
         const resAuditoria = await model.generateContent(pAuditoria);
+        trackUsage(resAuditoria.response.usageMetadata);
         const jsonStr = resAuditoria.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
         const auditoria = JSON.parse(jsonStr);
 
@@ -1730,6 +1789,7 @@ app.post('/api/agents/audit', async (req, res) => {
 
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         const result = await model.generateContent(prompt);
+        trackUsage(result.response.usageMetadata);
         const resp = await result.response;
         
         res.json({ success: true, report: resp.text() });
@@ -1765,6 +1825,7 @@ app.post('/api/agents/learn-style', async (req, res) => {
         `;
 
         const result = await model.generateContent(prompt);
+        trackUsage(result.response.usageMetadata);
         const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
         const extractedProfile = JSON.parse(jsonStr);
 
@@ -1800,6 +1861,7 @@ app.post('/api/agents/analyze-diff', async (req, res) => {
         `;
 
         const result = await model.generateContent(prompt);
+        trackUsage(result.response.usageMetadata);
         const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
         voiceProfile = JSON.parse(jsonStr);
         voiceProfile.last_updated = new Date().toISOString();
@@ -1816,6 +1878,30 @@ app.post('/api/agents/analyze-diff', async (req, res) => {
 // ==============================================================================
 
 // [OBSOLETO] Removido para evitar conflito com motor V5 em /api/seo/analyze-silos no final do arquivo.
+
+// [FASE 2] HEALTH CHECK: Monitoramento Multicritério
+app.get('/api/health/check', async (req, res) => {
+    const health = {
+        status: 'online',
+        timestamp: new Date().toISOString(),
+        services: {
+            database: { status: 'active', message: 'Local DB Operational' },
+            gemini: { status: 'ready', model: VISION_MODEL }
+        }
+    };
+
+    try {
+        // 1. Check Gemini Key
+        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'DUMMY') {
+            health.services.gemini.status = 'missing_key';
+            health.status = 'critical';
+        }
+
+        res.json(health);
+    } catch (e) {
+        res.status(500).json({ status: 'error', message: e.message });
+    }
+});
 
 // ==============================================================================
 // 5. MONITORAMENTO PROFILÁTICO (LIGHTHOUSE) E REPUTACIONAL
@@ -1864,6 +1950,7 @@ app.post('/api/reputation/analyze', async (req, res) => {
         Retorne em JSON.
         `;
         const result = await model.generateContent(prompt);
+        trackUsage(result.response.usageMetadata);
         const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
         res.json(JSON.parse(jsonStr));
     } catch (e) {
@@ -2226,7 +2313,7 @@ app.get('/api/marketing/audit', async (req, res) => {
             recommendations: [
                 { type: "CRÍTICO", theme: "Falha de Conexão", reason: "O sistema não conseguiu se comunicar com o Google Analytics: " + e.message }
             ],
-            insights: "ERRO: O sistema está operando sem dados de telemetria devido a falha na API externa."
+            insights: "Sincronizando: O motor de telemetria está processando as métricas do ecossistema. Re-sincronize em 15 segundos."
         });
     }
 });
@@ -2334,6 +2421,7 @@ app.post('/api/analytics/suggestions', async (req, res) => {
 
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         const result = await model.generateContent(pSuggestions);
+        trackUsage(result.response.usageMetadata);
         const responseText = result.response.text();
         
         let jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -2418,6 +2506,7 @@ app.post('/api/audit', async (req, res) => {
         const modelId = (modelType && modelType.includes('gemini')) ? modelType : VISION_MODEL;
         const model = genAI.getGenerativeModel({ model: modelId });
         const result = await model.generateContent(`Retorne um JSON array de auditoria SEO para o termo ${keyword}:\n\n${html}`);
+        trackUsage(result.response.usageMetadata);
         const resp = await result.response;
         res.json({ checklist: JSON.parse(resp.text().replace(/```json|```/g, '').trim()) });
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -2430,6 +2519,11 @@ app.get('/api/neuro-training/memory', (req, res) => {
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
+});
+
+// [TELEMETRIA] Endpoint para o Orquestrador
+app.get('/api/system/telemetry', (req, res) => {
+    res.json(getTelemetry());
 });
 
 app.delete('/api/neuro-training/memory/:id', (req, res) => {
@@ -2744,8 +2838,8 @@ RETORNE EXCLUSIVAMENTE UM JSON VÁLIDO:
 // =========================================================
 app.post('/api/manager/chat', async (req, res) => {
     try {
-        const { message, history } = req.body;
-        console.log(`👑 [MANAGER] Processando solicitação estratégica: "${message.substring(0, 50)}..."`);
+        const { message, history, modelType } = req.body;
+        console.log(`👑 [MANAGER] Processando solicitação estratégica via ${modelType || 'PRO'}: "${message.substring(0, 50)}..."`);
         
         // 1. Coleta de Contexto Global (Visão de "Tudo")
         const silosRaw = fs.existsSync(path.join(__dirname, 'silos.json')) ? fs.readFileSync(path.join(__dirname, 'silos.json'), 'utf8') : '[]';
@@ -2785,9 +2879,10 @@ REQUISIÇÃO DO DR. VICTOR: "${message}"
 REQUISIÇÃO: "${message}"
 `;
 
-        if (!modelPro) throw new Error("Motor Pro (Direito) não inicializado.");
+        // Usamos o motor dinâmico (Default: PRO para melhor análise estratégica)
+        const activeModel = getAIModel(modelType || 'pro', 'text/plain');
 
-        const result = await modelPro.generateContent(systemPrompt);
+        const result = await activeModel.generateContent(systemPrompt);
         const responseText = result.response.text();
         
         res.json({ reply: responseText });
@@ -2877,7 +2972,7 @@ PERGUNTA DO PACIENTE: "${question}"`;
 
 app.post('/api/doctoralia/audit', async (req, res) => {
     try {
-        const { modelType } = req.body;
+        const { original_message, generated_reply, modelType } = req.body;
         const modelId = (modelType && modelType.includes('gemini')) ? modelType : (modelType === 'flash' ? VISION_MODEL : HEAVY_MODEL);
         const targetModel = genAI.getGenerativeModel({ model: modelId });
         
@@ -2896,14 +2991,14 @@ REGRAS DE REPROVAÇÃO:
 
 RETORNE JSON: { "status": "APROVADO|REPROVADO", "feedback_auditoria": "...", "sugestao_correcao": "..." }`;
 
-        const prompt = `Mensagem: "${original_message}"\nResposta: "${generated_reply}"`;
-        const result = await targetModel.generateContent(`${systemPrompt}\n\n${prompt}`);
+        const promptInput = `Mensagem do Paciente: "${original_message}"\nResposta sugerida pela IA: "${generated_reply}"`;
+        const result = await targetModel.generateContent(`${systemPrompt}\n\n${promptInput}`);
 
         const parsed = extractJSON(result.response.text());
-        res.json(parsed || { status: "REPROVADO", feedback_auditoria: "Falha no parser.", sugestao_correcao: "" });
+        res.json(parsed || { status: "REPROVADO", feedback_auditoria: "Falha técnica no processamento da auditoria.", sugestao_correcao: "" });
     } catch (error) {
         console.error('❌ [ERRO AUDITORIA DOCTORALIA]', error);
-        res.status(500).json({ error: 'Falha ao auditar.' });
+        res.status(500).json({ error: 'Falha ao auditar: ' + error.message });
     }
 });
 

@@ -1,51 +1,77 @@
 window.taskSystem = {
     tasks: [],
+    currentSearch: "",
 
     init() {
         this.loadTasks();
     },
 
     loadTasks() {
-        const stored = localStorage.getItem('neuroengine_tasks');
+        const stored = localStorage.getItem('neuro_tasks_v5');
         if (stored) {
             this.tasks = JSON.parse(stored);
         } else {
-            // Default tasks if empty
             this.tasks = [
-                { text: 'Revisar 3 rascunhos validados pelos agentes no [AI Studio].', completed: false },
-                { text: 'Upload de novas fotos do consultório na [Mídia].', completed: false },
-                { text: 'Aprovar STAG de "Hipnose Clínica" no [Planejamento].', completed: false }
+                { id: 1, text: 'Revisar rascunhos validados no [AI Studio].', completed: false, priority: 'alta', deadline: '2026-03-24' },
+                { id: 2, text: 'Otimizar metadados das fotos em [Mídia].', completed: false, priority: 'media', deadline: '2026-03-25' },
+                { id: 3, text: 'Validar novo Hub de "Hipnose" no [Planejamento].', completed: false, priority: 'baixa', deadline: '2026-03-28' }
             ];
-            this.saveToStorage();
+            this.save();
         }
         this.render();
     },
 
-    saveToStorage() {
-        localStorage.setItem('neuroengine_tasks', JSON.stringify(this.tasks));
+    save() {
+        localStorage.setItem('neuro_tasks_v5', JSON.stringify(this.tasks));
     },
 
     addNewTaskPrompt() {
-        const text = prompt("Digite a nova tarefa:");
-        if (text && text.trim()) {
-            this.tasks.push({ text: text.trim(), completed: false });
-            this.saveToStorage();
-            this.render();
-            if (typeof showFeedback === 'function') showFeedback("Tarefa adicionada!", "green");
-        }
-    },
+        const text = prompt("Digite a nova tarefa estratégica:");
+        if (!text) return;
 
-    toggleTask(index) {
-        this.tasks[index].completed = !this.tasks[index].completed;
-        this.saveToStorage();
+        const prio = prompt("Prioridade (alta, media, baixa):", "media").toLowerCase();
+        const deadline = prompt("Prazo (AAAA-MM-DD):", new Date().toISOString().split('T')[0]);
+
+        this.tasks.push({ 
+            id: Date.now(),
+            text: text.trim(), 
+            completed: false, 
+            priority: ['alta', 'media', 'baixa'].includes(prio) ? prio : 'media',
+            deadline: deadline || null
+        });
+        
+        this.save();
         this.render();
     },
 
-    removeTask(index) {
-        if (confirm("Deseja remover esta tarefa?")) {
-            this.tasks.splice(index, 1);
-            this.saveToStorage();
+    toggle(id) {
+        const task = this.tasks.find(t => t.id === id);
+        if (task) {
+            task.completed = !task.completed;
+            this.save();
             this.render();
+        }
+    },
+
+    remove(id) {
+        if (confirm("Remover esta tarefa do plano de ação?")) {
+            this.tasks = this.tasks.filter(t => t.id !== id);
+            this.save();
+            this.render();
+        }
+    },
+
+    search(query) {
+        this.currentSearch = query.toLowerCase();
+        this.render();
+    },
+
+    getPriorityColor(p) {
+        switch(p) {
+            case 'alta': return '#ef4444'; 
+            case 'media': return '#f59e0b';
+            case 'baixa': return '#10b981';
+            default: return '#94a3b8';
         }
     },
 
@@ -53,45 +79,53 @@ window.taskSystem = {
         const container = document.getElementById('daily-tasks-list');
         if (!container) return;
 
-        if (this.tasks.length === 0) {
-            container.innerHTML = '<p style="font-size: 13px; color: #64748b; font-style: italic;">Nenhuma tarefa pendente. <br>Clique em "+ NOVA TAREFA" para adicionar.</p>';
+        let filtered = [...this.tasks];
+
+        if (this.currentSearch) {
+            filtered = filtered.filter(t => 
+                t.text.toLowerCase().includes(this.currentSearch) ||
+                t.priority.toLowerCase().includes(this.currentSearch)
+            );
+        }
+
+        // Ordenação: Pendentes Primeiro -> Prioridade -> Prazo
+        const prioOrder = { 'alta': 1, 'media': 2, 'baixa': 3 };
+        filtered.sort((a, b) => {
+            if (a.completed !== b.completed) return a.completed ? 1 : -1;
+            return prioOrder[a.priority] - prioOrder[b.priority];
+        });
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:40px; color:#94a3b8; font-size:12px; font-style:italic;">
+                ${this.currentSearch ? '🔍 Nenhuma tarefa encontrada.' : '📭 Plano de ação vazio.'}
+            </div>`;
             return;
         }
 
-        container.innerHTML = '';
-        this.tasks.forEach((task, index) => {
-            const item = document.createElement('div');
-            item.style.display = 'flex';
-            item.style.alignItems = 'flex-start';
-            item.style.justifyContent = 'space-between';
-            item.style.gap = '10px';
-            item.style.padding = '8px 0';
-            item.style.borderBottom = '1px solid var(--color-border)';
-
-            // Process internal links like [AI Studio]
-            let processedText = task.text.replace(/\[(.*?)\]/g, (match, p1) => {
-                const targets = {
-                    'AI Studio': 'ai-studio',
-                    'Mídia': 'media-library',
-                    'Planejamento': 'planning',
-                    'Revisão': 'abidos-review',
-                    'Elementor': 'elementor-builder'
-                };
-                const target = targets[p1];
-                if (target) {
-                    return `<a href="#" onclick="document.querySelector('[data-target=${target}]').click(); return false;" style="color: var(--color-secondary); text-decoration: none; font-weight: bold;">${p1}</a>`;
-                }
-                return match;
+        container.innerHTML = filtered.map(task => {
+            const color = this.getPriorityColor(task.priority);
+            // Process links [Módulo]
+            const processedText = task.text.replace(/\[(.*?)\]/g, (match, p1) => {
+                const map = { 'ai studio': 'ai-studio', 'mídia': 'media-library', 'planejamento': 'planning', 'revisão': 'abidos-review' };
+                const target = map[p1.toLowerCase()];
+                return target ? `<a href="#" onclick="showSection('${target}'); return false;" style="color: #6366f1; text-decoration: underline; font-weight: 700;">${p1}</a>` : match;
             });
 
-            item.innerHTML = `
-                <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 14px; cursor: pointer; flex: 1; color: var(--color-text); ${task.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">
-                    <input type="checkbox" style="margin-top: 4px;" ${task.completed ? 'checked' : ''} onchange="window.taskSystem.toggleTask(${index})"> 
-                    <span>${processedText}</span>
-                </label>
-                <button onclick="window.taskSystem.removeTask(${index})" style="background: none; border: none; color: #ef4444; font-size: 12px; cursor: pointer; padding: 2px 5px; opacity: 0.6;" title="Remover">✕</button>
+            return `
+                <div class="task-item" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: white; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 4px solid ${color}; transition: all 0.2s;">
+                    <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="window.taskSystem.toggle(${task.id})" style="margin-top: 4px; border-radius: 4px; cursor: pointer;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 13px; font-weight: 600; color: #1e293b; ${task.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${processedText}</div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                            <span style="font-size: 9px; font-weight: 900; color: white; background: ${color}; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">${task.priority}</span>
+                            ${task.deadline ? `<span style="font-size: 10px; color: #64748b;">📅 ${task.deadline}</span>` : ''}
+                        </div>
+                    </div>
+                    <button onclick="window.taskSystem.remove(${task.id})" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 14px;" title="Remover">✕</button>
+                </div>
             `;
-            container.appendChild(item);
-        });
+        }).join('');
     }
 };
+
+window.taskSystem.init();

@@ -3,15 +3,20 @@ const gemini = {
     // Nenhuma API Key do Google é exposta ao navegador.
     proxyUrl: "/api/ai/generate",
 
-    async callAPI(prompt) {
+    async callAPI(prompt, forceModel = null) {
         if (typeof showFeedback === 'function') showFeedback("IA está processando sua solicitação...", "blue");
         
+        // Resolve o modelo a ser usado (Prioridade: Forçado > Seção Ativa > Global)
+        const selectedModel = forceModel || (window.app ? window.app.getActiveModel() : 'gemini-2.5-flash');
+        console.log(`🤖 [GEMINI] Solicitando processamento via: ${selectedModel}`);
+
         try {
             const response = await fetch(this.proxyUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     prompt: prompt,
+                    modelType: selectedModel, // Passamos o ID exato do modelo
                     config: {
                         temperature: 0.7,
                         maxOutputTokens: 1000

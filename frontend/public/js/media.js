@@ -6,10 +6,16 @@ const mediaLibrary = {
     allFolders: [],
 
     currentCategory: 'all',
+    searchQuery: '',
 
     init() {
         this.bindEvents();
         this.loadLibrary();
+    },
+
+    search(q) {
+        this.searchQuery = q;
+        this.renderItems();
     },
 
     bindEvents() {
@@ -34,70 +40,85 @@ const mediaLibrary = {
     },
 
     async loadLibrary() {
-        const container = document.getElementById('media-list-container');
-        if (!container) return;
-
         try {
             const res = await fetch('/api/media/acervo');
             const data = await res.json();
+            this.allItems = data.items || [];
             this.allFolders = data.folders || [];
-            const items = data.items || [];
-            
+
             // Popula Seletores de Álbuns
             this.updateAlbumSelectors();
-
-            const filteredItems = this.currentCategory === 'all' 
-                ? items 
-                : items.filter(i => i.folder === this.currentCategory);
-
-            container.innerHTML = '';
-            
-            if (filteredItems.length === 0) {
-                container.innerHTML = '<div style="text-align: center; grid-column: 1/-1; padding: 60px; color: #94a3b8;">📭 Nenhum arquivo nesta categoria.</div>';
-                return;
-            }
-
-            filteredItems.forEach(item => {
-                const isSelected = this.selectedMedia && item.id === this.selectedMedia.id;
-                const isVideo = item.url.match(/\.(mp4|mov|webm)$/i);
-                
-                const card = document.createElement('div');
-                card.className = `card media-thumb-card ${isSelected ? 'selected' : ''}`;
-                card.id = `media-card-${item.id}`;
-                card.style.cssText = `
-                    padding: 8px; cursor: pointer; 
-                    border: 2px solid ${isSelected ? 'var(--color-secondary)' : '#e2e8f0'};
-                    transition: all 0.2s; position: relative; height: 160px;
-                    background: white; border-radius: 12px;
-                    overflow: hidden;
-                    ${isSelected ? 'transform: scale(1.02); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);' : ''}
-                `;
-                
-                card.onclick = () => this.selectMedia(item);
-                
-                const categoryBadge = `<div style="position: absolute; top: 8px; left: 8px; background: rgba(15, 23, 42, 0.8); color: white; font-size: 8px; padding: 4px 8px; border-radius: 20px; font-weight: 800; text-transform: uppercase; z-index: 10;">${item.folder || 'Geral'}</div>`;
-
-                let mediaPreview = '';
-                if (isVideo) {
-                    mediaPreview = `<video src="${item.url}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>
-                                   <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5); pointer-events: none;">▶️</div>`;
-                } else {
-                    mediaPreview = `<img src="${item.url}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" onerror="this.src='img/placeholder-media.png'">`;
-                }
-
-                card.innerHTML = `
-                    ${categoryBadge}
-                    ${mediaPreview}
-                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; font-size: 9px; padding: 10px 8px; border-radius: 0 0 8px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        ${item.title}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-
-        } catch (error) { 
+            this.renderItems();
+        } catch (error) {
             console.error("Erro ao carregar galeria:", error);
         }
+    },
+
+    renderItems() {
+        const container = document.getElementById('media-list-container');
+        if (!container) return;
+
+        let filteredItems = this.allItems;
+
+        // Filtro por Álbum
+        if (this.currentCategory !== 'all') {
+            filteredItems = filteredItems.filter(i => i.folder === this.currentCategory);
+        }
+
+        // Filtro por Busca
+        if (this.searchQuery) {
+            const query = this.searchQuery.toLowerCase();
+            filteredItems = filteredItems.filter(i =>
+                (i.title && i.title.toLowerCase().includes(query)) ||
+                (i.alt && i.alt.toLowerCase().includes(query)) ||
+                (i.folder && i.folder.toLowerCase().includes(query))
+            );
+        }
+
+        container.innerHTML = '';
+
+        if (filteredItems.length === 0) {
+            container.innerHTML = `<div style="text-align: center; grid-column: 1/-1; padding: 60px; color: #94a3b8;">📭 Nenhum item encontrado para "${this.searchQuery || this.currentCategory}".</div>`;
+            return;
+        }
+
+        filteredItems.forEach(item => {
+            const isSelected = this.selectedMedia && item.id === this.selectedMedia.id;
+            const isVideo = item.url.match(/\.(mp4|mov|webm)$/i);
+
+            const card = document.createElement('div');
+            card.className = `card media-thumb-card ${isSelected ? 'selected' : ''}`;
+            card.id = `media-card-${item.id}`;
+            card.style.cssText = `
+                padding: 8px; cursor: pointer;
+                border: 2px solid ${isSelected ? 'var(--color-secondary)' : '#e2e8f0'};
+                transition: all 0.2s; position: relative; height: 160px;
+                background: white; border-radius: 12px;
+                overflow: hidden;
+                ${isSelected ? 'transform: scale(1.02); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);' : ''}
+            `;
+
+            card.onclick = () => this.selectMedia(item);
+
+            const categoryBadge = `<div style="position: absolute; top: 8px; left: 8px; background: rgba(15, 23, 42, 0.8); color: white; font-size: 8px; padding: 4px 8px; border-radius: 20px; font-weight: 800; text-transform: uppercase; z-index: 10;">${item.folder || 'Geral'}</div>`;
+
+            let mediaPreview = '';
+            if (isVideo) {
+                mediaPreview = `<video src="${item.url}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>
+                               <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5); pointer-events: none;">▶️</div>`;
+            } else {
+                mediaPreview = `<img src="${item.url}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" onerror="this.src='img/placeholder-media.png'">`;
+            }
+
+            card.innerHTML = `
+                ${categoryBadge}
+                ${mediaPreview}
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; font-size: 9px; padding: 10px 8px; border-radius: 0 0 8px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${item.title}
+                </div>
+            `;
+            container.appendChild(card);
+        });
     },
 
     updateAlbumSelectors() {

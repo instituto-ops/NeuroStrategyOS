@@ -147,31 +147,44 @@ window.seoEngine = {
     renderGraph(data) {
         const elements = [];
         
+        // Coleta status de produção para colorir o grafo
+        const publishedPages = window.acervoManager?.allPages || [];
+        const activeDrafts = window.abidosReview?.allDrafts || [];
+
         // Adiciona Hubs
         data.silos.forEach(silo => {
-            elements.push({ data: { id: silo.hub, label: silo.hub, type: 'hub' } });
+            const isPublished = publishedPages.some(p => p.slug.includes(silo.slug) || p.title === silo.hub);
+            const isDraft = activeDrafts.some(d => d.theme === silo.hub);
+
+            elements.push({ 
+                data: { 
+                    id: silo.hub, 
+                    label: silo.hub, 
+                    type: 'hub',
+                    status: isPublished ? 'published' : (isDraft ? 'draft' : 'planned')
+                } 
+            });
+
             silo.spokes.forEach(spoke => {
-                elements.push({ data: { id: spoke, label: spoke, type: 'spoke' } });
+                const spPublished = publishedPages.some(p => p.title.toLowerCase() === spoke.toLowerCase());
+                const spDraft = activeDrafts.some(d => d.theme.toLowerCase() === spoke.toLowerCase());
+
+                elements.push({ 
+                    data: { 
+                        id: spoke, 
+                        label: spoke, 
+                        type: 'spoke',
+                        status: spPublished ? 'published' : (spDraft ? 'draft' : 'planned')
+                    } 
+                });
                 elements.push({ data: { source: spoke, target: silo.hub } });
             });
         });
 
-        // Adiciona Sugestões Extras (Segurança Abidos V5.4)
-        if (data && data.suggestions && data.suggestions.forEach) {
-            data.suggestions.forEach(sug => {
-                elements.push({ 
-                    data: { 
-                        source: `Page #${sug.from_id}`, 
-                        target: `Page #${sug.to_id}`,
-                        label: sug.anchor_text
-                    } 
-                });
-            });
-        }
-
         this.cy = cytoscape({
             container: document.getElementById('cy-map'),
             elements: elements,
+            wheelSensitivity: 0.2,
             style: [
                 {
                     selector: 'node',
@@ -186,8 +199,18 @@ window.seoEngine = {
                         'text-outline-color': '#020617',
                         'text-valign': 'center',
                         'text-halign': 'center',
-                        'font-weight': '600'
+                        'font-weight': '600',
+                        'border-width': 2,
+                        'border-color': '#1e293b'
                     }
+                },
+                {
+                    selector: 'node[status="published"]',
+                    style: { 'border-color': '#10b981', 'border-width': 3 }
+                },
+                {
+                    selector: 'node[status="draft"]',
+                    style: { 'border-color': '#f59e0b', 'border-width': 3 }
                 },
                 {
                     selector: 'node[type="hub"]',
@@ -195,11 +218,8 @@ window.seoEngine = {
                         'background-color': '#38bdf8',
                         'width': '45px',
                         'height': '45px',
-                        'font-weight': 'bold',
                         'font-size': '11px',
-                        'color': '#fff',
-                        'border-width': 2,
-                        'border-color': 'rgba(56, 189, 248, 0.4)'
+                        'color': '#fff'
                     }
                 },
                 {
@@ -214,10 +234,15 @@ window.seoEngine = {
                     }
                 }
             ],
-            layout: {
-                name: 'cose',
-                animate: true,
-                padding: 30
+            layout: { name: 'cose', animate: true, padding: 30 }
+        });
+
+        // Eventos de Toque/Clique no Grafo
+        this.cy.on('tap', 'node', (evt) => {
+            const node = evt.target;
+            const label = node.data('label');
+            if(confirm(`Deseja iniciar a produção de "${label}" agora?`)) {
+                this.writePost(label, "Iniciado via Mapa Estratégico");
             }
         });
     },
@@ -291,24 +316,21 @@ window.seoEngine = {
         `).join('');
     },
 
-    writePost(title, focus) {
-        // Navega para o AI Studio
-        const navBtn = document.querySelector('[data-target="ai-studio"]');
-        if (navBtn) navBtn.click();
-        
-        // Preenche campos no AI Studio (Novos IDs do Stepper V5)
-        const themeInput = document.getElementById('ai-studio-theme');
-        const contextInput = document.getElementById('ai-studio-context');
-        
-        if (themeInput) themeInput.value = title;
-        if (contextInput) contextInput.value = focus;
-
-        // Feedback visual ou log
-        console.log(`📝 [PAUTA] Direcionando "${title}" para o AI Studio.`);
-        
-        // Sugestão de Blueprint Automático no Chat (Opcional)
-        if(window.chatApp && window.chatApp.addMessage) {
-            window.chatApp.addMessage(`📅 **Vindo da Pauta:** Vamos trabalhar em **"${title}"** focado em **${focus}**. Defina o objetivo e siga para a próxima etapa.`);
+    async writePost(title, focus) {
+        // [Fase 3] Interconectividade: Pauta -> Studio
+        if (window.aiStudioTemplate) {
+            await window.aiStudioTemplate.importIntoStudio({
+                theme: title,
+                context: focus,
+                reset: true
+            });
+            
+            // Log no Centelha se carregado
+            if(window.sparkEngine) {
+                console.log(`✨ [SPARK] Iniciando produção de "${title}"...`);
+            }
+        } else {
+            alert("Studio não carregado.");
         }
     }
 };

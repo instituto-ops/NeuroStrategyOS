@@ -112,36 +112,17 @@ window.acervoManager = {
             const result = await res.json();
 
             if (result.success) {
-                const dados = result.data;
-                
-                // Redireciona para o AI Studio no Modo de Edição
+                // Sincronização de Interconectividade (Fase 3 do Roadmap)
                 if (window.aiStudioTemplate) {
-                    window.aiStudioTemplate.values = dados;
-                    
-                    const selectEl = document.getElementById('ai-studio-template');
-                    if (dados.template && selectEl) {
-                        Array.from(selectEl.options).forEach(opt => {
-                            if (opt.text.includes(dados.template) || opt.value === dados.template) {
-                                opt.selected = true;
-                                window.aiStudioTemplate.selectedId = opt.value;
-                            }
-                        });
-                    }
-
-                    window.aiStudioTemplate.menuId = dados.menuId || null;
-                    if (window.aiStudioTemplate.selectedId) {
-                        window.aiStudioTemplate.loadTemplateDetails(window.aiStudioTemplate.selectedId);
-                    }
-                    
-                    const statusLabel = document.getElementById('ai-studio-status-label');
-                    if (statusLabel) {
-                        statusLabel.textContent = "STATUS: MODO DE EDIÇÃO ATIVO";
-                        statusLabel.style.color = "#ea580c";
-                    }
-
-                    window.aiStudioTemplate.caminhoFisico = caminhoFisico;
-                    const studioBtn = document.querySelector('.nav-btn[data-target="ai-studio"]');
-                    if (studioBtn) studioBtn.click();
+                    await window.aiStudioTemplate.importIntoStudio({
+                        theme: result.data.THEME || result.data.H1 || "Página Importada",
+                        values: result.data,
+                        templateId: result.data.template || null,
+                        caminhoFisico: caminhoFisico,
+                        reset: true // Garante que não misture rascunhos anteriores
+                    });
+                } else {
+                    alert("O motor AI Studio ainda não está carregado.");
                 }
             } else {
                 alert("Erro: " + result.error);

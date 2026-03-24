@@ -111,7 +111,8 @@ window.managerAgent = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     message: text,
-                    history: this.messages
+                    history: this.messages,
+                    modelType: window.app ? window.app.getActiveModel('manager-agent') : 'gemini-2.5-pro'
                 })
             });
 

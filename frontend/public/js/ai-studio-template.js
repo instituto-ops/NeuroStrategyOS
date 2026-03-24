@@ -41,6 +41,73 @@ window.aiStudioTemplate = {
         }
     },
 
+    // ── INTERCONECTIVIDADE (MÉTODO CENTRAL DE IMPORTAÇÃO) ─────────────────
+    importIntoStudio: async function(data) {
+        console.log("📥 [STUDIO] Importando Conteúdo Externo...", data);
+        
+        // 1. Limpa estado anterior se necessário
+        if (data.reset) this.newDraft();
+
+        // 2. Preenche Valores de Configuração (Etapa 1)
+        if (data.theme) {
+            const el = document.getElementById('ai-studio-theme');
+            if (el) el.value = data.theme;
+            this.values.tema = data.theme;
+        }
+        if (data.context) {
+            const el = document.getElementById('ai-studio-context');
+            if (el) el.value = data.context;
+            this.values.contexto_extra = data.context;
+        }
+
+        // 3. Seleciona Template
+        if (data.templateId) {
+            this.selectedId = data.templateId;
+            const selectEl = document.getElementById('ai-studio-template');
+            if (selectEl) {
+                selectEl.value = data.templateId;
+                await this.loadTemplateDetails(data.templateId);
+            }
+        }
+
+        // 4. Mapeia Silo/Menu
+        if (data.siloId) {
+            const siloEl = document.getElementById('ai-studio-silo');
+            if (siloEl) siloEl.value = data.siloId;
+            this.values.silo = data.siloId;
+        }
+        if (data.menuId) {
+            const menuEl = document.getElementById('ai-studio-menu');
+            if (menuEl) menuEl.value = data.menuId;
+            this.menuId = data.menuId;
+        }
+
+        // 5. Se houver valores brutos (Edição de Acervo)
+        if (data.values) {
+            this.values = { ...this.values, ...data.values };
+            this.renderVariables();
+            
+            const statusLabel = document.getElementById('ai-studio-status-label');
+            if (statusLabel) {
+                statusLabel.textContent = "STATUS: MODO DE EDIÇÃO (ACERVO)";
+                statusLabel.style.color = "#ea580c";
+            }
+        }
+
+        if (data.caminhoFisico) this.caminhoFisico = data.caminhoFisico;
+
+        // 6. Navega para o Studio se não estiver lá
+        const studioBtn = document.querySelector('.nav-btn[data-target="ai-studio"]');
+        if (studioBtn) studioBtn.click();
+        
+        // 7. Garante que estamos no Passo 1 para revisão das configs
+        this.currentStep = 1;
+        this.updateStepUI();
+
+        // Toast de confirmação
+        if(window.showToast) window.showToast("🚀 Conteúdo importado para o AI Studio.");
+    },
+
     loadSilos: async function() {
         const select = document.getElementById('ai-studio-silo');
         if (!select) return;
@@ -103,6 +170,23 @@ window.aiStudioTemplate = {
         }
     },
 
+    switchTab: function(tabId, el) {
+        // Seleciona o card pai para isolar a troca de abas
+        const card = el.closest('.card');
+        if (!card) return;
+        
+        // Remove active class de todos os botões de aba dentro deste card
+        card.querySelectorAll('.card-tab-btn').forEach(b => b.classList.remove('active'));
+        // Adiciona ao botão clicado
+        el.classList.add('active');
+
+        // Esconde todos os painéis de aba dentro deste card
+        card.querySelectorAll('.tab-pane-content').forEach(p => p.classList.remove('active'));
+        // Mostra o painel alvo
+        const target = card.querySelector(`#${tabId}`);
+        if (target) target.classList.add('active');
+    },
+
     updateStepUI: function() {
         // Esconde todos
         document.querySelectorAll('.studio-step-content').forEach(s => s.classList.remove('active'));
@@ -110,12 +194,22 @@ window.aiStudioTemplate = {
         const nextStepDiv = document.getElementById(`studio-step-${this.currentStep}`);
         if(nextStepDiv) nextStepDiv.classList.add('active');
 
+        // Atualiza Círculos do Stepper
+        for (let i = 1; i <= 4; i++) {
+            const circle = document.getElementById(`step-${i}-circle`);
+            if (circle) {
+                circle.classList.remove('active', 'completed');
+                if (i < this.currentStep) circle.classList.add('completed');
+                if (i === this.currentStep) circle.classList.add('active');
+            }
+        }
+
         // Atualiza Título
         const titles = {
-            1: "🟢 1ª ETAPA: CONFIGURAÇÃO E PLANEJAMENTO (O CÉREBRO)",
-            2: "🔵 2ª ETAPA: GERAÇÃO E PREVIEW (A CRIAÇÃO)",
-            3: "🟡 3ª ETAPA: AUDITORIAS E REFINAMENTO (O FILTRO CLÍNICO)",
-            4: "🔴 4ª ETAPA: SALVAR E LANÇAR (O DEPLOY)"
+            1: "1ª ETAPA: CONFIGURAÇÃO (O CÉREBRO)",
+            2: "2ª ETAPA: GERAÇÃO (A CRIAÇÃO)",
+            3: "3ª ETAPA: AUDITORIAS (O FILTRO CLÍNICO)",
+            4: "4ª ETAPA: LANÇAR (O DEPLOY)"
         };
         const titleEl = document.getElementById('studio-step-title');
         if (titleEl) titleEl.innerText = titles[this.currentStep];
@@ -124,7 +218,11 @@ window.aiStudioTemplate = {
         const btnPrev = document.getElementById('btn-studio-prev');
         const btnNext = document.getElementById('btn-studio-next');
         if (btnPrev) btnPrev.style.display = this.currentStep === 1 ? 'none' : 'block';
-        if (btnNext) btnNext.style.display = this.currentStep === 4 ? 'none' : 'block';
+        if (btnNext) btnNext.style.display = this.currentStep === 4 ? 'none' : 'flex';
+        
+        // Reset scroll do conteúdo
+        const scrollEl = document.getElementById(`studio-step-${this.currentStep}`);
+        if (scrollEl) scrollEl.scrollTop = 0;
     },
 
     // ── PREVIEW & DISPOSITIVOS ───────────────────────────────────────────────
@@ -247,17 +345,21 @@ window.aiStudioTemplate = {
     renderVariable: function(key) {
         const val = this.values[key] || "";
         const lower = key.toLowerCase();
-        const isImg = (lower.includes('img') || lower.includes('foto')) && !lower.includes('alt');
+        // Detecção ultra-resiliente de campos de imagem/mídia
+        const isImg = (lower.includes('img') || lower.includes('foto') || lower.includes('url') || lower.includes('banner') || lower.includes('asset')) && !lower.includes('alt');
         const isText = key.includes('texto') || key.includes('bio') || key.includes('desc') || key.includes('p1') || key.includes('p2') || key.includes('artigo');
 
         if (isImg) {
             return `<div class="var-field-group">
                 <label>${key.replace(/_/g,' ')} <code>{{${key}}}</code></label>
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <input type="file" id="f-${key}" style="display:none" onchange="window.aiStudioTemplate.handleImageUpload('${key}', this)">
-                    <button class="btn btn-secondary" onclick="document.getElementById('f-${key}').click()">📸 Subir Foto</button>
-                    ${val ? `<button class="btn btn-secondary" onclick="window.aiStudioTemplate.removeValue('${key}')" style="color:red">🗑️ Remover</button>` : ''}
-                    <div id="p-${key}" style="font-size:10px; flex:1;">${val ? '✅ Imagem Carregada' : 'Nenhuma imagem'}</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="file" id="f-${key}" style="display:none" onchange="window.aiStudioTemplate.handleImageUpload('${key}', this)">
+                        <button class="btn btn-secondary" onclick="document.getElementById('f-${key}').click()" style="font-size:10px;">📸 Upload</button>
+                        <button class="btn btn-primary" onclick="window.aiStudioTemplate.openMediaPicker('${key}')" style="font-size:10px; background:#6366f1;">🖼️ Galeria</button>
+                        ${val ? `<button class="btn" onclick="window.aiStudioTemplate.removeValue('${key}')" style="color:#ef4444; border:1px solid #fecaca; font-size:10px; background:white;">🗑️</button>` : ''}
+                    </div>
+                    ${val ? `<div style="padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-size:10px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">✅ ${val.substring(0, 40)}...</div>` : '<div style="font-size:10px; color:#94a3b8;">Nenhuma imagem vinculada.</div>'}
                 </div>
             </div>`;
         }
@@ -265,6 +367,49 @@ window.aiStudioTemplate = {
             <label>${key.replace(/_/g,' ')} <code>{{${key}}}</code></label>
             ${isText ? `<textarea id="input-${key}" oninput="window.aiStudioTemplate.updateVal('${key}',this.value)" rows="3">${val}</textarea>` : `<input type="text" id="input-${key}" oninput="window.aiStudioTemplate.updateVal('${key}',this.value)" value="${val}">`}
         </div>`;
+    },
+
+    openMediaPicker: function(key) {
+        const modal = document.getElementById('media-picker-modal');
+        const grid = document.getElementById('picker-grid-container');
+        const label = document.getElementById('picker-target-label');
+        if(!modal || !grid) return;
+
+        label.innerText = `{{${key}}}`;
+        modal.style.display = 'flex';
+        grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:40px;">⌛ Carregando Galeria Abidos...</div>';
+
+        // Usa o acervo já carregado no mediaLibrary ou busca um novo
+        const items = window.mediaLibrary?.allItems || [];
+        
+        if (items.length === 0) {
+            grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:40px;">📭 Nenhuma mídia encontrada no acervo local.</div>';
+            return;
+        }
+
+        grid.innerHTML = items.map(item => `
+            <div class="picker-item" onclick="window.aiStudioTemplate.selectFromPicker('${key}', '${item.url}', this)" 
+                 style="cursor:pointer; border:2px solid #e2e8f0; border-radius:12px; overflow:hidden; transition:all 0.2s; background:white;">
+                <img src="${item.url}" style="width:100%; height:110px; object-fit:cover;">
+                <div style="padding:8px; font-size:9px; font-weight:800; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.title}</div>
+            </div>
+        `).join('');
+    },
+
+    selectFromPicker: function(key, url, el) {
+        // Highlight selection
+        document.querySelectorAll('.picker-item').forEach(item => item.style.borderColor = '#e2e8f0');
+        el.style.borderColor = '#6366f1';
+        el.style.transform = 'scale(0.98)';
+
+        const btn = document.getElementById('btn-confirm-picker');
+        btn.disabled = false;
+        btn.onclick = () => {
+            this.updateVal(key, url);
+            this.renderVariables();
+            if(this.currentStep === 2) this.refreshPreviewFrame();
+            document.getElementById('media-picker-modal').style.display = 'none';
+        };
     },
 
     updateVal: function(k,v) { 

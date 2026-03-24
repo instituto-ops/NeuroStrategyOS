@@ -1,5 +1,11 @@
 const app = {
+    modelConfig: {
+        global: localStorage.getItem('neuroengine_global_model') || 'gemini-2.5-flash',
+        sections: JSON.parse(localStorage.getItem('neuroengine_local_models') || '{}')
+    },
+
     init() {
+        this.syncModelSelectors();
         this.bindEvents();
         this.loadDashboardData();
         this.loadContentList();
@@ -9,6 +15,54 @@ const app = {
         if (window.marketingLab) window.marketingLab.init();
         if (window.managerAgent) window.managerAgent.init();
         if (window.aiStudioTemplate) window.aiStudioTemplate.init();
+    },
+
+    updateGlobalModel(modelId) {
+        this.modelConfig.global = modelId;
+        localStorage.setItem('neuroengine_global_model', modelId);
+        console.log("🌏 [MODEL] Global model updated to:", modelId);
+        // Notificamos o sistema de que o modelo global mudou (poderia disparar re-render se necessário)
+    },
+
+    updateLocalModel(sectionId, modelId) {
+        if (modelId === 'global') {
+            delete this.modelConfig.sections[sectionId];
+        } else {
+            this.modelConfig.sections[sectionId] = modelId;
+        }
+        localStorage.setItem('neuroengine_local_models', JSON.stringify(this.modelConfig.sections));
+        console.log(`📍 [MODEL] Local model for ${sectionId} updated to:`, modelId);
+        
+        // Se for o AI Studio, sincronizamos o seletor antigo se ele existir
+        if (sectionId === 'ai-studio') {
+            const oldSel = document.getElementById('ai-studio-model');
+            if (oldSel && oldSel.value !== modelId) oldSel.value = modelId;
+        }
+    },
+
+    getActiveModel(sectionId) {
+        if (!sectionId) {
+            // Se não informou seção, tenta pegar a seção ativa no DOM
+            const activeSection = document.querySelector('.content-section.active');
+            sectionId = activeSection ? activeSection.id : 'dashboard';
+        }
+        return this.modelConfig.sections[sectionId] || this.modelConfig.global;
+    },
+
+    syncModelSelectors() {
+        // Global
+        const globalSel = document.getElementById('global-model-selector');
+        if (globalSel) globalSel.value = this.modelConfig.global;
+
+        // Locals
+        document.querySelectorAll('.local-model-selector').forEach(sel => {
+            const section = sel.getAttribute('data-section');
+            if (this.modelConfig.sections[section]) {
+                sel.value = this.modelConfig.sections[section];
+            } else {
+                sel.value = 'global';
+            }
+        });
     },
 
     bindEvents() {
@@ -136,6 +190,12 @@ const app = {
             if(vEl) vEl.innerText = data.visitors || 849;
             if(lEl) lEl.innerText = data.leads || 32;
 
+            // 🔥 [FIX] Update NeuroEngine Insight text
+            const insightEl = document.getElementById('neuroengine-insight-text');
+            if(insightEl && data.insights) {
+                insightEl.innerText = "🤖 " + data.insights;
+            }
+
         } catch (e) {
             console.error("Erro na Auditoria de Dados GA4:", e);
             if (dashboard) {
@@ -160,12 +220,16 @@ const app = {
 
             container.style.display = 'block';
             list.innerHTML = data.suggestions.map(s => `
-                <div class="card" style="padding: 15px;">
-                    <span class="badge-suggestion">NOVO HUB SILO</span>
-                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">${s.hub}</h4>
-                    <ul style="margin: 0; padding: 0 0 0 18px; font-size: 13px; color: var(--color-text-light); line-height: 1.6;">
+                <div class="card" style="padding: 15px; cursor: pointer; transition: transform 0.2s; border-left: 4px solid var(--color-secondary);" 
+                     onmouseover="this.style.transform='translateY(-5px)'" 
+                     onmouseout="this.style.transform='translateY(0)'"
+                     onclick="window.seoEngine.selectSilo('${s.hub}'); document.querySelector('[data-target=\'planning\']').click();">
+                    <span class="badge-suggestion" style="background: var(--color-secondary); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 800;">HUB SUGERIDO IA</span>
+                    <h4 style="margin: 10px 0; font-size: 15px; color: var(--color-text);">${s.hub}</h4>
+                    <ul style="margin: 0; padding: 0 0 0 18px; font-size: 12px; color: var(--color-text-light); line-height: 1.5;">
                         ${s.spokes.map(sp => `<li>${sp}</li>`).join('')}
                     </ul>
+                    <div style="margin-top: 10px; font-size: 10px; font-weight: 800; color: var(--color-secondary);">VER NO PLANEJAMENTO ➔</div>
                 </div>
             `).join('');
 

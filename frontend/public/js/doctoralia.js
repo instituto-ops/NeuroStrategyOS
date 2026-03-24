@@ -1,11 +1,20 @@
 window.doctoraliaApp = {
-    // Modelo padrão inicial
-    currentModel: "gemini-2.5-flash-lite",
+    // Modelo padrão inicial (será sobreposto pelo sistema global se disponível)
+    currentModel: "gemini-2.5-flash",
 
-    // Função para mudar o modelo via seletor
+    // Função para mudar o modelo via seletor (Integrada ao app.js)
     updateModel(newModel) {
-        this.currentModel = newModel;
-        console.log(`🧠 [Studio] Modelo alterado para: ${this.currentModel}`);
+        if (window.app) {
+            window.app.updateLocalModel('doctoralia-assistant', newModel);
+        } else {
+            this.currentModel = newModel;
+        }
+        console.log(`🧠 [Doctoralia] Modelo alterado para: ${newModel}`);
+    },
+    
+    // Helper para pegar o modelo ativo
+    getActiveModel() {
+        return window.app ? window.app.getActiveModel('doctoralia-assistant') : this.currentModel;
     },
 
     async generateReply() {
@@ -14,7 +23,7 @@ window.doctoraliaApp = {
         const btn = document.getElementById('btn-generate-doctoralia') || event.target;
         const container = document.getElementById('doctoralia-reply-container');
 
-        const modelType = document.getElementById('doctoralia-model')?.value || this.currentModel;
+        const modelType = this.getActiveModel();
 
         if (!question.trim()) return alert("Por favor, cole a pergunta do paciente.");
 
@@ -28,7 +37,7 @@ window.doctoraliaApp = {
             const response = await fetch('/api/doctoralia/generate-reply', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question, modelType: this.currentModel })
+                body: JSON.stringify({ question, modelType })
             });
 
             const data = await response.json();
@@ -79,7 +88,7 @@ window.doctoraliaApp = {
         statusBadge.innerText = '⏳ AUDITANDO...';
         feedbackText.innerText = 'Consultando Compliance Clínico (V4 Ethical Engine)...';
 
-        const modelType = document.getElementById('doctoralia-model')?.value || this.currentModel;
+        const modelType = this.getActiveModel();
         try {
             const response = await fetch('/api/doctoralia/audit', {
                 method: 'POST',
@@ -87,7 +96,7 @@ window.doctoraliaApp = {
                 body: JSON.stringify({ 
                     original_message: originalMessage, 
                     generated_reply: generatedReply,
-                    modelType: this.currentModel
+                    modelType: modelType
                 })
             });
 
@@ -127,7 +136,7 @@ window.doctoraliaApp = {
         const container = document.getElementById('doctoralia-reply-container');
         const feedback = document.getElementById('audit-feedback-text').innerText;
         const fixBtn = document.getElementById('btn-fix-doctoralia');
-        const modelType = document.getElementById('doctoralia-model')?.value || this.currentModel;
+        const modelType = this.getActiveModel();
 
         if (!container.innerText || container.innerText.includes('Aguardando')) return;
 
@@ -143,7 +152,7 @@ window.doctoraliaApp = {
                 body: JSON.stringify({ 
                     original_reply: container.innerText, 
                     auditor_feedback: feedback,
-                    modelType: this.currentModel
+                    modelType: modelType
                 })
             });
 

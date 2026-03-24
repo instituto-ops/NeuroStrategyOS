@@ -37,9 +37,18 @@ window.abidosReview = {
 
             const fontesRag = Array.isArray(draft.fontes_rag_utilizadas) ? draft.fontes_rag_utilizadas.join('\\n') : 'Nenhuma fonte';
             
-            const draftDate = draft.data_submissao ? new Date(draft.data_submissao).toLocaleDateString() : 'N/D';
-            const draftId = draft.draft_id || 'ID_PENDING';
-            const draftTheme = draft.tema_foco || 'Sem Tema Definido';
+            const rawDate = draft.data_submissao || draft.last_update || null;
+            let draftDate = 'N/D';
+            
+            if (rawDate && rawDate !== 'undefined') {
+                const dateObj = new Date(rawDate);
+                if (!isNaN(dateObj.getTime())) {
+                    draftDate = dateObj.toLocaleDateString('pt-BR');
+                }
+            }
+
+            const draftId = draft.draft_id || draft.id || 'ID_PENDING';
+            const draftTheme = draft.tema_foco || draft.name || 'Sem Tema Definido';
 
             tr.innerHTML = `
                 <td><strong>${draftId}</strong><br><span style="font-size:11px; color:var(--color-text-light);">${draftDate}</span></td>
@@ -48,7 +57,7 @@ window.abidosReview = {
                 <td><span style="font-size:11px; color:var(--color-secondary); cursor:pointer;" onclick="alert('Fontes:\\n' + '${fontesRag}')">Ver Fontes (RAG)</span></td>
                 <td style="display: flex; gap: 5px;">
                     <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="window.abidosReview.openModal('${draftId}')">✏️ Revisar</button>
-                    <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="window.abidosReview.quickApprove('${draftId}')">✅ Publicar</button>
+                    <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="window.abidosReview.quickApprove('${draftId}')">✅ Exportar</button>
                 </td>
             `;
             list.appendChild(tr);
@@ -104,15 +113,15 @@ window.abidosReview = {
     },
 
     async quickApprove(id) {
-        if(!confirm("Aprovar e publicar via WordPress REST API?")) return;
-        alert(`Rascunho ${id} aprovado. Fluxo de publicação engatilhado no backend.`);
+        if(!confirm("Autorizar exportação direta para o Core Next.js (Headless CMS)?")) return;
+        alert(`Rascunho ${id} validado e movido para a fila de sincronização Next.js.`);
     },
 
     async approveDraft() {
-        const id = this.currentDraftId.replace('WP-', '');
+        const id = this.currentDraftId;
         const editedContent = document.getElementById('draft-modal-content').value;
 
-        if(!confirm("Deseja publicar este conteúdo agora no site?")) return;
+        if(!confirm("Deseja exportar este conteúdo editado para o diretório de produção?")) return;
 
         try {
             // 1. Atualiza o conteúdo se houver edição e muda status para publish
