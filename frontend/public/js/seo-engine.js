@@ -47,17 +47,17 @@ window.seoEngine = {
 
         // Renderiza Conteúdo do Silo
         siloContainer.innerHTML = `
-            <div style="padding: 15px; background: white; border: 1px solid #e2e8f0; border-radius: 8px;">
-                <strong style="color: #1e40af; font-size: 16px;">📂 Hub: ${silo.hub}</strong>
-                <ul style="font-size: 14px; margin-top: 10px; color: #1e293b; list-style: none; padding: 0;">
+            <div class="card" style="padding: 15px;">
+                <strong style="color: var(--color-secondary); font-size: 16px;">📂 Hub: ${silo.hub}</strong>
+                <ul style="font-size: 14px; margin-top: 10px; list-style: none; padding: 0;">
                     ${silo.spokes.map(s => `
-                        <li style="padding: 5px 0; border-bottom: 1px dashed #f1f5f9; display: flex; align-items: center; gap: 8px;">
-                            <span style="color: #10b981;">🟢</span> ${s}
+                        <li style="padding: 5px 0; border-bottom: 1px dashed var(--color-border); display: flex; align-items: center; gap: 8px;">
+                            <span style="color: var(--color-success);">🟢</span> ${s}
                         </li>
                     `).join('')}
                 </ul>
                 <div style="margin-top: 15px;">
-                    <button class="btn btn-secondary" style="font-size: 11px; width: 100%; border-style: dashed;" onclick="window.seoEngine.addSpokePrompt('${silo.hub}')">+ Adicionar Novo Spoke</button>
+                    <button class="btn btn-secondary btn-add" style="font-size: 11px; width: 100%; border-style: dashed;" onclick="window.seoEngine.addSpokePrompt('${silo.hub}')"> Adicionar Novo Spoke</button>
                 </div>
             </div>
         `;
@@ -74,20 +74,18 @@ window.seoEngine = {
         } else {
             relatedSuggestions.forEach(sug => {
                 const div = document.createElement('div');
+                div.className = 'card';
                 div.style.padding = '12px';
-                div.style.background = 'white';
-                div.style.borderRadius = '8px';
-                div.style.border = '1px solid #e2e8f0';
                 div.style.fontSize = '13px';
                 div.innerHTML = `
-                    <div style="font-weight: bold; color: #6366f1; margin-bottom: 4px;">🎯 Oportunidade: "${sug.anchor_text}"</div>
-                    <div style="color: #64748b; font-size: 11px; margin-bottom: 8px;">
-                        De: <span style="color: #1e293b; font-weight: bold;">ID #${sug.from_id}</span> ➔ Para: <span style="color: #1e293b; font-weight: bold;">ID #${sug.to_id}</span>
+                    <div style="font-weight: bold; color: var(--color-secondary); margin-bottom: 4px;">🎯 Oportunidade: "${sug.anchor_text}"</div>
+                    <div style="color: var(--color-text-light); font-size: 11px; margin-bottom: 8px;">
+                        De: <span style="font-weight: bold;">ID #${sug.from_id}</span> ➔ Para: <span style="font-weight: bold;">ID #${sug.to_id}</span>
                     </div>
-                    <div style="font-style: italic; font-size: 11px; border-left: 2px solid #10b981; padding-left: 8px; color: #334155;">
+                    <div style="font-style: italic; font-size: 11px; border-left: 2px solid var(--color-success); padding-left: 8px; color: var(--color-text-light);">
                         <strong>Razão IA:</strong> ${sug.reason}
                     </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px; font-size: 10px; height: 28px; background: #10b981;" onclick="alert('Linkagem aplicada via REST API!')">🚀 Aplicar Link agora</button>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px; font-size: 10px; height: 28px;" onclick="alert('Linkagem aplicada via REST API!')">🚀 Aplicar Link agora</button>
                 `;
                 suggestContainer.appendChild(div);
             });
@@ -180,29 +178,33 @@ window.seoEngine = {
                     style: {
                         'background-color': '#6366f1',
                         'label': 'data(label)',
-                        'color': '#1e293b',
+                        'color': '#ffffff',
                         'font-size': '10px',
                         'width': '20px',
-                        'height': '20px'
+                        'height': '20px',
+                        'text-outline-width': 1,
+                        'text-outline-color': '#020617'
                     }
                 },
                 {
                     selector: 'node[type="hub"]',
                     style: {
-                        'background-color': '#10b981',
+                        'background-color': '#2dd4bf',
                         'width': '40px',
                         'height': '40px',
-                        'font-weight': 'bold'
+                        'font-weight': 'bold',
+                        'font-size': '12px'
                     }
                 },
                 {
                     selector: 'edge',
                     style: {
                         'width': 2,
-                        'line-color': '#cbd5e1',
-                        'target-arrow-color': '#cbd5e1',
+                        'line-color': '#334155',
+                        'target-arrow-color': '#334155',
                         'target-arrow-shape': 'triangle',
-                        'curve-style': 'bezier'
+                        'curve-style': 'bezier',
+                        'opacity': 0.6
                     }
                 }
             ],

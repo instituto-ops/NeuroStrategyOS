@@ -154,10 +154,10 @@ const app = {
 
             container.style.display = 'block';
             list.innerHTML = data.suggestions.map(s => `
-                <div style="background: white; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                    <div style="font-size: 11px; text-transform: uppercase; color: #db2777; font-weight: 800; margin-bottom: 5px;">NOVO HUB SILO</div>
-                    <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 15px;">${s.hub}</h4>
-                    <ul style="margin: 0; padding: 0 0 0 18px; font-size: 13px; color: #64748b; line-height: 1.6;">
+                <div class="card" style="padding: 15px;">
+                    <span class="badge-suggestion">NOVO HUB SILO</span>
+                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">${s.hub}</h4>
+                    <ul style="margin: 0; padding: 0 0 0 18px; font-size: 13px; color: var(--color-text-light); line-height: 1.6;">
                         ${s.spokes.map(sp => `<li>${sp}</li>`).join('')}
                     </ul>
                 </div>

@@ -72,16 +72,16 @@ window.goalSystem = {
             goalDiv.style.position = 'relative';
 
             goalDiv.innerHTML = `
-                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
-                    <span style="font-weight: 600;">${goal.title}</span>
-                    <span>${goal.progress}%</span>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; color: var(--color-text);">
+                    <span style="font-weight: 700;">${goal.title}</span>
+                    <span style="color: var(--color-secondary); font-weight: 800;">${goal.progress}%</span>
                 </div>
-                <div style="height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; margin-bottom: 5px;">
-                    <div style="width: ${goal.progress}%; height: 100%; background: var(--color-primary);"></div>
+                <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; margin-bottom: 8px; border: 1px solid var(--color-border);">
+                    <div style="width: ${goal.progress}%; height: 100%; background: linear-gradient(90deg, var(--color-secondary), var(--color-accent)); shadow: 0 0 10px var(--color-secondary);"></div>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <small style="color: #64748b;">${goal.subtitle}</small>
-                    <button onclick="window.goalSystem.removeGoal(${index})" style="background: none; border: none; color: #ef4444; font-size: 10px; cursor: pointer; padding: 0;">Remover</button>
+                    <small style="color: var(--color-text-light); font-weight: 600;">${goal.subtitle}</small>
+                    <button onclick="window.goalSystem.removeGoal(${index})" style="background: none; border: none; color: #ef4444; font-size: 10px; cursor: pointer; padding: 0; opacity: 0.6; font-weight: 700;">Remover</button>
                 </div>
             `;
             listContainer.appendChild(goalDiv);

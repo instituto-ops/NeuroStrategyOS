@@ -34,15 +34,15 @@ window.acervoManager = {
                     
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td style="font-weight: bold; color: #1e293b;">${page.slug}</td>
-                        <td style="color: #64748b;">${formattedDate}</td>
+                        <td style="font-weight: bold; color: var(--color-text);">${page.slug}</td>
+                        <td style="color: var(--color-text-light);">${formattedDate}</td>
                         <td>
-                            <span style="background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">PUBLICADO</span>
+                            <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">PUBLICADO</span>
                         </td>
                         <td style="display: flex; gap: 5px;">
                             <button class="btn btn-primary" onclick="acervoManager.editarPagina('${page.caminhoFisico.replace(/\\/g, '\\\\')}')" style="font-size: 11px; padding: 5px 10px;">📝 EDITAR</button>
-                            <a href="http://localhost:3001${page.slug}" target="_blank" class="btn btn-secondary" style="font-size: 11px; padding: 5px 10px; text-decoration: none; color: #475569; border-color: #cbd5e1;" title="Testar Vercel Local">👁️ LOCAL</a>
-                            <a href="https://hipnolawrence.com${page.slug}" target="_blank" class="btn btn-secondary" style="font-size: 11px; padding: 5px 10px; text-decoration: none; color: #0284c7; border-color: #bae6fd; background: #f0f9ff;" title="Ver Site em Produção">🌍 PROD</a>
+                            <a href="http://localhost:3001${page.slug}" target="_blank" class="btn btn-secondary" style="font-size: 11px; padding: 5px 10px; text-decoration: none;" title="Testar Vercel Local">👁️ LOCAL</a>
+                            <a href="https://hipnolawrence.com${page.slug}" target="_blank" class="btn btn-secondary" style="font-size: 11px; padding: 5px 10px; text-decoration: none; color: var(--color-secondary); border-color: var(--color-secondary);" title="Ver Site em Produção">🌍 PROD</a>
                         </td>
                     `;
                     tbody.appendChild(tr);

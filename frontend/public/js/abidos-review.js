@@ -37,14 +37,18 @@ window.abidosReview = {
 
             const fontesRag = Array.isArray(draft.fontes_rag_utilizadas) ? draft.fontes_rag_utilizadas.join('\\n') : 'Nenhuma fonte';
             
+            const draftDate = draft.data_submissao ? new Date(draft.data_submissao).toLocaleDateString() : 'N/D';
+            const draftId = draft.draft_id || 'ID_PENDING';
+            const draftTheme = draft.tema_foco || 'Sem Tema Definido';
+
             tr.innerHTML = `
-                <td><strong>${draft.draft_id}</strong><br><span style="font-size:11px; color:#64748b;">${new Date(draft.data_submissao).toLocaleDateString()}</span></td>
-                <td>${draft.tema_foco}</td>
+                <td><strong>${draftId}</strong><br><span style="font-size:11px; color:var(--color-text-light);">${draftDate}</span></td>
+                <td>${draftTheme}</td>
                 <td>${statusStr}</td>
-                <td><span style="font-size:11px; color:#3b82f6; cursor:pointer;" onclick="alert('Fontes:\\n' + '${fontesRag}')">Ver Fontes (RAG)</span></td>
+                <td><span style="font-size:11px; color:var(--color-secondary); cursor:pointer;" onclick="alert('Fontes:\\n' + '${fontesRag}')">Ver Fontes (RAG)</span></td>
                 <td style="display: flex; gap: 5px;">
-                    <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="window.abidosReview.openModal('${draft.draft_id}')">✏️ Revisar</button>
-                    <button class="btn" style="padding: 5px 10px; font-size: 12px; background: #10b981; color: white;" onclick="window.abidosReview.quickApprove('${draft.draft_id}')">✅ Publicar</button>
+                    <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="window.abidosReview.openModal('${draftId}')">✏️ Revisar</button>
+                    <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="window.abidosReview.quickApprove('${draftId}')">✅ Publicar</button>
                 </td>
             `;
             list.appendChild(tr);

@@ -1,23 +1,28 @@
 /* Variables & Base Styles based on the documentation */
 :root {
-    --color-primary: #1F2937; /* Dark Gray / Blackish */
-    --color-secondary: #0ea5e9; /* Light Blue focus */
+    /* 🌌 Cinematic Dark Palette (Abidos v5) */
+    --color-primary: #0F172A;     /* Deep Navy / Cinematic Black */
+    --color-secondary: #38BDF8;   /* Sky Blue Focus (Cyberpunk Accent) */
+    --color-accent: #818CF8;      /* Indigo / Emotional Layer */
     --color-success: #10B981; 
     --color-warning: #F59E0B;
     --color-error: #EF4444;
-    --color-text: #111827;
-    --color-text-light: #6B7280;
-    --color-bg: #F3F4F6;
-    --color-card: #FFFFFF;
-    --color-border: #E5E7EB;
-
-    --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    
+    /* Surface & Glassmorphism */
+    --color-bg: #020617;          /* Rich Background (Oled Black) */
+    --color-card: rgba(30, 41, 59, 0.7); /* Translucent Glass */
+    --color-text: #F8FAFC;        /* Snow White */
+    --color-text-light: #94A3B8;  /* Slate Gray */
+    --color-border: rgba(255, 255, 255, 0.08); /* Minimalist Border */
+    
+    --font-family: 'Outfit', 'Inter', system-ui, sans-serif;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
     --spacing-lg: 1.5rem;
-    --border-radius: 8px;
+    --border-radius: 14px;
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --glass-blur: blur(12px);
 }
 
 * {
@@ -29,8 +34,10 @@
 body {
     font-family: var(--font-family);
     background-color: var(--color-bg);
+    background-image: radial-gradient(circle at top left, #0f172a 0%, #020617 100%);
     color: var(--color-text);
     line-height: 1.5;
+    background-attachment: fixed;
 }
 
 /* Layout */
@@ -41,13 +48,15 @@ body {
 
 .sidebar {
     width: 260px;
-    background-color: var(--color-primary);
+    background-color: #020617;
+    border-right: 1px solid var(--color-border);
     color: white;
     padding: var(--spacing-lg);
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease, padding 0.3s ease;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
     position: relative;
+    z-index: 1000;
 }
 
 .sidebar.collapsed {
@@ -61,72 +70,60 @@ body {
     display: none;
 }
 
-.sidebar.collapsed .nav-btn {
-    text-align: center;
-    padding: 12px 0;
-}
-
-.sidebar-toggle {
-    background: #374151;
-    border: none;
-    color: white;
-    padding: 5px;
-    cursor: pointer;
-    border-radius: 4px;
-    position: absolute;
-    right: -15px;
-    top: 20px;
-    z-index: 100;
-    box-shadow: var(--shadow-md);
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 .sidebar-header {
     margin-bottom: var(--spacing-lg);
 }
 
 .sidebar-header h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-}
-
-.sidebar-header p {
-    font-size: 0.875rem;
-    color: #9CA3AF;
-}
-
-.sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #fff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .nav-btn {
     background: none;
     border: none;
-    color: #D1D5DB;
+    color: var(--color-text-light);
     text-align: left;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: 12px var(--spacing-md);
     cursor: pointer;
-    border-radius: var(--border-radius);
-    transition: all 0.2s;
-    font-size: 0.95rem;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.85rem;
     font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+    position: relative;
+    overflow: hidden;
 }
 
 .nav-btn:hover {
-    background-color: #374151;
+    background-color: rgba(255, 255, 255, 0.05);
     color: white;
+    transform: translateX(5px);
 }
 
 .nav-btn.active {
-    background-color: var(--color-secondary);
-    color: white;
-    font-weight: 600;
+    background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(30, 41, 59, 0) 100%);
+    color: var(--color-secondary);
+    border-left: 3px solid var(--color-secondary);
+    font-weight: 800;
+}
+
+.nav-btn.active::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    width: 6px;
+    height: 6px;
+    background: var(--color-secondary);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--color-secondary);
 }
 
 /* Main Content */
@@ -189,11 +186,29 @@ body {
 
 /* Cards & Utilities */
 .card {
-    background: var(--color-card);
+    background: var(--color-card) !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--border-radius);
     padding: var(--spacing-lg);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border) !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+    color: var(--color-text) !important;
+}
+
+.card h2, .card h3, .card h4 {
+    color: var(--color-text) !important;
+}
+
+.card p, .card span:not([style*="color"]) {
+    color: var(--color-text-light) !important;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.8);
+    border-color: rgba(56, 189, 248, 0.3) !important;
 }
 
 .cards-grid {
@@ -210,9 +225,14 @@ body {
 }
 
 .stat-value {
-    font-size: 2rem;
-    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
     margin: 0.5rem 0;
+    background: linear-gradient(180deg, #FFFFFF 0%, #94A3B8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
 }
 
 .stat-trend {
@@ -306,29 +326,47 @@ select:focus {
 }
 
 .btn {
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius);
-    font-weight: 500;
+    padding: 0.6rem 1.2rem;
+    border-radius: 10px;
+    font-weight: 700;
     cursor: pointer;
     border: none;
     font-family: inherit;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 13px;
 }
 
 .btn-primary {
-    background-color: var(--color-primary);
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-accent) 100%);
     color: white;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
 }
 
-.btn-primary:hover { background-color: #111827; }
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+}
 
 .btn-secondary {
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.05);
     color: var(--color-text);
     border: 1px solid var(--color-border);
 }
 
-.btn-secondary:hover { background-color: var(--color-bg); }
+.btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Fix para botões "+" que estavam invisíveis */
+.btn-add::before {
+    content: '+';
+    font-size: 16px;
+    font-weight: 900;
+}
 
 .btn-ask-ai {
     background-color: #F0FDF4;
@@ -361,12 +399,26 @@ select:focus {
     padding: var(--spacing-md);
     text-align: left;
     border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
 }
 
 .table th {
-    background-color: var(--color-bg);
-    font-weight: 600;
+    background-color: rgba(255, 255, 255, 0.05);
+    font-weight: 700;
     color: var(--color-text-light);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+.table td a {
+    color: var(--color-secondary) !important;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.table td strong {
+    color: var(--color-text);
 }
 
 /* AI Feedback */
@@ -1282,10 +1334,12 @@ select:focus {
 }
 
 .msg.ai {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--color-text);
     align-self: flex-start;
     border-bottom-left-radius: 4px;
+    border: 1px solid var(--color-border);
+    backdrop-filter: var(--glass-blur);
 }
 
 .msg.user {
@@ -1360,4 +1414,60 @@ select:focus {
 .device-btn.active {
     background: #6366f1;
     color: white;
+}
+
+/* --- FIXES ADICIONAIS AUDITORIA V5 --- */
+
+/* Badge 'Novo Hub Silo' (Ciano em vez de Magenta) */
+.badge-suggestion {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--color-secondary) !important;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Contraste em URLs de Tabelas */
+.table td span[style*="color: #3b82f6"] {
+    color: var(--color-secondary) !important;
+    font-weight: 600;
+}
+
+/* Botões com fundo branco forçado via inline (reverter) */
+button:not(.nav-btn)[style*="background: white"], 
+button:not(.nav-btn)[style*="background: #ffffff"],
+label:not(.nav-btn)[style*="background: white"] {
+    background: var(--color-card) !important;
+    color: var(--color-text) !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+/* Estilo para o Grafo de Silos */
+#cy-map {
+    background: #020617;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+}
+
+/* PageSpeed Scores */
+#psi-metrics-container div {
+    border: 1px solid var(--color-border) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+#psi-score-performance, #psi-score-accessibility {
+    color: var(--color-text) !important;
+}
+
+/* Correção de Zeros e Valores GA4 */
+.card .stat-value, 
+.card p[style*="font-size: 24px"], 
+.card div[style*="font-size: 28px"],
+.card div[style*="font-size: 22px"] {
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: white !important;
 }

@@ -66,7 +66,7 @@ window.taskSystem = {
             item.style.justifyContent = 'space-between';
             item.style.gap = '10px';
             item.style.padding = '8px 0';
-            item.style.borderBottom = '1px solid #f1f5f9';
+            item.style.borderBottom = '1px solid var(--color-border)';
 
             // Process internal links like [AI Studio]
             let processedText = task.text.replace(/\[(.*?)\]/g, (match, p1) => {
@@ -79,17 +79,17 @@ window.taskSystem = {
                 };
                 const target = targets[p1];
                 if (target) {
-                    return `<a href="#" onclick="document.querySelector('[data-target=${target}]').click(); return false;" style="color: #6366f1; text-decoration: none; font-weight: bold;">${p1}</a>`;
+                    return `<a href="#" onclick="document.querySelector('[data-target=${target}]').click(); return false;" style="color: var(--color-secondary); text-decoration: none; font-weight: bold;">${p1}</a>`;
                 }
                 return match;
             });
 
             item.innerHTML = `
-                <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 14px; cursor: pointer; flex: 1; ${task.completed ? 'text-decoration: line-through; opacity: 0.6;' : ''}">
+                <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 14px; cursor: pointer; flex: 1; color: var(--color-text); ${task.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">
                     <input type="checkbox" style="margin-top: 4px;" ${task.completed ? 'checked' : ''} onchange="window.taskSystem.toggleTask(${index})"> 
                     <span>${processedText}</span>
                 </label>
-                <button onclick="window.taskSystem.removeTask(${index})" style="background: none; border: none; color: #ef4444; font-size: 12px; cursor: pointer; padding: 2px 5px; border-radius: 4px;" title="Remover">✕</button>
+                <button onclick="window.taskSystem.removeTask(${index})" style="background: none; border: none; color: #ef4444; font-size: 12px; cursor: pointer; padding: 2px 5px; opacity: 0.6;" title="Remover">✕</button>
             `;
             container.appendChild(item);
         });
