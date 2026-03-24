@@ -4,30 +4,30 @@
     "name": "Principal",
     "items": [
       {
-        "id": "it_1",
-        "name": "Início",
-        "url": "https://hipnolawrence.com/",
+        "id": "item_1774317227905",
+        "label": "Início",
+        "url": "/",
         "status": "published",
         "children": []
       },
       {
-        "id": "it_2",
-        "name": "Sobre",
-        "url": "https://hipnolawrence.com/sobre",
+        "id": "item_1774317247747",
+        "label": "Sobre",
+        "url": "/sobre",
         "status": "published",
         "children": []
       },
       {
-        "id": "it_3",
-        "name": "Serviços",
-        "url": "https://hipnolawrence.com/servicos",
+        "id": "item_1774317271550",
+        "label": "Serviços",
+        "url": "/servicos",
         "status": "published",
         "children": []
       },
       {
-        "id": "it_4",
-        "name": "Contato",
-        "url": "https://hipnolawrence.com/contato",
+        "id": "item_1774317286743",
+        "label": "Contato",
+        "url": "/contato",
         "status": "published",
         "children": []
       }

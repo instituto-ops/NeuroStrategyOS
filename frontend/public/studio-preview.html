@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview Autêntico - Abidos V4</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background: #1e293b;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            z-index: 100;
+        }
+
+        .device-selector {
+            display: flex;
+            gap: 10px;
+            background: rgba(255,255,255,0.05);
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .device-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .device-btn.active {
+            background: #6366f1;
+            color: white;
+        }
+
+        .device-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .preview-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            overflow-y: auto;
+            background: #cbd5e1;
+        }
+
+        #preview-frame {
+            background: white;
+            border: none;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            transition: width 0.3s ease;
+            height: auto;
+            min-height: 90vh;
+        }
+
+        .close-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-weight: 900; font-size: 14px; letter-spacing: 1px;">👁️ PREVIEW AMPLO <span id="preview-title" style="color: #6366f1; opacity: 0.8;"></span></div>
+        </div>
+
+        <div class="device-selector">
+            <button class="device-btn" onclick="setSize('mobile', this)" title="Mobile">📱</button>
+            <button class="device-btn" onclick="setSize('tablet', this)" title="Tablet">tablet</button>
+            <button class="device-btn active" onclick="setSize('desktop', this)" title="Desktop">🖥️</button>
+        </div>
+
+        <button class="close-btn" onclick="window.close()">✖ FECHAR PREVIEW</button>
+    </header>
+
+    <div class="preview-container">
+        <iframe id="preview-frame" style="width: 100%;"></iframe>
+    </div>
+
+    <script>
+        const frame = document.getElementById('preview-frame');
+        const html = localStorage.getItem('abidos_preview_html');
+        const title = localStorage.getItem('abidos_preview_title');
+
+        if (title) document.getElementById('preview-title').innerText = `| ${title}`;
+
+        if (html) {
+            const doc = frame.contentWindow.document;
+            doc.open();
+            doc.write(html);
+            doc.close();
+        } else {
+            frame.srcdoc = "<h1>Erro ao carregar preview. Tente novamente no Studio.</h1>";
+        }
+
+        function setSize(type, btn) {
+            document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (type === 'mobile') {
+                frame.style.width = '375px';
+            } else if (type === 'tablet') {
+                frame.style.width = '768px';
+            } else {
+                frame.style.width = '1000px';
+            }
+        }
+    </script>
+</body>
+</html>

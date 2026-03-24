@@ -4,6 +4,7 @@ const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
 const WebSocket = require('ws');
+const cloudinary = require('cloudinary').v2;
 const textToSpeech = require('@google-cloud/text-to-speech');
 const ttsClient = new textToSpeech.TextToSpeechClient();
 require('dotenv').config({ path: '../.env' }); 
@@ -40,6 +41,19 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB
 });
 
+// [SMART MEDIA] Cloudinary Config (Se houver no .env)
+const isCloudinaryActive = !!process.env.CLOUDINARY_API_KEY;
+if (isCloudinaryActive) {
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET
+    });
+    console.log("☁️ [SMART MEDIA] Cloudinary Engine: ON (Conectado ao " + process.env.CLOUDINARY_CLOUD_NAME + ")");
+} else {
+    console.log("📍 [SMART MEDIA] Cloudinary Engine: OFF (Operando em modo Local-Only)");
+}
+
 // [GLOBAL] Servidor WebSocket para Logs em Tempo Real e Voz
 let wss; 
 
@@ -63,11 +77,22 @@ function reportAgentStatus(agent, status, reason = "", isDone = false) {
     }
 }
 
-// [HEMISFÉRIOS CEREBRAIS DA IA - GERAÇÃO 2026]
+// [HEMISFÉRIOS CEREBRAIS DA IA - GERAÇÃO 2026: PROTOCOLO ABIDOS V5.5]
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "DUMMY");
-const VISION_MODEL = "gemini-2.5-flash-lite"; // Otimizado para escala e latência mínima
-const HEAVY_MODEL = "gemini-2.5-pro";         // O cérebro mais profundo disponível
-const STABLE_MODEL = "gemini-2.0-flash";      // Versão estável anterior
+
+// Modelos Primários (Soberania do Usuário)
+const LITE_MODEL = "gemini-2.5-flash-lite"; 
+const MAIN_MODEL = "gemini-2.5-flash"; // PADRÃO SELECIONADO
+const PRO_MODEL = "gemini-2.5-pro";
+
+// Fallbacks de Segurança (Apenas legado)
+const LEGACY_PRO = "gemini-1.5-pro";
+const LEGACY_FLASH = "gemini-1.5-flash";
+
+// Configuração dos Motores (Padrão: 2.5 Flash)
+const VISION_MODEL = MAIN_MODEL; 
+const HEAVY_MODEL = PRO_MODEL;
+const STABLE_MODEL = LEGACY_PRO;
 
 // Hemisfério Esquerdo (FLASH): Rápido, Multimodal e Estruturado
 // Perfeito para ouvir seu áudio em tempo real e cuspir o JSON das regras.
@@ -727,6 +752,134 @@ app.get('/api/acervo/listar', (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+// [SMART MEDIA] Engine: Watchdog e Acervo Inteligente
+const ACERVO_MEDIA_FILE = path.join(__dirname, 'acervo_links.json');
+const LOCAL_WATCH_FOLDER = path.join(__dirname, 'midia_local');
+if (!fs.existsSync(LOCAL_WATCH_FOLDER)) fs.mkdirSync(LOCAL_WATCH_FOLDER);
+
+app.get('/api/media/acervo', (req, res) => {
+    try {
+        if (!fs.existsSync(ACERVO_MEDIA_FILE)) return res.json({ folders: [], items: [] });
+        const data = JSON.parse(fs.readFileSync(ACERVO_MEDIA_FILE, 'utf8'));
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// [API] Criar Novo Álbum/Pasta no Acervo
+app.post('/api/media/create-folder', (req, res) => {
+    try {
+        const { id, name, icon } = req.body;
+        const data = JSON.parse(fs.readFileSync(ACERVO_MEDIA_FILE, 'utf8'));
+        if (data.folders.find(f => f.id === id)) return res.json({ success: false, error: 'ID já existe.' });
+        
+        data.folders.push({ id, name, description: `Álbum criado pelo usuário: ${name}`, icon: icon || '📂' });
+        fs.writeFileSync(ACERVO_MEDIA_FILE, JSON.stringify(data, null, 2));
+        res.json({ success: true, folders: data.folders });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// [API] Atualizar Item de Mídia (Mudar pasta, título, etc)
+app.post('/api/media/update-item', (req, res) => {
+    try {
+        const { itemId, folder, title, alt } = req.body;
+        const data = JSON.parse(fs.readFileSync(ACERVO_MEDIA_FILE, 'utf8'));
+        const item = data.items.find(i => i.id === itemId);
+        if (!item) return res.status(404).json({ success: false, error: 'Item não encontrado.' });
+        
+        if (folder) item.folder = folder;
+        if (title) item.title = title;
+        if (alt) item.alt = alt;
+        
+        fs.writeFileSync(ACERVO_MEDIA_FILE, JSON.stringify(data, null, 2));
+        res.json({ success: true, item });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// [API] Pick Intelligent: O Agente solicita uma imagem estratégica para um bloco
+app.get('/api/media/pick-intelligent', (req, res) => {
+    const { category } = req.query; // ex: ambiente, psicologo
+    try {
+        const data = JSON.parse(fs.readFileSync(ACERVO_MEDIA_FILE, 'utf8'));
+        const filtered = data.items.filter(i => i.folder === category || category === 'any');
+        
+        if (filtered.length === 0) {
+            // Fallback para ícones se não houver fotos reais
+            const icons = data.items.filter(i => i.folder === 'icones');
+            return res.json(icons.length > 0 ? icons[Math.floor(Math.random() * icons.length)] : null);
+        }
+        
+        // Sorteia uma imagem da categoria para variedade no Studio
+        const pick = filtered[Math.floor(Math.random() * filtered.length)];
+        res.json(pick);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// O motor "Watchdog" de sincronização passiva (Simulado para não estourar recursos em loop)
+const runWatchdog = async () => {
+    try {
+        const files = fs.readdirSync(LOCAL_WATCH_FOLDER).filter(f => f.match(/\.(jpg|jpeg|png|webp|svg)$/i));
+        if (files.length === 0) return;
+
+        console.log(`📡 [WATCHDOG] Detectadas ${files.length} novas mídias em midia_local...`);
+        const db = JSON.parse(fs.readFileSync(ACERVO_MEDIA_FILE, 'utf8'));
+
+        for (const file of files) {
+            const oldPath = path.join(LOCAL_WATCH_FOLDER, file);
+            const ext = path.extname(file).toLowerCase();
+            const baseName = `psicologo-victor-lawrence-goiania-${Date.now()}`;
+            const newFileName = `${baseName}${ext}`;
+            const targetPublicPath = path.join(__dirname, 'public/media');
+            if (!fs.existsSync(targetPublicPath)) fs.mkdirSync(targetPublicPath, { recursive: true });
+            
+            const newPath = path.join(targetPublicPath, newFileName);
+            let finalUrl = `/media/${newFileName}`;
+
+            // [NUVEM] Se Cloudinary estiver ativo, enviamos para o CDN
+            if (isCloudinaryActive) {
+                try {
+                    console.log(`☁️ [CLOUDINARY] Enviando ${file} para a nuvem...`);
+                    const result = await cloudinary.uploader.upload(oldPath, {
+                        public_id: baseName,
+                        folder: "neuroengine-v5",
+                        overwrite: true,
+                        resource_type: "auto"
+                    });
+                    finalUrl = result.secure_url;
+                    console.log(`✅ [CLOUDINARY] Sucesso: ${finalUrl}`);
+                } catch (cloudErr) {
+                    console.error("❌ [CLOUDINARY ERROR]:", cloudErr.message);
+                    // Fallback para local se o upload falhar
+                    fs.renameSync(oldPath, newPath);
+                }
+            } else {
+                // Modo offline / local
+                fs.renameSync(oldPath, newPath);
+            }
+
+            db.items.push({
+                id: `media_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                folder: "ambiente", // Categoria padrão (pode ser mudada no painel)
+                url: finalUrl,
+                title: "Asset Estratégico Abidos",
+                alt: "Consultório Dr. Victor Lawrence - Hipnose Clínica e Psicologia em Goiânia"
+            });
+            console.log(`✅ [WATCHDOG] Item registrado no acervo.`);
+        }
+
+        db.last_sync = new Date().toISOString();
+        fs.writeFileSync(ACERVO_MEDIA_FILE, JSON.stringify(db, null, 2));
+    } catch (e) { console.error("❌ [WATCHDOG ERROR]:", e.message); }
+};
+
+// Ativa o Watchdog a cada 60 segundos (Mínima intervenção)
+setInterval(runWatchdog, 60000);
+
+// [API] Listar Mídia (Alias para Acervo na Transição Headless)
+app.get('/api/acervo/list-media', (req, res) => {
+    // Redireciona para o listar padrão que já mapeia as páginas
+    // No futuro, isso varreria a pasta de assets/public
+    res.json([]); 
+});
 
 /**
  * 📖 ROTA 2: Carregar os Dados de uma Página para o Studio
@@ -890,10 +1043,9 @@ const callWP = async (method, endpoint, data = null, params = {}) => {
         });
     } catch (e) {
         if (e.response?.status === 403) {
-            console.warn("⚠️ [WP PROXY] Acesso negado pelo WordPress (403). Como o sistema está em migração, este erro é esperado e será ignorado.");
+            console.warn("⚠️ [WP PROXY] Acesso negado pelo WordPress (403).");
         }
-        res.status(200).json({ error_silent: true, data: [] }); // Retorna vazio em vez de crashar a UI
-        return; 
+        return { error_silent: true, data: [] }; 
     }
 };
 
@@ -1542,47 +1694,7 @@ app.post('/api/agents/analyze-diff', async (req, res) => {
 // 4. MOTOR SEMÂNTICO (SEO PROGRAMÁTICO & SILOS)
 // ==============================================================================
 
-app.get('/api/seo/analyze-silos', async (req, res) => {
-    try {
-        console.log(`🧭 [SEO] Iniciando Auditoria de Silos e Interlinking...`);
-        
-        // 1. Puxa todas as páginas do WP
-        const pages = await callWP('GET', '/pages', null, { per_page: 100 });
-        if(!pages.data) throw new Error("Não foi possível carregar as páginas do WP.");
-
-        const pageMap = pages.data.map(p => ({
-            id: p.id,
-            title: p.title.rendered,
-            link: p.link,
-            content: p.content.rendered.substring(0, 500) // Amostra para IA
-        }));
-
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
-        const prompt = `
-        Aja como um Arquiteto de SEO Programático.
-        Analise a lista de páginas da clínica abaixo e construa um Mapa de Interlinking (Silos).
-        
-        Objetivo: Identificar quais páginas (Spokes) devem linkar para qual Hub principal e encontrar páginas "órfãs".
-        
-        Páginas: ${JSON.stringify(pageMap)}
-        
-        Retorne um JSON com:
-        - silos: [{ hub: "Título Hub", spokes: ["Título 1", "Título 2"] }]
-        - suggestions: [{ from_id: id, to_id: id, anchor_text: "Texto do Link", reason: "Por que?" }]
-        
-        Retorne APENAS o JSON.
-        `;
-
-        const result = await model.generateContent(prompt);
-        const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
-        const siloData = JSON.parse(jsonStr);
-
-        res.json(siloData);
-    } catch (e) {
-        console.error("❌ [SEO SILO ERROR]", e.message);
-        res.status(500).json({ error: e.message });
-    }
-});
+// [OBSOLETO] Removido para evitar conflito com motor V5 em /api/seo/analyze-silos no final do arquivo.
 
 // ==============================================================================
 // 5. MONITORAMENTO PROFILÁTICO (LIGHTHOUSE) E REPUTACIONAL
@@ -2551,6 +2663,125 @@ app.post('/api/ai/audit-clinical', async (req, res) => {
 });
 
 // [DUPLICATA REMOVIDA - ROTA CONSOLIDADA EM /api/blueprint/cluster ACIMA]
+
+// [API] SEO Silos (Arquitetura Hub & Spoke)
+app.get('/api/seo/silos', (req, res) => {
+    const siloPath = path.join(__dirname, 'silos.json');
+    if (fs.existsSync(siloPath)) {
+        const data = JSON.parse(fs.readFileSync(siloPath, 'utf-8'));
+        return res.json(data);
+    }
+
+    // Default Mock Data
+    const defaultData = {
+        silos: [
+            { id: "silo_1", hub: "Autismo Adulto", slug: "autismo-adulto", spokes: ["Diagnóstico Tardio", "Sinais Sutis em Mulheres"] },
+            { id: "silo_2", hub: "Ansiedade e Burnout", slug: "ansiedade-burnout", spokes: ["Terapia Estratégica", "Sintomas Físicos"] }
+        ]
+    };
+    res.json(defaultData);
+});
+
+app.post('/api/seo/silos', (req, res) => {
+    try {
+        console.log("💾 [API-SILO] Recebendo atualização de silos...");
+        const silos = req.body;
+        if (!Array.isArray(silos)) {
+            console.error("❌ [API-SILO ERROR] Payload não é um array:", silos);
+            return res.status(400).json({ error: "O corpo da requisição deve ser um array de silos." });
+        }
+
+        const siloPath = path.join(__dirname, 'silos.json');
+        fs.writeFileSync(siloPath, JSON.stringify({ silos: silos }, null, 2));
+        console.log(`✅ [API-SILO] ${silos.length} silos persistidos com sucesso.`);
+        res.json({ success: true });
+    } catch (e) {
+        console.error("❌ [API-SILO FATAL ERROR]:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// [API] ACERVO NACIONAL (Vercel Native)
+// Varre rascunhos e simula inventário de páginas publicadas
+app.get('/api/acervo/listar', (req, res) => {
+    try {
+        console.log("📂 [ACERVO] Listando inventário completo...");
+        
+        // Títulos de rascunhos gerados na sessão atual
+        const draftTitles = draftsDb.map(d => d.tema_foco);
+        
+        // Simulação de páginas que já estariam no site (Vercel)
+        // No futuro, isso varreria a pasta de dist/ ou um banco de dados real
+        const publishedPages = [
+            { slug: "/autismo-adulto", titulo: "O que é Autismo Adulto?", status: "PUBLICADO", ultimaAtualizacao: new Date().toISOString() },
+            { slug: "/ansiedade-goiania", titulo: "Tratamento de Ansiedade", status: "PUBLICADO", ultimaAtualizacao: new Date().toISOString() }
+        ];
+        
+        res.json({
+            success: true,
+            drafts: draftTitles,
+            paginas: publishedPages, // Formato esperado pelo acervo.js
+            inventory: {
+                drafts: draftTitles,
+                published: publishedPages.map(p => p.titulo)
+            }
+        });
+    } catch (e) {
+        console.error("❌ [ACERVO ERROR]", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// [API] Sugestão de Silos e STAGs via IA Abidos (Motor Semântico V5)
+app.get('/api/seo/analyze-silos', async (req, res) => {
+    try {
+        console.log("🧠 [ABIDOS-SILO] Iniciando análise de demanda estratégica...");
+        const siloPath = path.join(__dirname, 'silos.json');
+        let currentSilos = [];
+        try {
+            if (fs.existsSync(siloPath)) {
+                const raw = fs.readFileSync(siloPath, 'utf-8');
+                currentSilos = JSON.parse(raw).silos || [];
+            }
+        } catch(e) { console.error("Erro leitura silos:", e); }
+        
+        const prompt = `[CONTEXTO]: Dr. Victor Lawrence, Psicólogo e Hipnoterapeuta Clínico.
+        [ARQUITETURA ATUAL]: 
+        ${currentSilos.map(s => `- Hub: ${s.hub} (Spokes: ${s.spokes.join(', ')})`).join('\n')}
+        
+        Aja como o Agente Abidos. 
+        1. ANALISE a arquitetura atual. Identifique falhas de cobertura ou silos pouco explorados.
+        2. SUGIRA 3 novos silos ou expansões críticas para os já existentes.
+        3. Para cada sugestão, defina um HUB imponente e 5 SPOKES (Postagens / Artigos) de alta intenção clínica.
+        4. O foco deve ser em conversão (venda de sessões) e autoridade técnica (E-E-A-T).
+        
+        RETORNE EXATAMENTE UM JSON NO FORMATO:
+        { "suggestions": [ { "hub": "...", "slug": "hub-slug", "spokes": ["...", "...", "..."] } ] }`;
+
+        const result = await modelFlash.generateContent(prompt);
+        const text = result.response.text();
+        
+        const data = extractJSON(text);
+        if (!data || !data.suggestions) throw new Error("A IA não retornou sugestões válidas.");
+        
+        // Garante que cada sugestão tenha slug
+        data.suggestions.forEach(s => {
+            if (!s.slug) s.slug = s.hub.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+        });
+
+        res.json(data);
+    } catch (e) {
+        console.error("❌ [ABIDOS-SILO ERROR]", e);
+        res.status(500).json({ success: false, error: e.message || "Falha na geração neural de silos." });
+    }
+});
+
+app.use('/api/*', (req, res) => {
+    res.status(404).json({ 
+        success: false, 
+        error: "Endpoint não encontrado no ecossistema NeuroEngine (Protocolo V5)." 
+    });
+});
 
 const server = app.listen(port, () => {
     console.log(`\n🚀 AntiGravity CMS: Mission Control Ativo!`);

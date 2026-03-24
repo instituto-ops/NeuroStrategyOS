@@ -6,22 +6,13 @@ window.seoEngine = {
         this.analyze();
     },
     async analyze() {
-        const siloContainer = document.getElementById('silo-groups-container');
-        const suggestContainer = document.getElementById('silo-suggestions-container');
         const selector = document.getElementById('planning-silo-selector');
+        if (!selector) return;
 
         try {
-            // Mock Data for Silos (Since WP is removed)
-            const data = {
-                silos: [
-                    { hub: "Autismo Adulto", spokes: ["Diagnóstico Tardio", "Sinais Sutis em Mulheres", "Alta Funcionalidade e Burnout", "Relacionamentos e TEA"] },
-                    { hub: "Ansiedade e Burnout", spokes: ["Sintomas Físicos da Ansiedade", "Terapia Estratégica Breve", "Como Parar Ataques de Pânico"] },
-                    { hub: "Hipnose Clínica", spokes: ["O que é Hipnose Clínica", "Hipnose para Fobias", "Mitos e Verdades"] }
-                ],
-                suggestions: []
-            };
-
-            this.fullData = data; // Armazena para filtro
+            const res = await fetch('/api/seo/silos');
+            const data = await res.json();
+            this.fullData = data; 
 
             // Popula Selector
             selector.innerHTML = '<option value="">Selecione um Silo...</option>';
@@ -32,13 +23,11 @@ window.seoEngine = {
                 selector.appendChild(opt);
             });
 
-            // Mostra o primeiro silo por padrão se existir
             if (data.silos.length > 0) {
                 selector.value = data.silos[0].hub;
                 this.selectSilo(data.silos[0].hub);
             }
 
-            // Renderiza Grafo (Global) Mockado
             if(window.cytoscape) {
                 this.renderGraph(data);
             }
@@ -68,14 +57,13 @@ window.seoEngine = {
                     `).join('')}
                 </ul>
                 <div style="margin-top: 15px;">
-                    <button class="btn btn-secondary" style="font-size: 11px; width: 100%; border-style: dashed;" onclick="alert('Funcionalidade em desenvolvimento: Adicionar Spoke ao Silo')">+ Adicionar Novo Spoke</button>
+                    <button class="btn btn-secondary" style="font-size: 11px; width: 100%; border-style: dashed;" onclick="window.seoEngine.addSpokePrompt('${silo.hub}')">+ Adicionar Novo Spoke</button>
                 </div>
             </div>
         `;
 
         // Filtra Sugestões para este Silo
-        const relatedSuggestions = this.fullData.suggestions.filter(sug => {
-            // Lógica simples: se o destino ou origem tem o hub no nome ou é um dos spokes
+        const relatedSuggestions = (this.fullData.suggestions || []).filter(sug => {
             return sug.reason.toLowerCase().includes(hub.toLowerCase()) || 
                    silo.spokes.some(sp => sug.reason.toLowerCase().includes(sp.toLowerCase()));
         });
@@ -106,6 +94,58 @@ window.seoEngine = {
         }
     },
 
+    async addSiloPrompt() {
+        const title = prompt("Qual o nome do novo Hub de Silo?");
+        if (!title) return;
+
+        if (!this.fullData) this.fullData = { silos: [] };
+        if (!this.fullData.silos) this.fullData.silos = [];
+
+        const newSilo = { 
+            id: 'silo_' + Date.now(), 
+            hub: title, 
+            slug: title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-'),
+            spokes: [] 
+        };
+        
+        console.log("Adding Silo:", newSilo);
+        this.fullData.silos.push(newSilo);
+        await this.saveSilos();
+        this.analyze(); 
+    },
+
+    async addSpokePrompt(hub) {
+        const spoke = prompt(`Qual o novo Spoke para o Silo "${hub}"?`);
+        if (!spoke) return;
+        const silo = this.fullData.silos.find(s => s.hub === hub);
+        if (silo) {
+            silo.spokes.push(spoke);
+            await this.saveSilos();
+            this.selectSilo(hub);
+            this.renderGraph(this.fullData);
+        }
+    },
+
+    async saveSilos() {
+        try {
+            await fetch('/api/seo/silos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(this.fullData.silos)
+            });
+            console.log("✅ Silos persistidos via Planning.");
+            if (window.menuSystem) window.menuSystem.loadSilos(); // Sincroniza Gestor de Menus
+        } catch (e) {
+            console.error("Erro ao persistir silos:", e);
+        }
+    },
+
+    addStagPrompt() {
+        const title = prompt("Qual o nome da Campanha STAG (Ads)?");
+        if (!title) return;
+        alert(`Campanha STAG "${title}" criada e mapeada para Auditoria de Ads.`);
+    },
+
     renderGraph(data) {
         const elements = [];
         
@@ -118,8 +158,9 @@ window.seoEngine = {
             });
         });
 
-        // Adiciona Sugestões Extras
-        data.suggestions.forEach(sug => {
+        // Adiciona Sugestões Extras (Segurança Abidos V5.4)
+        if (data && data.suggestions && data.suggestions.forEach) {
+            data.suggestions.forEach(sug => {
             elements.push({ 
                 data: { 
                     source: `Page #${sug.from_id}`, 
@@ -128,6 +169,7 @@ window.seoEngine = {
                 } 
             });
         });
+        }
 
         const cy = cytoscape({
             container: document.getElementById('cy-map'),
@@ -229,32 +271,22 @@ window.seoEngine = {
 
     writePost(title, focus) {
         // Navega para o AI Studio
-        document.querySelector('[data-target="studio"]').click();
+        const navBtn = document.querySelector('[data-target="ai-studio"]');
+        if (navBtn) navBtn.click();
         
-        // Preenche campos no AI Studio
-        const titleInput = document.getElementById('ai-studio-new-title');
-        const kwInput = document.getElementById('ai-studio-keyword');
+        // Preenche campos no AI Studio (Novos IDs do Stepper V5)
+        const themeInput = document.getElementById('ai-studio-theme');
+        const contextInput = document.getElementById('ai-studio-context');
         
-        if (titleInput) titleInput.value = title;
-        // Tenta achar a keyword no select ou adiciona se necessário
-        if (kwInput) {
-            // Se for um select, tenta selecionar. Se for input, preenche.
-            if (kwInput.tagName === 'SELECT') {
-                // Checa se existe, se não, adiciona opção temporária
-                let exists = Array.from(kwInput.options).some(opt => opt.value === focus);
-                if (!exists) {
-                    const opt = document.createElement('option');
-                    opt.value = focus;
-                    opt.text = focus + " (Pauta)";
-                    kwInput.add(opt);
-                }
-                kwInput.value = focus;
-            } else {
-                kwInput.value = focus;
-            }
-        }
+        if (themeInput) themeInput.value = title;
+        if (contextInput) contextInput.value = focus;
 
-        // Sugestão de Blueprint Automático
-        window.chatApp.addMessage(`📅 **Vindo da Pauta:** Vamos trabalhar em **"${title}"** focado em **${focus}**. Use o modo Manual ou escolha um Blueprint abaixo.`);
+        // Feedback visual ou log
+        console.log(`📝 [PAUTA] Direcionando "${title}" para o AI Studio.`);
+        
+        // Sugestão de Blueprint Automático no Chat (Opcional)
+        if(window.chatApp && window.chatApp.addMessage) {
+            window.chatApp.addMessage(`📅 **Vindo da Pauta:** Vamos trabalhar em **"${title}"** focado em **${focus}**. Defina o objetivo e siga para a próxima etapa.`);
+        }
     }
 };

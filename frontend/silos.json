@@ -1,0 +1,71 @@
+{
+  "silos": [
+    {
+      "id": "autismo-adulto",
+      "hub": "Autismo Adulto",
+      "spokes": [
+        "Diagnóstico Tardio",
+        "Sinais Sutis em Mulheres",
+        "Alta Funcionalidade e Burnout",
+        "Relacionamentos e TEA"
+      ],
+      "slug": "autismo-adulto"
+    },
+    {
+      "id": "ansiedade-burnout",
+      "hub": "Ansiedade",
+      "spokes": [
+        "Sintomas Físicos da Ansiedade",
+        "Terapia Estratégica Breve",
+        "Como Parar Ataques de Pânico"
+      ],
+      "slug": "ansiedade"
+    },
+    {
+      "id": "hipnose-clinica",
+      "hub": "Hipnose Clínica",
+      "spokes": [
+        "O que é Hipnose Clínica",
+        "Hipnose para Fobias",
+        "Mitos e Verdades"
+      ],
+      "slug": "hipnose-clinica"
+    },
+    {
+      "id": "silo_1774323523068",
+      "hub": "Saúde Mental no Trabalho e Produtividade",
+      "slug": "saude-mental-trabalho-produtividade",
+      "spokes": [
+        "Como o estresse afeta a produtividade no trabalho e como a hipnose pode ajudar",
+        "Gerenciamento de estresse e ansiedade para profissionais de alta performance",
+        "Prevenção e tratamento do burnout em ambientes corporativos"
+      ]
+    },
+    {
+      "id": "silo_1774323541222",
+      "hub": "Relacionamentos Afetivos e Intimidade",
+      "slug": "relacionamentos-afetivos-intimidade",
+      "spokes": [
+        "Superando inseguranças e medos em relacionamentos amorosos com hipnose",
+        "Como a hipnose clínica pode melhorar a comunicação e a conexão em casais",
+        "Tratamento de disfunções sexuais e bloqueios emocionais com hipnose"
+      ]
+    },
+    {
+      "id": "silo_1774323544462",
+      "hub": "Autoconhecimento e Desenvolvimento Pessoal",
+      "slug": "autoconhecimento-desenvolvimento-pessoal",
+      "spokes": [
+        "Descobrindo seu potencial máximo através da hipnose para autoconfiança",
+        "Como a hipnose ajuda a reprogramar crenças limitantes e a alcançar objetivos",
+        "Explorando memórias reprimidas e traumas passados com segurança através da hipnose"
+      ]
+    },
+    {
+      "id": "silo_1774329262766",
+      "hub": "Transtornos de Humor",
+      "slug": "transtornos-de-humor",
+      "spokes": []
+    }
+  ]
+}

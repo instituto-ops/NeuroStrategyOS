@@ -7,6 +7,40 @@
     <link rel="stylesheet" href="css/dashboard.css?v=6">
     <link rel="icon" href="/favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+    <style>
+        .category-tab {
+            padding: 10px 20px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        .category-tab:hover {
+            border-color: #6366f1;
+            color: #6366f1;
+            background: #f5f3ff;
+        }
+        .category-tab.active {
+            background: #6366f1;
+            color: white;
+            border-color: #6366f1;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+        }
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -61,11 +95,21 @@
                     <div class="card">Carregando dados do Google Analytics...</div>
                 </div>
 
-                <div class="card" id="neuroengine-insights-card" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                <div class="card" id="neuroengine-insights-card" style="background: #f8fafc; border: 1px dashed #cbd5e1; margin-bottom: 20px;">
                     <h3 style="margin: 0 0 10px 0; font-size: 14px; display: flex; align-items: center; gap: 8px;">💡 Insight do NeuroEngine</h3>
                     <p id="neuroengine-insight-text" style="font-size: 14px; line-height: 1.6; color: #1e293b;">
                         🤖 Analisando dados reais do ecossistema...
                     </p>
+                </div>
+
+                <div id="dashboard-abidos-suggestions" class="card" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; font-size: 16px; font-weight: bold; color: #1e293b;">✨ Sugestões de Arquitetura (Abidos V5)</h3>
+                        <span style="font-size: 10px; background: #fdf2f8; color: #db2777; padding: 4px 10px; border-radius: 20px; font-weight: bold; border: 1px solid #fbcfe8;">MÉTODO ABIDOS</span>
+                    </div>
+                    <div id="dashboard-suggestions-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                        <!-- Injetado via app.js -->
+                    </div>
                 </div>
             </section>
 
@@ -240,27 +284,6 @@
                 </div>
             </section>
 
-            <!-- Section: AI Studio (Copilot NEXT-GEN) -->
-            <section id="ai-studio" class="content-section" style="display: flex; flex-direction: column; overflow: hidden; height: calc(100vh - 100px); padding: 0;">
-                
-                <!-- Barra de Controle Superior (Template Choice & Global Actions) -->
-                <div class="template-selector-bar">
-                    <div style="flex: 1;">
-                        <h2 style="font-size: 14px; color: var(--color-primary); margin-bottom: 5px;">🎨 SETUP VISUAL DO LANÇAMENTO</h2>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <select id="ai-studio-template" style="max-width: 350px; border-color: var(--color-secondary); font-weight: bold; background: #f0f9ff;" 
-                                    onchange="window.aiStudioTemplate.loadTemplateDetails(this.value)">
-                                <option value="">Selecione uma Estrutura...</option>
-                            </select>
-                            <span id="template-design-info" style="font-size: 11px; color: #64748b;">
-                                Selecione uma template para mapear as variáveis.
-                            </span>
-                        </div>
-                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
-                            <label style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">🌳 Menu do Silo:</label>
-                            <select id="ai-studio-menu" style="max-width: 250px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; background: white;" onchange="window.aiStudioTemplate.menuId = this.value">
-                                <option value="">Sem Menu (Default)</option>
-                                <option value="menu_principal_01">Carregando...</option>
             <section id="ai-studio" class="content-section" style="padding: 0; background: #fdfdfd; display: flex; flex-direction: column; min-height: 85vh;">
                 <!-- Header: Mission Control (Fixo) -->
                 <div style="background: white; border-bottom: 2px solid #e2e8f0; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;">
@@ -287,87 +310,93 @@
 
                 <!-- ETAPA 1: O CÉREBRO (Configuração e Planejamento) -->
                 <div id="studio-step-1" class="studio-step-content" style="padding: 30px; flex: 1; overflow-y: auto;">
-                    <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 30px;">
-                        <!-- Coluna 1: Planejamento Clínico -->
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <div class="card" style="padding: 25px;">
-                                <h3 style="margin-top:0; font-size: 12px; color: #6366f1; margin-bottom: 20px;">🧠 NÚCLEO CRIATIVO</h3>
-                                <div style="display: flex; flex-direction: column; gap: 15px;">
-                                    <div>
-                                        <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">🤖 MOTOR DE INTELIGÊNCIA</label>
-                                        <select id="ai-studio-model" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-weight: 700;">
-                                            <option value="gemini-2.5-flash-lite">⚡ GEMINI 2.5 FLASH LITE (Rápido)</option>
-                                            <option value="gemini-2.5-flash">⚡ GEMINI 2.5 FLASH (Equilibrado)</option>
-                                            <option value="gemini-2.0-flash">⚡ GEMINI 2.0 FLASH (Estável)</option>
-                                            <option value="gemini-2.5-pro" selected>🧠 GEMINI 2.5 PRO (Cérebro Denso)</option>
-                                        </select>
-                                    </div>
-                                    <div style="display: flex; gap: 10px;">
-                                        <button class="btn btn-secondary" onclick="window.aiStudioTemplate.loadDraft()" style="flex: 1; height: 45px; font-weight: 800;">📂 CARREGAR RASCUNHO</button>
-                                        <button class="btn btn-primary" onclick="window.aiStudioTemplate.newDraft()" style="flex: 1; height: 45px; font-weight: 800; background: #1e293b;">🆕 NOVO RASCUNHO</button>
-                                    </div>
-                                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 10px 0;">
-                                    <div>
-                                        <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">🎯 OBJETIVO DO CONTEÚDO</label>
-                                        <select id="ai-studio-objective" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-weight: 700;">
-                                            <option value="landing_page">🚀 Landing Page (Conversão Estrita)</option>
-                                            <option value="content_page">📄 Página de Conteúdo / Site</option>
-                                            <option value="blog_post">✍️ Artigo para Blog / SEO</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">🔖 TEMA / PALAVRA-CHAVE (OBRIGATÓRIO)</label>
-                                        <input type="text" id="ai-studio-theme" placeholder="Ex: Avaliação Neuropsicológica para TEA..." 
-                                               style="width: 100%; padding: 12px 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">📝 RASCUNHO DE IDEIAS & CONTEXTO (OPCIONAL)</label>
-                                        <textarea id="ai-studio-context" placeholder="Mais contexto para nortear o agente..." 
-                                                  style="width: 100%; height: 100px; padding: 12px 15px; border: 2px solid #cbd5e1; border-radius: 8px;"></textarea>
-                                    </div>
+                    <div class="grid" style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 25px; align-items: start;">
+                        <!-- Coluna 1: Núcleo Criativo -->
+                        <div class="card" style="padding: 24px; min-height: 520px; display: flex; flex-direction: column;">
+                            <h3 style="margin-top:0; font-size: 12px; color: #6366f1; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">🧠 NÚCLEO CRIATIVO</h3>
+                            <div style="display: flex; flex-direction: column; gap: 15px; flex: 1;">
+                                <div>
+                                    <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">🤖 MOTOR DE INTELIGÊNCIA</label>
+                                    <select id="ai-studio-model" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-weight: 700;">
+                                        <option value="gemini-2.5-flash-lite">⚡ GEMINI 2.5 FLASH LITE (Economia)</option>
+                                        <option value="gemini-2.5-flash" selected>⚡ GEMINI 2.5 FLASH (Mestre / Padrão)</option>
+                                        <option value="gemini-2.5-pro">🧠 GEMINI 2.5 PRO (Poder Total)</option>
+                                        <option value="gemini-1.5-flash">📦 GEMINI 1.5 FLASH (Legado)</option>
+                                        <option value="gemini-1.5-pro">📦 GEMINI 1.5 PRO (Legado)</option>
+                                    </select>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <button class="btn btn-secondary" onclick="window.aiStudioTemplate.loadDraft()" style="flex: 1; height: 45px; font-weight: 800; font-size: 10px;">📂 CARREGAR RASCUNHO</button>
+                                    <button class="btn btn-primary" onclick="window.aiStudioTemplate.newDraft()" style="flex: 1; height: 45px; font-weight: 800; font-size: 10px; background: #1e293b;">🆕 NOVO RASCUNHO</button>
+                                </div>
+                                <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 10px 0;">
+                                <div>
+                                    <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">🎯 OBJETIVO DO CONTEÚDO</label>
+                                    <select id="ai-studio-objective" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-weight: 700;">
+                                        <option value="landing_page">🚀 Landing Page (Conversão Estrita)</option>
+                                        <option value="content_page">📄 Página de Conteúdo / Site</option>
+                                        <option value="blog_post">✍️ Artigo para Blog / SEO</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">🔖 TEMA / PALAVRA-CHAVE (OBRIGATÓRIO)</label>
+                                    <input type="text" id="ai-studio-theme" placeholder="Ex: Avaliação Neuropsicológica para TEA..." 
+                                           style="width: 100%; padding: 12px 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">📝 RASCUNHO DE IDEIAS & CONTEXTO</label>
+                                    <textarea id="ai-studio-context" placeholder="Mais contexto para nortear o agente..." 
+                                              style="width: 100%; height: 100px; padding: 12px 15px; border: 2px solid #cbd5e1; border-radius: 8px;"></textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Coluna 2: SEO & Dados -->
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <div class="card" style="padding: 25px;">
-                                <h3 style="margin-top:0; font-size: 12px; color: #10b981; margin-bottom: 20px;">🌐 SEO & ARQUITETURA</h3>
-                                <div style="display: flex; flex-direction: column; gap: 15px;">
-                                    <div>
-                                        <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">📁 SELEÇÃO DE SILO / CATEGORIA</label>
-                                        <select id="ai-studio-silo" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
-                                            <!-- Preenchido via JS -->
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">🌳 SELEÇÃO DO MENU</label>
-                                        <select id="ai-studio-menu" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
-                                            <!-- Preenchido via JS -->
-                                        </select>
-                                    </div>
+                        <!-- Coluna 2: SEO & Arquitetura -->
+                        <div class="card" style="padding: 24px; min-height: 520px;">
+                            <h3 style="margin-top:0; font-size: 12px; color: #10b981; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">🌐 SEO & ARQUITETURA</h3>
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div>
+                                    <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">📁 SELEÇÃO DE SILO / CATEGORIA</label>
+                                    <select id="ai-studio-silo" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
+                                        <!-- Preenchido via JS -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px;">🌳 SELEÇÃO DO MENU</label>
+                                    <select id="ai-studio-menu" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
+                                        <!-- Preenchido via JS -->
+                                    </select>
+                                </div>
+                                <div style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px dashed #cbd5e1; margin-top: 20px;">
+                                    <p style="font-size: 11px; color: #64748b; line-height: 1.5; margin: 0;">
+                                        💡 <strong>Dica SEO:</strong> Ao selecionar o Silo, o Agente Abidos automaticamente mapeará os links internos necessários para manter a autoridade (E-E-A-T).
+                                    </p>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="card" style="padding: 25px;">
-                                <h3 style="margin-top:0; font-size: 12px; color: #f59e0b; margin-bottom: 20px;">📱 DADOS DE CONTATO (PADRÃO)</h3>
-                                <div style="display: flex; flex-direction: column; gap: 12px;">
-                                    <div class="input-group">
-                                        <span style="font-size: 10px; font-weight: 900; color: #64748b;">WHATSAPP</span>
-                                        <input type="text" id="studio-contact-wa" value="62991545295" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px;">
-                                    </div>
-                                    <div class="input-group">
-                                        <span style="font-size: 10px; font-weight: 900; color: #64748b;">EMAIL</span>
-                                        <input type="text" id="studio-contact-email" value="instituto@hipnolawrence.com" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px;">
-                                    </div>
-                                    <div class="input-group">
-                                        <span style="font-size: 10px; font-weight: 900; color: #64748b;">INSTAGRAM</span>
-                                        <input type="text" id="studio-contact-insta" value="https://www.instagram.com/hipnolawrence" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px;">
-                                    </div>
-                                    <div class="input-group">
-                                        <span style="font-size: 10px; font-weight: 900; color: #64748b;">AGENDAMENTO</span>
-                                        <input type="text" id="studio-contact-link" value="www.hipnolawrence.com/agendamento" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px;">
-                                    </div>
+                        <!-- Coluna 3: Dados de Contato -->
+                        <div class="card" style="padding: 24px; min-height: 520px;">
+                            <h3 style="margin-top:0; font-size: 12px; color: #f59e0b; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">📱 CTA & DADOS DE CONTATO</h3>
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <div class="input-group">
+                                    <label style="display: block; font-size: 10px; font-weight: 900; color: #64748b; margin-bottom: 5px;">WHATSAPP</label>
+                                    <input type="text" id="studio-contact-wa" value="62991545295" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                                </div>
+                                <div class="input-group">
+                                    <label style="display: block; font-size: 10px; font-weight: 900; color: #64748b; margin-bottom: 5px;">EMAIL</label>
+                                    <input type="text" id="studio-contact-email" value="instituto@hipnolawrence.com" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                                </div>
+                                <div class="input-group">
+                                    <label style="display: block; font-size: 10px; font-weight: 900; color: #64748b; margin-bottom: 5px;">INSTAGRAM</label>
+                                    <input type="text" id="studio-contact-insta" value="https://www.instagram.com/hipnolawrence" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                                </div>
+                                <div class="input-group">
+                                    <label style="display: block; font-size: 10px; font-weight: 900; color: #64748b; margin-bottom: 5px;">LINK AGENDAMENTO</label>
+                                    <input type="text" id="studio-contact-link" value="www.hipnolawrence.com/agendamento" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                                </div>
+                                <div style="margin-top: 10px; padding-top: 15px; border-top: 1px solid #f1f5f9;">
+                                    <p style="font-size: 10px; color: #94a3b8; font-style: italic;">Estes dados são usados automaticamente nos botões de ação e rodapés gerados pela IA.</p>
                                 </div>
                             </div>
                         </div>
@@ -395,7 +424,10 @@
                     <!-- Painel Direito: Preview Mobile-First -->
                     <div style="flex: 1; background: #0f172a; display: flex; flex-direction: column;">
                         <div style="padding: 15px 30px; background: #1e293b; display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #94a3b8; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">👁️ Preview Real-time (Protocolo Abidos V5)</span>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="color: #94a3b8; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">👁️ Preview Real-time (Protocolo Abidos V5)</span>
+                                <button class="btn btn-secondary" onclick="window.aiStudioTemplate.fullPreview()" style="font-size: 10px; padding: 4px 12px; border-radius: 20px; background: #6366f122; border: 1px solid #6366f144; color: #6366f1; font-weight: 800;">👁️ PREVIEW AMPLO</button>
+                            </div>
                             <div style="display: flex; gap: 8px; background: #0f172a; padding: 4px; border-radius: 8px;">
                                 <button class="device-btn active" onclick="window.aiStudioTemplate.setPreviewSize('mobile')" title="Mobile First">📱</button>
                                 <button class="device-btn" onclick="window.aiStudioTemplate.setPreviewSize('tablet')" title="Tablet View"> tablet </button>
@@ -404,7 +436,7 @@
                         </div>
                         <div id="preview-wrapper" style="flex: 1; display:flex; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto;">
                             <!-- O preview será injetado aqui -->
-                            <div id="studio-preview-frame" style="width: 375px; min-height: 667px; background: white; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; position: relative;">
+                            <div id="studio-preview-frame" style="width: 375px; height: 667px; background: white; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; position: relative;">
                                 <div style="padding: 100px 40px; text-align: center; color: #64748b;">
                                     <span style="font-size: 50px; display: block; margin-bottom: 20px;">🚀</span>
                                     <h4 style="color: #cbd5e1;">Aguardando Geração</h4>
@@ -524,45 +556,119 @@
 
             <!-- Section: Gestão de Menus (Decoupled Navigation) -->
             <section id="menu-manager" class="content-section">
-                <div class="card" style="margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h2 style="font-size: 24px; color: var(--color-primary); margin: 0;">🌳 Gestor de Menus e Silos</h2>
-                            <p style="color: #64748b; font-size: 14px; margin-top: 5px;">Configure a estrutura de links. O formato visual será adaptado pelo AI Studio de acordo com o template.</p>
+                <div class="card" style="margin-bottom: 20px; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; gap: 30px; align-items: center;">
+                        <h2 style="font-size: 20px; color: var(--color-primary); margin: 0; font-weight: 800;">Navigation Control</h2>
+                        <div class="tab-switcher" style="display: flex; gap: 10px; background: #f1f5f9; padding: 5px; border-radius: 10px;">
+                            <button class="tab-btn active" onclick="window.menuSystem.switchTab('silos', this)" style="padding: 10px 20px; border-radius: 8px; border: none; font-weight: 800; font-size: 11px; cursor: pointer; transition: all 0.2s;">📁 ARQUITETURA DE SILOS</button>
+                            <button class="tab-btn" onclick="window.menuSystem.switchTab('menus', this)" style="padding: 10px 20px; border-radius: 8px; border: none; font-weight: 800; font-size: 11px; color: #64748b; cursor: pointer; transition: all 0.2s;">🌳 MENUS DE NAVEGAÇÃO</button>
+                        </div>
+                    </div>
+                    <div style="font-size: 11px; color: #94a3b8; font-weight: 700;">GESTÃO DE ESTRUTURA v4.2</div>
+                </div>
+
+                <!-- CONTEÚDO: TAB MENUS -->
+                <div id="tab-menus-content" class="menu-tab-pane" style="display: none;">
+                    <div class="grid" style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+                        <div class="card" style="align-self: flex-start; padding: 25px;">
+                            <h3 style="margin-bottom: 15px; font-size: 12px; text-transform: uppercase; color: #64748b;">Estruturas de Menu</h3>
+                            <ul id="menu-list" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;">
+                                <li><span style="color: #64748b; font-size: 13px;">Carregando menus...</span></li>
+                            </ul>
+                            <button class="btn btn-secondary" style="width: 100%; margin-top: 20px; border: 2px dashed #cbd5e1; background: transparent; color: #64748b; font-weight: 800;" onclick="window.menuSystem.createNewMenu()">+ CRIAR NOVO MENU</button>
+                        </div>
+
+                        <div class="card" id="menu-editor-card" style="display: none; padding: 25px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                                <h3 id="menu-editor-title" style="margin: 0; font-size: 18px; font-weight: 900;">Editando Menu...</h3>
+                                <button class="btn btn-primary" id="btn-save-menu" onclick="window.menuSystem.saveCurrentMenu()" style="background: #10b981; border-radius: 8px; font-weight: 800;">💾 SALVAR ÁRVORE</button>
+                            </div>
+
+                            <div style="margin-bottom: 25px;">
+                                <label style="font-size: 11px; font-weight: 800; color: #64748b; display: block; margin-bottom: 8px;">NOME DO MENU (EX: HEADER PRINCIPAL)</label>
+                                <input type="text" id="menu-editor-name" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-weight: 700;">
+                                <input type="hidden" id="menu-editor-id">
+                            </div>
+
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; min-height: 400px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                                    <span style="font-weight: 900; font-size: 12px; color: #1e293b;">ITENS DE NAVEGAÇÃO (DRAG & DROP)</span>
+                                    <button class="btn btn-secondary" style="font-size: 10px; padding: 8px 15px; background: white; border: 1px solid #cbd5e1; font-weight: 800;" onclick="window.menuSystem.addMenuItem()">+ ADICIONAR LINK</button>
+                                </div>
+                                <div id="menu-tree-container" style="display: flex; flex-direction: column; gap: 12px;">
+                                    <!-- Itens de menu injetados via JS -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid" style="grid-template-columns: 1fr 2fr; gap: 20px;">
-                    <div class="card" style="align-self: flex-start;">
-                        <h3 style="margin-bottom: 15px; font-size: 14px; text-transform: uppercase;">Lista de Menus</h3>
-                        <ul id="menu-list" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;">
-                            <li><span style="color: #64748b; font-size: 13px;">Carregando menus...</span></li>
-                        </ul>
-                        <button class="btn btn-secondary" style="width: 100%; margin-top: 15px; border: 2px dashed #cbd5e1; background: transparent; color: #64748b;" onclick="window.menuSystem.createNewMenu()">+ Criar Novo Esqueleto de Menu</button>
-                    </div>
+                <!-- CONTEÚDO: TAB SILOS -->
+                        <div id="tab-silos-content" class="menu-tab-pane active" style="display: block;">
+                            <div class="grid" style="display: grid; grid-template-columns: 350px 1fr; gap: 20px;">
+                                <!-- Lista de Silos e Sugestões -->
+                                <div style="display: flex; flex-direction: column; gap: 15px;">
+                                    <div class="card" style="padding: 25px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                                        <h3 style="margin-bottom: 15px; font-size: 12px; text-transform: uppercase; color: #10b981;">Hubs de Conteúdo (Silos)</h3>
+                                        <div id="silo-manager-list" style="display: flex; flex-direction: column; gap: 10px;">
+                                            <!-- Injetado via JS -->
+                                            <div style="color: #64748b; font-size: 13px;">Carregando arquitetura...</div>
+                                        </div>
+                                        <button class="btn btn-secondary" style="width: 100%; margin-top: 20px; border: 2px dashed #10b98144; background: #10b9810a; color: #10b981; font-weight: 800;" onclick="window.menuSystem.createNewSilo()">+ CRIAR NOVO HUB SILO</button>
+                                    </div>
 
-                    <div class="card" id="menu-editor-card" style="display: none;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <h3 id="menu-editor-title" style="margin: 0;">Editando Menu...</h3>
-                            <button class="btn btn-primary" id="btn-save-menu" onclick="window.menuSystem.saveCurrentMenu()" style="background: #10b981;">💾 Salvar Árvore de Navegação</button>
-                        </div>
+                                    <!-- Sugestões Abidos IA -->
+                                    <div class="card" style="padding: 20px; background: #fff1f2; border: 1px solid #fecdd3;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                            <h3 style="font-size: 12px; margin: 0; color: #9f1239; font-weight: 800;">✨ SUGESTÕES ABIDOS</h3>
+                                            <button class="btn" id="btn-suggest-silos" onclick="window.menuSystem.suggestSilos()" style="font-size: 9px; padding: 4px 8px; background: #e11d48; color: white; border-radius: 4px;">ATUALIZAR SUGESTÕES</button>
+                                        </div>
+                                        <div id="silo-suggestions-list" style="font-size: 11px; color: #881337;">
+                                            Analise demandas estratégicas baseadas no site e Ads.
+                                        </div>
+                                    </div>
+                                </div>
 
-                        <div style="margin-bottom: 20px;">
-                            <label style="font-size: 12px; font-weight: bold; color: #64748b; display: block; margin-bottom: 5px;">Nome do Menu (Uso Interno)</label>
-                            <input type="text" id="menu-editor-name" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                            <input type="hidden" id="menu-editor-id">
-                        </div>
+                        <!-- Editor de Silos (Hub & Spoke) -->
+                        <div class="card" id="silo-editor-card" style="padding: 25px; display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                                <h3 id="silo-editor-title" style="margin: 0; font-size: 18px; font-weight: 900;">Configurar Arquitetura Silo</h3>
+                                <button class="btn btn-primary" onclick="window.menuSystem.saveCurrentSilo()" style="background: #6366f1; border-radius: 8px; font-weight: 800;">💾 ATUALIZAR SILO</button>
+                            </div>
 
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; min-height: 300px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #cbd5e1;">
-                                <span style="font-weight: bold; font-size: 13px; color: #475569;">Árvore de Links</span>
-                                <button class="btn btn-secondary" style="font-size: 11px; padding: 5px 10px;" onclick="window.menuSystem.addMenuItem()">+ Adicionar Link Nível 1</button>
+                            <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                                <div>
+                                    <label style="font-size: 11px; font-weight: 800; color: #64748b; display: block; margin-bottom: 8px;">TEMA DO HUB (EX: ANSIEDADE)</label>
+                                    <input type="text" id="silo-editor-hub" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-weight: 700;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 11px; font-weight: 800; color: #64748b; display: block; margin-bottom: 8px;">SLUG / URL RAIZ</label>
+                                    <input type="text" id="silo-editor-slug" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-weight: 700;">
+                                </div>
+                            </div>
+
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <span style="font-weight: 900; font-size: 12px; color: #166534;">PÁGINAS SPOKES (ARTIGOS DE SUPORTE)</span>
+                                    <button class="btn btn-secondary" style="font-size: 10px; padding: 5px 12px; background: white; color: #166534; border: 1px solid #bbf7d0;" onclick="window.menuSystem.addSiloSpoke()">+ ADICIONAR SPOKE</button>
+                                </div>
+                                <div id="silo-spokes-container" style="display: flex; flex-direction: column; gap: 10px;">
+                                    <!-- Spokes injetados -->
+                                </div>
                             </div>
                             
-                            <div id="menu-tree-container" style="display: flex; flex-direction: column; gap: 10px;">
-                                <!-- Itens de menu injetados via JS -->
+                            <div style="margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;">
+                                <p style="font-size: 11px; color: #92400e; margin: 0; line-height: 1.5;">
+                                    💡 <strong>Dica Abidos:</strong> Os Silos criados aqui aparecem automaticamente no Planejamento e no AI Studio para garantir que cada nova página herde a autoridade do seu Hub sem esforço manual.
+                                </p>
                             </div>
+                        </div>
+                        
+                        <!-- Estado Vazio -->
+                        <div class="card" id="silo-empty-state" style="padding: 100px 50px; text-align: center; color: #cbd5e1; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                             <span style="font-size: 50px; margin-bottom: 20px;">📂</span>
+                             <h4 style="margin: 0; color: #94a3b8;">Silo Master Control</h4>
+                             <p style="font-size: 13px;">Selecione um silo à esquerda para gerenciar sua arquitetura de Hub & Spoke.</p>
                         </div>
                     </div>
                 </div>
@@ -579,9 +685,8 @@
                                 <div style="width: 180px;">
                                     <select id="neuro-training-model" style="width: 100%; padding: 8px; border: 2px solid #6366f122; border-radius: 6px; font-weight: 800; background: #6366f111; color: #6366f1; font-size: 10px; cursor: pointer;">
                                         <option value="gemini-2.5-flash-lite">⚡ FLASH LITE (Treino Rápido)</option>
-                                        <option value="gemini-2.5-flash">⚡ FLASH (Equilibrado)</option>
-                                        <option value="gemini-2.0-flash">⚡ FLASH 2.0 (Estável)</option>
-                                        <option value="gemini-2.5-pro" selected>🧠 PRO (Deep Training)</option>
+                                        <option value="gemini-2.5-flash" selected>⚡ FLASH (Padrão Abidos)</option>
+                                        <option value="gemini-2.5-pro">🧠 PRO (Deep Training)</option>
                                     </select>
                                 </div>
                                 <button class="btn btn-secondary" style="background: white; border: 1px solid #6366f144; color: #6366f1; font-weight: 800; font-size: 11px; padding: 8px 15px;" onclick="window.neuroTraining.toggleMode('voice')">🎙️ INICIAR ENTREVISTA DE VOZ</button>
@@ -635,10 +740,9 @@
                     <div style="width: 220px;">
                         <label style="display: block; font-size: 10px; font-weight: 800; color: #6366f1; margin-bottom: 5px; text-transform: uppercase;">🤖 MOTOR DE INTELIGÊNCIA</label>
                         <select id="doctoralia-model" onchange="window.Doctoralia?.updateModel(this.value)" style="width: 100%; padding: 8px; border: 2px solid #6366f122; border-radius: 6px; font-weight: 800; background: #6366f111; color: #6366f1; font-size: 11px; cursor: pointer;">
-                            <option value="gemini-2.5-flash-lite">⚡ GEMINI 2.5 FLASH LITE (Respostas curtas)</option>
-                            <option value="gemini-2.5-flash">⚡ GEMINI 2.5 FLASH (Equilibrado)</option>
-                            <option value="gemini-2.0-flash">⚡ GEMINI 2.0 FLASH (Estável)</option>
-                            <option value="gemini-2.5-pro" selected>🧠 GEMINI 2.5 PRO (Respostas clínicas complexas)</option>
+                            <option value="gemini-2.5-flash-lite">⚡ GEMINI 2.5 FLASH LITE (Rápido)</option>
+                            <option value="gemini-2.5-flash" selected>⚡ GEMINI 2.5 FLASH (Mestre / Padrão)</option>
+                            <option value="gemini-2.5-pro">🧠 GEMINI 2.5 PRO (Clínico Profundo)</option>
                         </select>
                     </div>
                 </div>
@@ -720,17 +824,24 @@
                             <p style="font-size: 14px; color: #64748b;">Selecione uma imagem para otimização SEO avançada.</p>
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            <button class="btn" style="background: #f59e0b; color: white; font-weight: bold;" onclick="window.mediaLibrary.fixGallerySEO()">🪄 Otimizar Lote (IA)</button>
-                            <button class="btn btn-secondary" onclick="window.mediaLibrary.loadLibrary()">🔄 Recarregar</button>
+                            <button class="btn" style="background: #1e293b; color: white; font-weight: 800; font-size: 11px; padding: 10px 15px;" onclick="window.mediaLibrary.syncAllToCloudinary()">🚀 Sincronizar Tudo com Cloudinary</button>
+                            <button class="btn" style="background: #f59e0b; color: white; font-weight: bold; font-size: 11px;" onclick="window.mediaLibrary.fixGallerySEO()">🪄 Otimizar Lote (IA)</button>
+                            <button class="btn btn-secondary" style="font-size: 11px;" onclick="window.mediaLibrary.loadLibrary()">🔄 Recarregar</button>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Feedback Local para Mídia -->
-                <div id="ai-media-feedback" style="display: none; margin-bottom: 20px; padding: 12px; border-radius: 8px; border-left: 4px solid #6366f1; background: #eff6ff; font-size: 13px; color: #1e40af; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 16px;">🪄</span>
-                        <span id="ai-media-feedback-text">IA está analisando sua galeria...</span>
+
+                <!-- Filtro de Álbuns Dinâmico (V5.6) -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow-sm);">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 10px; font-weight: 800; color: #6366f1; margin-bottom: 5px; text-transform: uppercase;">📂 Filtrar por Álbum / Categoria</label>
+                        <select id="media-album-selector" onchange="window.mediaLibrary.filterByAlbum(this.value)" style="width: 100%; padding: 10px; border: 2px solid #6366f122; border-radius: 8px; font-weight: 700; background: #6366f111; color: #6366f1; font-size: 13px; cursor: pointer;">
+                            <option value="all">🔍 Todos os Ativos</option>
+                            <!-- Injetado via JS -->
+                        </select>
+                    </div>
+                    <div style="width: 150px; padding-top: 15px;">
+                        <button class="btn btn-secondary" style="width: 100%; border-style: dashed; font-size: 11px; padding: 10px;" onclick="window.mediaLibrary.createNewAlbum()">🆕 Novo Álbum</button>
                     </div>
                 </div>
 
@@ -761,6 +872,13 @@
                         <div id="editor-active-state" style="display: none; height: 100%; overflow-y: auto; padding-right: 5px;">
                             <div style="position: relative; margin-bottom: 20px;">
                                 <img id="edit-panel-preview" src="" style="width: 100%; height: 220px; object-fit: contain; background: #f1f5f9; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; font-size: 11px; font-weight: 800; color: #6366f1; margin-bottom: 5px; text-transform: uppercase;">📂 Álbum / Categoria Abidos</label>
+                                <select id="edit-panel-album" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-weight: 700;">
+                                    <!-- Injetado via JS -->
+                                </select>
                             </div>
 
                             <div class="form-group" style="margin-bottom: 15px;">
@@ -881,8 +999,8 @@
                             <p style="color: #64748b; font-size: 14px; margin: 0;">Mapeie seu domínio e planeje campanhas de Google Ads com intenção clínica.</p>
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-primary" onclick="alert('Funcionalidade em desenvolvimento: Novo Silo')">+ NOVO SILO</button>
-                            <button class="btn btn-secondary" onclick="alert('Funcionalidade em desenvolvimento: Nova Campanha')">+ NOVA CAMPANHA STAG</button>
+                            <button class="btn btn-secondary" style="font-size: 11px; font-weight: 800; background: #1e293b; color: white;" onclick="window.seoEngine.addSiloPrompt()">+ NOVO SILO</button>
+                            <button class="btn btn-secondary" style="font-size: 11px; font-weight: 800;" onclick="window.seoEngine.addStagPrompt()">+ NOVA CAMPANHA STAG</button>
                         </div>
                     </div>
                     
@@ -947,10 +1065,7 @@
             </section>
 
 
-                            <div style="display: flex; gap: 10px;">
-                                <button class="btn btn-secondary" style="font-size: 11px;">🔍 View</button>
-                                <button class="btn btn-primary" style="font-size: 11px; background: #6366f1;">🤖 Edit IA</button>
-                            </div>
+                            <!-- Botões 'Inúteis' Removidos -->
                         </div>
                     </div>
                 </div>
@@ -976,13 +1091,13 @@
     <script src="js/chat.js"></script>
     <script src="js/media.js"></script>
     <script src="js/abidos-review.js"></script>
-    <script src="js/seo-engine.js"></script>
+    <script src="js/seo-engine.js?v=6"></script>
     <script src="js/health-system.js"></script>
     <script src="js/marketing-lab.js"></script>
     <script src="js/task-system.js"></script>
     <script src="js/goal-system.js"></script>
     <script src="js/neuro-training.js"></script>
-    <script src="js/menu-manager.js"></script>
+    <script src="js/menu-manager.js?v=6"></script>
     <!-- [MODAL] Media Picker Abidos -->
     <div id="media-picker-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:20000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
         <div style="background:white; width:90%; max-width:800px; height:80%; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 30px 60px rgba(0,0,0,0.5);">
@@ -1047,94 +1162,6 @@
         </div>
     </div>
 
-    <script>
-        // NeuroStepper Logic for AI Studio
-        window.neuroStepper = {
-            currentStep: 1,
-            totalSteps: 4,
-            
-            init() {
-                console.log("NeuroStepper initialized.");
-                this.updateUI();
-            },
-            
-            next() {
-                if (this.currentStep < this.totalSteps) {
-                    this.currentStep++;
-                    this.updateUI();
-                    // Scroll to top of section
-                    document.getElementById('ai-studio').scrollTop = 0;
-                }
-            },
-            
-            prev() {
-                if (this.currentStep > 1) {
-                    this.currentStep--;
-                    this.updateUI();
-                    // Scroll to top of section
-                    document.getElementById('ai-studio').scrollTop = 0;
-                }
-            },
-            
-            goTo(n) {
-                if (n >= 1 && n <= this.totalSteps) {
-                    this.currentStep = n;
-                    this.updateUI();
-                }
-            },
-            
-            updateUI() {
-                // Update Step Content
-                for (let i = 1; i <= this.totalSteps; i++) {
-                    const content = document.getElementById(`step-content-${i}`);
-                    const nav = document.getElementById(`step-nav-${i}`);
-                    
-                    if (content) {
-                        content.classList.remove('active');
-                        if (i === this.currentStep) content.classList.add('active');
-                    }
-                    
-                    if (nav) {
-                        nav.classList.remove('active', 'completed');
-                        if (i === this.currentStep) nav.classList.add('active');
-                        if (i < this.currentStep) nav.classList.add('completed');
-                    }
-                }
-                
-                // Update Footer Buttons
-                const prevBtn = document.getElementById('prev-btn');
-                const nextBtn = document.getElementById('next-btn');
-                const indicatorText = document.getElementById('step-indicator-text');
-                
-                if (prevBtn) prevBtn.disabled = this.currentStep === 1;
-                
-                if (nextBtn) {
-                    if (this.currentStep === this.totalSteps) {
-                        nextBtn.style.display = 'none';
-                    } else {
-                        nextBtn.style.display = 'flex';
-                        nextBtn.innerHTML = this.currentStep === 3 ? 'Finalizar Integração →' : 'Próximo →';
-                    }
-                }
-                
-                if (indicatorText) {
-                    indicatorText.innerText = `ETAPA ${this.currentStep} DE ${this.totalSteps}`;
-                }
-
-                // Special handling for Step 3: Editor width fix
-                if (this.currentStep === 3) {
-                    setTimeout(() => {
-                        window.dispatchEvent(new Event('resize'));
-                    }, 100);
-                }
-            }
-        };
-
-        // Initialize when document is ready
-        document.addEventListener('DOMContentLoaded', () => {
-            window.neuroStepper.init();
-        });
-    </script>
     <!-- VOICE OVERLAY (MODO ENTREVISTA v2.0) -->
     <div id="voice-mode-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:100000; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(25px); transition: all 0.5s ease;">
         <div id="voice-mode-mic" style="width:180px; height:180px; border-radius:50%; background:#ef4444; display:flex; align-items:center; justify-content:center; box-shadow:0 0 50px rgba(239,68,68,0.3); transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer; position:relative;" onclick="window.neuroTraining.toggleMute()">

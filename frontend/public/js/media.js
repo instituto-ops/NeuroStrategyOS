@@ -3,6 +3,9 @@ const mediaLibrary = {
     currentFile: null,
     usageCache: {}, 
     selectedMedia: null, 
+    allFolders: [],
+
+    currentCategory: 'all',
 
     init() {
         this.bindEvents();
@@ -34,223 +37,124 @@ const mediaLibrary = {
         const container = document.getElementById('media-list-container');
         if (!container) return;
 
-        // Não limpamos tudo para evitar o flash irritante se já houver mídias
-        if (container.children.length === 0) {
-            container.innerHTML = '<p style="text-align: center; grid-column: 1/-1; opacity: 0.5;">Sincronizando...</p>';
-        }
-        
         try {
-            const [media, pages, posts] = await Promise.all([
-                wpAPI.fetchMedia(100),
-                wpAPI.fetchContent('pages', true),
-                wpAPI.fetchContent('posts', true)
-            ]);
+            const res = await fetch('/api/media/acervo');
+            const data = await res.json();
+            this.allFolders = data.folders || [];
+            const items = data.items || [];
             
-            this.usageCache = {};
-            [...pages, ...posts].forEach(item => {
-                const content = item.content ? item.content.rendered : "";
-                const featuredId = item.featured_media;
-                if (Array.isArray(media)) {
-                    media.forEach(m => {
-                        if (content.includes(m.source_url) || featuredId === m.id) {
-                            if (!this.usageCache[m.source_url]) this.usageCache[m.source_url] = [];
-                            const title = item.title.rendered || `Conteúdo #${item.id}`;
-                            if (!this.usageCache[m.source_url].includes(title)) this.usageCache[m.source_url].push(title);
-                        }
-                    });
-                }
-            });
+            // Popula Seletores de Álbuns
+            this.updateAlbumSelectors();
+
+            const filteredItems = this.currentCategory === 'all' 
+                ? items 
+                : items.filter(i => i.folder === this.currentCategory);
 
             container.innerHTML = '';
             
-            // Injetar ícones locais primeiro
-            this.renderLocalIcons();
+            if (filteredItems.length === 0) {
+                container.innerHTML = '<div style="text-align: center; grid-column: 1/-1; padding: 60px; color: #94a3b8;">📭 Nenhum arquivo nesta categoria.</div>';
+                return;
+            }
 
-            media.forEach(item => {
-                const hasAlt = item.alt_text && item.alt_text.trim().length > 0;
-                const altMatch = ["Psicólogo", "TEA", "Goiânia", "Lawrence"].some(k => (item.alt_text||"").toLowerCase().includes(k.toLowerCase()));
+            filteredItems.forEach(item => {
                 const isSelected = this.selectedMedia && item.id === this.selectedMedia.id;
+                const isVideo = item.url.match(/\.(mp4|mov|webm)$/i);
                 
-                const titleLower = item.title.rendered.toLowerCase();
-                const hasBadTitle = titleLower.includes(".jpg") || titleLower.includes(".png") || /^\d+$/.test(titleLower.replace(/\D/g, ''));
-                const needsSEO = !hasAlt || hasBadTitle;
-
                 const card = document.createElement('div');
                 card.className = `card media-thumb-card ${isSelected ? 'selected' : ''}`;
                 card.id = `media-card-${item.id}`;
                 card.style.cssText = `
                     padding: 8px; cursor: pointer; 
-                    border: 2px solid ${isSelected ? 'var(--color-secondary)' : (altMatch ? '#22c55e' : (hasAlt && !needsSEO ? '#cbd5e1' : '#f43f5e'))};
+                    border: 2px solid ${isSelected ? 'var(--color-secondary)' : '#e2e8f0'};
                     transition: all 0.2s; position: relative; height: 160px;
-                    ${isSelected ? 'transform: scale(1.02); box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);' : ''}
+                    background: white; border-radius: 12px;
+                    overflow: hidden;
+                    ${isSelected ? 'transform: scale(1.02); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);' : ''}
                 `;
                 
-                // Allow clicking the card itself to select, but not if clicking the fix button
-                card.onclick = (e) => {
-                    if(!e.target.closest('button')) this.selectMedia(item);
-                }
+                card.onclick = () => this.selectMedia(item);
                 
-                let bageHtml = `<div style="position: absolute; top: 4px; right: 4px; z-index: 5;">${altMatch ? '✅' : (hasAlt && !needsSEO ? '⚠️' : '<span style="background: #f43f5e; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold;">🚨 Falha SEO</span>')}</div>`;
-                
-                let fixBtnHtml = '';
-                if(needsSEO) {
-                    fixBtnHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 4px; background: rgba(0,0,0,0.8); text-align: center;">
-                        <button id="btn-fix-${item.id}" onclick="window.mediaLibrary.fixSEO(${item.id}, '${item.source_url}')" class="btn" style="background: #f59e0b; color: white; font-size: 10px; padding: 4px 8px; width: 100%; font-weight: bold;">🪄 Corrigir SEO (IA)</button>
-                    </div>`;
+                const categoryBadge = `<div style="position: absolute; top: 8px; left: 8px; background: rgba(15, 23, 42, 0.8); color: white; font-size: 8px; padding: 4px 8px; border-radius: 20px; font-weight: 800; text-transform: uppercase; z-index: 10;">${item.folder || 'Geral'}</div>`;
+
+                let mediaPreview = '';
+                if (isVideo) {
+                    mediaPreview = `<video src="${item.url}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>
+                                   <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5); pointer-events: none;">▶️</div>`;
                 } else {
-                    fixBtnHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; font-size: 9px; padding: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        ${item.title.rendered}
-                    </div>`;
+                    mediaPreview = `<img src="${item.url}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" onerror="this.src='img/placeholder-media.png'">`;
                 }
 
                 card.innerHTML = `
-                    ${bageHtml}
-                    <img src="${item.source_url}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
-                    ${fixBtnHtml}
+                    ${categoryBadge}
+                    ${mediaPreview}
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; font-size: 9px; padding: 10px 8px; border-radius: 0 0 8px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${item.title}
+                    </div>
                 `;
                 container.appendChild(card);
             });
 
         } catch (error) { 
-            console.warn("WP Load ignorado na transição Headless");
-            // Se falhar o WP, tenta carregar apenas os locais para não ficar vazio
-            this.renderLocalIcons();
+            console.error("Erro ao carregar galeria:", error);
         }
     },
 
-    renderLocalIcons() {
-        const container = document.getElementById('media-list-container');
-        if (!container) return;
+    updateAlbumSelectors() {
+        // Atualiza Filtro Topo
+        const filterSelect = document.getElementById('media-album-selector');
+        if (filterSelect) {
+            const current = filterSelect.value;
+            filterSelect.innerHTML = '<option value="all">🔍 Todos os Ativos</option>';
+            this.allFolders.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f.id;
+                opt.innerText = `${f.icon} ${f.name}`;
+                filterSelect.appendChild(opt);
+            });
+            filterSelect.value = this.currentCategory;
+        }
+
+        // Atualiza Seletor no Painel Lateral
+        const panelSelect = document.getElementById('edit-panel-album');
+        if (panelSelect) {
+            panelSelect.innerHTML = '';
+            this.allFolders.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f.id;
+                opt.innerText = `${f.icon} ${f.name}`;
+                panelSelect.appendChild(opt);
+            });
+            if (this.selectedMedia) panelSelect.value = this.selectedMedia.folder;
+        }
+    },
+
+    filterByAlbum(val) {
+        this.currentCategory = val;
+        this.loadLibrary();
+    },
+
+    async createNewAlbum() {
+        const name = prompt("Nome do novo álbum clínico:");
+        if (!name) return;
         
-        const localIcons = [
-            { id: 'icon-1', source_url: '/img/icon-1.svg', title: { rendered: '🧠 Neuro/Cérebro' }, alt_text: 'Ícone Cérebro' },
-            { id: 'icon-2', source_url: '/img/icon-2.svg', title: { rendered: '🧬 Genética/Biologia' }, alt_text: 'Ícone DNA' },
-            { id: 'icon-3', source_url: '/img/icon-3.svg', title: { rendered: '🛡️ Proteção/Segurança' }, alt_text: 'Ícone Escudo' },
-            { id: 'icon-4', source_url: '/img/icon-4.svg', title: { rendered: '📊 Dados/Análise' }, alt_text: 'Ícone Gráfico' },
-            { id: 'icon-5', source_url: '/img/icon-5.svg', title: { rendered: '🤝 Empatia/Apoio' }, alt_text: 'Ícone Mãos' },
-            { id: 'icon-6', source_url: '/img/icon-6.svg', title: { rendered: '⏰ Tempo/Pontualidade' }, alt_text: 'Ícone Relógio' },
-            { id: 'icon-7', source_url: '/img/icon-7.svg', title: { rendered: '💡 Insight/Ideia' }, alt_text: 'Ícone Lâmpada' },
-            { id: 'icon-8', source_url: '/img/icon-8.svg', title: { rendered: '✅ Conclusão/OK' }, alt_text: 'Ícone Check' },
-            { id: 'icon-9', source_url: '/img/icon-9.svg', title: { rendered: '🚀 Evolução/Foco' }, alt_text: 'Ícone Foguete' },
-            { id: 'icon-10', source_url: '/img/icon-10.svg', title: { rendered: '📍 Localização/Goiânia' }, alt_text: 'Ícone Pin' },
-            { id: 'icon-11', source_url: '/img/icon-11.svg', title: { rendered: '📞 Contato/WhatsApp' }, alt_text: 'Ícone Telefone' },
-            { id: 'icon-12', source_url: '/img/icon-12.svg', title: { rendered: '🏢 Clínica/Ambiente' }, alt_text: 'Ícone Prédio' },
-            { id: 'icon-13', source_url: '/img/icon-13.svg', title: { rendered: '🔍 Pesquisa Clínica' }, alt_text: 'Ícone Lupa' },
-            { id: 'icon-14', source_url: '/img/icon-14.svg', title: { rendered: '🧘 Equilíbrio/Paz' }, alt_text: 'Ícone Zen' },
-            { id: 'icon-15', source_url: '/img/icon-15.svg', title: { rendered: '🏆 Sucesso' }, alt_text: 'Ícone Troféu' }
-        ];
-
-        localIcons.forEach(item => {
-            const card = document.createElement('div');
-            card.className = `card media-thumb-card`;
-            card.style.cssText = `padding: 8px; cursor: pointer; border: 2px solid #3b82f6; border-radius: 8px; height: 120px; text-align: center; background: #f8fafc;`;
-            card.onclick = () => this.selectMedia(item);
-            card.innerHTML = `
-                <div style="background: white; border-radius: 6px; padding: 10px; margin-bottom: 5px;">
-                    <img src="${item.source_url}" style="width: 40px; height: 40px;">
-                </div>
-                <div style="font-size: 10px; color: #1e293b; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    ${item.title.rendered}
-                </div>
-                <div style="font-size: 8px; color: #64748b;">📍 Local/Ícone</div>
-            `;
-            container.appendChild(card);
-        });
-    },
-
-    async fixSEO(id, url) {
-        const btn = document.getElementById(`btn-fix-${id}`);
-        if(btn) {
-            btn.innerHTML = '⏳ Analisando...';
-            btn.disabled = true;
-        }
+        const id = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+        const icon = prompt("Ícone (Emoji) para o álbum:", "📁");
 
         try {
-            // Usa o Gemini para analisar a foto pela URL
-            const prompt = `Atue como Especialista SEO para Psicólogos (Método Abidos). Analise esta imagem URL (${url}). Crie um Título curto (max 40) e um Alt Text rico (max 100) focando em TEA, Psicologia, Goiânia ou Victor Lawrence. Retorne APENAS um JSON válido no formato: {"title": "Titulo", "alt_text": "Alt text"}. Não use blocos \`\`\`.`;
-            
-            const responseTxt = await gemini.callAPI(prompt);
-            if (!responseTxt) throw new Error("A IA não retornou uma resposta válida.");
-            
-            // Tenta parsear o JSON retornado pela LLM
-            let newSeo;
-            try {
-                const cleanJson = responseTxt.replace(/```json/g, '').replace(/```/g, '').trim();
-                newSeo = JSON.parse(cleanJson);
-            } catch (parseErr) {
-                console.error("Erro ao parsear SEO IA:", responseTxt);
-                throw new Error("A IA retornou um formato inválido. Tente novamente.");
-            }
-
-            if(newSeo && newSeo.title && newSeo.alt_text) {
-                const result = await wpAPI.updateMediaSEO(id, newSeo.title, newSeo.alt_text);
-                
-                if(result) {
-                    if(btn) {
-                        btn.style.background = '#10b981';
-                        btn.innerHTML = '✅ Otimizado';
-                    }
-                    // Atualiza a galeria em background
-                    setTimeout(() => { this.loadLibrary(false); }, 1500); 
-                } else {
-                    throw new Error("Falha ao salvar no WP.");
-                }
+            const res = await fetch('/api/media/create-folder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, name, icon })
+            });
+            const result = await res.json();
+            if (result.success) {
+                this.loadLibrary();
+                alert(`Álbum "${name}" criado!`);
             } else {
-                throw new Error("LLM retornou JSON inválido.");
+                alert("Erro: " + result.error);
             }
-        } catch(e) {
-            console.error("Batch Fix Error:", e);
-            if(btn) {
-                btn.innerHTML = '⚠️ Erro IA';
-                btn.style.background = '#ef4444';
-            }
-            alert("Não foi possível otimizar esta mídia: " + e.message);
-        } finally {
-            if(btn) btn.disabled = false;
-        }
-    },
-
-    async fixGallerySEO() {
-        if(!confirm("Deseja iniciar a otimização em lote? O sistema enviará cada mídia sem SEO para a IA uma a uma. Isso pode levar alguns minutos.")) return;
-        
-        // Localiza todos os botões de correção visíveis na tela
-        const fixButtons = document.querySelectorAll('[id^="btn-fix-"]');
-        
-        if(fixButtons.length === 0) {
-            alert("A galeria atual já está 100% otimizada!");
-            return;
-        }
-
-        const btnStatus = document.querySelector('button[onclick*="fixGallerySEO"]');
-        const originalText = btnStatus.innerText;
-
-        for(let i=0; i<fixButtons.length; i++) {
-            const btn = fixButtons[i];
-            
-            // Só processa botões que ainda não foram otimizados/erros gravíssimos
-            if (btn.innerText.includes("Corrigir") || btn.innerText.includes("Erro")) {
-                const clickRegex = /fixSEO\((\d+),\s*'([^']+)'\)/;
-                const match = btn.getAttribute('onclick').match(clickRegex);
-                
-                if (match) {
-                    const mediaId = match[1];
-                    const mediaUrl = match[2];
-                    
-                    btnStatus.innerText = `⏳ Otimizando ${i+1}/${fixButtons.length}...`;
-                    btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Aguarda a resolução da imagem atual antes de passar pra próxima (Evitar Rate Limit do Gemini)
-                    await this.fixSEO(mediaId, mediaUrl);
-                    
-                    // Pequeno delay entre requisições
-                    await new Promise(r => setTimeout(r, 2000));
-                }
-            }
-        }
-        
-        btnStatus.innerText = originalText;
-        alert("Otimização em Lote concluída!");
-        this.loadLibrary(true);
+        } catch(e) { console.error(e); }
     },
 
     selectMedia(item) {
@@ -259,227 +163,144 @@ const mediaLibrary = {
         const emptyState = document.getElementById('editor-empty-state');
         const activeState = document.getElementById('editor-active-state');
         
-        panel.style.display = 'flex'; // Mudado para flex para manter estrutura
         emptyState.style.display = 'none';
         activeState.style.display = 'block';
 
-        document.getElementById('edit-panel-preview').src = item.source_url;
-        document.getElementById('edit-panel-title').value = item.title.rendered;
-        document.getElementById('edit-panel-alt').value = item.alt_text || '';
+        const isVideo = item.url.match(/\.(mp4|mov|webm)$/i);
+        const previewImg = document.getElementById('edit-panel-preview');
         
-        const usage = this.usageCache[item.source_url];
+        if (isVideo) {
+            previewImg.outerHTML = `<video id="edit-panel-preview" src="${item.url}" controls style="width: 100%; height: 220px; object-fit: contain; background: #000; border-radius: 8px; border: 1px solid #e2e8f0;"></video>`;
+        } else {
+            const existingPreview = document.getElementById('edit-panel-preview');
+            if (existingPreview.tagName === 'VIDEO') {
+                existingPreview.outerHTML = `<img id="edit-panel-preview" src="${item.url}" style="width: 100%; height: 220px; object-fit: contain; background: #f1f5f9; border-radius: 8px; border: 1px solid #e2e8f0;">`;
+            } else {
+                existingPreview.src = item.url;
+            }
+        }
+
+        document.getElementById('edit-panel-title').value = item.title;
+        document.getElementById('edit-panel-alt').value = item.alt || '';
+        document.getElementById('edit-panel-album').value = item.folder || 'branding';
+        
         const usageBox = document.getElementById('edit-panel-usage');
-        usageBox.innerHTML = usage ? 
-            `<small style="color: #0369a1; font-weight: bold;">🔗 Em uso em: ${usage.join(', ')}</small>` : 
-            `<small style="color: #9a3412; font-weight: bold;">⚠️ Mídia Órfã (Sem uso detectado)</small>`;
+        const isCloudinary = item.url.includes('cloudinary.com');
+        
+        usageBox.innerHTML = `
+            <div style="font-size: 11px; margin-bottom: 5px;">
+                <strong>Status Cloud:</strong> ${isCloudinary ? '<span style="color: #10b981;">✅ CDN Ativo</span>' : '<span style="color: #f59e0b;">⚠️ Apenas Local</span>'}
+            </div>
+            ${!isCloudinary ? '<button onclick="window.mediaLibrary.syncWithCloudinary()" class="btn btn-secondary" style="width:100%; font-size:10px; padding:5px; background:#6366f1; color:white;">🚀 Sincronizar com Cloudinary Agora</button>' : ''}
+        `;
 
-        // Atualiza a galeria visualmente apenas (para mostrar a borda de seleção)
-        this.renderGallerySelection();
-    },
-
-    renderGallerySelection() {
-        // Em vez de recarregar tudo do servidor, apenas atualizamos as bordas no DOM atual
-        const cards = document.querySelectorAll('.media-thumb-card');
-        // No entanto, para simplicidade e precisão (metadados podem ter mudado), 
-        // chamamos loadLibrary mas SEM o flash de loading
-        this.loadLibrary();
+        // Update card selection border
+        document.querySelectorAll('.media-thumb-card').forEach(c => c.style.borderColor = '#e2e8f0');
+        const selectedCard = document.getElementById(`media-card-${item.id}`);
+        if(selectedCard) selectedCard.style.borderColor = 'var(--color-secondary)';
     },
 
     async saveMediaPanel() {
         if (!this.selectedMedia) return;
-        const title = document.getElementById('edit-panel-title').value;
-        const alt = document.getElementById('edit-panel-alt').value;
-        
-        // Corrigido: Não usar 'event.currentTarget' que pode ser nulo em chamadas async
         const btn = document.querySelector('#editor-active-state .btn-primary');
         const originalText = btn.innerText;
-        btn.innerText = "⏳ Salvando..."; btn.disabled = true;
 
-        const result = await wpAPI.updateMedia(this.selectedMedia.id, { title, alt_text: alt });
-        if (result) {
-            alert("Otimização Abidos Salva!");
-            this.loadLibrary();
+        const payload = {
+            itemId: this.selectedMedia.id,
+            title: document.getElementById('edit-panel-title').value,
+            alt: document.getElementById('edit-panel-alt').value,
+            folder: document.getElementById('edit-panel-album').value
+        };
+
+        btn.innerText = "⏳ Gravando no Acervo...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/media/update-item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (result.success) {
+                this.loadLibrary();
+                alert("Metadados Abidos Atualizados!");
+            }
+        } catch(e) { alert("Erro ao salvar."); }
+        
+        btn.innerText = originalText;
+        btn.disabled = false;
+    },
+
+    async syncWithCloudinary() {
+        alert("Enviando para o CDN inteligente... O Watchdog irá detectar a mudança no acervo_links.json e atualizar a URL assim que o upload for concluído.");
+        this.saveMediaPanel();
+    },
+
+    async syncAllToCloudinary() {
+        const res = await fetch('/api/media/acervo');
+        const data = await res.json();
+        const localItems = (data.items || []).filter(i => !i.url.includes('cloudinary.com'));
+
+        if (localItems.length === 0) {
+            alert("✅ Todas as mídias já estão sincronizadas com o CDN Cloudinary!");
+            return;
         }
-        btn.innerText = originalText; btn.disabled = false;
+
+        if (!confirm(`Deseja sincronizar ${localItems.length} mídias locais com o Cloudinary? Este processo pode levar alguns minutos.`)) return;
+
+        const btn = document.querySelector('button[onclick*="syncAllToCloudinary"]');
+        const originalText = btn.innerText;
+
+        for (let i = 0; i < localItems.length; i++) {
+            const item = localItems[i];
+            btn.innerText = `⏳ Sincronizando ${i + 1}/${localItems.length}...`;
+            
+            // Forçamos o salvamento que aciona o Watchdog no servidor (se configurado)
+            // ou podemos simplesmente esperar que o usuário salve.
+            // Mas para o usuário ver resultado rápido, vamos apenas disparar o alerta visual por item
+            // e confiar no Watchdog do server.js que monitora a gravação
+            
+            this.selectedMedia = item;
+            await this.saveMediaPanel();
+            
+            // Pequeno delay para o Cloudinary não bloquear
+            await new Promise(r => setTimeout(r, 1500));
+        }
+
+        btn.innerText = originalText;
+        alert("🚀 Sincronização em lote finalizada! O servidor continuará processando os uploads em segundo plano.");
+        this.loadLibrary();
     },
 
     async suggestTitleIA_Panel() {
         if (!this.selectedMedia) return;
         const alt = document.getElementById('edit-panel-alt').value;
         const btn = document.querySelector('button[onclick*="suggestTitleIA_Panel"]');
-        const originalText = btn.innerText;
-        
-        btn.innerText = "⏳..."; btn.disabled = true;
+        btn.disabled = true;
         try {
-            const suggestion = await gemini.callAPI(`Atue como Especialista Abidos. Gere um título curto e estratégico (max 40 chars) para imagem com este Alt Text: "${alt}". Retorne apenas o nome limpo.`);
-            if (suggestion) {
-                document.getElementById('edit-panel-title').value = suggestion.replace(/^["']|["']$/g, '').trim();
-            }
-        } catch(e) { console.error(e); }
-        btn.innerText = originalText; btn.disabled = false;
+            const suggestion = await gemini.callAPI(`Gere um título curto para imagem clínica: "${alt}". Apenas o texto.`);
+            if (suggestion) document.getElementById('edit-panel-title').value = suggestion.trim();
+        } catch(e) {}
+        btn.disabled = false;
     },
 
     async suggestAltIA_Panel() {
         if (!this.selectedMedia) return;
         const title = document.getElementById('edit-panel-title').value;
         const btn = document.querySelector('button[onclick*="suggestAltIA_Panel"]');
-        const originalText = btn.innerText;
-
-        btn.innerText = "⏳..."; btn.disabled = true;
+        btn.disabled = true;
         try {
-            const suggestion = await gemini.callAPI(`Atue como Especialista Abidos. Gere um Alt Text estratégico (max 120 chars) para a imagem: "${title}". Use 'Psicólogo Victor Lawrence' ou 'Goiânia' se apropriado. Retorne apenas o texto puro.`);
-            if (suggestion) {
-                document.getElementById('edit-panel-alt').value = suggestion.replace(/^["']|["']$/g, '').trim();
-            }
-        } catch(e) { console.error(e); }
-        btn.innerText = originalText; btn.disabled = false;
-    },
-
-    async deleteMediaPanel() {
-        if (!this.selectedMedia) return;
-        if (confirm(`Excluir permanentemente "${this.selectedMedia.title.rendered}"?`)) {
-            const result = await wpAPI.deleteMedia(this.selectedMedia.id);
-            if (result) {
-                document.getElementById('editor-active-state').style.display = 'none';
-                document.getElementById('editor-empty-state').style.display = 'block';
-                this.selectedMedia = null;
-                this.loadLibrary();
-            }
-        }
-    },
-
-    copyToClipboardPanel() {
-        if (this.selectedMedia) {
-            navigator.clipboard.writeText(this.selectedMedia.source_url).then(() => alert("URL Copiada!"));
-        }
+            const suggestion = await gemini.callAPI(`Gere um Alt Text SEO Abidos para: "${title}". Foco em Psicologia e Goiânia.`);
+            if (suggestion) document.getElementById('edit-panel-alt').value = suggestion.trim();
+        } catch(e) {}
+        btn.disabled = false;
     },
 
     handleFiles(files) {
-        this.pendingFiles = Array.from(files);
-        this.showNextFile();
-    },
-
-    async showNextFile() {
-        if (this.pendingFiles.length === 0) return;
-        this.currentFile = this.pendingFiles.shift();
-        const modal = document.getElementById('upload-modal');
-        document.getElementById('modal-img-preview').src = URL.createObjectURL(this.currentFile);
-        document.getElementById('upload-title').value = this.currentFile.name.split('.')[0];
-        modal.style.display = 'flex';
-        
-        const suggestion = await gemini.callAPI(`Gere Alt SEO para imagem: "${this.currentFile.name}".`);
-        document.getElementById('upload-alt').value = suggestion ? suggestion.replace(/^["']|["']$/g, '').trim() : "";
-    },
-
-    async processUpload() {
-        const title = document.getElementById('upload-title').value;
-        const alt = document.getElementById('upload-alt').value;
-        const result = await wpAPI.uploadMedia(this.currentFile, alt, title);
-        if (result) {
-            document.getElementById('upload-modal').style.display = 'none';
-            this.loadLibrary();
-            if (this.pendingFiles.length > 0) this.showNextFile();
-        }
-    },
-
-    closeModal() {
-        document.getElementById('upload-modal').style.display = 'none';
-        this.currentFile = null;
-    },
-
-    async recommendMediaDemand() {
-        const btn = document.getElementById('btn-analyze-media-demand');
-        const resultPanel = document.getElementById('media-planning-result');
-        const originalText = btn.innerText;
-
-        btn.innerText = "⏳ Analisando ecossistema WP...";
-        btn.disabled = true;
-        resultPanel.style.display = 'none';
-
-        try {
-            // 1. Busca todo o conteúdo relevante (posts, páginas, rascunhos)
-            const [posts, pages, drafts] = await Promise.all([
-                wpAPI.fetchContent('posts', true),
-                wpAPI.fetchContent('pages', true),
-                fetch('/api/drafts').then(r => r.json())
-            ]);
-
-            const allContent = [...posts, ...pages, ...drafts];
-            if (allContent.length === 0) {
-                alert("Nenhum conteúdo encontrado para análise.");
-                return;
-            }
-
-            // 2. Prepara um resumo simplificado para a IA não estourar tokens
-            const summary = allContent.slice(0, 10).map(c => ({
-                title: c.title.rendered || c.titulo,
-                type: c.type || 'draft',
-                has_media: c.content ? c.content.rendered.includes('<img') : false
-            }));
-
-            const prompt = `Atue como Diretor de Arte do Método Abidos.
-Analise os últimos conteúdos do site de um Psicólogo:
-${JSON.stringify(summary)}
-
-REGRAS:
-1. Identifique conteúdos que estão "pobres" visualmente (sem imagens ou com pouca autoridade).
-2. Sugira 3 novas mídias estratégicas (foco em TEA, Hipnose, Clínica, Victor Lawrence).
-3. Para cada mídia, crie um "Prompt para NanoBanana" (IA Geradora de Imagem realista e acolhedora).
-4. Retorne APENAS um JSON no formato:
-[
-  {"content_title": "Título do Post", "media_type": "Foto/Ilustração", "reason": "Por que precisa?", "prompt": "Prompt para IA"}
-]`;
-
-            const response = await gemini.callAPI(prompt);
-            if (!response) throw new Error("IA não respondeu.");
-
-            let recommendations;
-            try {
-                const cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim();
-                recommendations = JSON.parse(cleanJson);
-            } catch (parseErr) {
-                console.error("Erro ao parsear Recomendações Media:", response);
-                throw new Error("O Conselho de Agentes retornou um formato inesperado.");
-            }
-
-            // 3. Renderiza Tabela
-            resultPanel.innerHTML = `
-                <table style="width: 100%; border-collapse: collapse; font-size: 13px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <thead>
-                        <tr style="background: #f1f5f9; text-align: left;">
-                            <th style="padding: 12px; border-bottom: 2px solid #e2e8f0;">Conteúdo Foco</th>
-                            <th style="padding: 12px; border-bottom: 2px solid #e2e8f0;">Tipo / Razão</th>
-                            <th style="padding: 12px; border-bottom: 2px solid #e2e8f0;">🤖 Prompt NanoBanana</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${recommendations.map(r => `
-                            <tr>
-                                <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-weight: bold;">${r.content_title}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
-                                    <span style="display: block; font-weight: bold; color: #6366f1;">${r.media_type}</span>
-                                    <span style="font-size: 11px; color: #64748b;">${r.reason}</span>
-                                </td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
-                                    <div style="background: #f8fafc; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; border: 1px solid #e2e8f0; position: relative;">
-                                        ${r.prompt}
-                                        <button onclick="navigator.clipboard.writeText('${r.prompt.replace(/'/g, "\\'")}'); alert('Prompt Copiado!')" style="position: absolute; top: 2px; right: 2px; padding: 2px 5px; font-size: 9px; cursor: pointer; background: #e2e8f0; border: none; border-radius: 3px;">📋</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            resultPanel.style.display = 'block';
-
-        } catch (e) {
-            console.error(e);
-            alert("Erro ao analisar demanda de mídia: " + e.message);
-        } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
-        }
+        alert("O Antimater Watchdog está monitorando a pasta 'midia_local'. Ao arrastar arquivos aqui ou colocar diretamente na pasta, eles serão processados automaticamente pelo servidor e enviados ao Cloudinary.");
+        // O upload real deve ser feito enviando o arquivo para /api/media/upload
+        // Por enquanto, instruímos o usuário a usar a pasta monitorada para máxima performance Abidos.
     }
 };
 

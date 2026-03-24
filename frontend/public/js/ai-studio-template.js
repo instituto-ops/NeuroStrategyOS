@@ -28,11 +28,17 @@ window.aiStudioTemplate = {
         this.values.instagram = "https://www.instagram.com/hipnolawrence";
         this.values.link_agendamento = "www.hipnolawrence.com/agendamento";
 
+        // Preenche o passo 1 se ja existirem
+        this.updateStepUI();
+
         // Setup Event Listeners
-        document.getElementById('ethical-approval-check')?.addEventListener('change', (e) => {
-            const btn = document.getElementById('btn-publish-final');
-            if (btn) btn.disabled = !e.target.checked;
-        });
+        const ethicalCheck = document.getElementById('ethical-approval-check');
+        if (ethicalCheck) {
+            ethicalCheck.addEventListener('change', (e) => {
+                const btn = document.getElementById('btn-publish-final');
+                if (btn) btn.disabled = !e.target.checked;
+            });
+        }
     },
 
     loadSilos: async function() {
@@ -45,8 +51,8 @@ window.aiStudioTemplate = {
             select.innerHTML = '<option value="">Sem Silo (Geral)</option>';
             silos.forEach(s => {
                 const opt = document.createElement('option');
-                opt.value = s.key;
-                opt.innerText = s.title;
+                opt.value = s.id; // Corrigido p/ API
+                opt.innerText = s.hub; // Corrigido p/ API
                 select.appendChild(opt);
             });
         } catch(e) { console.error("Erro Silos:", e); }
@@ -72,11 +78,9 @@ window.aiStudioTemplate = {
     // ── NAVEGAÇÃO ENTRE ETAPAS (STEPPER) ───────────────────────────────────
     nextStep: function() {
         if (this.currentStep === 1) {
-            // Validação Etapa 1
-            const theme = document.getElementById('ai-studio-theme')?.value;
-            if (!theme) return alert("Por favor, defina um Tema Central para o Cérebro da IA.");
-            this.values.tema = theme;
-            this.values.contexto_extra = document.getElementById('ai-studio-context')?.value;
+            // Salva valores da Etapa 1
+            this.values.tema = document.getElementById('ai-studio-theme')?.value || "";
+            this.values.contexto_extra = document.getElementById('ai-studio-context')?.value || "";
             this.values.whatsapp = document.getElementById('studio-contact-wa')?.value;
             this.values.email = document.getElementById('studio-contact-email')?.value;
             this.values.instagram = document.getElementById('studio-contact-insta')?.value;
@@ -101,10 +105,10 @@ window.aiStudioTemplate = {
 
     updateStepUI: function() {
         // Esconde todos
-        document.querySelectorAll('.studio-step-content').forEach(s => s.style.display = 'none');
+        document.querySelectorAll('.studio-step-content').forEach(s => s.classList.remove('active'));
         // Mostra atual
         const nextStepDiv = document.getElementById(`studio-step-${this.currentStep}`);
-        if(nextStepDiv) nextStepDiv.style.display = (this.currentStep === 2) ? 'flex' : 'block';
+        if(nextStepDiv) nextStepDiv.classList.add('active');
 
         // Atualiza Título
         const titles = {
@@ -135,13 +139,35 @@ window.aiStudioTemplate = {
 
         if (type === 'mobile') {
             frame.style.width = '375px';
-            frame.style.minHeight = '667px';
+            frame.style.height = '667px';
         } else if (type === 'tablet') {
             frame.style.width = '768px';
-            frame.style.minHeight = '1024px';
+            frame.style.height = '900px';
         } else {
-            frame.style.width = '1000px';
-            frame.style.minHeight = '800px';
+            frame.style.width = '100%';
+            frame.style.height = '1000px';
+        }
+    },
+
+    fullPreview: async function() {
+        if (!this.selectedId) return alert("Selecione uma estrutura antes.");
+        try {
+            const res = await fetch('/api/templates/preview', { 
+                method:'POST', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({templateId:this.selectedId, values:this.values}) 
+            });
+            const html = await res.text();
+            
+            // Salva no localStorage para a nova aba ler
+            localStorage.setItem('abidos_preview_html', html);
+            localStorage.setItem('abidos_preview_title', this.values.tema || "Rascunho Abidos");
+            
+            // Abre nova aba dedicada ao preview
+            window.open('studio-preview.html', '_blank');
+        } catch(e) { 
+            console.error(e);
+            alert("Erro ao abrir preview amplo."); 
         }
     },
 
@@ -289,7 +315,8 @@ window.aiStudioTemplate = {
             });
             const data = await res.json();
             if(data.error) throw new Error(data.error);
-            
+            if(!data.text) throw new Error("A IA não retornou conteúdo. Tente novamente.");
+
             // Extração Robusta de JSON (Anti-Markdown)
             const jsonMatch = data.text.match(/\{[\s\S]*\}/);
             if (!jsonMatch) throw new Error("A IA não retornou um formato JSON válido. Tente Refinar novamente.");
@@ -305,6 +332,43 @@ window.aiStudioTemplate = {
             if(this.currentStep === 2) this.refreshPreviewFrame();
         } catch(e) { console.error(e); alert("Erro na geração: " + e.message); }
         finally { this.setProductionProgress(false, "", 0); }
+        
+        // Sincroniza mídias inteligentes após a geração do texto
+        await this.autoAssignIntelligentImages();
+    },
+
+    autoAssignIntelligentImages: async function() {
+        console.log("📸 [STUDIO] Iniciando Seleção Inteligente de Mídias Reais...");
+        const imageVars = Object.keys(this.values).filter(k => 
+            (k.toLowerCase().includes('img') || k.toLowerCase().includes('foto')) && 
+            !k.toLowerCase().includes('alt') &&
+            (!this.values[k] || this.values[k].startsWith('http') || this.values[k].includes('placeholder'))
+        );
+
+        for (const key of imageVars) {
+            let category = 'any';
+            const k = key.toLowerCase();
+            if (k.includes('hero') || k.includes('bg') || k.includes('ambiente')) category = 'ambiente';
+            if (k.includes('autor') || k.includes('perfil') || k.includes('psicologo')) category = 'psicologo';
+            if (k.includes('logo')) category = 'branding';
+            if (k.includes('tea') || k.includes('infantil')) category = 'tea-infantil';
+
+            try {
+                const res = await fetch(`/api/media/pick-intelligent?category=${category}`);
+                const pick = await res.json();
+                if (pick && pick.url) {
+                    console.log(`✨ [STUDIO] IA escolheu mística estratégica para ${key}: ${pick.title}`);
+                    this.updateVal(key, pick.url);
+                    
+                    // Tenta preencher o ALT correspondente
+                    const altKey = key.replace('_url', '_alt').replace('foto', 'foto_alt').replace('bg', 'alt');
+                    const targetAlt = this.modules.flatMap(m => m.variables).find(v => v.toLowerCase().includes(altKey.toLowerCase()));
+                    if (targetAlt) this.updateVal(targetAlt, pick.alt || "");
+                }
+            } catch(e) { console.warn(`Falha ao buscar mídia inteligente para ${key}`); }
+        }
+        this.renderVariables();
+        this.refreshPreviewFrame();
     },
 
     generateAllWithIA: async function() {
@@ -389,6 +453,8 @@ window.aiStudioTemplate = {
                 body: JSON.stringify({ prompt, modelType })
             });
             const data = await res.json();
+            if(!data.text) throw new Error("A IA retornou um resultado vazio.");
+            
             const jsonMatch = data.text.match(/\{[\s\S]*\}/);
             if (!jsonMatch) throw new Error("Falha ao processar correções.");
             const result = JSON.parse(jsonMatch[0]);
@@ -463,6 +529,11 @@ window.aiStudioTemplate = {
                 this.selectedId = d.templateId;
                 this.currentDraftId = d.id;
                 this.currentDraftName = d.name;
+                
+                // Preenche campos visuais
+                if(document.getElementById('ai-studio-theme')) document.getElementById('ai-studio-theme').value = this.values.tema || "";
+                if(document.getElementById('ai-studio-context')) document.getElementById('ai-studio-context').value = this.values.contexto_extra || "";
+                
                 document.getElementById('ai-studio-template').value = this.selectedId;
                 await this.loadTemplateDetails(this.selectedId);
             }
@@ -504,15 +575,21 @@ window.aiStudioTemplate = {
     },
 
     showPreviewModal: function(h) {
-        let m = document.getElementById('preview-template-modal') || document.createElement('div');
-        m.id = 'preview-template-modal'; m.className = 'studio-full-modal';
-        document.body.appendChild(m);
+        if (!window.previewModal) {
+            window.previewModal = document.getElementById('preview-template-modal') || document.createElement('div');
+            window.previewModal.id = 'preview-template-modal';
+            window.previewModal.className = 'studio-full-modal';
+            document.body.appendChild(window.previewModal);
+        }
+        
+        const m = window.previewModal;
+        m.style.display = 'flex';
         m.innerHTML = `<div class="modal-content-full">
-            <div class="modal-header"><h3>Preview Abidos V4</h3><button class="btn btn-secondary" onclick="document.getElementById('preview-template-modal').style.display='none'">X Fechar</button></div>
+            <div class="modal-header"><h3>Preview Abidos V5</h3><button class="btn btn-secondary" onclick="window.previewModal.style.display='none'">X Fechar</button></div>
             <iframe style="width:100%; height:100%; border:none; background:white;"></iframe>
         </div>`;
-        m.style.display = 'flex';
-        const doc = m.querySelector('iframe').contentWindow.document;
+        const iframe = m.querySelector('iframe');
+        const doc = iframe.contentWindow.document;
         doc.open(); doc.write(h); doc.close();
     },
 
