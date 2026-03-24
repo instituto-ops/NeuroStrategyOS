@@ -1409,7 +1409,16 @@ const DOCTORALIA_REVIEWS = `
 - Y. (Autista): "Acompanhamento fez enorme diferença... hipnose e PNL com empatia e respeito."
 - A. M. (Sábio): "Estrutura da minha vida, alguém sábio que me fez enxergar eu mesma."
 - R. A. (Ansiedade): "Problema de ansiedade resolvido em algumas sessões. Muito profissional."
-- L. F. S.: "Resultados nítidos e precisos. Indico fortemente."
+`;
+
+const VICTOR_IDENTIDADE = `
+[IDENTIDADE OFICIAL — DR. VICTOR LAWRENCE]
+- Nome: Victor Lawrence Bernardes Santana
+- Registro Profissional: Psicólogo | CRP 09/012681
+- Formação: Mestre em Psicologia pela Universidade Federal de Uberlândia (UFU).
+- Especialidades: Hipnoterapia Clínica Ericksoniana, TEA Adulto (Asperger), Neuropsicologia.
+- Localização: Goiânia (GO) e Uberlândia (MG).
+- JAMAIS refira-se ao Dr. Victor como Psicanalista. Ele é Psicólogo Clínico e Hipnoterapeuta.
 `;
 
 const REAL_ASSETS = `
@@ -1457,12 +1466,11 @@ AMBIENTE CONSULTÓRIO:
 // ============================================================================
 const ETICA_ABIDOS = `
 [DIRETRIZES ÉTICAS ABSOLUTAS — PROIBIÇÕES SEM EXCEÇÃO]
-- PROIBIDO oferecer, mencionar ou sugerir SESSÃO GRATUITA ou AVALIAÇÃO GRATUITA sob qualquer forma.
-- PROIBIDO prometer cura, garantia de resultado ou melhora garantida.
-- PROIBIDO fazer diagnósticos pela internet.
-- PROIBIDO linguagem de "marketing agressivo" (ex: "mude sua vida", "transformação instantânea").
-- PROIBIDO incluir números de WhatsApp, e-mail, preços ou endereços diretamente no texto (use apenas os links reais fornecidos).
-- PROIBIDO usar formatação markdown no texto visível (sem **, *, #, etc.).
+- PROIBIDO oferecer, mencionar ou sugerir SESSÃO GRATUITA ou AVALIAÇÃO GRATUITA.
+- PROIBIDO prometer cura ou garantia de resultado.
+- PROIBIDO jargão de marketing agressivo (Copywriting Sóbrio e Acadêmico).
+- PROIBIDO criar variáveis como {{area_dinamica_extra}} — Redundante.
+- O WhatsApp e Contatos devem ser preenchidos EXCLUSIVAMENTE nas variáveis globais, não gere novos campos para isso se já existirem.
 - O CTA de agendamento DEVE levar ao link: https://hipnolawrence.com/agendamento/
 `;
 
@@ -1971,34 +1979,27 @@ async function runConstructor(userInput, feedback = null, waNumber, moodId = "1_
     const personalStyle = getVictorStyle();
     const styleRules = personalStyle.style_rules?.map(r => `- ${r.regra}`).join('\n') || '';
 
-    const prompt = `VOCÊ É O ARQUITETO ABIDOS V4. Crie uma ${contentType === 'pages' ? 'Landing Page de Alta Conversão' : 'Postagem de Autoridade'} para: "${userInput}".
+    const prompt = `VOCÊ É O ARQUITETO ABIDOS V5 (Digital Twin). 
+                    Crie uma ${contentType === 'pages' ? 'Landing Page de Alta Conversão' : 'Postagem de Autoridade'} para: "${userInput}".
                     
-                    HIERARQUIA SEMÂNTICA (REGRAS DE OURO):
-                    1. TÍTULO SEO: Palavra-chave foco nos primeiros 50 caracteres (Limite 60).
-                    2. H1: RIGOROSAMENTE apenas um H1 (Primary KW + Promessa + Goiânia). 
-                       - Higiene: Não inclua H1 se for repetir o título da página. Mas para Landing Pages, gere um H1 impactante na Hero.
-                    3. H2: Use para Identificação da Dor, Benefícios, Autoridade (E-A-T) e FAQ.
-                    4. H3: Detalhamento técnico e quebra de objeções.
+                    ${VICTOR_IDENTIDADE}
                     
-                    DETALHES DO CLIENTE:
-                    - Profissional: Dr. Victor Lawrence (Psicólogo, Mestre UFU).
-                    - Registro: CRP 09/012681.
-                    - WhatsApp: 62991545295
-                    - Localização: Goiânia.
-                    - Estilo Visual: ${clima.nome_amigavel}.
+                    REGRAS DE CONSTRUTOR:
+                    1. Use HTML5 Semântico e Tailwind v4.
+                    2. NÃO gere variáveis redundantes como {{area_dinamica_extra}}.
+                    3. Use os blocos de conteúdo estratégico Abidos (Dor, Método, Autoridade).
+                    4. No bloco de Autoridade, cite: Mestre pela UFU, CRP 09/012681 e Especialista em Hipnose Ericksoniana.
                     
-                    ESTRUTURA OBRIGATÓRIA (FUNIL):
-                    - HERO: H1 Gatilho + Subtítulo Acolhedor + CTA WhatsApp.
-                    - DOR (H2): "Sente que a exaustão emocional está travando sua vida?". Use ícones.
-                    - MÉTODO (H2): Explicação lógica com repetição semântica da KW.
-                    - AUTORIDADE (H2): Foto humanizada, Mestrado UFU, CRP 09/012681.
-                    - FAQ (H2): Perguntas em accordion (H3 para perguntas).
-                    - RODAPÉ: NAP (Nome, Endereço, Telefone) perfeitamente alinhado ao Google Meu Negócio.
+                    MOOD/VIBE: ${clima.nome_amigavel}
+                    WHATSAPP GLOBAL: ${waNumber}
+                    LOCALIZAÇÃO: Goiânia.
                     
-                    REGRAS DE CÓDIGO:
-                    - Use HTML5 Semântico e Tailwind inline.
-                    - Use gradientes suaves e glassmorphism conforme o clima.
-                    - Retorne APENAS o HTML INTERNO da div abidos-wrapper.`;
+                    [ESTRUTURA FUNIL]
+                    - HERO: Título Magnífico + CTA WhatsApp Direto (${waNumber}).
+                    - MÉTODO ERICKSONIANO: Foco em Hipnose Clínica e Ciência.
+                    - FAQ: 3 perguntas fundamentais.
+                    
+                    Retorne APENAS o HTML INTERNO (Snippet) para o abidos-wrapper.`;
 
     const result = await model.generateContent(prompt);
     return result.response.text().replace(/```html|```/g, '').trim();

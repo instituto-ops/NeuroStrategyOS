@@ -1,19 +1,20 @@
-
-Victor Lawrence Bernardes Santana
+Psicólogo Victor Lawrence Bernardes Santana | CRP 09/012681
 instituto@hipnolawrence.com
-WhatsApp (62) 99154-5295 
-www.hipnolawrence.com 
+WhatsApp (62) 99154-5295
+www.hipnolawrence.com
 Atendimento Online
-Atendimento presencial em Uberlândia (MG) e Goiânia (GO), Brasil
-CRP 09/012681
-
+Atendimento em Uberlândia (MG) e Goiânia (GO)
 Perfil Doctoralia: https://www.doctoralia.com.br/victor-lawrence-bernardes-santana/psicologo-terapeuta-complementar/goiania
 Curriculo Lattes: https://lattes.cnpq.br/7486371353673780
 ORCID: https://orcid.org/0000-0002-2184-7310
 Instagram: https://www.instagram.com/hipnolawrence
 
+
+
 Resumo Profissional
-Psicólogo clínico e pesquisador com atuação desde 2016, especializado em Hipnose Ericksoniana e Programação Neurolinguística (PNL). Mestrando em Ciências da Saúde pela UFU. Estruturação metodológica de Ensaios Clínicos e validação psicométrica de ponta, integrando o rigor dos dados à integridade científica internacional. Possui foco de pesquisa no tratamento de Transtorno do Espectro Autista (TEA) em adultos, com publicações e apresentações em congressos nacionais e internacionais. Oferece atendimento clínico e docência em inglês. Comprometido com a formação contínua, possui pós-graduação em Ciência Política e formação pela Milton H. Erickson Foundation. 
+Psicólogo clínico e pesquisador com atuação desde 2016, especializado em Hipnose Ericksoniana e Programação Neurolinguística (PNL). Mestrando em Ciências da Saúde pela UFU. Estruturação metodológica de Ensaios Clínicos e validação psicométrica de ponta, integrando o rigor dos dados à integridade científica internacional. Possui foco de pesquisa no tratamento de Transtorno do Espectro Autista (TEA) em adultos, com publicações e apresentações em congressos nacionais e internacionais. Oferece atendimento clínico e docência em inglês. Comprometido com a formação contínua, possui pós-graduação em Ciência Política e formação pela Milton H. Erickson Foundation.
+
+
 
 Principais Áreas de Atuação
 
@@ -26,55 +27,63 @@ Principais Áreas de Atuação
 * Questões de Relacionamento: Conflitos familiares, de casal, autoestima e terapia familiar.
 
 
+
 Experiência Profissional
 Psicólogo Clínico e Pesquisador Independente (2016 – Atual) Instituto Lawrence de Hipnose Clínica, Goiânia, GO
+
 * Atendimento clínico com hipnose e PNL para depressão, ansiedade e dificuldades relacionais.
 * Pesquisa em comunicação simbólica, psicometria e tratamento de TEA em adultos.
 Assistente de Pesquisa (2016 – Atual) Universidade Federal de Uberlândia (UFU), Uberlândia, MG
 * Colaboração em projetos de psicometria e TEA.
 Estagiário em Psicologia Clínica (2014 – 2015) Universidade Federal de Uberlândia (UFU), Uberlândia, MG
 
+
+
 Projetos de Pesquisa
+
 * Desenvolvimento da Abordagem Ericksoniana (Projeto independente, 2020 – Atual) Esta linha de pesquisa investiga o refinamento da comunicação simbólica e dos fenômenos hipnóticos, inspirada em publicações como "Explorando a Comunicação Simbólica e as Estratégias Terapêuticas de Milton H. Erickson". O objetivo é ampliar os fundamentos teóricos e práticos da abordagem, propondo novos protocolos terapêuticos.
 * Desenvolvimento da Abordagem Ericksoniana no Tratamento de TEA (Projeto independente, 2023 – Atual) Este projeto explora a aplicação da hipnose ericksoniana como ferramenta terapêutica para indivíduos com Transtorno do Espectro Autista (TEA), especialmente adultos. A pesquisa investiga como a comunicação simbólica e a manipulação de fenômenos hipnóticos podem facilitar a construção de rapport e a remodelação de sintomas.
 * Mensurando o Transtorno do Espectro Autista (TEA) (2014 – Atual) Desenvolvimento de uma escala psicométrica para TEA em adultos, baseada na Autism-Spectrum Quotient (Cambridge, 2001).
 
-Publicações 
-*  Santana, V. L. B., & Morais, J. F. (2023). O Transtorno do Espectro Autista (TEA) e o Potencial de Estabelecimento de Rapport (PER). 
+
+
+Publicações
+
+* Santana, V. L. B., \& Morais, J. F. (2023). O Transtorno do Espectro Autista (TEA) e o Potencial de Estabelecimento de Rapport (PER).
 Revista FT, Edição 121. DOI: 10.5281/zenodo.7802303.
-*  Santana, V. L. B. (2023). Explorando a Comunicação Simbólica e as Estratégias Terapêuticas de Milton H. Erickson: Uma Análise Multinível dos Fundamentos da Hipnoterapia Ericksoniana. 
-Revista Fisio&Terapia.
-*  Santana, V. L. B. (2023). The Use of The Hypnotic Phenomenon To Reshape the Symptom: Two Cases. 
+* Santana, V. L. B. (2023). Explorando a Comunicação Simbólica e as Estratégias Terapêuticas de Milton H. Erickson: Uma Análise Multinível dos Fundamentos da Hipnoterapia Ericksoniana.
+Revista Fisio\&Terapia.
+* Santana, V. L. B. (2023). The Use of The Hypnotic Phenomenon To Reshape the Symptom: Two Cases.
 Health and Society.
-*  Morais, J. F., Kerr, T. B., Santana, V. L. B., & Remigio, S. A. E. (2018). Escala para o Rapport Emitido por Acadêmicos (ERE). 
+* Morais, J. F., Kerr, T. B., Santana, V. L. B., \& Remigio, S. A. E. (2018). Escala para o Rapport Emitido por Acadêmicos (ERE).
 Atas do 10º Congresso da AIDAP/AIDEP, Coimbra.
-*  Morais, J. F., Santana, V. L. B., & Kerr, T. B. (2018). Tradução e Validação, para o português do Brasil, da Escala de Quociente do Espectro Autista (AQ10). 
+* Morais, J. F., Santana, V. L. B., \& Kerr, T. B. (2018). Tradução e Validação, para o português do Brasil, da Escala de Quociente do Espectro Autista (AQ10).
 Atas do 10º Congresso da AIDAP/AIDEP, Coimbra.
-*  Morais, J. F., & Santana, V. L. B. (2015). A trace scale of autistic spectrum disorder in young adults [Resumo]. Archives of Clinical Psychiatry, São Paulo.
+* Morais, J. F., \& Santana, V. L. B. (2015). A trace scale of autistic spectrum disorder in young adults \[Resumo]. Archives of Clinical Psychiatry, São Paulo.
+
+
 
 Formação Acadêmica
+Mestrando em Ciências da Saúde, Universidade Federal de Uberlândia (UFU) - Mestrado em andamento.
+
 Especialização em Ciência Política (2021–2023) Instituto Brasileiro de Formação (IBF)
 Graduação em Psicologia (2012–2016) Universidade Federal de Uberlândia (UFU)
+
 * Monografia: O Transtorno do Espectro Autista (TEA) e o Potencial de Estabelecimento de Rapport (PER).
 
 Interesse Acadêmico e Docência
 Busco uma posição docente em uma instituição de ensino superior onde eu possa aliar a prática clínica à pesquisa e ao ensino. Possuo flexibilidade para atuar em modalidades de ensino presencial e a distância (EAD), e tenho total disponibilidade para mudança de cidade.
-Estou aberto a:
-* Ministrar aulas com foco nas áreas de Hipnoterapia, Psicometria, Metodologia de Pesquisa e Bioestatística. Apesar das preferências, estou aberto a lecionar outras disciplinas conforme a necessidade da instituição.
-* Desenvolver e integrar linhas de pesquisa, com especial interesse na aplicação da Abordagem Ericksoniana no tratamento de TEA e no estudo da Psicoterapia Marcial.
-* Colaborar com o corpo docente em projetos acadêmicos e orientar trabalhos de graduação e pós-graduação.
-* Integrar meus trabalhos em andamento, como a validação de escalas psicométricas, às atividades de pesquisa da universidade.
-      
 
 
 Formação Continuada
-* Advanced Techniques of Hypnosis &amp; Therapy: The Process of Hypnotic Induction [Stream]. (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
-* Advanced Techniques of Hypnosis Therapy. Symbolic Hypnotherapy [stream] (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
-* Advanced Techniques of Hypnosis &amp; Therapy: Therapy within a Marital System (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
-* A Teaching Seminar with Milton Erickson Part 1 - Seeding a Theme [stream] (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
-* A Teaching Seminar with Milton Erickson Part 2 - Lessons Through Arm Levitation [stream] (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
-* A Teaching Seminar with Milton Erickson Part 3 - Tailoring Experiential Education [stream] (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
-* A Teaching Seminar with Milton Erickson Part 4 - The Power of Utilization in Psychotherapy [stream] (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
+
+* Advanced Techniques of Hypnosis \& Therapy: The Process of Hypnotic Induction \[Stream]. (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
+* Advanced Techniques of Hypnosis Therapy. Symbolic Hypnotherapy \[stream] (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
+* Advanced Techniques of Hypnosis \& Therapy: Therapy within a Marital System (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
+* A Teaching Seminar with Milton Erickson Part 1 - Seeding a Theme \[stream] (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
+* A Teaching Seminar with Milton Erickson Part 2 - Lessons Through Arm Levitation \[stream] (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
+* A Teaching Seminar with Milton Erickson Part 3 - Tailoring Experiential Education \[stream] (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
+* A Teaching Seminar with Milton Erickson Part 4 - The Power of Utilization in Psychotherapy \[stream] (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
 * IC07 Fundamentals of Hypnosis 01 - The Phenomenology of Induction - Jeffrey Zeig, PhD. Original Program Date : Dec 07, 2007 (PST). The Milton H. Erickson Foundation, Inc.
 * Smoking Cessation (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).
 * Collected Works Audio (The Milton H. Erickson Foundation, Inc. is approved by the American Psychological Association to sponsor continuing education for psychologists. The Milton H. Erickson Foundation, Inc. maintains responsibility for this program and its content).

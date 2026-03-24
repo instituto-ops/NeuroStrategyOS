@@ -2079,3 +2079,71 @@ label:not(.nav-btn)[style*="background: white"] {
     background: #10b981;
     color: white;
 }
+
+/* 🎨 Override Studio: Botões de Mídia de Alto Contraste */
+#ai-studio .btn-secondary {
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px;
+    padding: 8px 16px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+}
+
+#ai-studio .btn-secondary:hover {
+    background: #e2e8f0 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+#ai-studio .btn-primary {
+    background: #6366f1 !important;
+    border: 1px solid #4f46e5 !important;
+    color: white !important;
+    font-weight: 800 !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+#ai-studio .btn-primary:hover {
+    background: #4f46e5 !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* 📥 Campos de Input / Textarea no Studio (Legibilidade) */
+#ai-studio input[type="text"], 
+#ai-studio textarea, 
+#ai-studio select {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0 !important;
+    color: #0f172a !important;
+    font-weight: 500 !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+#ai-studio input[type="text"]:focus, 
+#ai-studio textarea:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+    outline: none !important;
+}
+
+#ai-studio label {
+    color: #475569 !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+#ai-studio label code {
+    background: #f1f5f9 !important;
+    color: #6366f1 !important;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    margin-left: 8px;
+}

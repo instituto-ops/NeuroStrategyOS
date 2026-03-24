@@ -315,21 +315,31 @@ window.aiStudioTemplate = {
             return;
         }
 
-        container.innerHTML = this.modules.map((mod, idx) => `
+        // Filtra as variáveis ANTES de renderizar o módulo
+        container.innerHTML = this.modules.map((mod, idx) => {
+            const validVars = mod.variables.filter(v => 
+                !v.toLowerCase().includes('whatsapp') && 
+                !v.toLowerCase().includes('area_dinamica_extra')
+            );
+            
+            // Se o módulo ficar vazio após filtrar as redundantes, não o renderizamos
+            if (validVars.length === 0) return '';
+
+            return `
             <div class="studio-module-card" style="border-left: 6px solid ${this.getModuleColor(mod.title)}; margin-bottom: 25px;">
                 <div class="module-header" onclick="let b=this.nextElementSibling; b.style.display=b.style.display==='none'?'block':'none'">
                     <div class="module-title">
                         <div class="module-number" style="background:${this.getModuleColor(mod.title)}22; color:${this.getModuleColor(mod.title)}">${idx+1}</div>
-                        <div><h4>${mod.title}</h4><p>${mod.variables.length} variáveis mapeadas</p></div>
+                        <div><h4>${mod.title}</h4><p>${validVars.length} variáveis reais</p></div>
                     </div>
                     <div style="color: #64748b; font-size: 11px; font-weight: bold;">ABRIR/FECHAR ▼</div>
                 </div>
                 <div class="module-body" style="display:block;">
                     <button class="btn btn-secondary" onclick="event.stopPropagation(); window.aiStudioTemplate.generateWithIA('${mod.title}', ${idx})" style="margin-bottom:15px; font-size:11px;">🪄 Refinar com IA</button>
-                    <div class="variable-grid">${mod.variables.map(v => this.renderVariable(v)).join('')}</div>
+                    <div class="variable-grid">${validVars.map(v => this.renderVariable(v)).join('')}</div>
                 </div>
             </div>
-        `).join('');
+        `; }).join('');
     },
 
     getModuleColor: function(t) {
@@ -369,7 +379,7 @@ window.aiStudioTemplate = {
         </div>`;
     },
 
-    openMediaPicker: function(key) {
+    openMediaPicker: async function(key) {
         const modal = document.getElementById('media-picker-modal');
         const grid = document.getElementById('picker-grid-container');
         const label = document.getElementById('picker-target-label');
@@ -379,11 +389,18 @@ window.aiStudioTemplate = {
         modal.style.display = 'flex';
         grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:40px;">⌛ Carregando Galeria Abidos...</div>';
 
-        // Usa o acervo já carregado no mediaLibrary ou busca um novo
+        // Tenta garantir que a biblioteca esteja carregada
+        if (!window.mediaLibrary?.allItems || window.mediaLibrary.allItems.length === 0) {
+            console.log("🔄 [STUDIO] Forçando carregamento da Galeria...");
+            if (window.mediaLibrary?.loadLibrary) {
+                await window.mediaLibrary.loadLibrary();
+            }
+        }
+
         const items = window.mediaLibrary?.allItems || [];
         
         if (items.length === 0) {
-            grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:40px;">📭 Nenhuma mídia encontrada no acervo local.</div>';
+            grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:40px;">📭 Nenhuma mídia encontrada no acervo local.<br><br><small>Dica: Coloque fotos na pasta "midia_local" para que o Watchdog as processe.</small></div>';
             return;
         }
 
@@ -455,12 +472,12 @@ window.aiStudioTemplate = {
         const modelType = document.getElementById('ai-studio-model')?.value || 'gemini-2.5-pro';
         this.setProductionProgress(true, `Refinando módulo via GEMINI 2.5 ${modelType.toUpperCase()}...`, 40);
         try {
-            const prompt = `[DR VICTOR LAWRENCE]: CRP 09/012681.
+            const prompt = `[DR VICTOR LAWRENCE]: CRP 09/012681 (Psicólogo | Mestre UFU).
             [OBJETIVO]: Gerar conteúdo para o bloco "${title}" da página.
             [TEMA]: "${theme}"
-            [DRAFT]: "${extra}"
-            [REGRA]: Use plain-text (sem markdown). CTAs: www.hipnolawrence.com.
-            RETORNE JSON: { ${this.modules[idx].variables.join(', ')} }`;
+            [CONTEXTO]: "${extra}"
+            [REGRA]: Use texto puro (sem markdown). NÃO inclua campos redundantes (whatsapp, area_dinamica_extra).
+            RETORNE JSON: { ${this.modules[idx].variables.filter(v => !v.toLowerCase().includes('whatsapp') && !v.toLowerCase().includes('area_dinamica_extra')).join(', ')} }`;
 
             const res = await fetch('/api/ai/generate', {
                 method: "POST", headers: {"Content-Type":"application/json"},
