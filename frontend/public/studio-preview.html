@@ -110,19 +110,32 @@
 
     <script>
         const frame = document.getElementById('preview-frame');
-        const html = localStorage.getItem('abidos_preview_html');
-        const title = localStorage.getItem('abidos_preview_title');
+        const urlParams = new URLSearchParams(window.location.search);
+        const previewId = urlParams.get('id');
 
-        if (title) document.getElementById('preview-title').innerText = `| ${title}`;
+        async function loadPreview() {
+            if (!previewId) {
+                frame.srcdoc = "<h1>Erro: ID de Preview não fornecido.</h1>";
+                return;
+            }
 
-        if (html) {
-            const doc = frame.contentWindow.document;
-            doc.open();
-            doc.write(html);
-            doc.close();
-        } else {
-            frame.srcdoc = "<h1>Erro ao carregar preview. Tente novamente no Studio.</h1>";
+            try {
+                const res = await fetch(`/api/previews/get/${previewId}`);
+                if (!res.ok) throw new Error("Preview não encontrado no servidor (Expirado).");
+                
+                const data = await res.json();
+                if (data.title) document.getElementById('preview-title').innerText = `| ${data.title}`;
+                
+                const doc = frame.contentWindow.document;
+                doc.open();
+                doc.write(data.html);
+                doc.close();
+            } catch (e) {
+                frame.srcdoc = `<h1>Erro: ${e.message}</h1><p>Gere um novo preview no AI Studio.</p>`;
+            }
         }
+
+        loadPreview();
 
         function setSize(type, btn) {
             document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));

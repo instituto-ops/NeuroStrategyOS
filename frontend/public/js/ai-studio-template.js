@@ -152,22 +152,30 @@ window.aiStudioTemplate = {
     fullPreview: async function() {
         if (!this.selectedId) return alert("Selecione uma estrutura antes.");
         try {
-            const res = await fetch('/api/templates/preview', { 
+            const resPreview = await fetch('/api/templates/preview', { 
                 method:'POST', 
                 headers:{'Content-Type':'application/json'}, 
                 body:JSON.stringify({templateId:this.selectedId, values:this.values}) 
             });
-            const html = await res.text();
+            const html = await resPreview.text();
             
-            // Salva no localStorage para a nova aba ler
-            localStorage.setItem('abidos_preview_html', html);
-            localStorage.setItem('abidos_preview_title', this.values.tema || "Rascunho Abidos");
+            // NOVO: Salva no servidor para evitar estouro de cota no navegador
+            const resSave = await fetch('/api/previews/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ html, title: this.values.tema || "Rascunho Abidos" })
+            });
+            const dataSave = await resSave.json();
             
-            // Abre nova aba dedicada ao preview
-            window.open('studio-preview.html', '_blank');
+            if (dataSave.previewId) {
+                // Abre nova aba dedicada ao preview com o ID do servidor
+                window.open(`studio-preview.html?id=${dataSave.previewId}`, '_blank');
+            } else {
+                throw new Error("Falha ao preparar preview no servidor.");
+            }
         } catch(e) { 
-            console.error(e);
-            alert("Erro ao abrir preview amplo."); 
+            console.error("Preview Amplo Error:", e);
+            alert("Erro ao abrir preview amplo: " + e.message); 
         }
     },
 
@@ -622,4 +630,3 @@ window.aiStudioTemplate = {
     }
 };
 
-window.aiStudioTemplate.init();

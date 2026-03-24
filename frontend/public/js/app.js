@@ -6,6 +6,9 @@ const app = {
         this.loadStrategicSuggestions(); // [NOVO] IA Proativa na Visão Geral
         if (window.taskSystem) window.taskSystem.init();
         if (window.goalSystem) window.goalSystem.init();
+        if (window.marketingLab) window.marketingLab.init();
+        if (window.managerAgent) window.managerAgent.init();
+        if (window.aiStudioTemplate) window.aiStudioTemplate.init();
     },
 
     bindEvents() {
@@ -54,9 +57,13 @@ const app = {
                     if(window.healthSystem) window.healthSystem.checkLighthouse();
                 }
 
-                // [NOVO] Auto-load Marketing Lab when entering
-                if (targetId === 'marketing-lab') {
+                if (targetId === 'analytics') {
                     if(window.marketingLab) window.marketingLab.loadAnalytics();
+                }
+
+                // [NOVO] Auto-load Manager Agent when entering
+                if (targetId === 'manager-agent' && window.managerAgent) {
+                    window.managerAgent.loadInitialStatus();
                 }
             });
         });
