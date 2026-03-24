@@ -1943,14 +1943,22 @@ label:not(.nav-btn)[style*="background: white"] {
     font-weight: 600 !important;
 }
 
-/* Hover effects nos campos do Studio */
-#ai-studio input, 
-#ai-studio select, 
-#ai-studio textarea {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 2px solid #e2e8f0 !important;
-    background: #fff;
-    color: #1e293b !important; /* Texto escuro para fundo claro */
+#ai-studio .btn-secondary {
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #475569 !important;
+    font-weight: 800 !important;
+}
+
+#ai-studio .btn-secondary:hover {
+    background: #e2e8f0 !important;
+    color: #1e293b !important;
+}
+
+#ai-studio .btn-primary {
+    background: #1e293b !important;
+    color: #ffffff !important;
+    border: none !important;
 }
 
 #ai-studio input:hover, 
