@@ -113,7 +113,7 @@ const app = {
                 dashboard.innerHTML = `
                     <div class="card">
                         <h3>👥 Visitantes (Real)</h3>
-                        <p style="font-size: 24px; font-weight: bold; color: var(--color-primary);">${data.visitors || 0}</p>
+                        <p style="font-size: 24px; font-weight: bold; color: var(--color-secondary);">${data.visitors || 0}</p>
                         <span style="color: var(--color-text-light);">Sincronizado via WP/GA</span>
                     </div>
                     <div class="card">
@@ -124,7 +124,7 @@ const app = {
                     <div class="card">
                         <h3>🚀 Score Abidos Md.</h3>
                         <p style="font-size: 24px; font-weight: bold; color: var(--color-success);">${data.abidos_score || 'N/A'}</p>
-                        <span style="color: var(--color-primary);">Auditoria de Conteúdo</span>
+                        <span style="color: var(--color-secondary);">Auditoria de Conteúdo</span>
                     </div>
                 `;
             }
