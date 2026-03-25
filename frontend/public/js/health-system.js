@@ -79,5 +79,182 @@ window.healthSystem = {
             input.value = mocks[selected];
             this.analyzeReputation();
         }, 1500);
+    },
+
+    // ── FASE 3: SISTEMA DE DIAGNÓSTICO E AUTOMONITORAMENTO ──────────────────
+    
+    async runSystemCheck() {
+        const resultsEl = document.getElementById('functional-report-results');
+        if(!resultsEl) return;
+        
+        resultsEl.innerHTML = `
+            <div style="padding: 20px; text-align: center;">
+                <div class="loading-shimmer" style="height: 20px; width: 60%; margin: 10px auto; border-radius: 4px;"></div>
+                <p style="font-size: 11px; color: #64748b; font-weight: 800; text-transform: uppercase;">🚀 Iniciando Diagnóstico Profundo Abidos V5...</p>
+            </div>
+        `;
+
+        const report = {
+            timestamp: new Date().toLocaleString('pt-BR'),
+            version: "5.30 Alpha",
+            modules: [],
+            apis: [],
+            logs: []
+        };
+
+        // 1. Verificação de Funcionalidades (DOM & Objetos)
+        const checkList = [
+            { name: "AI Studio Core", obj: "aiStudioTemplate", element: "ai-studio" },
+            { name: "Task Engine", obj: "taskSystem", element: "action-plan" },
+            { name: "Marketing Lab", obj: "marketingLab", element: "analytics" },
+            { name: "NeuroEngine Spark", obj: "sparkEngine", element: "spark-panel" },
+            { name: "Silo/Menu Manager", obj: "menuSystem", element: "menu-manager" },
+            { name: "Review Pipeline", obj: "abidosReview", element: "abidos-review" }
+        ];
+
+        report.modules = checkList.map(item => {
+            const exists = !!document.getElementById(item.element);
+            const initialized = !!window[item.obj];
+            return { name: item.name, status: (exists && initialized) ? "✅ ONLINE" : "❌ FALHA", details: `DOM: ${exists} | Init: ${initialized}` };
+        });
+
+        // 2. Verificação de Conectividade de APIs (Tokens Otimizados)
+        const apiList = [
+            { name: "Gemini Hub", route: "/api/ai/health" },
+            { name: "Media Assets", route: "/api/media/health" },
+            { name: "Strategic Analytics", route: "/api/marketing/audit" },
+            { name: "Drafts Storage", route: "/api/drafts" }
+        ];
+
+        for (const api of apiList) {
+            try {
+                const start = performance.now();
+                const res = await fetch(api.route, { method: 'GET' }); // Usar HEAD se o servidor suportar
+                const end = performance.now();
+                report.apis.push({ name: api.name, status: res.ok ? "✅ CONECTADO" : "⚠️ ERRO HTTP", latency: `${Math.round(end-start)}ms` });
+            } catch(e) {
+                report.apis.push({ name: api.name, status: "❌ OFFLINE", error: e.message });
+            }
+        }
+
+        // 3. Captura de Logs do Navegador (Pega os últimos 20)
+        if (window._neuroLogs) {
+            report.logs = window._neuroLogs.slice(-20);
+        }
+
+        this.renderFunctionalReport(report);
+        await this.persistReport(report);
+    },
+
+    renderFunctionalReport(report) {
+        const container = document.getElementById('functional-report-results');
+        if (!container) return;
+
+        let html = `
+            <div style="font-family: 'Inter', sans-serif; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h4 style="margin:0; font-weight:900; color:#1e293b;">📋 RELATÓRIO DE FUNCIONALIDADE</h4>
+                    <span style="font-size: 10px; color:#64748b;">${report.timestamp}</span>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Módulos Core</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        ${report.modules.map(m => `
+                            <div style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 11px;">
+                                <div style="font-weight: 700;">${m.name}</div>
+                                <div style="color: ${m.status.includes('✅') ? '#10b981' : '#ef4444'}; font-weight: 800;">${m.status}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Integridade de API</div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                        ${report.apis.map(a => `
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 5px 0; font-weight: 600;">${a.name}</td>
+                                <td style="padding: 5px 0; text-align: right; color: ${a.status.includes('✅') ? '#10b981' : '#f59e0b'}; font-weight: 800;">${a.status}</td>
+                                <td style="padding: 5px 0; text-align: right; color: #94a3b8;">${a.latency || '--'}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                </div>
+
+                <div style="padding: 10px; background: #0f172a; border-radius: 8px; margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 10px; font-weight: 800; color: #2dd4bf; text-transform: uppercase;">Logs Recentes (Console)</span>
+                        <button class="btn" style="font-size: 9px; padding: 2px 6px; background: rgba(255,255,255,0.1); color: white;" onclick="window.healthSystem.copyFullReport()">📋 Copiar Tudo</button>
+                    </div>
+                    <div id="log-display-area" style="max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 10px; color: #94a3b8; line-height: 1.4;">
+                        ${report.logs.length > 0 ? report.logs.map(l => `<div>[${l.type.toUpperCase()}] ${l.msg}</div>`).join('') : '<div style="font-style:italic;">Nenhum erro detectado no console.</div>'}
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" style="width: 100%; margin-top: 15px; font-weight: 800;" onclick="window.healthSystem.askAiForDiagnosis()">🤖 CONSULTAR NEUROENGINEAI (AUDITORIA)</button>
+            </div>
+        `;
+
+        container.innerHTML = html;
+        this.currentFullReport = report; // Cache para cópia
+    },
+
+    async askAiForDiagnosis() {
+        if(!this.currentFullReport) return alert("Execute o diagnóstico funcional primeiro.");
+        const btn = document.querySelector('button[onclick*="askAiForDiagnosis"]');
+        const originalText = btn.innerText;
+        btn.innerText = "⏳IA ANALISANDO LOGS...";
+        btn.disabled = true;
+
+        try {
+            const prompt = `[DR VICTOR LAWRENCE]: Analise o relatório de saúde do sistema abaixo e forneça um diagnóstico objetivo.
+            [DADOS DO SISTEMA]: ${JSON.stringify(this.currentFullReport.modules)}
+            [STATUS APIs]: ${JSON.stringify(this.currentFullReport.apis)}
+            [LOGS DE CONSOLE]: ${JSON.stringify(this.currentFullReport.logs)}
+            
+            [MISSÃO]: Liste apenas os problemas críticos identificados, breaking changes e sugira 3 melhoras de infraestrutura imediata. Seja cirúrgico e direto.`;
+
+            const modelType = window.app ? window.app.getActiveModel('health-reputation') : 'gemini-2.5-flash';
+            const response = await fetch('/api/ai/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, modelType })
+            });
+            const data = await response.json();
+            
+            // Exibe a análise da IA no lugar dos logs ou em um modal
+            const logDisplay = document.getElementById('log-display-area');
+            if (logDisplay) {
+                logDisplay.innerHTML = `<div style="color: #6366f1; border-left: 2px solid #6366f1; padding-left: 10px; white-space: pre-wrap;">${data.text}</div>`;
+                logDisplay.scrollTop = 0;
+            }
+            if(window.showToast) window.showToast("🛡️ Auditoria IA Concluída!");
+            
+        } catch (e) {
+            alert("Erro na auditoria IA: " + e.message);
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    },
+
+    async persistReport(report) {
+        try {
+            await fetch('/api/system/report/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(report)
+            });
+            console.log("💾 [HEALTH] Relatório Longitudinal Salvo com Sucesso.");
+        } catch(e) { console.error("Falha ao persistir relatório", e); }
+    },
+
+    copyFullReport() {
+        if(!this.currentFullReport) return;
+        const text = JSON.stringify(this.currentFullReport, null, 2);
+        navigator.clipboard.writeText(text).then(() => {
+            if(window.showToast) window.showToast("✅ Relatório copiado para a área de transferência!");
+        });
     }
 };

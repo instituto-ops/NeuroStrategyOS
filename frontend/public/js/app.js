@@ -15,7 +15,24 @@ const app = {
         if (window.marketingLab) window.marketingLab.init();
         if (window.managerAgent) window.managerAgent.init();
         if (window.aiStudioTemplate) window.aiStudioTemplate.init();
+        this.loadSystemAlerts();
         console.log("🚀 [NeuroEngine] App Core Initialized.");
+    },
+
+    async loadSystemAlerts() {
+        try {
+            const res = await fetch('/api/system/report/latest');
+            const data = await res.json();
+            const alertCard = document.getElementById('system-health-alert-card');
+            const summaryEl = document.getElementById('system-alert-summary');
+            
+            if (data.critical_alerts > 0 && alertCard && summaryEl) {
+                alertCard.style.display = 'block';
+                summaryEl.innerText = `${data.critical_alerts} falhas detectadas no último check-up: ${data.summary}`;
+            } else if (alertCard) {
+                alertCard.style.display = 'none';
+            }
+        } catch(e) {}
     },
 
     updateGlobalModel(modelId) {
@@ -215,5 +232,45 @@ const app = {
 // Start system
 document.addEventListener('DOMContentLoaded', () => {
     app.init();
+
+// Global Helpers
+window.showSection = (id) => {
+    const navBtn = document.querySelector(`.nav-btn[data-target="${id}"]`);
+    if (navBtn) navBtn.click();
+};
+
+window.showToast = (msg, type = 'success') => {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.style.background = type === 'success' ? '#10b981' : '#ef4444';
+    toast.style.color = 'white';
+    toast.style.padding = '12px 24px';
+    toast.style.borderRadius = '8px';
+    toast.style.marginBottom = '10px';
+    toast.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+    toast.style.fontSize = '13px';
+    toast.style.fontWeight = '700';
+    toast.style.animation = 'slideIn 0.3s ease-out';
+    toast.innerText = msg;
+    
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.5s ease-out';
+        setTimeout(() => toast.remove(), 500);
+    }, 3000);
+};
+
+// Add slideIn animation
+const style = document.createElement('style');
+style.innerHTML = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+`;
+document.head.appendChild(style);
 });
 window.app = app;

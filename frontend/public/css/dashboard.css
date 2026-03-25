@@ -2150,3 +2150,74 @@ label:not(.nav-btn)[style*="background: white"] {
     font-size: 10px;
     margin-left: 8px;
 }
+
+/* AI STUDIO - ESTILOS DE ABAS E UX (FASE 3) */
+.card-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 0;
+}
+
+.card-tab-btn {
+    padding: 10px 15px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 10px;
+    font-weight: 801; /* Garante visibilidade */
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.card-tab-btn:hover {
+    color: #6366f1;
+}
+
+.card-tab-btn.active {
+    color: #6366f1;
+    border-bottom-color: #6366f1;
+}
+
+.tab-pane-content {
+    display: none;
+}
+
+.tab-pane-content.active {
+    display: block;
+    animation: fadeInStudio 0.3s ease;
+}
+
+@keyframes fadeInStudio {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* MELHORIA DE CONTRASTE E FEEDBACK (STUDIO) */
+#ai-studio label {
+    color: #1e293b !important; /* Cor forte para labels */
+    font-size: 10px !important;
+    font-weight: 900 !important;
+}
+
+#ai-studio input:hover, 
+#ai-studio textarea:hover, 
+#ai-studio select:hover {
+    border-color: #94a3b8 !important;
+}
+
+#ai-studio .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4) !important;
+}
+
+/* RESPONSIVIDADE STUDIO GRID */
+@media (max-width: 1200px) {
+    .grid-config {
+        grid-template-columns: 1fr !important;
+    }
+    .card {
+        min-height: auto !important;
+    }
+}

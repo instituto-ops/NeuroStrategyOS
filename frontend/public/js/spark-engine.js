@@ -215,11 +215,13 @@ window.sparkEngine = {
                     </div>
                 </div>
 
-                <div class="telemetry-card">
-                    <h5 style="color: white; font-size: 10px; margin-bottom: 10px; text-transform: uppercase;">Insights de Segurança</h5>
-                    <p style="font-size: 11px; color: rgba(255,255,255,0.4);">
-                        ${this.health.status === 'online' ? '✅ Todos os sistemas operacionais. Governança Abidos ativa.' : '⚠️ Alerta de latência detectado em serviços externos.'}
-                    </p>
+                </div>
+
+                <div class="telemetry-card" style="background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2);">
+                   <h5 style="color: white; font-size: 10px; margin-bottom: 10px; text-transform: uppercase;">Diagnóstico Onipresente</h5>
+                   <button class="btn-spark-action" onclick="window.healthSystem.runSystemCheck()" style="width: 100%; padding: 10px; border-radius: 8px; border: none; background: #6366f1; color: white; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                       <i data-lucide="activity" style="width: 14px; height: 14px;"></i> CHECAR SEÇÃO ATUAL
+                   </button>
                 </div>
             </div>
         `;

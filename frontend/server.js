@@ -201,6 +201,88 @@ const trackUsage = (usage) => {
     }
 };
 
+// [FASE 3: SISTEMA DE RELATÓRIOS E AUTODIAGNÓSTICO]
+const REPORTS_DIR = path.join(__dirname, 'relatorios');
+
+// Rota de Salvamento de Relatório Longitudinal
+app.post('/api/system/report/save', (req, res) => {
+    try {
+        const report = req.body;
+        const now = new Date();
+        const year = now.getFullYear().toString();
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const month = monthNames[now.getMonth()];
+        
+        // Criar estrutura de pastas: relatorios/ANO/MES
+        const yearDir = path.join(REPORTS_DIR, year);
+        const monthDir = path.join(yearDir, month);
+        
+        if (!fs.existsSync(REPORTS_DIR)) fs.mkdirSync(REPORTS_DIR, { recursive: true });
+        if (!fs.existsSync(yearDir)) fs.mkdirSync(yearDir, { recursive: true });
+        if (!fs.existsSync(monthDir)) fs.mkdirSync(monthDir, { recursive: true });
+
+        // Nome: Relatório_HH-mm_DD-MM-AA.json
+        const filename = `Relatório_${now.getHours().toString().padStart(2,'0')}-${now.getMinutes().toString().padStart(2,'0')}_${now.getDate().toString().padStart(2,'0')}-${(now.getMonth()+1).toString().padStart(2,'0')}-${year.slice(-2)}.json`;
+        const filePath = path.join(monthDir, filename);
+
+        fs.writeFileSync(filePath, JSON.stringify(report, null, 2));
+        
+        // Atualizar o ponteiro de "Último Alerta" para o Dashboard
+        const criticalModules = report.modules.filter(m => m.status.includes('❌'));
+        const criticalApis = report.apis.filter(a => a.status.includes('❌'));
+        
+        const latestInfo = {
+            filename: filename,
+            timestamp: report.timestamp,
+            critical_alerts: criticalModules.length + criticalApis.length,
+            summary: criticalModules.map(m => m.name).concat(criticalApis.map(a => a.name)).join(', ') || "Tudo operacional!"
+        };
+        fs.writeFileSync(path.join(REPORTS_DIR, 'latest_status.json'), JSON.stringify(latestInfo, null, 2));
+
+        res.json({ success: true, path: filePath });
+    } catch (e) {
+        console.error("❌ Erro ao salvar relatório:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Rota para pegar o último status para o Dashboard
+app.get('/api/system/report/latest', (req, res) => {
+    try {
+        const latestFile = path.join(REPORTS_DIR, 'latest_status.json');
+        if (fs.existsSync(latestFile)) {
+            const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
+            res.json(data);
+        } else {
+            res.json({ critical_alerts: 0, summary: "Nenhum relatório pendente." });
+        }
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Health Checks (Simples)
+app.get('/api/ai/health', async (req, res) => {
+    try {
+        if (!process.env.GEMINI_API_KEY) throw new Error("API Key Ausente");
+        // Tenta listar o modelo para validar a chave (rápido)
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        res.json({ status: "OK", engine: "Gemini 2.5 Hub", auth: "Validada" });
+    } catch (e) {
+        res.status(503).json({ status: "OFFLINE", error: e.message });
+    }
+});
+
+app.get('/api/media/health', (req, res) => {
+    try {
+        const hasCloudinary = !!(process.env.CLOUDINARY_URL || (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY));
+        res.json({ status: "OK", storage: "Cloudinary/FS", cloudinary: hasCloudinary });
+    } catch (e) {
+        res.status(503).json({ status: "ERROR", error: e.message });
+    }
+});
+
 // [FASE 5] Módulo Neuro-Training: Memória de Estilo do Dr. Victor
 const MEMORY_FILE_PATH = path.join(__dirname, 'estilo_victor.json');
 

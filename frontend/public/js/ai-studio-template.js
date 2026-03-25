@@ -40,6 +40,23 @@ window.aiStudioTemplate = {
             });
         }
     },
+    
+    switchTab: function(tab, btn) {
+        // Encontra o container pai do botão (card-tabs)
+        const tabsContainer = btn.parentElement;
+        const cardBody = tabsContainer.nextElementSibling;
+
+        // Resetar botões
+        tabsContainer.querySelectorAll('.card-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Esconder todos os conteúdos do card correspondente
+        cardBody.querySelectorAll('.tab-pane-content').forEach(p => p.classList.remove('active'));
+        
+        // Mostrar o alvo
+        const target = document.getElementById(tab);
+        if (target) target.classList.add('active');
+    },
 
     // ── INTERCONECTIVIDADE (MÉTODO CENTRAL DE IMPORTAÇÃO) ─────────────────
     importIntoStudio: async function(data) {
