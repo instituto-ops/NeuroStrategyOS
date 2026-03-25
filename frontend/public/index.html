@@ -130,15 +130,14 @@
             
             <!-- Section: NeuroEngineAI (Abidos Manager) -->
             <section id="manager-agent" class="content-section">
-                <div class="section-header-flex" style="display: flex; justify-content: flex-end; padding: 0 20px 10px 0;">
-                    <div class="local-model-container">
-                        <select class="local-model-selector" data-section="manager-agent" onchange="app.updateLocalModel('manager-agent', this.value)">
+                <div class="section-header-flex" style="display: flex; justify-content: flex-end; padding: 10px 20px;">
+                    <div class="local-model-container" style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 10px; font-weight: 800; color: #64748b;">🤖 MODELO:</span>
+                        <select class="local-model-selector" data-section="manager-agent" onchange="app.updateLocalModel('manager-agent', this.value)" style="padding: 5px 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; background: white;">
                             <option value="global">🌐 USAR GLOBAL</option>
-                            <option value="gemini-2.5-flash-lite">⚡ GEMINI 2.5 FLASH LITE</option>
-                            <option value="gemini-2.5-flash">⚡ GEMINI 2.5 FLASH</option>
-                            <option value="gemini-2.5-pro">🧠 GEMINI 2.5 PRO</option>
-                            <option value="gemini-1.5-flash">📦 GEMINI 1.5 FLASH</option>
-                            <option value="gemini-1.5-pro">📦 GEMINI 1.5 PRO</option>
+                            <option value="gemini-2.5-flash-lite">⚡ FLASH LITE</option>
+                            <option value="gemini-2.5-flash">⚡ FLASH</option>
+                            <option value="gemini-2.5-pro">🧠 PRO</option>
                         </select>
                     </div>
                 </div>
@@ -517,11 +516,11 @@
                                     <div style="display: flex; flex-direction: column; gap: 20px;">
                                         <div>
                                             <label style="display: block; margin-bottom: 8px;">🤖 MOTOR DE INTELIGÊNCIA</label>
-                                            <select id="ai-studio-model" class="local-model-selector" data-section="ai-studio" onchange="app.updateLocalModel('ai-studio', this.value)" style="width: 100%; padding: 12px; border-radius: 10px;">
-                                                <option value="global">🌐 USAR GLOBAL</option>
+                                            <select id="ai-studio-model" class="local-model-selector" data-section="ai-studio" onchange="app.updateLocalModel('ai-studio', this.value)" style="width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; border: 1px solid #e2e8f0;">
+                                                <option value="global">🌐 USAR GLOBAL (Padrão)</option>
                                                 <option value="gemini-2.5-flash-lite">⚡ GEMINI 2.5 FLASH LITE (Economia)</option>
-                                                <option value="gemini-2.5-flash" selected>⚡ GEMINI 2.5 FLASH (Mestre / Padrão)</option>
-                                                <option value="gemini-2.5-pro">🧠 GEMINI 2.5 PRO (Poder Total)</option>
+                                                <option value="gemini-2.5-flash" selected>⚡ GEMINI 2.5 FLASH (Otimizado Abidos)</option>
+                                                <option value="gemini-2.5-pro">🧠 GEMINI 2.5 PRO (Poder Total / Auditoria)</option>
                                             </select>
                                         </div>
                                         <div style="display: flex; gap: 10px;">

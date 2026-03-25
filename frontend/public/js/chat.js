@@ -1300,6 +1300,10 @@ window.chatApp = {
         const moodSelector = document.getElementById('global-mood-selector');
         if (moodSelector) formData.append('moodId', moodSelector.value);
 
+        // [NOVO] Vincula o Modelo Ativo (Global/Local)
+        const activeModel = window.app ? window.app.getActiveModel('ai-studio') : 'gemini-2.5-flash';
+        formData.append('modelType', activeModel);
+
         // Recupera o Tipo de Conteúdo
         const typeSelector = document.getElementById('ai-studio-type');
         if (typeSelector) formData.append('type', typeSelector.value || 'pages');

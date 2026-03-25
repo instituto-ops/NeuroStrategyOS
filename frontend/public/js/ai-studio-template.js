@@ -472,7 +472,7 @@ window.aiStudioTemplate = {
         const modelType = document.getElementById('ai-studio-model')?.value || 'gemini-2.5-pro';
         this.setProductionProgress(true, `Refinando módulo via GEMINI 2.5 ${modelType.toUpperCase()}...`, 40);
         try {
-            const prompt = `[DR VICTOR LAWRENCE]: CRP 09/012681 (Psicólogo | Mestre UFU).
+            const prompt = `[DR VICTOR LAWRENCE]: CRP 09/012681 (Psicólogo | MESTRANDO UFU 2028).
             [OBJETIVO]: Gerar conteúdo para o bloco "${title}" da página.
             [TEMA]: "${theme}"
             [CONTEXTO]: "${extra}"

@@ -2081,45 +2081,48 @@ label:not(.nav-btn)[style*="background: white"] {
 }
 
 /* 🎨 Override Studio: Botões de Mídia de Alto Contraste */
-#ai-studio .btn-secondary {
-    background: #f1f5f9 !important;
-    border: 1px solid #cbd5e1 !important;
-    color: #334155 !important;
+#ai-studio .btn-secondary,
+.studio-step-content .btn-secondary {
+    background: #ffffff !important;
+    border: 2.5px solid #cbd5e1 !important;
+    color: #1e293b !important;
     font-weight: 800 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.5px;
-    padding: 8px 16px !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+    letter-spacing: 0.5px !important;
 }
 
-#ai-studio .btn-secondary:hover {
-    background: #e2e8f0 !important;
-    border-color: #94a3b8 !important;
-    color: #0f172a !important;
+#ai-studio .btn-secondary:hover,
+.studio-step-content .btn-secondary:hover {
+    background: #f8fafc !important;
+    border-color: #6366f1 !important;
+    color: #4f46e5 !important;
 }
 
-#ai-studio .btn-primary {
+#ai-studio .btn-primary, 
+.studio-step-content .btn-primary {
     background: #6366f1 !important;
-    border: 1px solid #4f46e5 !important;
+    border: none !important;
     color: white !important;
     font-weight: 800 !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-#ai-studio .btn-primary:hover {
-    background: #4f46e5 !important;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
-}
-
-/* 📥 Campos de Input / Textarea no Studio (Legibilidade) */
 #ai-studio input[type="text"], 
 #ai-studio textarea, 
-#ai-studio select {
+#ai-studio select,
+.studio-step-content input,
+.studio-step-content textarea,
+.studio-step-content select {
     background: #ffffff !important;
-    border: 1.5px solid #e2e8f0 !important;
+    border: 2px solid #cbd5e1 !important;
     color: #0f172a !important;
-    font-weight: 500 !important;
-    font-family: 'Inter', sans-serif !important;
+    font-weight: 600 !important;
+}
+
+#ai-studio input[type="text"]:focus, 
+#ai-studio textarea:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
 }
 
 #ai-studio input[type="text"]:focus, 
