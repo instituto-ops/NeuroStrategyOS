@@ -144,6 +144,9 @@ window.healthSystem = {
 
         this.renderFunctionalReport(report);
         await this.persistReport(report);
+        
+        if (window.showToast) window.showToast("🛡️ Diagnóstico Abidos Concluído!");
+        if (window.showSection) window.showSection('health-reputation');
     },
 
     renderFunctionalReport(report) {
@@ -151,7 +154,7 @@ window.healthSystem = {
         if (!container) return;
 
         let html = `
-            <div style="font-family: 'Inter', sans-serif; font-size: 13px;">
+            <div style="font-family: 'Inter', sans-serif; font-size: 13px; color: #1e293b;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h4 style="margin:0; font-weight:900; color:#1e293b;">📋 RELATÓRIO DE FUNCIONALIDADE</h4>
                     <span style="font-size: 10px; color:#64748b;">${report.timestamp}</span>
@@ -161,9 +164,9 @@ window.healthSystem = {
                     <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Módulos Core</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         ${report.modules.map(m => `
-                            <div style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 11px;">
-                                <div style="font-weight: 700;">${m.name}</div>
-                                <div style="color: ${m.status.includes('✅') ? '#10b981' : '#ef4444'}; font-weight: 800;">${m.status}</div>
+                            <div style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff !important; font-size: 11px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                                <div style="font-weight: 900 !important; color: #000000 !important; font-size: 12px; margin-bottom: 2px;">${m.name}</div>
+                                <div style="color: ${m.status.includes('✅') ? '#059669' : '#dc2626'} !important; font-weight: 950 !important; letter-spacing: 0.5px;">${m.status}</div>
                             </div>
                         `).join('')}
                     </div>
@@ -173,10 +176,10 @@ window.healthSystem = {
                     <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Integridade de API</div>
                     <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                         ${report.apis.map(a => `
-                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 5px 0; font-weight: 600;">${a.name}</td>
-                                <td style="padding: 5px 0; text-align: right; color: ${a.status.includes('✅') ? '#10b981' : '#f59e0b'}; font-weight: 800;">${a.status}</td>
-                                <td style="padding: 5px 0; text-align: right; color: #94a3b8;">${a.latency || '--'}</td>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px 0; font-weight: 800 !important; color: #000000 !important;">${a.name}</td>
+                                <td style="padding: 8px 0; text-align: right; color: ${a.status.includes('✅') ? '#059669' : '#d97706'} !important; font-weight: 950 !important;">${a.status}</td>
+                                <td style="padding: 8px 0; text-align: right; color: #475569 !important; font-weight: 600;">${a.latency || '--'}</td>
                             </tr>
                         `).join('')}
                     </table>

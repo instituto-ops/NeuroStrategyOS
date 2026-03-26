@@ -13,6 +13,7 @@ window.sparkEngine = {
     init() {
         console.log("✨ [SPARK] Motor de Orquestração Inicializado.");
         this.checkSystemHealth();
+        if(window.lucide) lucide.createIcons();
         
         // Auto-refresh logic
         setInterval(() => {
@@ -219,12 +220,33 @@ window.sparkEngine = {
 
                 <div class="telemetry-card" style="background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2);">
                    <h5 style="color: white; font-size: 10px; margin-bottom: 10px; text-transform: uppercase;">Diagnóstico Onipresente</h5>
-                   <button class="btn-spark-action" onclick="window.healthSystem.runSystemCheck()" style="width: 100%; padding: 10px; border-radius: 8px; border: none; background: #6366f1; color: white; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                   <button id="btn-spark-health-check" class="btn-spark-action" onclick="window.sparkEngine.runFullCheck(this)" style="width: 100%; padding: 10px; border-radius: 8px; border: none; background: #6366f1; color: white; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                        <i data-lucide="activity" style="width: 14px; height: 14px;"></i> CHECAR SEÇÃO ATUAL
                    </button>
                 </div>
             </div>
         `;
+    },
+
+    async runFullCheck(btn) {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '⏳ EXECUTANDO...';
+        btn.disabled = true;
+        
+        try {
+            await window.healthSystem.runSystemCheck();
+            btn.innerHTML = '✅ CONCLUÍDO';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }, 3000);
+        } catch (e) {
+            btn.innerHTML = '❌ ERRO';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }, 3000);
+        }
     }
 };
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeuroEngine - Mission Control (Psysi Dashboard)</title>
-    <link rel="stylesheet" href="css/dashboard.css?v=6">
+    <link rel="stylesheet" href="css/dashboard.css?v=8">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
@@ -80,6 +80,7 @@
                 <hr style="border-color: #374151; margin: 5px 0;">
                 <button class="nav-btn" data-target="acervo-publicacoes">🏛️ <span>Acervo e Gestão</span></button>
                 <button class="nav-btn" data-target="menu-manager">🌳 <span>Estrutura de Silos (Next.js)</span></button>
+                <button class="nav-btn" data-target="health-reputation">🛡️ <span>Saúde e Reputação</span></button>
                 <hr style="border-color: #374151; margin: 15px 0;">
                 <button class="nav-btn" data-target="manager-agent" style="background: linear-gradient(135deg, #6366f122, #2dd4bf22); border: 1px solid #6366f144;">👑 <span style="font-weight: 900; color: #fff;">NeuroEngineAI</span></button>
 
@@ -1491,7 +1492,7 @@
     </div> <!-- Fecha Voice Overlay -->
     <!-- ✨ CENTELHA: ORQUESTRADOR ONIPRESENTE -->
     <button id="spark-trigger" class="spark-trigger" onclick="window.sparkEngine.togglePanel()" title="NeuroEngine Spark">
-        <i data-lucide="sparkles"></i>
+        <i data-lucide="sparkles" class="spark-icon"></i>
         <span id="spark-badge" class="spark-badge" style="display: none;"></span>
     </button>
     
@@ -1520,6 +1521,6 @@
     </div>
 
     <!-- SCRIPTS -->
-    <script src="js/spark-engine.js?v=4"></script>
+    <script src="js/spark-engine.js?v=5"></script>
 </body>
 </html>

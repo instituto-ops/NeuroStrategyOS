@@ -1619,10 +1619,17 @@ label:not(.nav-btn)[style*="background: white"] {
     border-color: rgba(255,255,255,0.5);
 }
 
+.spark-trigger .spark-icon,
 .spark-trigger svg {
-    width: 32px;
-    height: 32px;
-    filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+    width: 34px;
+    height: 34px;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.8));
+    animation: iconSparkle 3s infinite ease-in-out;
+}
+
+@keyframes iconSparkle {
+    0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+    50% { transform: scale(1.15) rotate(15deg); opacity: 1; filter: drop-shadow(0 0 15px rgba(255,255,255,1)); }
 }
 
 .spark-panel {
