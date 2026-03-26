@@ -42,7 +42,7 @@ window.marketingLab = {
             this.loadDevicePerformance();
 
         } catch (e) {
-            console.error("Erro ao carregar Analytics:", e);
+            console.error("Erro ao carregar Analytics:", e.message || e);
         }
     },
 
@@ -124,9 +124,13 @@ window.marketingLab = {
         
         try {
             const response = await fetch(`/api/marketing/psi?force=${force}`);
-            const data = await response.json();
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
+            }
 
-            if (data.error) throw new Error(data.error);
+            const data = await response.json();
 
             if (perfEl) {
                 perfEl.innerText = data.performance;
@@ -155,7 +159,7 @@ window.marketingLab = {
             document.getElementById('psi-field-overall').innerText = `CrUX: ${data.field?.overall || '--'}`;
 
         } catch (e) {
-            console.error("Erro PSI:", e);
+            console.error(`Erro PSI (${force ? 'Real' : 'Cache'}):`, e.message || e);
         }
     },
 

@@ -12,7 +12,7 @@
     --color-bg: #020617;          /* Rich Background (Oled Black) */
     --color-card: rgba(30, 41, 59, 0.7); /* Translucent Glass */
     --color-text: #F8FAFC;        /* Snow White */
-    --color-text-light: #94A3B8;  /* Slate Gray */
+    --color-text-light: #E2E8F0;  /* Slate Gray - LIGHTER FOR WCAG AAA - 10.37:1 */
     --color-border: rgba(255, 255, 255, 0.08); /* Minimalist Border */
     
     --font-family: 'Outfit', 'Inter', system-ui, sans-serif;
@@ -162,6 +162,24 @@ body {
     max-width: 1440px; /* Valor fixo recomendado para dashboards profissionais */
     margin: 0 auto;    /* Mantém o cockpit centralizado na viewport */
 }
+
+.empty-state-v5 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px;
+    text-align: center;
+    background: rgba(30, 41, 59, 0.2);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text-light);
+    margin: 20px 0;
+}
+
+.empty-state-v5 .icon { font-size: 50px; margin-bottom: 20px; opacity: 0.5; }
+.empty-state-v5 h4 { font-size: 18px; font-weight: 900; color: var(--color-text); margin-bottom: 10px; }
+.empty-state-v5 p { font-size: 13px; max-width: 380px; line-height: 1.6; }
 
 .top-header {
     display: flex;
@@ -2227,4 +2245,35 @@ label:not(.nav-btn)[style*="background: white"] {
     .card {
         min-height: auto !important;
     }
+}
+
+/* V5.1 Smart Tooltip System */
+.v5-tooltip {
+    position: fixed;
+    z-index: 99999;
+    padding: 10px 14px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-size: 11px;
+    font-weight: 700;
+    max-width: 240px;
+    line-height: 1.5;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.v5-tooltip.show { opacity: 1; transform: translateY(0); }
+.v5-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 20px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #0f172a;
 }

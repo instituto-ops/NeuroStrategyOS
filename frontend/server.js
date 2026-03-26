@@ -1970,6 +1970,9 @@ app.post('/api/agents/analyze-diff', async (req, res) => {
 
 // [OBSOLETO] Removido para evitar conflito com motor V5 em /api/seo/analyze-silos no final do arquivo.
 
+// [PULSO DO SISTEMA] Monitoramento de Latência Real-time
+app.get('/api/health/ping', (req, res) => res.status(200).send('pong'));
+
 // [FASE 2] HEALTH CHECK: Monitoramento Multicritério
 app.get('/api/health/check', async (req, res) => {
     const health = {

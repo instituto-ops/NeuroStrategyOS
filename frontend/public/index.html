@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeuroEngine - Mission Control (Psysi Dashboard)</title>
+    <title>Núcleo de Marketing - Estratégia e Autoridade Clínica</title>
     <link rel="stylesheet" href="css/dashboard.css?v=8">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/favicon.ico">
@@ -14,7 +14,15 @@
         window._neuroLogs = [];
         const _originalConsole = { log: console.log, warn: console.warn, error: console.error };
         const capture = (type, args) => {
-            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+            const msg = args.map(a => {
+                if (a instanceof Error) return a.message || String(a);
+                if (typeof a === 'object' && a !== null) {
+                    try {
+                        return JSON.stringify(a, Object.getOwnPropertyNames(a));
+                    } catch (e) { return "[Object]"; }
+                }
+                return String(a);
+            }).join(' ');
             window._neuroLogs.push({ type, msg, time: new Date().toLocaleTimeString() });
             if (window._neuroLogs.length > 50) window._neuroLogs.shift();
             _originalConsole[type](...args);
@@ -64,23 +72,28 @@
         <aside class="sidebar" id="app-sidebar">
             <button class="sidebar-toggle" id="toggle-sidebar">☰</button>
             <div class="sidebar-header">
-                <h2>NeuroEngine OS</h2>
-                <p>Mission Control</p>
+                <h2>Núcleo de Marketing</h2>
+                <p>Estratégia Clínica</p>
             </div>
             <nav class="sidebar-nav">
-                <button class="nav-btn active" data-target="dashboard">🟢 <span>Visão Geral</span></button>
-                <button class="nav-btn" data-target="action-plan">📋 <span>Tarefas e Metas</span></button>
-                <button class="nav-btn" data-target="ai-studio">🤖 <span>AI Studio</span></button>
-                <button class="nav-btn" data-target="planning">🧭 <span>Planejamento</span></button>
-                <button class="nav-btn" data-target="abidos-review">📑 <span>Revisão</span></button>
-                <button class="nav-btn" data-target="neuro-training">🧠 <span>Neuro-Training</span></button>
-                <button class="nav-btn" data-target="doctoralia-assistant">🩺 <span>Doctoralia Assistant</span></button>
-                <button class="nav-btn" data-target="media-library">🖼️ <span>Biblioteca de Mídia</span></button>
-                <button class="nav-btn" data-target="analytics">📊 <span>Analytics & Marketing</span></button>
-                <hr style="border-color: #374151; margin: 5px 0;">
-                <button class="nav-btn" data-target="acervo-publicacoes">🏛️ <span>Acervo e Gestão</span></button>
-                <button class="nav-btn" data-target="menu-manager">🌳 <span>Estrutura de Silos (Next.js)</span></button>
-                <button class="nav-btn" data-target="health-reputation">🛡️ <span>Saúde e Reputação</span></button>
+                <div class="sidebar-divider">VISÃO E ESTRATÉGIA</div>
+                <button class="nav-btn active" data-target="dashboard" data-tooltip="Panorama estratégico e métricas de conversão GA4.">🟢 <span>Visão Geral</span></button>
+                <button class="nav-btn" data-target="action-plan" data-tooltip="Gestão de tarefas clínicas e acompanhamento de OKRs.">📋 <span>Execução e Metas</span></button>
+                <button class="nav-btn" data-target="analytics" data-tooltip="Auditoria de tráfego pago e fluxo de pacientes.">📊 <span>Inteligência de Tráfego</span></button>
+
+                <div class="sidebar-divider">PRODUÇÃO (PROTOCOLO ABIDOS)</div>
+                <button class="nav-btn" data-target="ai-studio" data-tooltip="Produção multimídia com IA (Protocolo Abidos).">🤖 <span>Estúdio de Conteúdo</span></button>
+                <button class="nav-btn" data-target="planning" data-tooltip="Mapeamento de autoridade e silos semânticos.">🧭 <span>Estratégia de Conteúdo</span></button>
+                <button class="nav-btn" data-target="abidos-review" data-tooltip="Revisão final de rascunhos antes da publicação.">📑 <span>Curadoria e Aprovação</span></button>
+                <button class="nav-btn" data-target="neuro-training" data-tooltip="Mapeamento e treinamento do seu DNA linguístico.">🧠 <span>Perfil Verbal</span></button>
+
+                <div class="sidebar-divider">GESTÃO CLÍNICA E INFRA</div>
+                <button class="nav-btn" data-target="doctoralia-assistant" data-tooltip="Orquestração de interações humanizadas com pacientes.">🩺 <span>Resposta Clínica</span></button>
+                <button class="nav-btn" data-target="media-library" data-tooltip="Gestão centralizada de mídias e ativos Cloudinary.">🖼️ <span>Acervo Visual</span></button>
+                <button class="nav-btn" data-target="acervo-publicacoes" data-tooltip="Inventário de conteúdos publicados no site.">🏛️ <span>Gestão de Páginas</span></button>
+                <button class="nav-btn" data-target="menu-manager" data-tooltip="Configuração de menus e hierarquia Next.js.">🌳 <span>Arquitetura de Conteúdo</span></button>
+                <button class="nav-btn" data-target="health-reputation" data-tooltip="Auditoria de performance e saúde da infraestrutura.">🛡️ <span>Monitor Técnico</span></button>
+                
                 <hr style="border-color: #374151; margin: 15px 0;">
                 <button class="nav-btn" data-target="manager-agent" style="background: linear-gradient(135deg, #6366f122, #2dd4bf22); border: 1px solid #6366f144;">👑 <span style="font-weight: 900; color: #fff;">NeuroEngineAI</span></button>
 
@@ -89,12 +102,27 @@
 
         <!-- Main Content Area -->
         <main class="main-content">
-            <header class="top-header">
-                <h1 id="page-title">Visão Geral</h1>
-                <div class="user-profile" style="display: flex; align-items: center; gap: 15px;">
-                    <div style="text-align: right; line-height: 1.2;">
-                        <span style="font-size: 11px; color: #10b981; font-weight: bold;">● Sistema Online</span><br>
-                        <span style="font-size: 13px; color: #64748b; font-weight: 600;">👤 Psicólogo Victor Lawrence</span>
+            <header class="top-header" style="border-bottom: 1px solid var(--color-border); padding-bottom: 15px; margin-bottom: 25px;">
+                <div style="flex: 1;">
+                    <h1 id="page-title" style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;">Visão Geral</h1>
+                    <p id="page-subtitle" style="margin: 5px 0 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Visão e Estratégia | Panorama Geral de Performance</p>
+                </div>
+                
+                <div class="header-actions" style="display: flex; align-items: center; gap: 25px;">
+                    <!-- Pulso do Sistema -->
+                    <div id="system-pulse" style="display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(16, 185, 129, 0.05); padding: 8px 15px; border-radius: 50px; border: 1px solid rgba(16, 185, 129, 0.1);">
+                        <div class="dot green blink" style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);"></div>
+                        <span>Ativo</span>
+                        <span style="color: #64748b; margin: 0 5px; opacity: 0.5;">|</span>
+                        <span id="system-latency" style="color: #64748b;">Ping: -- ms</span>
+                    </div>
+
+                    <div class="user-profile" style="display: flex; align-items: center; gap: 12px; padding-left: 20px; border-left: 1px solid var(--color-border);">
+                        <div style="text-align: right; line-height: 1.2;">
+                            <span style="font-size: 12px; color: var(--color-text); font-weight: 800;">Victor Lawrence</span><br>
+                            <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Psicólogo Clínico 🧠</span>
+                        </div>
+                        <img src="https://ui-avatars.com/api/?name=Victor+Lawrence&background=6366f1&color=fff&bold=true" style="width: 32px; height: 32px; border-radius: 8px; border: 2px solid var(--color-border);">
                     </div>
                 </div>
             </header>
@@ -126,7 +154,7 @@
                 </div>
 
                 <div class="card" id="neuroengine-insights-card" style="margin-bottom: 20px;">
-                    <h3 style="margin: 0 0 10px 0; font-size: 14px; display: flex; align-items: center; gap: 8px;">💡 Insight do NeuroEngine</h3>
+                    <h3 style="margin: 0 0 10px 0; font-size: 14px; display: flex; align-items: center; gap: 8px;">💡 Insight Estratégico</h3>
                     <p id="neuroengine-insight-text" style="font-size: 14px; line-height: 1.6;">
                         🤖 Analisando dados reais do ecossistema...
                     </p>
@@ -361,7 +389,7 @@
                 </div>
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2>Gerenciador de Conteúdo do Site</h2>
+                        <h2>🏛️ Gestão de Páginas</h2>
                         <div style="display: flex; gap: 10px;">
                             <select id="content-type-filter" class="btn" style="background: white; border: 1px solid #ddd;">
                                 <option value="pages">Páginas</option>
@@ -382,7 +410,15 @@
                                 </tr>
                             </thead>
                             <tbody id="wp-content-list">
-                                <!-- Conteúdo CMS -->
+                                <tr>
+                                    <td colspan="5" style="padding: 0;">
+                                        <div class="empty-state-v5" style="border: none; margin: 0; background: transparent;">
+                                            <div class="icon" style="filter: grayscale(1); opacity: 0.3;">🏛️</div>
+                                            <h4>Nenhuma Página Localizada</h4>
+                                            <p>Conecte seu sistema ou acione o sincronismo de inventário.</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -401,7 +437,7 @@
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <div>
-                            <h2>📑 Tabela de Revisão de Rascunhos (Human-in-the-Loop)</h2>
+                            <h2>📑 Curadoria e Aprovação</h2>
                             <p style="color: #64748b; font-size: 14px; margin: 0;">
                                 Aprove ou rejeite os rascunhos elaborados pelos Agentes. Textos filtrados pelo <strong>Método Abidos</strong>.
                             </p>
@@ -423,7 +459,15 @@
                                 </tr>
                             </thead>
                             <tbody id="drafts-list">
-                                <!-- Drafts injetados via JS -->
+                                <tr>
+                                    <td colspan="5">
+                                        <div class="empty-state-v5" style="border: none;">
+                                            <div class="icon" style="filter: grayscale(1); opacity: 0.3;">📑</div>
+                                            <h4>Fila de Curadoria Vazia</h4>
+                                            <p>Solicite um rascunho aos Agentes para iniciar a auditoria Abidos.</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -504,7 +548,7 @@
                         <div id="step-3-circle" class="step-circle">3</div>
                         <div id="step-4-circle" class="step-circle">4</div>
                         <div style="margin-left: 10px;">
-                            <h2 style="margin:0; font-size: 16px; font-weight: 900; color: white; letter-spacing: -0.5px;">AI STUDIO <span style="font-weight: 300; opacity: 0.6;">| MISSION CONTROL</span></h2>
+                            <h2 style="margin:0; font-size: 16px; font-weight: 900; color: white; letter-spacing: -0.5px;">Estúdio de Conteúdo</h2>
                             <p id="studio-step-title" style="margin: 2px 0 0; font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">1ª ETAPA: CONFIGURAÇÃO (O CÉREBRO)</p>
                         </div>
                     </div>
@@ -935,7 +979,7 @@
                     <!-- LADO ESQUERDO: CHAT & ESTADO -->
                     <div class="card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0; border: none; box-shadow: var(--shadow-sm);">
                         <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                            <h2 style="margin: 0; font-size: 16px; font-weight: 800; color: #1e293b;">🎙️ Treinamento de Identidade Verbal</h2>
+                            <h2 style="margin: 0; font-size: 16px; font-weight: 800; color: #1e293b;">🧠 Perfil Verbal</h2>
                             <div style="display: flex; gap: 10px; align-items: center;">
                                 <div style="width: 200px;">
                                     <select class="local-model-selector" data-section="neuro-training" onchange="app.updateLocalModel('neuro-training', this.value)" style="width: 100%;">
@@ -966,17 +1010,55 @@
                         </div>
                     </div>
 
-                    <!-- LADO DIREITO: MEMÓRIA ATIVA -->
-                    <div class="card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0; border: none; box-shadow: var(--shadow-sm);">
-                        <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
-                            <h3 style="margin: 0; font-size: 12px; font-weight: 900; color: #64748b; letter-spacing: 1px;">🧠 MEMÓRIA DE ESTILO (DIGITAL TWIN)</h3>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <span id="memory-last-update" style="font-size: 10px; color: #94a3b8; font-weight: 700; margin-right: 5px;">---</span>
-                                <button class="btn btn-secondary" style="font-size: 10px; padding: 4px 8px; background: white; border: 1px solid #ef4444; color: #ef4444;" onclick="window.neuroTraining.clearMemory()">LIMPAR TUDO</button>
+                    <!-- LADO DIREITO: DNA & MEMÓRIA -->
+                    <div style="display: flex; flex-direction: column; gap: 20px; overflow-y: auto;">
+                        <!-- DNA Grid (V5.1) -->
+                        <div class="card" style="padding: 20px; border-left: 4px solid #10b981; background: #f0fdf4;">
+                            <h3 style="margin: 0 0 15px 0; font-size: 11px; font-weight: 900; color: #065f46; text-transform: uppercase; letter-spacing: 1px;">🧬 DNA VERBAL ANALISADO</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #dcfce7; text-align: center;">
+                                    <span style="font-size: 10px; color: #64748b; font-weight: 700;">Tom de Voz</span>
+                                    <div id="trait-tone" style="font-size: 13px; font-weight: 900; color: #1e293b;">Clínico</div>
+                                </div>
+                                <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #dcfce7; text-align: center;">
+                                    <span style="font-size: 10px; color: #64748b; font-weight: 700;">Familiaridade</span>
+                                    <div id="trait-familiarity" style="font-size: 13px; font-weight: 900; color: #1e293b;">Acolhedor</div>
+                                </div>
+                                <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #dcfce7; text-align: center;">
+                                    <span style="font-size: 10px; color: #64748b; font-weight: 700;">Complexidade</span>
+                                    <div id="trait-complexity" style="font-size: 13px; font-weight: 900; color: #1e293b;">Média</div>
+                                </div>
+                                <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #dcfce7; text-align: center;">
+                                    <span style="font-size: 10px; color: #64748b; font-weight: 700;">Precisão (Abidos)</span>
+                                    <div id="trait-precision" style="font-size: 13px; font-weight: 900; color: #059669;">94%</div>
+                                </div>
                             </div>
                         </div>
-                        <div id="rules-feed" style="flex: 1; overflow-y: auto; padding: 15px; background: #f1f5f9; display: flex; flex-direction: column; gap: 10px;">
-                            <p style="color:#64748b;font-size:13px;text-align:center;padding:40px 0;">Sincronizando seu ritmo de fala...</p>
+
+                        <!-- Resumo do Perfil (Synthetic ID) -->
+                        <div class="card" style="padding: 20px; border-top: 4px solid #6366f1; background: #f5f3ff;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 11px; font-weight: 900; color: #4338ca; text-transform: uppercase; letter-spacing: 0.5px;">📋 SÍNTESE DA IDENTIDADE VERBAL</h3>
+                            <p id="dna-verbal-summary" style="margin: 0; font-size: 13px; color: #1e293b; line-height: 1.6; font-style: italic;">
+                                "Sua linguagem é predominantemente clínica e empática, com foco na clareza para o paciente e baixo uso de jargões técnicos. A estrutura textual é organizada em blocos lógicos, mantendo um equilíbrio entre autoridade e acolhimento."
+                            </p>
+                        </div>
+
+                        <!-- Memória Ativa -->
+                        <div class="card" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; border: none; box-shadow: var(--shadow-sm);">
+                            <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+                                <h3 style="margin: 0; font-size: 12px; font-weight: 900; color: #64748b; letter-spacing: 1px;">🧠 MEMÓRIA DE IDENTIDADE VERBAL</h3>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <span id="memory-last-update" style="font-size: 10px; color: #94a3b8; font-weight: 700; margin-right: 5px;">---</span>
+                                    <button class="btn btn-secondary" style="font-size: 10px; padding: 4px 8px; background: white; border: 1px solid #ef4444; color: #ef4444;" onclick="window.neuroTraining.clearMemory()">LIMPAR</button>
+                                </div>
+                            </div>
+                            <div id="rules-feed" style="flex: 1; overflow-y: auto; background: #f1f5f9; display: flex; flex-direction: column; gap: 10px;">
+                                <div class="empty-state-v5" style="border: none; background: transparent; padding: 40px; margin: 0;">
+                                    <div class="icon">🧬</div>
+                                    <h4 style="color: #64748b;">Aguardando Sincronização</h4>
+                                    <p>O motor de Identidade Verbal está analisando seu ritmo de fala...</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -987,9 +1069,9 @@
                 <!-- Header -->
                 <div class="card" style="margin-bottom: 20px; border-left: 5px solid #6366f1; padding: 20px; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <h2 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; color: #1e293b;">
-                            🩺 Doctoralia Assistant 
-                            <span style="background: #eef2ff; color: #6366f1; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 4px; border: 1px solid #e0e7ff; letter-spacing: 0.5px;">DIGITAL TWIN V5</span>
+                        <h2 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 800; color: #1e293b;">
+                            🩺 Resposta Clínica 
+                            <span style="background: #eef2ff; color: #6366f1; font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 4px; border: 1px solid #e0e7ff; letter-spacing: 0.5px;">IDENTIDADE VERBAL V5</span>
                         </h2>
                         <p style="font-size: 13px; color: #64748b; margin-top: 5px; font-weight: 500;">Orquestre respostas clínicas humanizadas usando a sua Identidade Verbal mapeada.</p>
                     </div>
@@ -1066,7 +1148,7 @@
                         
                         <!-- Footer Info -->
                         <div style="margin-top: 15px; padding: 12px 16px; background: #ecfdf5; border-radius: 10px; border: 1px solid #10b981; font-size: 11px; color: #065f46; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                            <div style="width: 8px; h eight: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                            <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
                             <span>PROTOCOL V4 SECURE: Bloqueio de diagnósticos e formatação markdown.</span>
                         </div>
                     </div>
@@ -1077,7 +1159,7 @@
                 <div class="card" style="margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h2 style="margin: 0;">🖼️ Biblioteca de Mídia - Método Abidos</h2>
+                            <h2 style="margin: 0;">🖼️ Acervo Visual</h2>
                             <p style="font-size: 14px; color: #64748b;">Selecione uma imagem para otimização SEO avançada.</p>
                         </div>
                         <div style="display: flex; gap: 10px;">
@@ -1116,8 +1198,12 @@
                             <input type="file" id="media-upload-input" style="display: none;" accept="image/*" multiple>
                         </div>
 
-                        <div id="media-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;">
-                            <!-- Mídias injetadas via JS -->
+                        <div id="media-list-container">
+                             <div class="empty-state-v5" style="grid-column: 1 / -1; border: none; padding: 40px 20px;">
+                                 <div class="icon" style="filter: grayscale(1); opacity: 0.3;">🖼️</div>
+                                 <h4 style="font-size: 14px;">Acervo Vazio</h4>
+                                 <p style="font-size: 11px;">Carregue ativos ou sincronize via Cloudinary.</p>
+                             </div>
                         </div>
                     </div>
 
@@ -1217,7 +1303,7 @@
             <!-- Section: Marketing Lab (Ads & STAGs) -->
             <section id="marketing-lab" class="content-section">
                 <div class="card">
-                    <h2>📈 Marketing Lab: Otimização de Performance (STAGs)</h2>
+                    <h2>📊 Inteligência de Tráfego</h2>
                     <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
                         Gestão de tráfego pago baseada em agrupamentos semânticos de alta conversão.
                     </p>
@@ -1242,7 +1328,7 @@
             <!-- Section: Saúde & Ética (Profiling & Reputation) -->
             <section id="health-reputation" class="content-section">
                 <div class="card">
-                    <h2>🛡️ Saúde Técnica & Monitoramento Reputacional</h2>
+                    <h2>🛡️ Monitor Técnico</h2>
                     <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
                         Auditoria de Core Web Vitals e Gestão de Imagem baseada em diretrizes CFP.
                     </p>
@@ -1256,16 +1342,7 @@
                             </div>
                         </div>
 
-                        <!-- Card: Reputation -->
-                        <div class="card" style="border-top: 4px solid #6366f1;">
-                            <div style="display: flex; justify-content: space-between; align-items: start;">
-                                <h3>💬 Gestão de Reputação (Sentiment)</h3>
-                                <button class="btn btn-secondary" style="font-size: 10px; padding: 4px 8px;" onclick="window.healthSystem.simulateScraping()">🌐 Scrape Doctoralia/Insta</button>
-                            </div>
-                            <textarea id="reputation-input" placeholder="Cole aqui o comentário/review do Doctoralia ou Instagram..." style="width: 100%; height: 80px; margin-bottom: 10px;"></textarea>
-                            <button class="btn btn-primary" style="width: 100%;" onclick="window.healthSystem.analyzeReputation()">🛡️ Analisar Risco e Gerar Resposta</button>
-                            <div id="reputation-result" style="margin-top: 15px; font-size: 13px;"></div>
-                        </div>
+
 
                         <!-- [FASE 3] Relatório de Funcionalidade Abidos -->
                         <div class="card" style="border-top: 4px solid #ef4444;">
@@ -1289,7 +1366,7 @@
                 <div class="card" style="margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <div>
-                            <h2>🧭 Planejamento: Arquitetura de Silos e STAGs</h2>
+                            <h2>🧭 Estratégia de Conteúdo</h2>
                             <p style="color: #64748b; font-size: 14px; margin: 0;">Mapeie seu domínio e planeje campanhas de Google Ads com intenção clínica.</p>
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">

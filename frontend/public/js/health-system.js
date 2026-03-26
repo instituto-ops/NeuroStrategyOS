@@ -102,20 +102,38 @@ window.healthSystem = {
             logs: []
         };
 
-        // 1. Verificação de Funcionalidades (DOM & Objetos)
+        // 1. Verificação de Funcionalidades (DOM & Objetos) com PROTOCOLO SELF-HEALING (V5.1)
         const checkList = [
-            { name: "AI Studio Core", obj: "aiStudioTemplate", element: "ai-studio" },
-            { name: "Task Engine", obj: "taskSystem", element: "action-plan" },
-            { name: "Marketing Lab", obj: "marketingLab", element: "analytics" },
-            { name: "NeuroEngine Spark", obj: "sparkEngine", element: "spark-panel" },
-            { name: "Silo/Menu Manager", obj: "menuSystem", element: "menu-manager" },
-            { name: "Review Pipeline", obj: "abidosReview", element: "abidos-review" }
+            { name: "Estúdio de Conteúdo", obj: "aiStudioTemplate", element: "ai-studio" },
+            { name: "Execução e Metas", obj: "taskSystem", element: "action-plan" },
+            { name: "Inteligência de Tráfego", obj: "marketingLab", element: "analytics" },
+            { name: "Assistente de Apoio", obj: "sparkEngine", element: "spark-panel" },
+            { name: "Arquitetura de Conteúdo", obj: "menuSystem", element: "menu-manager" },
+            { name: "Curadoria e Aprovação", obj: "abidosReview", element: "abidos-review" }
         ];
 
         report.modules = checkList.map(item => {
             const exists = !!document.getElementById(item.element);
-            const initialized = !!window[item.obj];
-            return { name: item.name, status: (exists && initialized) ? "✅ ONLINE" : "❌ FALHA", details: `DOM: ${exists} | Init: ${initialized}` };
+            let initialized = !!window[item.obj];
+            let selfHealed = false;
+
+            // Tentativa de Auto-Recuperação (Self-Healing)
+            if (exists && !initialized && window[item.obj]?.init) {
+                try {
+                    console.log(`🛡️ [SELF-HEALING] Tentando re-inicializar ${item.name}...`);
+                    window[item.obj].init();
+                    initialized = !!window[item.obj];
+                    selfHealed = true;
+                } catch(e) {
+                    console.error(`❌ [SELF-HEALING] Falha crítica ao recuperar ${item.name}`);
+                }
+            }
+
+            return { 
+                name: item.name, 
+                status: (exists && initialized) ? (selfHealed ? "🩹 RECUPERADO" : "✅ ONLINE") : "❌ FALHA", 
+                details: `DOM: ${exists} | Init: ${initialized}${selfHealed ? " (Repair Active)" : ""}` 
+            };
         });
 
         // 2. Verificação de Conectividade de APIs (Tokens Otimizados)
@@ -129,11 +147,26 @@ window.healthSystem = {
         for (const api of apiList) {
             try {
                 const start = performance.now();
-                const res = await fetch(api.route, { method: 'GET' }); // Usar HEAD se o servidor suportar
+                const res = await fetch(api.route);
                 const end = performance.now();
-                report.apis.push({ name: api.name, status: res.ok ? "✅ CONECTADO" : "⚠️ ERRO HTTP", latency: `${Math.round(end-start)}ms` });
+                
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || `HTTP ${res.status}`);
+                }
+                
+                report.apis.push({ 
+                    name: api.name, 
+                    status: "✅ CONECTADO", 
+                    latency: `${Math.round(end-start)}ms` 
+                });
             } catch(e) {
-                report.apis.push({ name: api.name, status: "❌ OFFLINE", error: e.message });
+                console.error(`Falha na API ${api.name}:`, e.message || e);
+                report.apis.push({ 
+                    name: api.name, 
+                    status: "❌ OFFLINE", 
+                    details: e.message 
+                });
             }
         }
 
@@ -173,16 +206,28 @@ window.healthSystem = {
                 </div>
 
                 <div style="margin-bottom: 15px;">
-                    <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Integridade de API</div>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-                        ${report.apis.map(a => `
-                            <tr style="border-bottom: 1px solid #e2e8f0;">
-                                <td style="padding: 8px 0; font-weight: 800 !important; color: #000000 !important;">${a.name}</td>
-                                <td style="padding: 8px 0; text-align: right; color: ${a.status.includes('✅') ? '#059669' : '#d97706'} !important; font-weight: 950 !important;">${a.status}</td>
-                                <td style="padding: 8px 0; text-align: right; color: #475569 !important; font-weight: 600;">${a.latency || '--'}</td>
-                            </tr>
-                        `).join('')}
-                    </table>
+                    <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">Integridade de API & Latência</div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        ${report.apis.map(a => {
+                            const lat = parseInt(a.latency) || 0;
+                            const color = lat < 100 ? '#10b981' : (lat < 300 ? '#f59e0b' : '#ef4444');
+                            const width = Math.min(lat / 5, 100);
+                            return `
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <span style="font-weight: 800; color: #1e293b;">${a.name}</span>
+                                    <span style="color: ${a.status.includes('✅') ? '#059669' : '#dc2626'}; font-weight: 900; font-size: 10px;">${a.status}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="flex: 1; height: 4px; background: #e2e8f0; border-radius: 10px; overflow: hidden;">
+                                        <div style="width: ${a.status.includes('✅') ? width : 0}%; height: 100%; background: ${color}; transition: width 0.5s ease;"></div>
+                                    </div>
+                                    <span style="font-size: 10px; color: #64748b; font-weight: 700; width: 40px; text-align: right;">${a.latency || '--'}</span>
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
 
                 <div style="padding: 10px; background: #0f172a; border-radius: 8px; margin-top: 15px;">
@@ -259,5 +304,47 @@ window.healthSystem = {
         navigator.clipboard.writeText(text).then(() => {
             if(window.showToast) window.showToast("✅ Relatório copiado para a área de transferência!");
         });
+    // ── PULSO DO SISTEMA (V5.1) ─────────────────────────────────────────────
+    
+    startHeartbeat() {
+        console.log("💓 [PULSO] Monitor de Latência Ativado.");
+        this.updatePulse();
+        setInterval(() => this.updatePulse(), 15000); // Check every 15s
+    },
+
+    async updatePulse() {
+        const startTime = Date.now();
+        const latencyEl = document.getElementById('system-latency');
+        const pulseEl = document.getElementById('system-pulse');
+        
+        try {
+            const response = await fetch('/api/health/ping');
+            const endTime = Date.now();
+            const latency = endTime - startTime;
+            
+            if (latencyEl) latencyEl.innerText = `Ping: ${latency} ms`;
+            
+            if (pulseEl) {
+                if (response.ok) {
+                    pulseEl.style.color = '#10b981';
+                    pulseEl.style.borderColor = 'rgba(16, 185, 129, 0.1)';
+                    pulseEl.querySelector('.dot').classList.add('green');
+                    pulseEl.querySelector('.dot').classList.remove('red');
+                    pulseEl.querySelector('span:first-of-type').innerText = 'Ativo';
+                } else {
+                    throw new Error("API Offline");
+                }
+            }
+        } catch (e) {
+            console.warn("⚠️ [PULSO] Falha de conexão:", e.message);
+            if (latencyEl) latencyEl.innerText = 'Ping: ERR';
+            if (pulseEl) {
+                pulseEl.style.color = '#ef4444';
+                pulseEl.style.borderColor = 'rgba(239, 68, 68, 0.1)';
+                pulseEl.querySelector('.dot').classList.add('red');
+                pulseEl.querySelector('.dot').classList.remove('green');
+                pulseEl.querySelector('span:first-of-type').innerText = 'Instável';
+            }
+        }
     }
 };

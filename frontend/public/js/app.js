@@ -16,7 +16,14 @@ const app = {
         if (window.managerAgent) window.managerAgent.init();
         if (window.aiStudioTemplate) window.aiStudioTemplate.init();
         this.loadSystemAlerts();
-        console.log("🚀 [NeuroEngine] App Core Initialized.");
+        
+        // Pulso do Sistema (V5.1)
+        if (window.healthSystem) window.healthSystem.startHeartbeat();
+
+        // Sistema de Tooltips Inteligentes (V5.1)
+        this.initTooltips();
+
+        console.log("🚀 [Núcleo de Marketing] App Core Initialized.");
     },
 
     async loadSystemAlerts() {
@@ -89,9 +96,26 @@ const app = {
                 const targetSec = document.getElementById(targetId);
                 if (targetSec) targetSec.classList.add('active');
                 
-                // Dynamic title
+                // Dynamic title & subtitle (V5.1)
                 const pageTitle = document.getElementById('page-title');
+                const pageSubtitle = document.getElementById('page-subtitle');
+                const subtitles = {
+                    'dashboard': 'Visão e Estratégia | Panorama Geral de Performance',
+                    'action-plan': 'Execução e Metas | Planejamento Tático e Auditoria de Tarefas',
+                    'analytics': 'Inteligência de Tráfego | Métricas em Tempo Real e Insights de IA',
+                    'ai-studio': 'Produção Abidos | Estúdio de Conteúdo Estratégico',
+                    'planning': 'Estratégia de Conteúdo | Arquitetura de Silos e Hubs de Autoridade',
+                    'abidos-review': 'Curadoria e Aprovação | Controle de Qualidade Final (Human-in-the-Loop)',
+                    'neuro-training': 'Perfil Verbal | Monitoramento de Identidade Verbal Estreita',
+                    'doctoralia-assistant': 'Resposta Clínica | Orquestração de Feedback Humanizado',
+                    'media-library': 'Acervo Visual | Gestão de Ativos Criativos do Ecossistema',
+                    'acervo-publicacoes': 'Gestão de Páginas | Inventário de Páginas e Governança de Conteúdo',
+                    'menu-manager': 'Arquitetura de Conteúdo | Estruturação de Silos e Navegação Next.js',
+                    'health-reputation': 'Monitor Técnico | Auditoria de Core Web Vitals e Reputação'
+                };
+
                 if (pageTitle) pageTitle.innerText = btn.innerText;
+                if (pageSubtitle && subtitles[targetId]) pageSubtitle.innerText = subtitles[targetId];
 
                 // Load section data
                 this.loadSectionData(targetId);
@@ -107,6 +131,66 @@ const app = {
                 toggleBtn.innerText = sidebar.classList.contains('collapsed') ? '▶' : '☰';
             });
         }
+    },
+
+    /**
+     * 🧠 SISTEMA DE TOOLTIPS INTELIGENTES (V5.1)
+     * Exibe descrições após 3 segundos de hover parado.
+     */
+    initTooltips() {
+        let tooltipTimer = null;
+        let tooltipEl = document.querySelector('.v5-tooltip');
+        
+        if (!tooltipEl) {
+            tooltipEl = document.createElement('div');
+            tooltipEl.className = 'v5-tooltip';
+            document.body.appendChild(tooltipEl);
+        }
+
+        const showTooltip = (e, text) => {
+            tooltipEl.innerText = text;
+            tooltipEl.style.left = `${Math.min(e.clientX + 10, window.innerWidth - 250)}px`;
+            tooltipEl.style.top = `${e.clientY - 40}px`;
+            tooltipEl.classList.add('show');
+        };
+
+        const hideTooltip = () => {
+            tooltipEl.classList.remove('show');
+            if (tooltipTimer) {
+                clearTimeout(tooltipTimer);
+                tooltipTimer = null;
+            }
+        };
+
+        document.addEventListener('mouseover', (e) => {
+            const el = e.target.closest('[data-tooltip]');
+            if (el) {
+                const text = el.getAttribute('data-tooltip');
+                if (tooltipTimer) clearTimeout(tooltipTimer);
+                tooltipTimer = setTimeout(() => showTooltip(e, text), 3000);
+            }
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            const el = e.target.closest('[data-tooltip]');
+            if (el) hideTooltip();
+        });
+
+        // Garantir que suma se mover o mouse rápido
+        document.addEventListener('mousemove', (e) => {
+            const el = e.target.closest('[data-tooltip]');
+            if (!el) {
+                hideTooltip();
+            } else {
+                // Se estiver sobre o elemento mas se movendo, reseta o timer de 3s para "parado"
+                // Opcional: o usuário pediu "ficar parado em cima dele por mais de 3 segundos"
+                if (tooltipTimer && !tooltipEl.classList.contains('show')) {
+                    clearTimeout(tooltipTimer);
+                    const text = el.getAttribute('data-tooltip');
+                    tooltipTimer = setTimeout(() => showTooltip(e, text), 3000);
+                }
+            }
+        });
     },
 
     loadSectionData(targetId) {

@@ -98,7 +98,7 @@ window.sparkEngine = {
             'abidos-review': { tip: "Revisão Clínica: Estou auditando rascunhos em busca de alucinações ou termos proibidos pelo CFP.", icon: "clipboard-check" },
             'planning': { tip: "Planejamento Silo: Crie clusters de conteúdo para dominar a autoridade em Goiânia.", icon: "map" },
             'doctoralia': { tip: "Respondendo Pacientes: Seus reviews da Doctoralia estão sendo usados como prova social.", icon: "message-square" },
-            'neuro-training': { tip: "Digital Twin: Treine minha escrita colando textos antigos. Aprenderei seu DNA.", icon: "graduation-cap" }
+            'neuro-training': { tip: "Identidade Verbal: Treine minha escrita colando textos antigos. Aprenderei seu DNA.", icon: "graduation-cap" }
         };
 
         return contextMap[activeSection] || contextMap['dashboard'];
