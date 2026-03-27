@@ -122,9 +122,11 @@ window.acervoManager = {
                         </td>
                         <td style="color: var(--color-text-light); font-size: 11px; padding: 15px;">${formattedDate}</td>
                         <td style="padding: 15px;">
-                            <span style="font-size: 10px; font-weight: 900; color: ${page.status === 'DRAFT' ? '#f59e0b' : '#10b981'}; text-transform: uppercase;">
-                                ${page.status === 'DRAFT' ? '🟠 Rascunho' : '🟢 Publicado'}
-                            </span>
+                            <select onchange="window.acervoManager.updateManualPageStatus('${page.id}', this.value)"
+                                style="font-size: 10px; font-weight: 900; background: ${page.status === 'DRAFT' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)'}; color: ${page.status === 'DRAFT' ? '#f59e0b' : '#10b981'}; border: 1px solid currentColor; border-radius: 4px; padding: 4px 8px; cursor: pointer; text-transform: uppercase;">
+                                <option value="PUBLICADO" ${page.status === 'PUBLICADO' ? 'selected' : ''}>🟢 Publicado</option>
+                                <option value="DRAFT" ${page.status === 'DRAFT' ? 'selected' : ''}>🟠 Rascunho</option>
+                            </select>
                         </td>
                         <td style="padding: 15px; text-align: right;">
                             <div style="display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap;">
@@ -181,7 +183,11 @@ window.acervoManager = {
             const res = await fetch('/api/acervo/manual', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, slug: slug || '/' + title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-'), menuId })
+                body: JSON.stringify({ 
+                    title, 
+                    slug: slug || '/' + title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-'), 
+                    menuId 
+                })
             });
             const data = await res.json();
             if (data.success) {
@@ -474,6 +480,21 @@ window.acervoManager = {
         } catch (e) {
             alert("Falha ao comunicar com o servidor.");
         }
+    },
+    
+    updateManualPageStatus: async function(pageId, novoStatus) {
+        try {
+            const res = await fetch('/api/acervo/manual', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: pageId, status: novoStatus })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.showToast) window.showToast(`Status manual atualizado para: ${novoStatus}`, "info");
+                this.loadAcervo();
+            }
+        } catch (e) { console.error("Erro ao atualizar status manual:", e); }
     }
 };
 

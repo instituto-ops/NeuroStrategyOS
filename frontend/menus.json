@@ -14,21 +14,21 @@
         "id": "item_1774317247747",
         "label": "Sobre",
         "url": "/sobre",
-        "status": "published",
+        "status": "draft",
         "children": []
       },
       {
         "id": "item_1774317271550",
         "label": "Serviços",
         "url": "/servicos",
-        "status": "published",
+        "status": "draft",
         "children": []
       },
       {
         "id": "item_1774317286743",
         "label": "Contato",
         "url": "/contato",
-        "status": "published",
+        "status": "draft",
         "children": []
       }
     ]

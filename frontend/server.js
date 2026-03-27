@@ -1060,16 +1060,20 @@ app.post('/api/acervo/definir-home', async (req, res) => {
         const { caminhoFisico } = req.body;
         if(!caminhoFisico) throw new Error("Caminho físico não informado.");
 
-        const targetPath = path.join(process.env.SITE_REPO_PATH || '../site-nextjs/src/app', 'page.tsx');
+        // Usa SITE_REPO_PATH unificado em vez de fallback para site-nextjs
+        const targetPath = path.join(SITE_REPO_PATH, 'page.tsx');
+        
+        console.log(`🏠 [HOME] Definindo nova homepage: ${caminhoFisico} -> ${targetPath}`);
+
+        if (!fs.existsSync(caminhoFisico)) throw new Error("Arquivo de origem não encontrado.");
         
         // Simplesmente copia o conteúdo da página selecionada para a raiz
-        // Importante: Mantém o DNA intacto
         fs.copyFileSync(caminhoFisico, targetPath);
 
-        res.json({ success: true, message: "Página inicial atualizada com sucesso." });
+        res.json({ success: true, message: "Página inicial atualizada com sucesso no repositório Next.js." });
 
     } catch (e) {
-        console.error("Erro ao definir home:", e);
+        console.error("❌ Erro ao definir home:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -1184,7 +1188,7 @@ app.get('/api/acervo/manual', (req, res) => {
 // [API] Criar/Atualizar página manual (metadados)
 app.post('/api/acervo/manual', (req, res) => {
     try {
-        const { id, title, slug, silo, menuId } = req.body;
+        const { id, title, slug, silo, menuId, status } = req.body;
         let pages = getManualPages();
         
         if (id) {
@@ -1195,7 +1199,23 @@ app.post('/api/acervo/manual', (req, res) => {
                 pages[idx].slug = slug || pages[idx].slug;
                 pages[idx].silo = silo || pages[idx].silo;
                 pages[idx].menuId = menuId || pages[idx].menuId;
+                pages[idx].status = status || pages[idx].status;
                 pages[idx].lastUpdate = new Date().toISOString();
+
+                // Se houver arquivo físico e status foi alterado, atualiza o arquivo também
+                if (pages[idx].caminhoFisico && status && fs.existsSync(pages[idx].caminhoFisico)) {
+                    try {
+                        let content = fs.readFileSync(pages[idx].caminhoFisico, 'utf8');
+                        const dnaMatch = content.match(/export const neuroEngineData = (\{[\s\S]*?\});/);
+                        if (dnaMatch) {
+                            let dna = JSON.parse(dnaMatch[1]);
+                            dna.STATUS = status;
+                            content = content.replace(/export const neuroEngineData = \{[\s\S]*?\};/, `export const neuroEngineData = ${JSON.stringify(dna, null, 2)};`);
+                            fs.writeFileSync(pages[idx].caminhoFisico, content);
+                            console.log(`✅ [STATUS] Arquivo físico atualizado: ${pages[idx].caminhoFisico}`);
+                        }
+                    } catch (e) { console.warn("Falha ao atualizar arquivo físico no status manual:", e); }
+                }
             }
         } else {
             // Criar nova
@@ -3854,35 +3874,9 @@ app.post('/api/seo/silos', (req, res) => {
     }
 });
 
-// [API] ACERVO NACIONAL (Vercel Native)
-// Varre rascunhos e simula inventário de páginas publicadas
-app.get('/api/acervo/listar', (req, res) => {
-    try {
-        console.log("📂 [ACERVO] Listando inventário completo...");
-        
-        // Títulos de rascunhos gerados na sessão atual
-        const draftTitles = draftsDb.map(d => d.tema_foco);
-        
-        // Simulação de páginas que já estariam no site (Vercel)
-        // No futuro, isso varreria a pasta de dist/ ou um banco de dados real
-        const publishedPages = [
-            { slug: "/autismo-adulto", titulo: "O que é Autismo Adulto?", status: "PUBLICADO", ultimaAtualizacao: new Date().toISOString() },
-            { slug: "/ansiedade-goiania", titulo: "Tratamento de Ansiedade", status: "PUBLICADO", ultimaAtualizacao: new Date().toISOString() }
-        ];
-        
-        res.json({
-            success: true,
-            drafts: draftTitles,
-            paginas: publishedPages, // Formato esperado pelo acervo.js
-            inventory: {
-                drafts: draftTitles,
-                published: publishedPages.map(p => p.titulo)
-            }
-        });
-    } catch (e) {
-        console.error("❌ [ACERVO ERROR]", e);
-        res.status(500).json({ error: e.message });
-    }
+// [OBSOLETO] Rota duplicada removida para evitar conflito com a rota principal em /api/acervo/listar (linha 908)
+app.get('/api/acervo/listar-status', (req, res) => {
+    res.json({ message: "Use /api/acervo/listar para inventário real." });
 });
 
 // [API] Sugestão de Silos e STAGs via IA Abidos (Motor Semântico V5)

@@ -239,12 +239,40 @@ input, textarea, select {
 
 .studio-step-content.active {
     display: block !important;
+    flex: 1;
+    overflow-y: auto;
+    height: 100%;
 }
 
 #studio-step-2.active,
 #studio-step-4.active {
     display: flex !important;
+    height: 100%;
+    overflow: hidden;
 }
+
+#template-variables-container {
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+    padding-right: 15px;
+}
+
+/* Scrollbar Premium para NeuroEngine Studio */
+#template-variables-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+#template-variables-container::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05); /* Track quase invisível */
+    border-radius: 10px;
+}
+
+#template-variables-container::-webkit-scrollbar-thumb {
+    background: var(--color-primary); /* Roxo neon */
+    border-radius: 10px;
+    box-shadow: 0 0 10px var(--color-primary);
+}
+
 
 @keyframes fadeInSection {
     from { opacity: 0; transform: translateY(10px); }

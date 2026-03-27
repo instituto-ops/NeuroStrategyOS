@@ -12,15 +12,17 @@ window.menuSystem = {
 
     init: async function() {
         console.log("🌳 Inicializando Gestor de Menus e Silos...");
-        await this.loadMenus();
-        await this.loadSilos();
-        await this.loadInventory();
+        try { await this.loadMenus(); } catch(e) { console.warn("Menus não carregados:", e); }
+        try { await this.loadSilos(); } catch(e) { console.warn("Silos não carregados:", e); }
+        try { await this.loadInventory(); } catch(e) { console.warn("Inventário não carregado:", e); }
+        
         this.renderMenuList();
         this.renderSiloList();
         this.loadMenusIntoStudio();
+        this.loadSilosIntoStudio();
         
         // Auto-run Abidos Analysis
-        this.suggestSilos();
+        try { this.suggestSilos(); } catch(e) { console.warn("Sugestões não processadas:", e); }
     },
 
     loadInventory: async function() {
@@ -487,6 +489,7 @@ window.menuSystem = {
 
             alert("✅ Arquitetura de Silos salva e sincronizada.");
             this.renderSiloList();
+            this.loadSilosIntoStudio();
             
             // Sincroniza o AI Studio se estiver aberto
             if (window.aiStudioTemplate) {
@@ -495,6 +498,17 @@ window.menuSystem = {
             }
         } catch (e) {
             alert("⚠️ " + e.message);
+        }
+    },
+
+    loadSilosIntoStudio: function() {
+        const select = document.getElementById('ai-studio-silo');
+        if (!select) return;
+        select.innerHTML = '<option value="">Selecione o Hub Silo...</option>';
+        if (this.silos && this.silos.length) {
+            this.silos.forEach(s => {
+                select.innerHTML += `<option value="${s.hub}">${s.hub}</option>`;
+            });
         }
     }
 };
