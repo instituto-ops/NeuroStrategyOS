@@ -9,7 +9,6 @@ const app = {
         this.bindEvents();
         this.loadDashboardData();
         this.loadContentList();
-        this.loadStrategicSuggestions(); 
         if (window.taskSystem) window.taskSystem.init();
         if (window.goalSystem) window.goalSystem.init();
         if (window.marketingLab) window.marketingLab.init();
@@ -20,9 +19,13 @@ const app = {
         // Pulso do Sistema (V5.1)
         if (window.healthSystem) window.healthSystem.startHeartbeat();
 
+        // [NOVO] Respeita a hash inicial ou Dashboard por padrão
+        const hash = window.location.hash.replace('#', '');
+        console.log("🧩 [INIT] Target section:", hash || 'dashboard');
+        this.showSection(hash || 'dashboard');
+
         // Inicializa ícones Lucide
         if (window.lucide) window.lucide.createIcons();
-
         console.log("🚀 [Núcleo de Marketing] App Core Initialized.");
     },
     async loadSystemAlerts() {
@@ -82,56 +85,41 @@ const app = {
     },
 
     bindEvents() {
-        // Navigation
-        const navBtns = document.querySelectorAll('.nav-btn');
-        navBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                navBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                const targetId = btn.getAttribute('data-target');
-                document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
-                
-                const targetSec = document.getElementById(targetId);
-                if (targetSec) targetSec.classList.add('active');
-                
-                // Dynamic title & subtitle (V5.1)
-                const pageTitle = document.getElementById('page-title');
-                const pageSubtitle = document.getElementById('page-subtitle');
-                const subtitles = {
-                    'dashboard': 'Visão e Estratégia | Panorama Geral de Performance',
-                    'action-plan': 'Execução e Metas | Planejamento Tático e Auditoria de Tarefas',
-                    'analytics': 'Inteligência de Tráfego | Métricas em Tempo Real e Insights de IA',
-                    'ai-studio': 'Produção Abidos | Estúdio de Conteúdo Estratégico',
-                    'planning': 'Estratégia de Conteúdo | Arquitetura de Silos e Hubs de Autoridade',
-                    'abidos-review': 'Curadoria e Aprovação | Controle de Qualidade Final (Human-in-the-Loop)',
-                    'neuro-training': 'Perfil Verbal | Monitoramento de Identidade Verbal Estreita',
-                    'doctoralia-assistant': 'Resposta Clínica | Orquestração de Feedback Humanizado',
-                    'media-library': 'Acervo Visual | Gestão de Ativos Criativos do Ecossistema',
-                    'acervo-publicacoes': 'Gestão de Páginas | Inventário de Páginas e Governança de Conteúdo',
-                    'menu-manager': 'Arquitetura de Conteúdo | Estruturação de Silos e Navegação Next.js',
-                    'health-reputation': 'Monitor Técnico | Auditoria de Core Web Vitals e Reputação'
-                };
+        // Nova Lógica de Navegação (V5.6)
+        window.onclick = (event) => {
+            if (!event.target.matches('.nav-link')) {
+                const dropdowns = document.querySelectorAll('.nav-dropdown');
+                dropdowns.forEach(d => {
+                    if (d.classList.contains('show')) d.classList.remove('show');
+                });
+            }
+        }
+    },
 
-                if (pageTitle) pageTitle.innerText = btn.innerText;
-                if (pageSubtitle && subtitles[targetId]) pageSubtitle.innerText = subtitles[targetId];
-
-                // Load section data
-                this.loadSectionData(targetId);
-
-                // Re-render icons for new section
-                if (window.lucide) window.lucide.createIcons();
-            });
+    showSection(id) {
+        if (!id) return;
+        console.log(`🌐 [NAV] Mudando para seção: ${id}`);
+        
+        const sections = document.querySelectorAll('.content-section');
+        sections.forEach(sec => {
+            sec.classList.remove('active');
+            sec.style.setProperty('display', 'none', 'important');
         });
-
-        // Sidebar Toggle
-        const toggleBtn = document.getElementById('toggle-sidebar');
-        const sidebar = document.getElementById('app-sidebar');
-        if (toggleBtn && sidebar) {
-            toggleBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('collapsed');
-                toggleBtn.innerText = sidebar.classList.contains('collapsed') ? '▶' : '☰';
-            });
+        
+        const targetSec = document.getElementById(id);
+        if (targetSec) {
+            targetSec.classList.add('active');
+            // AI-Studio precisa de flex para o grid 3-col
+            const displayType = (id === 'ai-studio') ? 'flex' : 'block';
+            targetSec.style.setProperty('display', displayType, 'important');
+            
+            // Re-render ícones Lucide
+            if (window.lucide) setTimeout(() => window.lucide.createIcons(), 50);
+            
+            // Sincroniza dados da seção
+            if (typeof this.loadSectionData === 'function') this.loadSectionData(id);
+        } else {
+            console.error(`❌ Seção não encontrada: ${id}`);
         }
     },
 
@@ -324,10 +312,9 @@ const app = {
 };
 
 // Global Helpers (V5.31 - Moved outside DOMContentLoaded for visibility)
-window.showSection = (id) => {
-    const navBtn = document.querySelector(`.nav-btn[data-target="${id}"]`);
-    if (navBtn) navBtn.click();
-};
+// Exportação Global
+window.app = app;
+window.showSection = (id) => app.showSection(id);
 
 window.showToast = (msg, type = 'success') => {
     const container = document.getElementById('toast-container');
@@ -367,6 +354,3 @@ toastStyle.innerHTML = `
     }
 `;
 document.head.appendChild(toastStyle);
-
-window.app = app;
-app.showSection = window.showSection; // Garantir retrocompatibilidade com chamadas window.app.showSection

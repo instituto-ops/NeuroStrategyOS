@@ -1,0 +1,160 @@
+{
+  "timestamp": "2026-03-27T05:15:29.218Z",
+  "version": "5.30 Alpha",
+  "modules": [
+    {
+      "name": "Estúdio de Conteúdo",
+      "status": "✅ OPERACIONAL",
+      "details": "DOM: true | Init: true"
+    },
+    {
+      "name": "Execução e Metas",
+      "status": "✅ OPERACIONAL",
+      "details": "DOM: true | Init: true"
+    },
+    {
+      "name": "Inteligência de Tráfego",
+      "status": "✅ OPERACIONAL",
+      "details": "DOM: true | Init: true"
+    },
+    {
+      "name": "Assistente de Apoio",
+      "status": "✅ OPERACIONAL",
+      "details": "DOM: true | Init: true"
+    },
+    {
+      "name": "Arquitetura de Conteúdo",
+      "status": "✅ OPERACIONAL",
+      "details": "DOM: true | Init: true"
+    },
+    {
+      "name": "Curadoria e Aprovação",
+      "status": "✅ OPERACIONAL",
+      "details": "DOM: true | Init: true"
+    }
+  ],
+  "apis": [
+    {
+      "name": "Gemini Hub",
+      "status": "✅ OPERACIONAL",
+      "latency": "14ms"
+    },
+    {
+      "name": "Media Assets",
+      "status": "✅ OPERACIONAL",
+      "latency": "3ms"
+    },
+    {
+      "name": "Strategic Analytics",
+      "status": "✅ OPERACIONAL",
+      "latency": "925ms"
+    },
+    {
+      "name": "Drafts Storage",
+      "status": "✅ OPERACIONAL",
+      "latency": "251ms"
+    }
+  ],
+  "logs": [
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: dashboard",
+      "time": "02:13:02"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: action-plan",
+      "time": "02:13:07"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: analytics",
+      "time": "02:13:10"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: neuro-training",
+      "time": "02:13:12"
+    },
+    {
+      "type": "error",
+      "msg": "Erro PSI (Cache): Falha na auditoria PSI: Quota exceeded for quota metric 'Queries' and limit 'Queries per day' of service 'pagespeedonline.googleapis.com' for consumer 'project_number:583797351490'.",
+      "time": "02:13:12"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: ai-studio",
+      "time": "02:13:16"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: acervo-publicacoes",
+      "time": "02:13:27"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: action-plan",
+      "time": "02:13:40"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: analytics",
+      "time": "02:13:42"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: neuro-training",
+      "time": "02:13:43"
+    },
+    {
+      "type": "error",
+      "msg": "Erro PSI (Cache): Falha na auditoria PSI: Quota exceeded for quota metric 'Queries' and limit 'Queries per day' of service 'pagespeedonline.googleapis.com' for consumer 'project_number:583797351490'.",
+      "time": "02:13:44"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: abidos-review",
+      "time": "02:13:50"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: media-library",
+      "time": "02:14:15"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: action-plan",
+      "time": "02:14:29"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: analytics",
+      "time": "02:14:30"
+    },
+    {
+      "type": "error",
+      "msg": "Erro PSI (Cache): Falha na auditoria PSI: Quota exceeded for quota metric 'Queries' and limit 'Queries per day' of service 'pagespeedonline.googleapis.com' for consumer 'project_number:583797351490'.",
+      "time": "02:14:33"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: neuro-training",
+      "time": "02:14:34"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: acervo-publicacoes",
+      "time": "02:14:37"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: abidos-review",
+      "time": "02:14:43"
+    },
+    {
+      "type": "log",
+      "msg": "🌐 [NAV] Mudando para seção: health-reputation",
+      "time": "02:15:21"
+    }
+  ]
+}
