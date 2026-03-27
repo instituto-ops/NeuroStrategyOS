@@ -171,8 +171,8 @@ input, textarea, select {
     overflow-y: auto;
     overflow-x: hidden;
     min-width: 0; 
-    max-width: 1440px; /* Valor fixo recomendado para dashboards profissionais */
-    margin: 0 auto;    /* Mantém o cockpit centralizado na viewport */
+    max-width: calc(100vw - 240px);
+    margin: 0;
 }
 
 .empty-state-v5 {
@@ -2305,7 +2305,7 @@ label:not(.nav-btn)[style*="background: white"] {
 
 /* MELHORIA DE CONTRASTE E FEEDBACK (STUDIO) */
 #ai-studio label {
-    color: #1e293b !important; /* Cor forte para labels */
+    color: var(--color-primary) !important; /* Cor forte para labels */
     font-size: 10px !important;
     font-weight: 900 !important;
 }
