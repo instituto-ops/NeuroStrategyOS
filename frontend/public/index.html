@@ -137,8 +137,6 @@
 
         <!-- Main Content Area -->
         <main class="main-content">
-            <!-- Header Antigo Removido -->
-
             <!-- Section: Dashboard (GA4 Integration) -->
             <section id="dashboard" class="content-section">
                 <div class="card">
@@ -981,8 +979,6 @@
                         </div>
                     </div>
                 </div>
-
-                </div>
             </section>
 
             <!-- Section: Neuro-Training (Aprendiz de Abidos) -->
@@ -1231,7 +1227,7 @@
                             </div>
 
                             <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; font-size: 11px; font-weight: 800; color: #6366f1; margin-bottom: 5px; text-transform: uppercase;">📂 Álbum / Categoria Abidos</label>
+                                <label style="display: block; font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase;">📂 Álbum / Categoria Abidos</label>
                                 <select id="edit-panel-album" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-weight: 700;">
                                     <!-- Injetado via JS -->
                                 </select>
@@ -1475,7 +1471,7 @@
                 </div>
             </section>
 
-            <section id="planning" class="content-section" style="padding: 0; min-height: 100vh;">
+            <section id="planning" class="content-section">
                 <!-- RESET ESTRUTURAL -->
                 <div class="card" style="margin-bottom: 25px; border-radius: 0 0 16px 16px; border-top: none;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -1490,82 +1486,52 @@
                                 <option value="gemini-2.5-pro">🧠 PRO (Análise Profunda)</option>
                             </select>
                             <button class="btn btn-primary" style="font-size: 11px; font-weight: 800;" onclick="window.seoEngine.addSiloPrompt()">+ NOVO HUB SILO</button>
+                            <button class="btn btn-secondary" style="font-size: 11px; font-weight: 800; border-color: #6366f1; color: #6366f1;" onclick="window.seoEngine.copyArchitecture()">📋 COPIAR ARQUITETURA</button>
                             <button class="btn btn-secondary" style="font-size: 11px; font-weight: 800; border-style: dashed;" onclick="window.seoEngine.suggestSilos()">🧠 Sugestões Abidos (IA)</button>
                         </div>
                     </div>
                 </div>
+                <!-- GESTÃO MESTRE DE ARQUITETURA DE SILOS -->
+                <div class="card" style="margin-bottom: 25px; border-top: 4px solid var(--color-primary); padding: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 18px; color: var(--color-primary); font-weight: 800;">🏛️ Arquitetura de Domínio (Hubs & Spokes)</h3>
+                            <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;">Clique nos Hubs para gerenciar seus respectivos Spokes e links de apoio.</p>
+                        </div>
+                        <div style="font-size: 11px; color: #94a3b8; font-style: italic; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 20px;">
+                             💡 Dica: Clique nas células para editar nome e URL em tempo real.
+                        </div>
+                    </div>
 
-                <!-- MAPEAMENTO DINÂMICO (Grafo) -->
+                    <div class="table-container" style="overflow-x: auto; background: rgba(0,0,0,0.1); border-radius: 12px;">
+                        <table class="table" style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+                            <thead>
+                                <tr style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">
+                                    <th style="width: 40px; text-align: center; padding: 15px;">#</th>
+                                    <th style="text-align: left; padding: 15px;">HUB (Tema Central)</th>
+                                    <th style="text-align: left; padding: 15px;">URL / SLUG</th>
+                                    <th style="text-align: center; padding: 15px;">MÉTTRICAS (SPOKES)</th>
+                                    <th style="text-align: center; padding: 15px;">AÇÕES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="silo-table-body">
+                                <!-- Conteúdo injetado via seo-engine.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- MAPEAMENTO DINÂMICO (Grafo) - Movido para baixo da Arquitetura -->
                 <div class="card" style="margin-bottom: 25px; background: rgba(15, 23, 42, 0.4); border: 1px solid var(--color-border); padding: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h3 style="margin:0; font-size: 11px; color: #38bdf8; text-transform: uppercase; font-weight: 900; letter-spacing: 1px;">🗺️ Mapeamento de Autoridade (Grafo)</h3>
+                        <h3 style="margin:0; font-size: 11px; color: #38bdf8; text-transform: uppercase; font-weight: 900; letter-spacing: 1px;">🗺️ Mapeamento de Autoridade (Grafo Visivo)</h3>
                         <div style="display: flex; gap: 8px;">
-                            <button class="btn btn-secondary" onclick="window.seoEngine.resetGraph()" style="font-size: 9px; padding: 4px 12px; border-color: rgba(56, 189, 248, 0.3);">🎯 RE-CENTRALIZAR</button>
-                            <button class="btn btn-secondary" onclick="window.seoEngine.reorganizeGraph()" style="font-size: 9px; padding: 4px 12px; border-color: rgba(56, 189, 248, 0.3);">🌳 LAYOUT AUTOMÁTICO</button>
+                            <button class="btn btn-secondary" onclick="window.seoEngine.resetGraph()" style="font-size: 9px; padding: 4px 12px; border-color: rgba(56, 189, 248, 0.3); background: transparent;">🎯 RE-CENTRALIZAR</button>
+                            <button class="btn btn-secondary" onclick="window.seoEngine.reorganizeGraph()" style="font-size: 9px; padding: 4px 12px; border-color: rgba(56, 189, 248, 0.3); background: transparent;">🌳 LAYOUT AUTOMÁTICO</button>
                         </div>
                     </div>
                     <div id="cy-map" style="width: 100%; height: 350px; border-radius: 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(56, 189, 248, 0.1);"></div>
                 </div>
-
-                <!-- GESTÃO MESTRE DE SILOS (NOVA TABELA EDITÁVEL) -->
-                    <div class="media-split-container" style="display: grid; grid-template-columns: 1fr 400px; gap: 20px; min-height: 500px; align-items: stretch;">
-                        <!-- LADO ESQUERDO: TABELA DE HUBS -->
-                        <div class="card" style="padding: 20px; background: rgba(0,0,0,0.1); border-radius: 12px; display: flex; flex-direction: column;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                <h3 style="margin: 0; font-size: 13px; color: #6366f1; text-transform: uppercase;">🗂️ Hubs do Domínio</h3>
-                                <div style="font-size: 10px; color: #94a3b8; font-style: italic;">Clique nas células para editar Nome ou Slug</div>
-                            </div>
-                            <div class="table-container" style="overflow-y: auto; flex: 1;">
-                                <table class="table" style="width: 100%;">
-                                    <thead>
-                                        <tr style="font-size: 10px; color: #94a3b8; text-transform: uppercase; border-bottom: 1px solid var(--color-border);">
-                                            <th style="text-align: left; padding: 10px;">Hub (Tema)</th>
-                                            <th style="text-align: left; padding: 10px;">URL / Slug</th>
-                                            <th style="text-align: center; padding: 10px;">Métricas</th>
-                                            <th style="text-align: right; padding: 10px;">Ação</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="silo-master-table-body">
-                                        <!-- Injetado via window.seoEngine.renderSiloMaster() -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- LADO DIREITO: EDITOR DE SPOKES E SUGESTÕES IA -->
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <!-- Sugestões Abidos (IA) - Movido para cá -->
-                            <div id="silo-suggestions-panel" class="card" style="padding: 20px; background: #fff1f2; border: 1px solid #fecdd3; display: none;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                    <h3 style="font-size: 11px; margin: 0; color: #9f1239; font-weight: 800;">✨ SUGESTÕES ABIDOS IA</h3>
-                                    <button class="btn" onclick="this.parentElement.parentElement.style.display='none'" style="background: none; border: none; font-size: 16px; color: #9f1239;">&times;</button>
-                                </div>
-                                <div id="silo-suggestions-list-planning" style="display: flex; flex-direction: column; gap: 10px;">
-                                    <!-- Injetado via JS -->
-                                </div>
-                            </div>
-
-                            <!-- Spoke Editor Component -->
-                            <div class="card" id="spoke-manager-panel" style="padding: 25px; border-top: 4px solid #10b981; flex: 1; display: none;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                    <div>
-                                        <h3 id="spoke-editor-title" style="margin: 0; font-size: 16px; font-weight: 900; color: #1e293b;">📄 Editando Spokes</h3>
-                                        <p style="font-size: 11px; color: #64748b; margin: 2px 0 0 0;">Artigos de apoio para o Hub: <span id="current-hub-name" style="font-weight: 800; color: #10b981;">--</span></p>
-                                    </div>
-                                    <button class="btn btn-secondary" style="font-size: 10px; background: white; border: 1px solid #bbf7d0; color: #166534;" onclick="window.seoEngine.addSpokePrompt()">+ SPOKE</button>
-                                </div>
-                                <div id="spoke-list-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto;">
-                                    <!-- Spokes injetados -->
-                                </div>
-                            </div>
-
-                            <!-- Estado Vazio -->
-                            <div id="spoke-empty-state" class="card" style="padding: 40px; text-align: center; color: #94a3b8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px;">
-                                <span style="font-size: 40px; margin-bottom: 15px;">📂</span>
-                                <p style="font-size: 13px;">Selecione um Hub na tabela para gerenciar seus Spokes e ver sugestões IA.</p>
-                            </div>
-                        </div>
-                    </div>
 
 
                     <!-- PAUTA DE CONTEÚDO EDITÁVEL -->
@@ -1645,9 +1611,6 @@
     <script src="js/doctoralia.js?v=18"></script>
     <script src="js/blocks.js?v=18"></script>
     <script src="js/chat.js?v=18"></script>
-    <script src="js/abidos-review.js?v=18"></script>
-    <script src="js/seo-engine.js?v=18"></script>
-    <script src="js/health-system.js?v=18"></script>
     <script src="js/task-system.js?v=18"></script>
     <script src="js/goal-system.js?v=18"></script>
     <script src="js/neuro-training.js?v=18"></script>

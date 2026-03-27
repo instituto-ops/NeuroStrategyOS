@@ -1,10 +1,9 @@
 window.seoEngine = {
     upcomingPosts: JSON.parse(localStorage.getItem('abidos_upcoming_posts') || '[]'),
     fullData: null,
-    currentHub: null,
+    expandedHubs: new Set(),
 
     init() {
-        this.renderUpcomingPosts();
         this.analyze();
     },
 
@@ -14,22 +13,10 @@ window.seoEngine = {
             const data = await res.json();
             this.fullData = data; 
             
-            // Popula Selector para retrocompatibilidade em outros módulos se necessário
-            const selector = document.getElementById('planning-silo-selector');
-            if (selector) {
-                selector.innerHTML = '<option value="">Selecione um Silo...</option>';
-                data.silos.forEach(silo => {
-                    const opt = document.createElement('option');
-                    opt.value = silo.hub;
-                    opt.innerText = silo.hub;
-                    selector.appendChild(opt);
-                });
-            }
+            this.renderSilos();
+            this.renderUpcomingPosts();
 
-            // Renderiza nova Visão Mestre
-            this.renderSiloMaster();
-
-            if(window.cytoscape) {
+            if(window.cytoscape && document.getElementById('cy-map')) {
                 this.renderGraph(data);
             }
 
@@ -38,92 +25,124 @@ window.seoEngine = {
         }
     },
 
-    renderSiloMaster() {
-        const tbody = document.getElementById('silo-master-table-body');
+    copyArchitecture() {
+        if (!this.fullData || !this.fullData.silos) return;
+        
+        let text = `# ARQUITETURA DE SILOS - NEUROENGINE\n\n`;
+        this.fullData.silos.forEach(silo => {
+            text += `## HUB: ${silo.hub} (/${silo.slug})\n`;
+            if (silo.spokes && silo.spokes.length > 0) {
+                silo.spokes.forEach(spoke => {
+                    const spokeSlug = spoke.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+                    text += `- SPOKE: ${spoke} (/${silo.slug}/${spokeSlug})\n`;
+                });
+            } else {
+                text += `(Nenhum spoke definido)\n`;
+            }
+            text += `\n`;
+        });
+
+        navigator.clipboard.writeText(text).then(() => {
+            alert("✅ Arquitetura copiada para o clipboard!\nIdeal para enviar a chats externos (ChatGPT/Gemini).");
+        }).catch(err => {
+            console.error('Erro ao copiar:', err);
+            alert("Erro ao copiar arquitetura.");
+        });
+    },
+
+    renderSilos() {
+        const tbody = document.getElementById('silo-table-body');
         if (!tbody || !this.fullData) return;
 
         if (this.fullData.silos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">Nenhum Hub Silo definido.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: #94a3b8;">Nenhum Hub Silo definido. Clique em "+ NOVO HUB SILO".</td></tr>';
             return;
         }
 
-        tbody.innerHTML = this.fullData.silos.map(silo => {
-            const isSelected = this.currentHub && this.currentHub.id === silo.id;
-            return `
-                <tr onclick="window.seoEngine.selectSilo('${silo.id}')" style="cursor: pointer; transition: background 0.2s; ${isSelected ? 'background: rgba(99, 102, 241, 0.15) !important;' : ''} border-bottom: 1px solid rgba(255,255,255,0.05);">
+        let html = '';
+        this.fullData.silos.forEach(silo => {
+            const isExpanded = this.expandedHubs.has(silo.id);
+            const spokeCount = silo.spokes ? silo.spokes.length : 0;
+            
+            html += `
+                <tr class="hub-row" onclick="window.seoEngine.toggleHub('${silo.id}')" style="cursor: pointer; transition: background 0.2s;">
+                    <td style="text-align: center; color: #6366f1; font-size: 14px;">${isExpanded ? '▼' : '▶'}</td>
                     <td style="padding: 12px;">
                         <input type="text" value="${silo.hub}" class="inline-edit" 
-                            style="background: transparent; border: none; color: #fff; font-weight: 700; width: 100%; transition: color 0.2s;"
+                            style="background: transparent; border: none; color: #fff; font-weight: 700; width: 100%;"
                             onchange="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.value)"
                             onclick="event.stopPropagation()">
                     </td>
                     <td style="padding: 12px;">
                         <input type="text" value="${silo.slug}" class="inline-edit" 
-                            style="background: transparent; border: none; color: var(--color-secondary); font-family: monospace; font-size: 11px; width: 100%;"
+                            style="background: transparent; border: none; color: #94a3b8; font-family: monospace; font-size: 11px; width: 100%;"
                             onchange="window.seoEngine.updateSiloField('${silo.id}', 'slug', this.value)"
                             onclick="event.stopPropagation()">
                     </td>
                     <td style="padding: 12px; text-align: center;">
-                        <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 4px;">
-                            ${silo.spokes.length} SPOKES
+                        <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2); font-size: 10px; padding: 2px 10px;">
+                            ${spokeCount} SPOKES
                         </span>
                     </td>
                     <td style="padding: 12px; text-align: right;">
-                        <button class="btn" style="background: transparent; color: #ef4444; font-size: 14px; border: none;" onclick="event.stopPropagation(); window.seoEngine.deleteSilo('${silo.id}')">🗑️</button>
+                        <button class="btn" style="background: transparent; color: #ef4444; border: none;" onclick="event.stopPropagation(); window.seoEngine.deleteSilo('${silo.id}')">🗑️</button>
                     </td>
                 </tr>
+            `;
+
+            if (isExpanded) {
+                html += `
+                    <tr class="spoke-detail-row" style="background: rgba(0,0,0,0.15);">
+                        <td colspan="5" style="padding: 0;">
+                            <div style="padding: 20px; border-left: 4px solid #6366f1; margin: 10px 20px; background: rgba(255,255,255,0.02); border-radius: 0 8px 8px 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h4 style="margin: 0; font-size: 11px; color: #818cf8; text-transform: uppercase; letter-spacing: 1px;">📄 Artigos de Apoio (Spokes) para: ${silo.hub}</h4>
+                                    <button class="btn btn-secondary" style="font-size: 9px; padding: 4px 12px; border-color: #10b981; color: #10b981;" onclick="window.seoEngine.addSpokePrompt('${silo.id}')">+ NOVO SPOKE</button>
+                                </div>
+                                <div id="spoke-list-${silo.id}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px;">
+                                    ${this.renderSpokeItems(silo)}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+
+        tbody.innerHTML = html;
+    },
+
+    renderSpokeItems(silo) {
+        if (!silo.spokes || silo.spokes.length === 0) {
+            return `<div style="grid-column: 1/-1; text-align: center; color: #64748b; font-size: 11px; padding: 10px; font-style: italic;">Nenhum spoke vinculado.</div>`;
+        }
+
+        return silo.spokes.map((spoke, idx) => {
+            const spokeSlug = spoke.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+            return `
+                <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="overflow: hidden; flex: 1; margin-right: 10px;">
+                        <input type="text" value="${spoke}" class="inline-edit" 
+                            style="background: transparent; border: none; color: #cbd5e1; font-size: 12px; font-weight: 500; width: 100%;"
+                            onchange="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, this.value)">
+                        <div style="font-size: 9px; color: #64748b; font-family: monospace;">/${silo.slug}/${spokeSlug}</div>
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 9px; border-color: #10b981; color: #10b981;" onclick="window.seoEngine.writePostPrompt('${spoke}', 'Foco no Hub: ${silo.hub}')">ESCREVER</button>
+                        <button class="btn" style="background: transparent; color: #ef4444; border: none; font-size: 12px; padding: 0 5px;" onclick="window.seoEngine.removeSpoke('${silo.id}', ${idx})">&times;</button>
+                    </div>
+                </div>
             `;
         }).join('');
     },
 
-    selectSilo(id) {
-        if (!this.fullData) return;
-        const silo = this.fullData.silos.find(s => s.id === id);
-        if (!silo) return;
-
-        this.currentHub = silo;
-        this.renderSiloMaster(); // Atualiza seleção visual
-
-        // Atualiza painel de spokes
-        const emptyState = document.getElementById('spoke-empty-state');
-        if(emptyState) emptyState.style.display = 'none';
-        
-        const panel = document.getElementById('spoke-manager-panel');
-        if(panel) panel.style.display = 'flex';
-
-        const hubNameDisplay = document.getElementById('current-hub-name');
-        if(hubNameDisplay) hubNameDisplay.innerText = silo.hub;
-        
-        this.renderSpokes();
-
-        // Limpa e oculta sugestões se não houver
-        const suggestPanel = document.getElementById('silo-suggestions-panel');
-        if(suggestPanel) suggestPanel.style.display = 'none';
-    },
-
-    renderSpokes() {
-        const container = document.getElementById('spoke-list-container');
-        if (!this.currentHub || !container) return;
-
-        if (this.currentHub.spokes.length === 0) {
-            container.innerHTML = '<div style="color: #94a3b8; font-size: 12px; text-align: center; padding: 20px;">Nenhum artigo de apoio vinculado a este Hub.</div>';
-            return;
+    toggleHub(id) {
+        if (this.expandedHubs.has(id)) {
+            this.expandedHubs.delete(id);
+        } else {
+            this.expandedHubs.add(id);
         }
-
-        container.innerHTML = this.currentHub.spokes.map((spoke, idx) => `
-            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                <div style="display: flex; flex-direction: column; gap: 4px;">
-                    <input type="text" value="${spoke}" class="inline-edit" 
-                        style="background: transparent; border: none; color: #fff; font-size: 13px; font-weight: 600; width: 100%;"
-                        onchange="window.seoEngine.updateSpokeField(${idx}, this.value)">
-                    <span style="font-size: 9px; color: #94a3b8; font-family: monospace;">/${spoke.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-')}</span>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button class="btn btn-primary" style="padding: 5px 10px; font-size: 10px;" onclick="window.seoEngine.writePostPrompt('${spoke}', 'Foco no Hub: ${this.currentHub.hub}')">Produzir</button>
-                    <button class="btn" style="background: transparent; color: #ef4444; border: none; font-size: 12px;" onclick="window.seoEngine.removeSpoke(${idx})">🗑️</button>
-                </div>
-            </div>
-        `).join('');
+        this.renderSilos();
     },
 
     async updateSiloField(id, field, value) {
@@ -131,15 +150,17 @@ window.seoEngine = {
         if (silo) {
             silo[field] = value;
             await this.saveSilos();
-            this.renderGraph(this.fullData);
+            this.renderUpcomingPosts(); // Update selectors
+            if(window.cytoscape && document.getElementById('cy-map')) this.renderGraph(this.fullData);
         }
     },
 
-    async updateSpokeField(idx, value) {
-        if (this.currentHub) {
-            this.currentHub.spokes[idx] = value;
+    async updateSpokeField(siloId, idx, value) {
+        const silo = this.fullData.silos.find(s => s.id === siloId);
+        if (silo) {
+            silo.spokes[idx] = value;
             await this.saveSilos();
-            this.renderGraph(this.fullData);
+            if(window.cytoscape && document.getElementById('cy-map')) this.renderGraph(this.fullData);
         }
     },
 
@@ -159,38 +180,38 @@ window.seoEngine = {
         this.fullData.silos.push(newSilo);
         await this.saveSilos();
         this.analyze();
-        setTimeout(() => this.selectSilo(newSilo.id), 100);
+        this.expandedHubs.add(newSilo.id);
+        setTimeout(() => this.renderSilos(), 100);
     },
 
     async deleteSilo(id) {
         if (!confirm("Excluir permanentemente este Hub e todos os seus Spokes?")) return;
         this.fullData.silos = this.fullData.silos.filter(s => s.id !== id);
-        if (this.currentHub && this.currentHub.id === id) {
-            this.currentHub = null;
-            document.getElementById('spoke-manager-panel').style.display = 'none';
-            document.getElementById('spoke-empty-state').style.display = 'flex';
-        }
+        this.expandedHubs.delete(id);
         await this.saveSilos();
         this.analyze();
     },
 
-    async addSpokePrompt() {
-        if (!this.currentHub) return;
-        const spoke = prompt(`Qual o novo Spoke para o Silo "${this.currentHub.hub}"?`);
+    async addSpokePrompt(siloId) {
+        const silo = this.fullData.silos.find(s => s.id === siloId);
+        if (!silo) return;
+        const spoke = prompt(`Qual o novo Spoke para o Silo "${silo.hub}"?`);
         if (!spoke) return;
         
-        this.currentHub.spokes.push(spoke);
+        if (!silo.spokes) silo.spokes = [];
+        silo.spokes.push(spoke);
         await this.saveSilos();
-        this.renderSpokes();
-        this.renderGraph(this.fullData);
+        this.renderSilos();
+        if(window.cytoscape && document.getElementById('cy-map')) this.renderGraph(this.fullData);
     },
 
-    async removeSpoke(idx) {
-        if (!this.currentHub) return;
-        this.currentHub.spokes.splice(idx, 1);
+    async removeSpoke(siloId, idx) {
+        const silo = this.fullData.silos.find(s => s.id === siloId);
+        if (!silo) return;
+        silo.spokes.splice(idx, 1);
         await this.saveSilos();
-        this.renderSpokes();
-        this.renderGraph(this.fullData);
+        this.renderSilos();
+        if(window.cytoscape && document.getElementById('cy-map')) this.renderGraph(this.fullData);
     },
 
     async saveSilos() {
@@ -207,57 +228,12 @@ window.seoEngine = {
         }
     },
 
-    async suggestSilos() {
-        const container = document.getElementById('silo-suggestions-list-planning');
-        const panel = document.getElementById('silo-suggestions-panel');
-        if (!container || !panel) return;
-
-        panel.style.display = 'block';
-        container.innerHTML = '<div style="padding: 10px; font-size: 11px; color: #9f1239;">🧠 Analisando arquitetura...</div>';
-
-        try {
-            const res = await fetch('/api/seo/analyze-silos');
-            const data = await res.json();
-            if (data.suggestions && data.suggestions.length > 0) {
-                container.innerHTML = data.suggestions.map(s => `
-                    <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid #fecdd3; display: flex; flex-direction: column; gap: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <strong style="color: #be185d; font-size: 12px;">HUB: ${s.hub}</strong>
-                            <button class="btn btn-primary" style="font-size: 9px; padding: 4px 10px; background: #e11d48;" onclick='window.seoEngine.applySiloSuggestion(${JSON.stringify(s)})'>✨ Criar</button>
-                        </div>
-                        <div style="font-size: 10px; color: #db2777;">Spokes sugeridos: ${s.spokes.join(', ')}</div>
-                    </div>
-                `).join('');
-            } else {
-                container.innerHTML = '<div style="font-size: 10px; color: #9f1239; padding:10px;">Nenhuma nova sugestão detectada.</div>';
-            }
-        } catch (e) {
-            container.innerHTML = `<div style="color: #ef4444; font-size: 10px; padding: 10px;">Erro: ${e.message}</div>`;
-        }
-    },
-
-    async applySiloSuggestion(s) {
-        if (!this.fullData) this.fullData = { silos: [] };
-        if (!this.fullData.silos) this.fullData.silos = [];
-        const newSilo = {
-            id: 'silo_' + Date.now(),
-            hub: s.hub,
-            slug: s.slug || s.hub.toLowerCase().replace(/\s+/g, '-'),
-            spokes: s.spokes || []
-        };
-        this.fullData.silos.push(newSilo);
-        await this.saveSilos();
-        this.analyze();
-        document.getElementById('silo-suggestions-panel').style.display = 'none';
-        setTimeout(() => this.selectSilo(newSilo.id), 100);
-    },
-
     addUpcomingPost() {
         const newPost = {
             id: Date.now(),
             title: "Novo Título Clínico...",
             focus: "TEA, Ansiedade, etc",
-            silo: this.currentHub ? this.currentHub.hub : "",
+            silo: "", // Combinado "Hub | Spoke"
             status: 'Pendente'
         };
 
@@ -305,7 +281,7 @@ window.seoEngine = {
                 <td style="padding: 12px;">
                     <select class="inline-edit" style="width: 100%; border: none; background: transparent; color: var(--color-secondary); font-size: 11px; font-weight: 700;" onchange="window.seoEngine.updatePostField(${p.id}, 'silo', this.value)">
                         <option value="">Nenhum Silo</option>
-                        ${this.fullData ? (this.fullData.silos || []).map(s => `<option value="${s.hub}" ${p.silo === s.hub ? 'selected' : ''}>${s.hub}</option>`).join('') : ''}
+                        ${this.renderSiloOptions(p.silo)}
                     </select>
                 </td>
                 <td style="padding: 12px; text-align: center;">
@@ -319,6 +295,23 @@ window.seoEngine = {
                 </td>
             </tr>
         `).join('');
+    },
+
+    renderSiloOptions(currentValue) {
+        if (!this.fullData || !this.fullData.silos) return '';
+        
+        return this.fullData.silos.map(hub => {
+            let options = `<optgroup label="HUB: ${hub.hub}">`;
+            options += `<option value="${hub.hub}" ${currentValue === hub.hub ? 'selected' : ''}>[HUB] ${hub.hub}</option>`;
+            if (hub.spokes) {
+                hub.spokes.forEach(spoke => {
+                    const combined = `${hub.hub} > ${spoke}`;
+                    options += `<option value="${combined}" ${currentValue === combined ? 'selected' : ''}>↳ Spoke: ${spoke}</option>`;
+                });
+            }
+            options += `</optgroup>`;
+            return options;
+        }).join('');
     },
 
     writePostPrompt(title, focus) {
@@ -355,7 +348,9 @@ window.seoEngine = {
     },
 
     renderGraph(data) {
-        if(!data || !data.silos) return;
+        const container = document.getElementById('cy-map');
+        if(!data || !data.silos || !container) return;
+        
         const elements = [];
         const publishedPages = window.acervoManager?.allPages || [];
         const activeDrafts = window.abidosReview?.allDrafts || [];
@@ -373,24 +368,26 @@ window.seoEngine = {
                 } 
             });
 
-            silo.spokes.forEach(spoke => {
-                const spPublished = publishedPages.some(p => p.title.toLowerCase() === spoke.toLowerCase());
-                const spDraft = activeDrafts.some(d => d.theme.toLowerCase() === spoke.toLowerCase());
+            if (silo.spokes) {
+                silo.spokes.forEach(spoke => {
+                    const spPublished = publishedPages.some(p => p.title.toLowerCase() === spoke.toLowerCase());
+                    const spDraft = activeDrafts.some(d => d.theme.toLowerCase() === spoke.toLowerCase());
 
-                elements.push({ 
-                    data: { 
-                        id: spoke, 
-                        label: spoke, 
-                        type: 'spoke',
-                        status: spPublished ? 'published' : (spDraft ? 'draft' : 'planned')
-                    } 
+                    elements.push({ 
+                        data: { 
+                            id: spoke, 
+                            label: spoke, 
+                            type: 'spoke',
+                            status: spPublished ? 'published' : (spDraft ? 'draft' : 'planned')
+                        } 
+                    });
+                    elements.push({ data: { source: spoke, target: silo.hub } });
                 });
-                elements.push({ data: { source: spoke, target: silo.hub } });
-            });
+            }
         });
 
         this.cy = cytoscape({
-            container: document.getElementById('cy-map'),
+            container: container,
             elements: elements,
             wheelSensitivity: 0.2,
             style: [
@@ -473,11 +470,12 @@ window.seoEngine = {
     }
 };
 
-const styleSeo = document.createElement('style');
-styleSeo.textContent = `
-    .inline-edit { cursor: pointer; border-radius: 4px; padding: 4px 8px !important; }
+const _styleSeo = document.createElement('style');
+_styleSeo.textContent = `
+    .inline-edit { cursor: pointer; border-radius: 4px; padding: 4px 8px !important; transition: all 0.2s; }
     .inline-edit:hover { background: rgba(255,255,255,0.05) !important; color: #fff !important; }
     .inline-edit:focus { background: rgba(99, 102, 241, 0.15) !important; outline: 1px solid #6366f1 !important; color: #fff !important; }
+    .hub-row:hover { background: rgba(99, 102, 241, 0.05) !important; }
+    .spoke-detail-row:hover { background: rgba(0,0,0,0.2) !important; }
 `;
-document.head.appendChild(styleSeo);
-
+document.head.appendChild(_styleSeo);

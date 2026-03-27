@@ -1,14 +1,22 @@
 Psicólogo Victor Lawrence Bernardes Santana | CRP 09/012681
-instituto@hipnolawrence.com
-WhatsApp (62) 99154-5295
-www.hipnolawrence.com
-Atendimento Online
-Atendimento em Uberlândia (MG) e Goiânia (GO)
-Perfil Doctoralia: https://www.doctoralia.com.br/victor-lawrence-bernardes-santana/psicologo-terapeuta-complementar/goiania
-Curriculo Lattes: https://lattes.cnpq.br/7486371353673780
-ORCID: https://orcid.org/0000-0002-2184-7310
-Instagram: https://www.instagram.com/hipnolawrence
 
+instituto@hipnolawrence.com
+
+WhatsApp (62) 991545295
+
+www.hipnolawrence.com
+
+Atendimento presencial e online
+
+Rua 94-D, nº 102, Setor Sul, Goiânia, CEP 74080-120
+
+Perfil Doctoralia: https://www.doctoralia.com.br/victor-lawrence-bernardes-santana/psicologo-terapeuta-complementar/goiania
+
+Curriculo Lattes: https://lattes.cnpq.br/7486371353673780
+
+ORCID: https://orcid.org/0000-0002-2184-7310
+
+Instagram: https://www.instagram.com/hipnolawrence
 
 
 Resumo Profissional
@@ -73,6 +81,7 @@ Graduação em Psicologia (2012–2016) Universidade Federal de Uberlândia (UFU)
 
 Interesse Acadêmico e Docência
 Busco uma posição docente em uma instituição de ensino superior onde eu possa aliar a prática clínica à pesquisa e ao ensino. Possuo flexibilidade para atuar em modalidades de ensino presencial e a distância (EAD), e tenho total disponibilidade para mudança de cidade.
+
 
 
 Formação Continuada
