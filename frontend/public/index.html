@@ -1790,12 +1790,15 @@
                     <div style="padding: 15px; background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px;">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-size: 11px; font-weight: 800; color: var(--color-success);">🛡️ USAR SHELL ABIDOS</span>
-                            <label style="position: relative; display: inline-block; width: 42px; height: 22px;">
-                                <input type="checkbox" id="import-use-shell" checked style="opacity: 0; width: 0; height: 0;">
-                                <span style="position: absolute; cursor: pointer; inset: 0; background: #334155; border-radius: 22px; transition: .3s;" 
-                                    onclick="this.previousElementSibling.checked = !this.previousElementSibling.checked; this.style.background = this.previousElementSibling.checked ? '#10b981' : '#334155';">
-                                    <span style="position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s;"></span>
-                                </span>
+                            <label class="switch-toggle" style="position: relative; display: inline-block; width: 44px; height: 22px; cursor: pointer;">
+                                <input type="checkbox" id="import-use-shell" checked style="display: none;">
+                                <div class="slider" style="position: absolute; inset: 0; background: #334155; border-radius: 22px; transition: .3s;">
+                                    <div class="knob" style="position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s;"></div>
+                                </div>
+                                <style>
+                                    #import-use-shell:checked + .slider { background: #10b981; }
+                                    #import-use-shell:checked + .slider .knob { transform: translateX(22px); }
+                                </style>
                             </label>
                         </div>
                         <p style="font-size: 9px; color: var(--color-text-dim); margin: 0;">Ativado: Envolve com Menu, Tailwind, Fontes, GTM e SEO Invisível.<br>Desativado: Salva o HTML exatamente como colado (Raw).</p>
