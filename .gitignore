@@ -39,3 +39,4 @@ credentials/
 tmp/
 diff.txt
 wordpress-stubs.php
+/docs/prints/

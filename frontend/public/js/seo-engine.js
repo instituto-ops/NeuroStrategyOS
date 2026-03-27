@@ -1,32 +1,33 @@
 window.seoEngine = {
     upcomingPosts: JSON.parse(localStorage.getItem('abidos_upcoming_posts') || '[]'),
+    fullData: null,
+    currentHub: null,
 
     init() {
         this.renderUpcomingPosts();
         this.analyze();
     },
-    async analyze() {
-        const selector = document.getElementById('planning-silo-selector');
-        if (!selector) return;
 
+    async analyze() {
         try {
             const res = await fetch('/api/seo/silos');
             const data = await res.json();
             this.fullData = data; 
-
-            // Popula Selector
-            selector.innerHTML = '<option value="">Selecione um Silo...</option>';
-            data.silos.forEach(silo => {
-                const opt = document.createElement('option');
-                opt.value = silo.hub;
-                opt.innerText = silo.hub.replace(/^\/|\/$/g, '');
-                selector.appendChild(opt);
-            });
-
-            if (data.silos.length > 0) {
-                selector.value = data.silos[0].hub;
-                this.selectSilo(data.silos[0].hub);
+            
+            // Popula Selector para retrocompatibilidade em outros módulos se necessário
+            const selector = document.getElementById('planning-silo-selector');
+            if (selector) {
+                selector.innerHTML = '<option value="">Selecione um Silo...</option>';
+                data.silos.forEach(silo => {
+                    const opt = document.createElement('option');
+                    opt.value = silo.hub;
+                    opt.innerText = silo.hub;
+                    selector.appendChild(opt);
+                });
             }
+
+            // Renderiza nova Visão Mestre
+            this.renderSiloMaster();
 
             if(window.cytoscape) {
                 this.renderGraph(data);
@@ -37,58 +38,108 @@ window.seoEngine = {
         }
     },
 
-    selectSilo(hub) {
+    renderSiloMaster() {
+        const tbody = document.getElementById('silo-master-table-body');
+        if (!tbody || !this.fullData) return;
+
+        if (this.fullData.silos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">Nenhum Hub Silo definido.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = this.fullData.silos.map(silo => {
+            const isSelected = this.currentHub && this.currentHub.id === silo.id;
+            return `
+                <tr onclick="window.seoEngine.selectSilo('${silo.id}')" style="cursor: pointer; transition: background 0.2s; ${isSelected ? 'background: rgba(99, 102, 241, 0.15) !important;' : ''} border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 12px;">
+                        <input type="text" value="${silo.hub}" class="inline-edit" 
+                            style="background: transparent; border: none; color: #fff; font-weight: 700; width: 100%; transition: color 0.2s;"
+                            onchange="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.value)"
+                            onclick="event.stopPropagation()">
+                    </td>
+                    <td style="padding: 12px;">
+                        <input type="text" value="${silo.slug}" class="inline-edit" 
+                            style="background: transparent; border: none; color: var(--color-secondary); font-family: monospace; font-size: 11px; width: 100%;"
+                            onchange="window.seoEngine.updateSiloField('${silo.id}', 'slug', this.value)"
+                            onclick="event.stopPropagation()">
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 4px;">
+                            ${silo.spokes.length} SPOKES
+                        </span>
+                    </td>
+                    <td style="padding: 12px; text-align: right;">
+                        <button class="btn" style="background: transparent; color: #ef4444; font-size: 14px; border: none;" onclick="event.stopPropagation(); window.seoEngine.deleteSilo('${silo.id}')">🗑️</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    selectSilo(id) {
         if (!this.fullData) return;
-        const siloContainer = document.getElementById('silo-groups-container');
-        const suggestContainer = document.getElementById('silo-suggestions-container');
-        
-        const silo = this.fullData.silos.find(s => s.hub === hub);
+        const silo = this.fullData.silos.find(s => s.id === id);
         if (!silo) return;
 
-        // Renderiza Conteúdo do Silo
-        siloContainer.innerHTML = `
-            <div class="card" style="padding: 15px;">
-                <strong style="color: var(--color-secondary); font-size: 16px;">📂 Hub: ${silo.hub}</strong>
-                <ul style="font-size: 14px; margin-top: 10px; list-style: none; padding: 0;">
-                    ${silo.spokes.map(s => `
-                        <li style="padding: 5px 0; border-bottom: 1px dashed var(--color-border); display: flex; align-items: center; gap: 8px;">
-                            <span style="color: var(--color-success);">🟢</span> ${s}
-                        </li>
-                    `).join('')}
-                </ul>
-                <div style="margin-top: 15px;">
-                    <button class="btn btn-secondary btn-add" style="font-size: 11px; width: 100%; border-style: dashed;" onclick="window.seoEngine.addSpokePrompt('${silo.hub}')"> Adicionar Novo Spoke</button>
+        this.currentHub = silo;
+        this.renderSiloMaster(); // Atualiza seleção visual
+
+        // Atualiza painel de spokes
+        const emptyState = document.getElementById('spoke-empty-state');
+        if(emptyState) emptyState.style.display = 'none';
+        
+        const panel = document.getElementById('spoke-manager-panel');
+        if(panel) panel.style.display = 'flex';
+
+        const hubNameDisplay = document.getElementById('current-hub-name');
+        if(hubNameDisplay) hubNameDisplay.innerText = silo.hub;
+        
+        this.renderSpokes();
+
+        // Limpa e oculta sugestões se não houver
+        const suggestPanel = document.getElementById('silo-suggestions-panel');
+        if(suggestPanel) suggestPanel.style.display = 'none';
+    },
+
+    renderSpokes() {
+        const container = document.getElementById('spoke-list-container');
+        if (!this.currentHub || !container) return;
+
+        if (this.currentHub.spokes.length === 0) {
+            container.innerHTML = '<div style="color: #94a3b8; font-size: 12px; text-align: center; padding: 20px;">Nenhum artigo de apoio vinculado a este Hub.</div>';
+            return;
+        }
+
+        container.innerHTML = this.currentHub.spokes.map((spoke, idx) => `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <input type="text" value="${spoke}" class="inline-edit" 
+                        style="background: transparent; border: none; color: #fff; font-size: 13px; font-weight: 600; width: 100%;"
+                        onchange="window.seoEngine.updateSpokeField(${idx}, this.value)">
+                    <span style="font-size: 9px; color: #94a3b8; font-family: monospace;">/${spoke.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-')}</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-primary" style="padding: 5px 10px; font-size: 10px;" onclick="window.seoEngine.writePostPrompt('${spoke}', 'Foco no Hub: ${this.currentHub.hub}')">Produzir</button>
+                    <button class="btn" style="background: transparent; color: #ef4444; border: none; font-size: 12px;" onclick="window.seoEngine.removeSpoke(${idx})">🗑️</button>
                 </div>
             </div>
-        `;
+        `).join('');
+    },
 
-        // Filtra Sugestões para este Silo
-        const relatedSuggestions = (this.fullData.suggestions || []).filter(sug => {
-            return sug.reason.toLowerCase().includes(hub.toLowerCase()) || 
-                   silo.spokes.some(sp => sug.reason.toLowerCase().includes(sp.toLowerCase()));
-        });
+    async updateSiloField(id, field, value) {
+        const silo = this.fullData.silos.find(s => s.id === id);
+        if (silo) {
+            silo[field] = value;
+            await this.saveSilos();
+            this.renderGraph(this.fullData);
+        }
+    },
 
-        if (suggestContainer) suggestContainer.innerHTML = '';
-        if (relatedSuggestions.length === 0) {
-            if (suggestContainer) suggestContainer.innerHTML = '<p style="font-size: 12px; color: #64748b; padding: 10px;">Nenhuma sugestão de linkagem detectada para este silo específico.</p>';
-        } else {
-            relatedSuggestions.forEach(sug => {
-                const div = document.createElement('div');
-                div.className = 'card';
-                div.style.padding = '12px';
-                div.style.fontSize = '13px';
-                div.innerHTML = `
-                    <div style="font-weight: bold; color: var(--color-secondary); margin-bottom: 4px;">🎯 Oportunidade: "${sug.anchor_text}"</div>
-                    <div style="color: var(--color-text-light); font-size: 11px; margin-bottom: 8px;">
-                        De: <span style="font-weight: bold;">ID #${sug.from_id}</span> ➔ Para: <span style="font-weight: bold;">ID #${sug.to_id}</span>
-                    </div>
-                    <div style="font-style: italic; font-size: 11px; border-left: 2px solid var(--color-success); padding-left: 8px; color: var(--color-text-light);">
-                        <strong>Razão IA:</strong> ${sug.reason}
-                    </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px; font-size: 10px; height: 28px;" onclick="alert('Linkagem aplicada via REST API!')">🚀 Aplicar Link agora</button>
-                `;
-                suggestContainer.appendChild(div);
-            });
+    async updateSpokeField(idx, value) {
+        if (this.currentHub) {
+            this.currentHub.spokes[idx] = value;
+            await this.saveSilos();
+            this.renderGraph(this.fullData);
         }
     },
 
@@ -97,8 +148,6 @@ window.seoEngine = {
         if (!title) return;
 
         if (!this.fullData) this.fullData = { silos: [] };
-        if (!this.fullData.silos) this.fullData.silos = [];
-
         const newSilo = { 
             id: 'silo_' + Date.now(), 
             hub: title, 
@@ -106,22 +155,42 @@ window.seoEngine = {
             spokes: [] 
         };
         
-        console.log("Adding Silo:", newSilo);
+        if (!this.fullData.silos) this.fullData.silos = [];
         this.fullData.silos.push(newSilo);
         await this.saveSilos();
-        this.analyze(); 
+        this.analyze();
+        setTimeout(() => this.selectSilo(newSilo.id), 100);
     },
 
-    async addSpokePrompt(hub) {
-        const spoke = prompt(`Qual o novo Spoke para o Silo "${hub}"?`);
-        if (!spoke) return;
-        const silo = this.fullData.silos.find(s => s.hub === hub);
-        if (silo) {
-            silo.spokes.push(spoke);
-            await this.saveSilos();
-            this.selectSilo(hub);
-            this.renderGraph(this.fullData);
+    async deleteSilo(id) {
+        if (!confirm("Excluir permanentemente este Hub e todos os seus Spokes?")) return;
+        this.fullData.silos = this.fullData.silos.filter(s => s.id !== id);
+        if (this.currentHub && this.currentHub.id === id) {
+            this.currentHub = null;
+            document.getElementById('spoke-manager-panel').style.display = 'none';
+            document.getElementById('spoke-empty-state').style.display = 'flex';
         }
+        await this.saveSilos();
+        this.analyze();
+    },
+
+    async addSpokePrompt() {
+        if (!this.currentHub) return;
+        const spoke = prompt(`Qual o novo Spoke para o Silo "${this.currentHub.hub}"?`);
+        if (!spoke) return;
+        
+        this.currentHub.spokes.push(spoke);
+        await this.saveSilos();
+        this.renderSpokes();
+        this.renderGraph(this.fullData);
+    },
+
+    async removeSpoke(idx) {
+        if (!this.currentHub) return;
+        this.currentHub.spokes.splice(idx, 1);
+        await this.saveSilos();
+        this.renderSpokes();
+        this.renderGraph(this.fullData);
     },
 
     async saveSilos() {
@@ -131,27 +200,166 @@ window.seoEngine = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(this.fullData.silos)
             });
-            console.log("✅ Silos persistidos via Planning.");
-            if (window.menuSystem) window.menuSystem.loadSilos(); // Sincroniza Gestor de Menus
+            console.log("✅ Silos persistidos.");
+            if (window.menuSystem) window.menuSystem.loadSilos();
         } catch (e) {
             console.error("Erro ao persistir silos:", e);
         }
     },
 
-    addStagPrompt() {
-        const title = prompt("Qual o nome da Campanha STAG (Ads)?");
-        if (!title) return;
-        alert(`Campanha STAG "${title}" criada e mapeada para Auditoria de Ads.`);
+    async suggestSilos() {
+        const container = document.getElementById('silo-suggestions-list-planning');
+        const panel = document.getElementById('silo-suggestions-panel');
+        if (!container || !panel) return;
+
+        panel.style.display = 'block';
+        container.innerHTML = '<div style="padding: 10px; font-size: 11px; color: #9f1239;">🧠 Analisando arquitetura...</div>';
+
+        try {
+            const res = await fetch('/api/seo/analyze-silos');
+            const data = await res.json();
+            if (data.suggestions && data.suggestions.length > 0) {
+                container.innerHTML = data.suggestions.map(s => `
+                    <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid #fecdd3; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <strong style="color: #be185d; font-size: 12px;">HUB: ${s.hub}</strong>
+                            <button class="btn btn-primary" style="font-size: 9px; padding: 4px 10px; background: #e11d48;" onclick='window.seoEngine.applySiloSuggestion(${JSON.stringify(s)})'>✨ Criar</button>
+                        </div>
+                        <div style="font-size: 10px; color: #db2777;">Spokes sugeridos: ${s.spokes.join(', ')}</div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div style="font-size: 10px; color: #9f1239; padding:10px;">Nenhuma nova sugestão detectada.</div>';
+            }
+        } catch (e) {
+            container.innerHTML = `<div style="color: #ef4444; font-size: 10px; padding: 10px;">Erro: ${e.message}</div>`;
+        }
+    },
+
+    async applySiloSuggestion(s) {
+        if (!this.fullData) this.fullData = { silos: [] };
+        if (!this.fullData.silos) this.fullData.silos = [];
+        const newSilo = {
+            id: 'silo_' + Date.now(),
+            hub: s.hub,
+            slug: s.slug || s.hub.toLowerCase().replace(/\s+/g, '-'),
+            spokes: s.spokes || []
+        };
+        this.fullData.silos.push(newSilo);
+        await this.saveSilos();
+        this.analyze();
+        document.getElementById('silo-suggestions-panel').style.display = 'none';
+        setTimeout(() => this.selectSilo(newSilo.id), 100);
+    },
+
+    addUpcomingPost() {
+        const newPost = {
+            id: Date.now(),
+            title: "Novo Título Clínico...",
+            focus: "TEA, Ansiedade, etc",
+            silo: this.currentHub ? this.currentHub.hub : "",
+            status: 'Pendente'
+        };
+
+        this.upcomingPosts.unshift(newPost);
+        this.saveUpcomingPosts();
+        this.renderUpcomingPosts();
+    },
+
+    updatePostField(id, field, value) {
+        const post = this.upcomingPosts.find(p => p.id === id);
+        if (post) {
+            post[field] = value;
+            this.saveUpcomingPosts();
+        }
+    },
+
+    removeUpcomingPost(id) {
+        if(!confirm("Remover este item da pauta?")) return;
+        this.upcomingPosts = this.upcomingPosts.filter(p => p.id !== id);
+        this.saveUpcomingPosts();
+        this.renderUpcomingPosts();
+    },
+
+    saveUpcomingPosts() {
+        localStorage.setItem('abidos_upcoming_posts', JSON.stringify(this.upcomingPosts));
+    },
+
+    renderUpcomingPosts() {
+        const tbody = document.getElementById('upcoming-posts-table');
+        if (!tbody) return;
+
+        if (this.upcomingPosts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="padding: 30px; text-align: center; color: #94a3b8; font-style: italic;">Nenhum título na pauta. Comece agora.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = this.upcomingPosts.map(p => `
+            <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 12px;">
+                    <input type="text" value="${p.title}" class="inline-edit" style="width: 100%; border: none; background: transparent; color: #fff; font-weight: 800; font-size: 13px;" onchange="window.seoEngine.updatePostField(${p.id}, 'title', this.value)">
+                </td>
+                <td style="padding: 12px;">
+                    <input type="text" value="${p.focus}" class="inline-edit" style="width: 100%; border: none; background: transparent; color: var(--color-text-light); font-size: 12px;" onchange="window.seoEngine.updatePostField(${p.id}, 'focus', this.value)">
+                </td>
+                <td style="padding: 12px;">
+                    <select class="inline-edit" style="width: 100%; border: none; background: transparent; color: var(--color-secondary); font-size: 11px; font-weight: 700;" onchange="window.seoEngine.updatePostField(${p.id}, 'silo', this.value)">
+                        <option value="">Nenhum Silo</option>
+                        ${this.fullData ? (this.fullData.silos || []).map(s => `<option value="${s.hub}" ${p.silo === s.hub ? 'selected' : ''}>${s.hub}</option>`).join('') : ''}
+                    </select>
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                    <span style="background: rgba(30, 41, 59, 0.5); padding: 4px 12px; border-radius: 20px; font-size: 9px; font-weight: 900; color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);">${p.status.toUpperCase()}</span>
+                </td>
+                <td style="padding: 12px; text-align: right;">
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                        <button onclick="window.seoEngine.writePostPrompt('${p.title}', '${p.focus}')" class="btn btn-primary" style="font-size: 10px; padding: 6px 15px; background: #10b981; border: none; font-weight: 800;">🚀 Escrever</button>
+                        <button onclick="window.seoEngine.removeUpcomingPost(${p.id})" class="btn" style="background: transparent; color: #ef4444; border: none; font-size: 14px;">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    },
+
+    writePostPrompt(title, focus) {
+        const choice = confirm(`ESCOLHER FLUXO DE PRODUÇÃO PARA:\n"${title}"\n\nOK = Ir para o AI Studio (Automação Abidos)\nCancelar = Criar Manualmente (Inserção HTML)`);
+        
+        if (choice) {
+            this.writePost(title, focus);
+        } else {
+            if(window.acervoManager) {
+                app.showSection('acervo-publicacoes');
+                setTimeout(() => {
+                    window.acervoManager.openCreateManualModal();
+                    const titleInput = document.getElementById('manual-title');
+                    const slugInput = document.getElementById('manual-slug');
+                    if(titleInput) titleInput.value = title;
+                    if(slugInput) slugInput.value = '/' + title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+                }, 100);
+            }
+        }
+    },
+
+    async writePost(title, focus) {
+        if (window.aiStudioTemplate) {
+            app.showSection('ai-studio');
+            await window.aiStudioTemplate.importIntoStudio({
+                theme: title,
+                context: focus,
+                reset: true
+            });
+            if(window.sparkEngine) console.log(`✨ [SPARK] Flow: Planning ➔ AI Studio: "${title}"`);
+        } else {
+            alert("Studio não carregado.");
+        }
     },
 
     renderGraph(data) {
+        if(!data || !data.silos) return;
         const elements = [];
-        
-        // Coleta status de produção para colorir o grafo
         const publishedPages = window.acervoManager?.allPages || [];
         const activeDrafts = window.abidosReview?.allDrafts || [];
 
-        // Adiciona Hubs
         data.silos.forEach(silo => {
             const isPublished = publishedPages.some(p => p.slug.includes(silo.slug) || p.title === silo.hub);
             const isDraft = activeDrafts.some(d => d.theme === silo.hub);
@@ -192,9 +400,9 @@ window.seoEngine = {
                         'background-color': '#475569',
                         'label': 'data(label)',
                         'color': '#cbd5e1',
-                        'font-size': '11px',
-                        'width': '22px',
-                        'height': '22px',
+                        'font-size': '10px',
+                        'width': '20px',
+                        'height': '20px',
                         'text-outline-width': 1,
                         'text-outline-color': '#020617',
                         'text-valign': 'bottom',
@@ -216,9 +424,9 @@ window.seoEngine = {
                 {
                     selector: 'node[type="hub"]',
                     style: {
-                        'background-color': '#38bdf8',
-                        'width': '45px',
-                        'height': '45px',
+                        'background-color': '#6366f1',
+                        'width': '40px',
+                        'height': '40px',
                         'font-size': '11px',
                         'color': '#fff'
                     }
@@ -227,8 +435,8 @@ window.seoEngine = {
                     selector: 'edge',
                     style: {
                         'width': 2,
-                        'line-color': '#1e293b',
-                        'target-arrow-color': '#1e293b',
+                        'line-color': 'rgba(99, 102, 241, 0.2)',
+                        'target-arrow-color': 'rgba(99, 102, 241, 0.4)',
                         'target-arrow-shape': 'triangle',
                         'curve-style': 'bezier',
                         'opacity': 0.5
@@ -238,19 +446,16 @@ window.seoEngine = {
             layout: { 
                 name: 'cose', 
                 animate: true, 
-                padding: 60,
-                componentSpacing: 100,
-                nodeRepulsion: 8000
+                padding: 40,
+                componentSpacing: 80,
+                nodeRepulsion: 10000
             }
         });
 
-        // Eventos de Toque/Clique no Grafo
         this.cy.on('tap', 'node', (evt) => {
             const node = evt.target;
             const label = node.data('label');
-            if(confirm(`Deseja iniciar a produção de "${label}" agora?`)) {
-                this.writePost(label, "Iniciado via Mapa Estratégico");
-            }
+            this.writePostPrompt(label, "Iniciado via Mapa de Autoridade");
         });
     },
 
@@ -265,79 +470,14 @@ window.seoEngine = {
         if (this.cy) {
             this.cy.layout({ name: 'cose', animate: true }).run();
         }
-    },
-
-    // --- PAUTA DE CONTEÚDO ---
-    addUpcomingPost() {
-        const title = prompt("Qual o Título Estratégico?");
-        if (!title) return;
-        const focus = prompt("Qual a Keyword ou Foco Principal?", "TEA Adulto");
-        
-        const newPost = {
-            id: Date.now(),
-            title: title,
-            focus: focus,
-            status: 'Pendente'
-        };
-
-        this.upcomingPosts.push(newPost);
-        this.saveUpcomingPosts();
-        this.renderUpcomingPosts();
-    },
-
-    removeUpcomingPost(id) {
-        this.upcomingPosts = this.upcomingPosts.filter(p => p.id !== id);
-        this.saveUpcomingPosts();
-        this.renderUpcomingPosts();
-    },
-
-    saveUpcomingPosts() {
-        localStorage.setItem('abidos_upcoming_posts', JSON.stringify(this.upcomingPosts));
-    },
-
-    renderUpcomingPosts() {
-        const tbody = document.getElementById('upcoming-posts-table');
-        if (!tbody) return;
-
-        if (this.upcomingPosts.length === 0) {
-            tbody.innerHTML = `
-                <tr id="no-posts-row">
-                    <td colspan="4" style="padding: 20px; text-align: center; color: #94a3b8;">Nenhum título na pauta. Adicione para começar a planejar com a IA.</td>
-                </tr>
-            `;
-            return;
-        }
-
-        tbody.innerHTML = this.upcomingPosts.map(p => `
-            <tr style="border-bottom: 1px solid var(--color-border);">
-                <td style="padding: 12px; font-weight: 800; color: #fff;">${p.title}</td>
-                <td style="padding: 12px; color: var(--color-text-light); font-size: 12px;">${p.focus}</td>
-                <td style="padding: 12px;">
-                    <span style="background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);">${p.status}</span>
-                </td>
-                <td style="padding: 12px; display: flex; gap: 8px;">
-                    <button onclick="window.seoEngine.writePost('${p.title}', '${p.focus}')" class="btn btn-primary" style="font-size: 10px; padding: 6px 12px;">📝 Escrever</button>
-                    <button onclick="window.seoEngine.removeUpcomingPost(${p.id})" class="btn btn-danger" style="font-size: 10px; padding: 6px 12px;">🗑️</button>
-                </td>
-            </tr>
-        `).join('');
-    },
-
-    async writePost(title, focus) {
-        // [Fase 3] Interconectividade: Pauta -> Studio
-        if (window.aiStudioTemplate) {
-            await window.aiStudioTemplate.importIntoStudio({
-                theme: title,
-                context: focus,
-                reset: true
-            });
-            
-            // Log no Centelha se carregado
-            if(window.sparkEngine) {
-                console.log(`✨ [SPARK] Iniciando produção de "${title}"...`);
-            }
-        } else {
-            alert("Studio não carregado.");
-        }
     }
 };
+
+const styleSeo = document.createElement('style');
+styleSeo.textContent = `
+    .inline-edit { cursor: pointer; border-radius: 4px; padding: 4px 8px !important; }
+    .inline-edit:hover { background: rgba(255,255,255,0.05) !important; color: #fff !important; }
+    .inline-edit:focus { background: rgba(99, 102, 241, 0.15) !important; outline: 1px solid #6366f1 !important; color: #fff !important; }
+`;
+document.head.appendChild(styleSeo);
+

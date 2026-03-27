@@ -2,14 +2,14 @@
   "silos": [
     {
       "id": "autismo-adulto",
-      "hub": "Autismo Adulto",
+      "hub": "Transtorno do Espectro Autista (TEA)",
       "spokes": [
         "Diagnóstico Tardio",
         "Sinais Sutis em Mulheres",
         "Alta Funcionalidade e Burnout",
         "Relacionamentos e TEA"
       ],
-      "slug": "autismo-adulto"
+      "slug": "autismo-em-adultos"
     },
     {
       "id": "ansiedade-burnout",

@@ -289,6 +289,32 @@ app.get('/api/system/report/history', (req, res) => {
     }
 });
 
+// [FASE 6: DIAGNÓSTICO E BACKUP VISUAL]
+const PRINTS_DIR = path.join(__dirname, '../docs/prints');
+
+app.post('/api/dev/screenshot', (req, res) => {
+    try {
+        const { image, filename, folder } = req.body;
+        if (!image) return res.status(400).json({ error: "Imagem ausente" });
+
+        const now = new Date();
+        const dateFolder = folder || `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
+        const timeFolder = now.getHours().toString().padStart(2,'0') + '-' + now.getMinutes().toString().padStart(2,'0');
+        
+        const finalDir = path.join(PRINTS_DIR, dateFolder, timeFolder);
+        if (!fs.existsSync(finalDir)) fs.mkdirSync(finalDir, { recursive: true });
+
+        const base64Data = image.replace(/^data:image\/png;base64,/, "");
+        const filePath = path.join(finalDir, filename || `screenshot_${Date.now()}.png`);
+        
+        fs.writeFileSync(filePath, base64Data, 'base64');
+        res.json({ success: true, path: filePath });
+    } catch (e) {
+        console.error("❌ Erro ao salvar screenshot:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Health Checks (Simples)
 app.get('/api/ai/health', async (req, res) => {
     try {

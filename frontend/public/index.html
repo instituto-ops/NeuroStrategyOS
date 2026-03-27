@@ -65,6 +65,8 @@
             100% { background-position: -200% 0; }
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="js/dev-tools.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -89,6 +91,7 @@
                     <div class="nav-item">
                         <div class="nav-link">🎬 Produção <i data-lucide="chevron-down" style="width: 10px; height: 10px; margin-left: 4px;"></i></div>
                         <div class="nav-dropdown">
+                            <div class="dropdown-item" onclick="app.showSection('planning')" data-target="planning"><i data-lucide="map"></i> Estratégia de Silos (Mapa)</div>
                             <div class="dropdown-item" onclick="app.showSection('ai-studio')"><i data-lucide="wand-2"></i> Studio de Conteúdo</div>
                             <div class="dropdown-item" onclick="app.showSection('acervo-publicacoes')"><i data-lucide="file-text"></i> Gestão de Páginas</div>
                             <div class="dropdown-item" onclick="app.showSection('menu-manager')"><i data-lucide="layout-template"></i> Gestão de Menus</div>
@@ -110,6 +113,7 @@
                     <div class="nav-item">
                         <div class="nav-link">🔨 Desenvolvimento <i data-lucide="chevron-down" style="width: 10px; height: 10px; margin-left: 4px;"></i></div>
                         <div class="nav-dropdown">
+                            <div class="dropdown-item" onclick="app.showSection('dev-tools')"><i data-lucide="wrench"></i> Ferramentas de Engenharia</div>
                             <div class="dropdown-item" onclick="app.showSection('health-reputation')"><i data-lucide="activity"></i> Monitor Técnico</div>
                         </div>
                     </div>
@@ -120,6 +124,10 @@
                     <div class="pulse-dot"></div>
                     <span>ENGINE ATIVO</span>
                 </div>
+                <!-- 📸 BOTÃO DE PRINT RÁPIDO (DEVTOLS) -->
+                <button class="btn btn-secondary" onclick="window.devTools?.copyCurrentToClipboard()" style="height: 32px; padding: 0 12px; font-size: 11px; border-radius: 8px; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--color-border);">
+                    <i data-lucide="camera" style="width: 14px; height: 14px;"></i> <span>PRINT</span>
+                </button>
                 <div class="user-profile" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                     <span style="font-size: 10px; color: var(--color-text-dim); font-weight: 800;">DR. LAWRENCE</span>
                     <img src="https://ui-avatars.com/api/?name=Victor+Lawrence&background=6366f1&color=fff&bold=true" style="width: 28px; height: 28px; border-radius: 8px;">
@@ -929,21 +937,17 @@
                 </div>
             </section>
 
-            <!-- Section: Gestão de Menus (Decoupled Navigation) -->
             <section id="menu-manager" class="content-section">
                 <div class="card" style="margin-bottom: 20px; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; gap: 30px; align-items: center;">
                         <h2 style="font-size: 20px; color: var(--color-primary); margin: 0; font-weight: 800;">Navigation Control</h2>
-                        <div class="tab-switcher" style="display: flex; gap: 10px; background: #f1f5f9; padding: 5px; border-radius: 10px;">
-                            <button class="tab-btn active" onclick="window.menuSystem.switchTab('silos', this)" style="padding: 10px 20px; border-radius: 8px; border: none; font-weight: 800; font-size: 11px; cursor: pointer; transition: all 0.2s;">📁 ARQUITETURA DE SILOS</button>
-                            <button class="tab-btn" onclick="window.menuSystem.switchTab('menus', this)" style="padding: 10px 20px; border-radius: 8px; border: none; font-weight: 800; font-size: 11px; color: #64748b; cursor: pointer; transition: all 0.2s;">🌳 MENUS DE NAVEGAÇÃO</button>
-                        </div>
+                        <div style="background: #eef2ff; color: #6366f1; font-size: 10px; font-weight: 900; padding: 5px 15px; border-radius: 20px; border: 1px solid #e0e7ff;">GESTÃO DE MENUS ATIVA</div>
                     </div>
-                    <div style="font-size: 11px; color: #94a3b8; font-weight: 700;">GESTÃO DE ESTRUTURA v4.2</div>
+                    <div style="font-size: 11px; color: #94a3b8; font-weight: 700;">NAV-NODE v4.2</div>
                 </div>
 
-                <!-- CONTEÚDO: TAB MENUS -->
-                <div id="tab-menus-content" class="menu-tab-pane" style="display: none;">
+                <!-- CONTEÚDO: TAB MENUS (Única aba agora) -->
+                <div id="tab-menus-content" class="menu-tab-pane" style="display: block;">
                     <div class="grid" style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
                         <div class="card" style="align-self: flex-start; padding: 25px;">
                             <h3 style="margin-bottom: 15px; font-size: 12px; text-transform: uppercase; color: #64748b;">Estruturas de Menu</h3>
@@ -978,75 +982,8 @@
                     </div>
                 </div>
 
-                <!-- CONTEÚDO: TAB SILOS -->
-                        <div id="tab-silos-content" class="menu-tab-pane active" style="display: block;">
-                            <div class="grid" style="display: grid; grid-template-columns: 350px 1fr; gap: 20px;">
-                                <!-- Lista de Silos e Sugestões -->
-                                <div style="display: flex; flex-direction: column; gap: 15px;">
-                                    <div class="card" style="padding: 25px; background: #f8fafc; border: 1px solid #e2e8f0;">
-                                        <h3 style="margin-bottom: 15px; font-size: 12px; text-transform: uppercase; color: #10b981;">Hubs de Conteúdo (Silos)</h3>
-                                        <div id="silo-manager-list" style="display: flex; flex-direction: column; gap: 10px;">
-                                            <!-- Injetado via JS -->
-                                            <div style="color: #64748b; font-size: 13px;">Carregando arquitetura...</div>
-                                        </div>
-                                        <button class="btn btn-secondary" style="width: 100%; margin-top: 20px; border: 2px dashed #10b98144; background: #10b9810a; color: #10b981; font-weight: 800;" onclick="window.menuSystem.createNewSilo()">+ CRIAR NOVO HUB SILO</button>
-                                    </div>
-
-                                    <!-- Sugestões Abidos IA -->
-                                    <div class="card" style="padding: 20px; background: #fff1f2; border: 1px solid #fecdd3;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                            <h3 style="font-size: 12px; margin: 0; color: #9f1239; font-weight: 800;">✨ SUGESTÕES ABIDOS</h3>
-                                            <button class="btn" id="btn-suggest-silos" onclick="window.menuSystem.suggestSilos()" style="font-size: 9px; padding: 4px 8px; background: #e11d48; color: white; border-radius: 4px;">ATUALIZAR SUGESTÕES</button>
-                                        </div>
-                                        <div id="silo-suggestions-list" style="font-size: 11px; color: #881337;">
-                                            Analise demandas estratégicas baseadas no site e Ads.
-                                        </div>
-                                    </div>
-                                </div>
-
-                        <!-- Editor de Silos (Hub & Spoke) -->
-                        <div class="card" id="silo-editor-card" style="padding: 25px; display: none;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                                <h3 id="silo-editor-title" style="margin: 0; font-size: 18px; font-weight: 900;">Configurar Arquitetura Silo</h3>
-                                <button class="btn btn-primary" onclick="window.menuSystem.saveCurrentSilo()" style="background: #6366f1; border-radius: 8px; font-weight: 800;">💾 ATUALIZAR SILO</button>
-                            </div>
-
-                            <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
-                                <div>
-                                    <label style="font-size: 11px; font-weight: 800; color: #64748b; display: block; margin-bottom: 8px;">TEMA DO HUB (EX: ANSIEDADE)</label>
-                                    <input type="text" id="silo-editor-hub" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-weight: 700;">
-                                </div>
-                                <div>
-                                    <label style="font-size: 11px; font-weight: 800; color: #64748b; display: block; margin-bottom: 8px;">SLUG / URL RAIZ</label>
-                                    <input type="text" id="silo-editor-slug" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-weight: 700;">
-                                </div>
-                            </div>
-
-                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                    <span style="font-weight: 900; font-size: 12px; color: #166534;">PÁGINAS SPOKES (ARTIGOS DE SUPORTE)</span>
-                                    <button class="btn btn-secondary" style="font-size: 10px; padding: 5px 12px; background: white; color: #166534; border: 1px solid #bbf7d0;" onclick="window.menuSystem.addSiloSpoke()">+ ADICIONAR SPOKE</button>
-                                </div>
-                                <div id="silo-spokes-container" style="display: flex; flex-direction: column; gap: 10px;">
-                                    <!-- Spokes injetados -->
-                                </div>
-                            </div>
-                            
-                            <div style="margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;">
-                                <p style="font-size: 11px; color: #92400e; margin: 0; line-height: 1.5;">
-                                    💡 <strong>Dica Abidos:</strong> Os Silos criados aqui aparecem automaticamente no Planejamento e no AI Studio para garantir que cada nova página herde a autoridade do seu Hub sem esforço manual.
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <!-- Estado Vazio -->
-                        <div class="card" id="silo-empty-state" style="padding: 100px 50px; text-align: center; color: #cbd5e1; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                             <span style="font-size: 50px; margin-bottom: 20px;">📂</span>
-                             <h4 style="margin: 0; color: #94a3b8;">Silo Master Control</h4>
-                             <p style="font-size: 13px;">Selecione um silo à esquerda para gerenciar sua arquitetura de Hub & Spoke.</p>
-                        </div>
-                    </div>
                 </div>
+            </section>
             </section>
 
             <!-- Section: Neuro-Training (Aprendiz de Abidos) -->
@@ -1489,17 +1426,63 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+            
+            <!-- Section: Ferramentas de Engenharia (DevTools - Decommission after Go-Live) -->
+            <section id="dev-tools" class="content-section">
+                <div class="grid">
+                    <div class="card" style="border-top: 4px solid var(--color-secondary); grid-column: 1 / -1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div>
+                                <h1 style="margin:0; font-size: 24px;">🛠️ Ferramentas de Engenharia</h1>
+                                <p style="color: var(--color-text-dim); margin-top: 5px;">Utilitários exclusivos para diagnóstico, auditoria visual e suporte ao desenvolvimento.</p>
+                            </div>
+                            <span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444;">DECOMISSÃO PENDENTE</span>
+                        </div>
+                    </div>
+
+                    <div class="card" style="border-top: 4px solid var(--color-success);">
+                        <div style="display: flex; gap: 15px; align-items: flex-start;">
+                            <div style="background: rgba(16, 185, 129, 0.1); pading: 15px; border-radius: 12px;">
+                                <i data-lucide="camera" style="width: 32px; height: 32px; color: var(--color-success);"></i>
+                            </div>
+                            <div style="flex:1;">
+                                <h3 style="margin:0;">Backup Visual do Sistema</h3>
+                                <p style="font-size: 12px; color: var(--color-text-dim); margin: 8px 0 15px 0;">
+                                    Captura todas as seções do ecossistema e salva em pastas organizadas por data e hora no servidor (<code>/docs/prints/</code>).
+                                </p>
+                                <button class="btn btn-primary" onclick="window.devTools?.runFullSystemBackup()" style="width: 100%; font-weight: 800;">🚀 INICIAR BACKUP COMPLETO</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="border-top: 4px solid var(--color-primary);">
+                        <div style="display: flex; gap: 15px; align-items: flex-start;">
+                            <div style="background: rgba(99, 102, 241, 0.1); pading: 15px; border-radius: 12px;">
+                                <i data-lucide="file-text" style="width: 32px; height: 32px; color: var(--color-primary);"></i>
+                            </div>
+                            <div style="flex:1;">
+                                <h3 style="margin:0;">Registro de Limpeza</h3>
+                                <p style="font-size: 12px; color: var(--color-text-dim); margin: 8px 0 15px 0;">
+                                    Consulte a lista de artefatos que devem ser removidos antes do lançamento oficial.
+                                </p>
+                                <a href="docs/MAINTENANCE_CLEANUP.md" target="_blank" class="btn btn-secondary" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; text-decoration: none; font-size: 12px;">
+                                    <i data-lucide="external-link" style="width: 14px; height: 14px;"></i> ABRIR CHECKLIST
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Section: Planejamento (Silos & STAGs) -->
             <section id="planning" class="content-section">
+                <!-- CABEÇALHO ESTRATÉGICO -->
                 <div class="card" style="margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <div>
-                            <h2>🧭 Estratégia de Conteúdo</h2>
-                            <p style="color: #64748b; font-size: 14px; margin: 0;">Mapeie seu domínio e planeje campanhas de Google Ads com intenção clínica.</p>
+                            <h2 style="margin: 0;">🧭 Estratégia de Conteúdo & Arquitetura Silo</h2>
+                            <p style="color: #64748b; font-size: 14px; margin: 0;">Dominação semântica: Gestão centralizada de Hubs, Spokes e Pauta Editorial.</p>
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <select class="local-model-selector" data-section="planning" onchange="app.updateLocalModel('planning', this.value)">
@@ -1507,86 +1490,135 @@
                                 <option value="gemini-2.5-flash">⚡ FLASH (Estratégico)</option>
                                 <option value="gemini-2.5-pro">🧠 PRO (Análise Profunda)</option>
                             </select>
-                            <button class="btn btn-secondary" style="font-size: 11px; font-weight: 800; background: #1e293b; color: white;" onclick="window.seoEngine.addSiloPrompt()">+ NOVO SILO</button>
-                            <button class="btn btn-secondary" style="font-size: 11px; font-weight: 800;" onclick="window.seoEngine.addStagPrompt()">+ NOVA CAMPANHA STAG</button>
+                            <button class="btn btn-primary" style="font-size: 11px; font-weight: 800;" onclick="window.seoEngine.addSiloPrompt()">+ NOVO HUB SILO</button>
+                            <button class="btn btn-secondary" style="font-size: 11px; font-weight: 800; border-style: dashed;" onclick="window.seoEngine.suggestSilos()">🧠 Sugestões Abidos (IA)</button>
                         </div>
                     </div>
-                    
-                    <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; align-items: stretch;">
-                        <!-- Coluna 1: Silos -->
-                        <div class="card" style="display: flex; flex-direction: column;">
+
+                    <!-- GESTÃO MESTRE DE SILOS (NOVA TABELA EDITÁVEL) -->
+                    <div class="media-split-container" style="display: grid; grid-template-columns: 1fr 400px; gap: 20px; min-height: 500px; align-items: stretch;">
+                        <!-- LADO ESQUERDO: TABELA DE HUBS -->
+                        <div class="card" style="padding: 20px; background: rgba(0,0,0,0.1); border-radius: 12px; display: flex; flex-direction: column;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                <h3 style="margin:0;">ESTRUTURA HUB AND SPOKE</h3>
-                                <select id="planning-silo-selector" onchange="window.seoEngine.selectSilo(this.value)" style="padding: 5px; font-size: 12px; border-radius: 4px; border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text);">
-                                    <option value="">Carregando Silos...</option>
-                                </select>
+                                <h3 style="margin: 0; font-size: 13px; color: #6366f1; text-transform: uppercase;">🗂️ Hubs do Domínio</h3>
+                                <div style="font-size: 10px; color: #94a3b8; font-style: italic;">Clique nas células para editar Nome ou Slug</div>
                             </div>
-                            <div id="silo-groups-container" style="font-family: monospace; font-size: 14px; line-height: 1.8; flex: 1; max-height: 350px; overflow-y: auto;">
-                                <p style="color: var(--color-text-light); font-style: italic;">Selecione um silo para ver a estrutura...</p>
+                            <div class="table-container" style="overflow-y: auto; flex: 1;">
+                                <table class="table" style="width: 100%;">
+                                    <thead>
+                                        <tr style="font-size: 10px; color: #94a3b8; text-transform: uppercase; border-bottom: 1px solid var(--color-border);">
+                                            <th style="text-align: left; padding: 10px;">Hub (Tema)</th>
+                                            <th style="text-align: left; padding: 10px;">URL / Slug</th>
+                                            <th style="text-align: center; padding: 10px;">Métricas</th>
+                                            <th style="text-align: right; padding: 10px;">Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="silo-master-table-body">
+                                        <!-- Injetado via window.seoEngine.renderSiloMaster() -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
-                        <!-- Coluna 2: Grafo Interativo -->
-                        <div class="card" style="display: flex; flex-direction: column; position: relative;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                <h3 style="margin:0;">MAPEAMENTO DINÂMICO</h3>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="btn btn-secondary" onclick="window.seoEngine.resetGraph()" style="font-size: 10px; padding: 4px 8px;" title="Recentralizar Mapa">🎯 RE-CENTRO</button>
-                                    <button class="btn btn-secondary" onclick="window.seoEngine.reorganizeGraph()" style="font-size: 10px; padding: 4px 8px;" title="Layout Automático">🌳 REORGANIZAR</button>
+                        <!-- LADO DIREITO: EDITOR DE SPOKES E SUGESTÕES IA -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <!-- Sugestões Abidos (IA) - Movido para cá -->
+                            <div id="silo-suggestions-panel" class="card" style="padding: 20px; background: #fff1f2; border: 1px solid #fecdd3; display: none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <h3 style="font-size: 11px; margin: 0; color: #9f1239; font-weight: 800;">✨ SUGESTÕES ABIDOS IA</h3>
+                                    <button class="btn" onclick="this.parentElement.parentElement.style.display='none'" style="background: none; border: none; font-size: 16px; color: #9f1239;">&times;</button>
+                                </div>
+                                <div id="silo-suggestions-list-planning" style="display: flex; flex-direction: column; gap: 10px;">
+                                    <!-- Injetado via JS -->
                                 </div>
                             </div>
-                            <div id="cy-map" style="width: 100%; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; background: rgba(0,0,0,0.3);"></div>
-                        </div>
-                    </div> <!-- Fecha Grid Topo Planejamento -->
 
-                    <!-- [NOVO] Pauta de Conteúdo AI -->
-                    <div class="card" style="margin-top: 20px; border-top: 4px solid #10b981;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h3 style="margin:0;">📅 Pauta de Conteúdo (Próximas Publicações)</h3>
-                            <button class="btn btn-secondary" onclick="window.seoEngine.addUpcomingPost()" style="font-size: 11px; padding:6px 12px;">+ Adicionar Título</button>
+                            <!-- Spoke Editor Component -->
+                            <div class="card" id="spoke-manager-panel" style="padding: 25px; border-top: 4px solid #10b981; flex: 1; display: none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                    <div>
+                                        <h3 id="spoke-editor-title" style="margin: 0; font-size: 16px; font-weight: 900; color: #1e293b;">📄 Editando Spokes</h3>
+                                        <p style="font-size: 11px; color: #64748b; margin: 2px 0 0 0;">Artigos de apoio para o Hub: <span id="current-hub-name" style="font-weight: 800; color: #10b981;">--</span></p>
+                                    </div>
+                                    <button class="btn btn-secondary" style="font-size: 10px; background: white; border: 1px solid #bbf7d0; color: #166534;" onclick="window.seoEngine.addSpokePrompt()">+ SPOKE</button>
+                                </div>
+                                <div id="spoke-list-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto;">
+                                    <!-- Spokes injetados -->
+                                </div>
+                            </div>
+
+                            <!-- Estado Vazio -->
+                            <div id="spoke-empty-state" class="card" style="padding: 40px; text-align: center; color: #94a3b8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px;">
+                                <span style="font-size: 40px; margin-bottom: 15px;">📂</span>
+                                <p style="font-size: 13px;">Selecione um Hub na tabela para gerenciar seus Spokes e ver sugestões IA.</p>
+                            </div>
                         </div>
-                        <div style="overflow-x: auto;">
-                            <table style="width:100%; border-collapse: collapse; font-size: 13px;">
-                                <thead style="background: rgba(255,255,255,0.05); text-align: left;">
-                                    <tr>
-                                        <th style="padding: 10px; border: 1px solid #e2e8f0;">Título Estratégico</th>
-                                        <th style="padding: 10px; border: 1px solid #e2e8f0;">Foco / Keyword</th>
-                                        <th style="padding: 10px; border: 1px solid #e2e8f0;">Status IA</th>
-                                        <th style="padding: 10px; border: 1px solid #e2e8f0; width: 100px;">Ação</th>
+                    </div>
+
+                    <!-- MAPEAMENTO DINÂMICO (Grafo) -->
+                    <div class="card" style="margin-top: 25px; background: rgba(15, 23, 42, 0.4); border: 1px solid var(--color-border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="margin:0; font-size: 13px; color: #38bdf8; text-transform: uppercase;">🗺️ Mapeamento de Autoridade (Grafo)</h3>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary" onclick="window.seoEngine.resetGraph()" style="font-size: 10px; padding: 4px 10px; border-color: rgba(56, 189, 248, 0.3);">🎯 RE-CENTRALIZAR</button>
+                                <button class="btn btn-secondary" onclick="window.seoEngine.reorganizeGraph()" style="font-size: 10px; padding: 4px 10px; border-color: rgba(56, 189, 248, 0.3);">🌳 LAYOUT AUTOMÁTICO</button>
+                            </div>
+                        </div>
+                        <div id="cy-map" style="width: 100%; height: 350px; border-radius: 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(56, 189, 248, 0.1);"></div>
+                    </div>
+
+                    <!-- PAUTA DE CONTEÚDO EDITÁVEL -->
+                    <div class="card" style="margin-top: 25px; border-top: 4px solid #10b981;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div>
+                                <h3 style="margin:0;">📅 Pauta Editorial (Próximas Publicações)</h3>
+                                <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Planejamento de esteira de produção. Clique para editar em tempo real.</p>
+                            </div>
+                            <button class="btn btn-primary" onclick="window.seoEngine.addUpcomingPost()" style="font-size: 12px; padding:8px 20px; background: #10b981;">+ NOVO TÍTULO ESTRATÉGICO</button>
+                        </div>
+                        <div class="table-container" style="background: rgba(0,0,0,0.1); border-radius: 12px; padding: 10px;">
+                            <table style="width:100%; border-collapse: separate; border-spacing: 0 8px; font-size: 13px;">
+                                <thead>
+                                    <tr style="color: #94a3b8; font-size: 10px; text-transform: uppercase; text-align: left;">
+                                        <th style="padding: 10px;">Título Estratégico</th>
+                                        <th style="padding: 10px;">Foco / Keyword (SEO)</th>
+                                        <th style="padding: 10px;">Silo / Agrupamento</th>
+                                        <th style="padding: 10px; text-align: center;">Status</th>
+                                        <th style="padding: 10px; text-align: right;">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="upcoming-posts-table">
                                     <tr id="no-posts-row">
-                                        <td colspan="4" style="padding: 20px; text-align: center; color: #94a3b8;">Nenhum título na pauta. Adicione para começar a planejar com a IA.</td>
+                                        <td colspan="5" style="padding: 30px; text-align: center; color: #94a3b8; font-style: italic;">Nenhum título na pauta. Comece agora.</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
-                    <!-- Rodapé do Planejamento: Mídia Assistant -->
-                    <div class="card" style="margin-top: 20px; border-top: 4px solid #6366f1;">
-                        <h3 style="margin-bottom: 10px;">🎨 Assistente de Demanda de Mídia</h3>
-                        <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">
-                            O assistente analisa posts publicados e rascunhos para avaliar a demanda de mídia e criar prompts para o <strong>NanoBanana</strong>.
-                        </p>
-                        <button class="btn btn-primary" onclick="window.mediaLibrary.recommendMediaDemand()" id="btn-analyze-media-demand" style="background: #6366f1;">
-                            🚀 Analisar Demanda Visual e Gerar Prompts
-                        </button>
-                        <div id="media-planning-result" style="margin-top: 20px;">
+                    <!-- ASSISTENTE DE DEMANDA DE MÍDIA -->
+                    <div class="card" style="margin-top: 25px; border-top: 4px solid #6366f1; background: rgba(99, 102, 241, 0.03);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div>
+                                <h3 style="margin:0;">🎨 Assistente Visual Abidos</h3>
+                                <p style="font-size: 12px; color: #64748b; margin-top: 3px;">Análise proativa de demanda por imagens baseada na pauta editorial.</p>
+                            </div>
+                            <button class="btn btn-primary" onclick="window.mediaLibrary.recommendMediaDemand()" id="btn-analyze-media-demand" style="background: #6366f1; font-weight: 800; font-size: 11px;">🚀 GERAR PAUTA VISUAL</button>
+                        </div>
+                        <div id="media-planning-result" style="margin-top: 10px;">
                             <div class="table-container">
                                 <table class="table">
                                     <thead>
-                                        <tr>
+                                        <tr style="font-size: 10px; text-transform: uppercase; color: #94a3b8;">
                                             <th>Imagem Desejada</th>
-                                            <th>Prompt Estratégico (Nano Banana)</th>
-                                            <th>Frequência</th>
-                                            <th>Ações</th>
+                                            <th>Prompt Estratégico (IA)</th>
+                                            <th style="text-align: center;">Frequência</th>
+                                            <th style="text-align: right;">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody id="media-demand-table">
                                         <tr>
-                                            <td colspan="4" style="text-align: center; color: var(--color-text-light); padding: 20px;">Execute a análise de demanda para gerar pauta visual.</td>
+                                            <td colspan="4" style="text-align: center; color: var(--color-text-light); padding: 30px; font-style: italic;">Execute a análise para visualizar demandas de mídia.</td>
                                         </tr>
                                     </tbody>
                                 </table>
