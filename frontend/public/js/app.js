@@ -24,7 +24,7 @@ const app = {
         if (window.lucide) window.lucide.createIcons();
 
         console.log("🚀 [Núcleo de Marketing] App Core Initialized.");
-}
+    },
     async loadSystemAlerts() {
         try {
             const res = await fetch('/api/system/report/latest');

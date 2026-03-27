@@ -149,6 +149,7 @@ window.healthSystem = {
                 const start = performance.now();
                 const res = await fetch(api.route);
                 const end = performance.now();
+                const latency = Math.round(end - start);
                 
                 if (!res.ok) {
                     const errData = await res.json().catch(() => ({}));
