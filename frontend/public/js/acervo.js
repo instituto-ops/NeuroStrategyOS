@@ -225,8 +225,60 @@ window.acervoManager = {
                 }
 
                 modal.style.display = 'flex';
+                
+                // Adicionar listener de input para análise automática (DEBOUNCED)
+                const editor = document.getElementById('import-html-editor');
+                if (editor && !editor.dataset.hasListener) {
+                    let timer;
+                    editor.addEventListener('input', () => {
+                        clearTimeout(timer);
+                        timer = setTimeout(() => this.analyzeHtmlForSEO(), 500);
+                    });
+                    editor.dataset.hasListener = "true";
+                }
             }
         } catch (e) { alert("Erro ao carregar página: " + e.message); }
+    },
+
+    /**
+     * Extrai automaticamente H1, Resumo e H2s do HTML colado para o SEO Invisível
+     */
+    analyzeHtmlForSEO: function() {
+        const html = document.getElementById('import-html-editor').value;
+        if (!html || html.length < 20) return;
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        // 1. Extrair H1 Técnico
+        const h1Input = document.getElementById('import-seo-h1');
+        if (h1Input && !h1Input.value.trim()) {
+            const h1 = doc.querySelector('h1')?.textContent || doc.querySelector('title')?.textContent || "";
+            if (h1) h1Input.value = h1.trim();
+        }
+
+        // 2. Extrair Resumo / Meta Description
+        const resumoInput = document.getElementById('import-seo-resumo');
+        if (resumoInput && !resumoInput.value.trim()) {
+            // Tenta meta description primeiro
+            let description = doc.querySelector('meta[name="description"]')?.getAttribute('content');
+            // Ou o primeiro parágrafo significativo
+            if (!description) {
+                const firstP = Array.from(doc.querySelectorAll('p')).find(p => p.textContent.length > 30);
+                if (firstP) description = firstP.textContent.substring(0, 160);
+            }
+            if (description) resumoInput.value = description.trim();
+        }
+
+        // 3. Extrair H2s Estratégicos
+        const h2sInput = document.getElementById('import-seo-h2s');
+        if (h2sInput && !h2sInput.value.trim()) {
+            const h2s = Array.from(doc.querySelectorAll('h2'))
+                .slice(0, 5)
+                .map(h => h.textContent.trim())
+                .filter(Boolean);
+            if (h2s.length > 0) h2sInput.value = h2s.join('\n');
+        }
     },
 
     saveImportedHtml: async function() {

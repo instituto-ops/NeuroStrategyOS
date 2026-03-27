@@ -1,0 +1,21 @@
+[
+  {
+    "id": "MANUAL-1774596403861",
+    "title": "Psicólogo Victor Lawrence",
+    "slug": "/victor",
+    "silo": "",
+    "menuId": "principal",
+    "status": "DRAFT",
+    "type": "manual",
+    "htmlContent": "",
+    "useShell": true,
+    "seoFields": {
+      "h1": "",
+      "resumo": "",
+      "h2s": []
+    },
+    "versions": [],
+    "createdAt": "2026-03-27T07:26:43.861Z",
+    "lastUpdate": "2026-03-27T07:26:43.861Z"
+  }
+]

@@ -835,9 +835,9 @@ app.post('/api/acervo/salvar-pagina', async (req, res) => {
         const googleTag = getGoogleTagSnippet();
         const googleTagNoscript = getGoogleTagNoscript();
         
-        // 1. Script no <head>
-        if (htmlSource.includes('</head>')) {
-            htmlSource = htmlSource.replace('</head>', `${googleTag}\n</head>`);
+        // 1. Script no <head> (O mais alto possível)
+        if (htmlSource.match(/<head[^>]*>/i)) {
+            htmlSource = htmlSource.replace(/<head[^>]*>/i, `$&\n${googleTag}`);
         } else {
             htmlSource = googleTag + htmlSource;
         }
@@ -1301,8 +1301,23 @@ app.post('/api/acervo/manual/preview', (req, res) => {
             }
 
             // Injeta Google Tag Manager (head + body)
-            shell = shell.replace(/\{\{GOOGLE_TAG_HEAD\}\}/g, getGoogleTagSnippet());
-            shell = shell.replace(/\{\{GOOGLE_TAG_BODY\}\}/g, getGoogleTagNoscript());
+            // Injeta Google Tag Manager (head + body) conforme solicitação do usuário
+            const googleTag = getGoogleTagSnippet();
+            const googleTagNoscript = getGoogleTagNoscript();
+
+            // 1. No topo do <head>
+            if (shell.match(/<head[^>]*>/i)) {
+                shell = shell.replace(/<head[^>]*>/i, `$&\n${googleTag}`);
+            } else {
+                shell = googleTag + shell;
+            }
+
+            // 2. Imediatamente após o <body>
+            if (shell.match(/<body[^>]*>/i)) {
+                shell = shell.replace(/<body[^>]*>/i, `$&\n${googleTagNoscript}`);
+            } else {
+                shell = shell + googleTagNoscript;
+            }
 
             // Injeta Menu
             let menuHtml = '';
@@ -1348,8 +1363,22 @@ app.post('/api/acervo/manual/publicar', async (req, res) => {
                 shell = shell.replace(`{{secao${i}_h2}}`, h2s[i - 1] || '');
             }
 
-            shell = shell.replace(/\{\{GOOGLE_TAG_HEAD\}\}/g, getGoogleTagSnippet());
-            shell = shell.replace(/\{\{GOOGLE_TAG_BODY\}\}/g, getGoogleTagNoscript());
+            const googleTag = getGoogleTagSnippet();
+            const googleTagNoscript = getGoogleTagNoscript();
+
+            // 1. No topo do <head>
+            if (shell.match(/<head[^>]*>/i)) {
+                shell = shell.replace(/<head[^>]*>/i, `$&\n${googleTag}`);
+            } else {
+                shell = googleTag + shell;
+            }
+
+            // 2. Imediatamente após o <body>
+            if (shell.match(/<body[^>]*>/i)) {
+                shell = shell.replace(/<body[^>]*>/i, `$&\n${googleTagNoscript}`);
+            } else {
+                shell = shell + googleTagNoscript;
+            }
 
             let menuHtml = '';
             if (page.menuId) {
