@@ -96,6 +96,15 @@
                 
                 <hr style="border-color: #374151; margin: 15px 0;">
                 <button class="nav-btn" data-target="manager-agent" style="background: linear-gradient(135deg, #6366f122, #2dd4bf22); border: 1px solid #6366f144;">👑 <span style="font-weight: 900; color: #fff;">NeuroEngineAI</span></button>
+                
+                <!-- [NOVO] Floating Help/Resource Center (Audit Point #10) -->
+                <div style="position: absolute; bottom: 20px; left: 20px; right: 20px; padding: 15px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; font-size: 11px;">
+                    <div style="font-weight: 800; color: #6366f1; margin-bottom: 5px; text-transform: uppercase;">📚 CENTRO DE APOIO</div>
+                    <div style="color: var(--color-text-dim); line-height: 1.4;">
+                        Dúvidas sobre o Método Abidos ou Silos? Clique no link abaixo ou consulte o Dr. Lawrence.
+                    </div>
+                    <button class="btn btn-secondary" style="width: 100%; margin-top: 10px; font-size: 10px; padding: 6px;" onclick="window.sparkEngine?._openManager()">📖 Wiki Estratégica</button>
+                </div>
 
             </nav>
         </aside>
@@ -127,13 +136,13 @@
                 </div>
             </header>
 
-            <!-- Section: Visão Geral (Dashboard) -->
+            <!-- Section: Dashboard (GA4 Integration) -->
             <section id="dashboard" class="content-section active">
-                <div class="card" style="margin-bottom: 20px; border-left: 4px solid var(--color-secondary);">
+                <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h3 style="margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #64748b;">📊 Integração Google Analytics 4 (GA4)</h3>
-                            <p style="margin: 3px 0 0 0; font-size: 13px;">Conectado ao Site (Next.js)</p>
+                            <h3 style="margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-text-dim);">📊 Integração Google Analytics 4 (GA4)</h3>
+                            <p style="margin: 3px 0 0 0; font-size: 13px; color: var(--color-text-light);">Conectado ao Site (Next.js Core)</p>
                         </div>
                         <div class="global-model-container" style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 12px; border: 1px solid var(--color-border);">
                             <span style="font-size: 10px; font-weight: 900; color: var(--color-secondary); text-transform: uppercase; letter-spacing: 1px;">🤖 Modelo Global:</span>
@@ -210,7 +219,7 @@
             <!-- Section: Analytics & Marketing -->
             <section id="analytics" class="content-section">
                 <!-- Header -->
-                <div class="card" style="margin-bottom: 20px; border-left: 4px solid var(--color-secondary); padding: 25px;">
+                <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h2 style="margin: 0; font-size: 20px; font-weight: 900; color: var(--color-text);">📊 BI & Analytics Estratégico</h2>
@@ -1090,42 +1099,39 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 280px); min-height: 500px;">
                     
                     <!-- LADO ESQUERDO: ENTRADA (A PERGUNTA) -->
-                    <div class="card" style="display: flex; flex-direction: column; padding: 25px; border-radius: 16px;">
+                    <div class="card" style="display: flex; flex-direction: column; padding: 25px; border-radius: 16px; background: rgba(30, 41, 59, 0.3);">
                         <div style="margin-bottom: 15px;">
-                            <h3 style="font-size: 12px; font-weight: 900; color: #475569; letter-spacing: 1px; margin: 0; margin-bottom: 5px;">ENTRADA DO PACIENTE</h3>
-                            <p style="font-size: 11px; color: #94a3b8; margin: 0;">Cole aqui o comentário do Doctoralia ou Instagram para processamento.</p>
+                            <h3 style="font-size: 12px; font-weight: 900; color: var(--color-text-dim); letter-spacing: 1px; margin: 0; margin-bottom: 5px;">ENTRADA DO PACIENTE</h3>
+                            <p style="font-size: 11px; color: var(--color-text-dim); margin: 0;">Cole aqui o comentário do Doctoralia ou Instagram para processamento.</p>
                         </div>
                         
                         <textarea id="doctoralia-input" 
                             placeholder="Ex: 'Doutor, você atende adultos com suspeita de autismo? Qual a sua abordagem?'" 
                             style="flex: 1; width: 100%; border-radius: 12px; border: 2px solid var(--color-border); padding: 20px; font-size: 15px; color: var(--color-text); line-height: 1.6; resize: none; background: rgba(255,255,255,0.02); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); outline: none;"
-                            onfocus="this.style.borderColor='var(--color-secondary)'; this.style.background='rgba(56, 189, 248, 0.05)';"
                         ></textarea>
                         
-                        <button id="btn-generate-doctoralia" class="btn" 
-                            style="width: 100%; margin-top: 20px; padding: 18px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; font-weight: 800; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2); transition: all 0.2s; letter-spacing: 0.5px; border: none; cursor: pointer;" 
+                        <button id="btn-generate-doctoralia" class="btn btn-primary" 
+                            style="width: 100%; margin-top: 20px; padding: 18px; font-size: 13px;" 
                             onclick="window.Doctoralia?.generateReply()">
                             ✨ GERAR RESPOSTA HUMANIZADA (PRO)
                         </button>
                     </div>
 
                     <!-- LADO DIREITO: SAÍDA (A REPOSTA) -->
-                    <div class="card" style="display: flex; flex-direction: column; padding: 25px; background: #f1f5f9; border-radius: 16px; border: 1px solid #e2e8f0;">
+                    <div class="card" style="display: flex; flex-direction: column; padding: 25px; background: rgba(30, 41, 59, 0.3); border-radius: 16px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <div>
-                                <h3 style="font-size: 12px; font-weight: 900; color: #475569; letter-spacing: 1px; margin: 0;">OUTPUT LITERÁRIO</h3>
-                                <p style="font-size: 10px; color: #94a3b8; margin: 0;">Clinical Plain-Text (Sem formatação)</p>
+                                <h3 style="font-size: 12px; font-weight: 900; color: var(--color-text-dim); letter-spacing: 1px; margin: 0;">OUTPUT LITERÁRIO</h3>
+                                <p style="font-size: 10px; color: var(--color-text-dim); margin: 0;">Clinical Plain-Text (Sem formatação)</p>
                             </div>
-                            <button class="btn" 
-                                style="font-size: 11px; padding: 8px 16px; background: white; color: #6366f1; border: 1.5px solid #6366f1; font-weight: 800; border-radius: 8px; cursor: pointer; transition: all 0.2s;"
-                                onmouseover="this.style.background='#6366f1'; this.style.color='white';"
-                                onmouseout="this.style.background='white'; this.style.color='#6366f1';"
+                            <button class="btn btn-secondary" 
+                                style="font-size: 11px; padding: 8px 16px;"
                                 onclick="window.Doctoralia?.copyReply()">COPIAR TEXTO</button>
                         </div>
                         
                         <div id="doctoralia-reply-container" 
-                            style="flex: 1; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; font-size: 15px; line-height: 1.7; color: #334155; overflow-y: auto; font-family: 'Inter', sans-serif; box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.02);">
-                            <div style="color: #94a3b8; text-align: center; margin-top: 150px; font-size: 14px;">
+                            style="flex: 1; background: rgba(0,0,0,0.2); border: 1px solid var(--color-border); border-radius: 12px; padding: 25px; font-size: 15px; line-height: 1.7; color: var(--color-text-light); overflow-y: auto; font-family: 'Inter', sans-serif;">
+                            <div style="color: var(--color-text-dim); text-align: center; margin-top: 150px; font-size: 14px;">
                                 <span style="font-size: 32px; display: block; margin-bottom: 10px;">🧠</span>
                                 Aguardando entrada para orquestração...
                             </div>
@@ -1338,25 +1344,84 @@
                         <div class="card" style="border-top: 4px solid #10b981;">
                             <h3>🔦 Auditoria Profilática (Lighthouse)</h3>
                             <div id="lighthouse-metrics" style="padding-top: 10px;">
-                                <button class="btn btn-secondary" onclick="window.healthSystem.checkLighthouse()">▶ Executar Escaneamento</button>
+                                <button class="btn btn-secondary" style="font-size: 11px; width: 100%;" onclick="window.healthSystem.checkLighthouse()">▶ Executar Escaneamento</button>
                             </div>
                         </div>
 
-
-
-                        <!-- [FASE 3] Relatório de Funcionalidade Abidos -->
+                        <!-- Card: Auditoria de Funcionalidade -->
                         <div class="card" style="border-top: 4px solid #ef4444;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                                 <div>
                                     <h3 style="margin:0;">🔗 Auditoria de Funcionalidade</h3>
-                                    <p style="font-size: 11px; color: #64748b; margin: 3px 0 0 0;">Teste estrutural e de APIs.</p>
+                                    <p style="font-size: 11px; color: #64748b; margin: 3px 0 0 0;">Teste estrutural e de APIs em tempo real.</p>
                                 </div>
-                                <button class="btn btn-primary" style="font-size: 10px; font-weight: 800; background: #1e293b;" onclick="window.healthSystem.runSystemCheck()">🚀 CHECK-UP</button>
+                                <button class="btn btn-primary" style="font-size: 11px; font-weight: 800; background: #1e293b; padding: 10px 15px;" onclick="window.healthSystem.runSystemCheck()">🚀 CHECK-UP AGORA</button>
                             </div>
                             <div id="functional-report-results" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; min-height: 100px; padding: 15px;">
                                 <p style="color: #64748b; font-size: 11px; text-align: center; font-style: italic; padding: 20px;">Aguardando diagnóstico...</p>
                             </div>
                         </div>
+
+                        <!-- [NOVO] Card: Análise Longitudinal (V5.3) -->
+                        <div class="card" style="border-top: 4px solid #8b5cf6;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <div>
+                                    <h3 style="margin:0;">📉 Análise Longitudinal</h3>
+                                    <p style="font-size: 11px; color: #64748b; margin: 3px 0 0 0;">Histórico de incidentes e estabilidade.</p>
+                                </div>
+                                <button class="btn btn-secondary" style="font-size: 11px; padding: 10px 15px;" onclick="window.healthSystem.loadLongitudinalReport()">🔄 Carregar Dados</button>
+                            </div>
+                            <div id="longitudinal-report-results" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; min-height: 100px; padding: 10px; overflow-y: auto; max-height: 250px;">
+                                <p style="color: #64748b; font-size: 11px; text-align: center; font-style: italic; padding: 20px;">Relatório inativo.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- [RESTORED] Card: Logs Recentes (Console) -->
+                        <div class="card" style="border-top: 4px solid #f59e0b; display: flex; flex-direction: column;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <div>
+                                    <h3 style="margin:0;">📜 Logs Recentes (Console)</h3>
+                                    <p style="font-size: 11px; color: #64748b; margin: 3px 0 0 0;">Monitoramento de eventos em tempo real.</p>
+                                </div>
+                                <button class="btn btn-secondary" style="font-size: 11px; padding: 10px 15px;" onclick="window.healthSystem.askAiForDiagnosis()">🤖 Consultar NeuroEngineAI</button>
+                            </div>
+                            <div id="log-display-area" style="background: #0f172a; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 11px; padding: 15px; color: #e2e8f0; height: 180px; overflow-y: auto; line-height: 1.5; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);">
+                                <div style="color: #64748b; font-style: italic;">Aguardando captura de logs...</div>
+                            </div>
+                        </div>
+
+                        <!-- [NOVO] Card: Auditoria de Design do Sistema (V5.2) -->
+                        <div class="card" style="border-top: 4px solid #6366f1; grid-column: 1 / -1; margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <div>
+                                    <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                                        🖌️ Auditoria Estética e UX do Sistema
+                                        <span style="background: #eef2ff; color: #6366f1; font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 4px; border: 1px solid #e0e7ff;">GLOBAL HUB</span>
+                                    </h3>
+                                    <p style="font-size: 11px; color: #64748b; margin-top: 5px;">Análise proativa da interface desktop do NeuroEngine (Heurísticas & Acessibilidade em Lote).</p>
+                                </div>
+                                <button class="btn btn-primary" id="btn-run-design-audit" style="background: #6366f1; padding: 10px 25px; font-weight: 800; font-size: 11px; box-shadow: 0 4px 12px rgba(99,102,241,0.2);" onclick="window.healthSystem.runDesignAudit(false)">🖌️ AUDITAR HUB COMPLETO</button>
+                            </div>
+
+                            <div id="design-audit-container" style="display: none; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-sm);">
+                                <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 0;">
+                                    <div style="background: #f1f5f9; padding: 20px; border-right: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center;">
+                                        <div id="design-audit-screenshot" style="width: 100%; height: 350px; background: #fff; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: var(--shadow-sm); overflow: hidden; position: relative;">
+                                            <div class="loading-shimmer" style="width: 100%; height: 100%;"></div>
+                                        </div>
+                                    </div>
+                                    <div style="padding: 25px; display: flex; flex-direction: column; gap: 15px;">
+                                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                            <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+                                            <span style="font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase;">Diagnóstico Estético</span>
+                                            <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+                                        </div>
+                                        <div id="design-audit-report" style="font-size: 13px; color: #1e293b; line-height: 1.6; max-height: 350px; overflow-y: auto; white-space: pre-line;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     </div>
                 </div>
             </section>
@@ -1469,11 +1534,14 @@
 
     <!-- Core Engine Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/gemini.js"></script>
+    <script src="js/api.js?v=18"></script>
+    <script src="js/gemini.js?v=18"></script>
     <script src="js/media.js?v=18"></script>
     <script src="js/marketing-lab.js?v=18"></script>
+    <script src="js/health-system.js?v=18"></script>
+    <script src="js/seo-engine.js?v=18"></script>
     <script src="js/ai-studio-template.js?v=18"></script>
+    <script src="js/abidos-review.js?v=18"></script>
     <script src="js/acervo.js?v=18"></script>
     <script src="js/doctoralia.js?v=18"></script>
     <script src="js/blocks.js?v=18"></script>

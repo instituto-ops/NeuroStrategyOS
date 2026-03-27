@@ -213,6 +213,7 @@ const app = {
         }
         if (targetId === 'analytics' && window.marketingLab) {
             window.marketingLab.loadAnalytics();
+            window.marketingLab.runPSI(false); // Carrega PSI apenas se entrar na aba
         }
     },
 
@@ -227,20 +228,20 @@ const app = {
             
             if (dashboard) {
                 dashboard.innerHTML = `
-                    <div class="card">
-                        <h3>👥 Visitantes (Real)</h3>
-                        <p style="font-size: 24px; font-weight: bold; color: var(--color-secondary);">${data.visitors || 0}</p>
-                        <span style="color: var(--color-text-light);">Sincronizado GA4</span>
+                    <div class="card" style="border-top: 4px solid var(--color-secondary);">
+                        <h3 style="font-size: 11px; text-transform: uppercase; color: var(--color-text-dim);">👥 Visitantes (Real)</h3>
+                        <p style="font-size: 32px; font-weight: 900; color: #fff; margin: 10px 0;">${data.visitors || 0}</p>
+                        <span style="font-size: 10px; color: var(--color-secondary); font-weight: 800;">⚡ Sincronizado GA4</span>
                     </div>
-                    <div class="card">
-                        <h3>🎯 Leads (Conversão)</h3>
-                        <p style="font-size: 24px; font-weight: bold; color: var(--color-secondary);">${data.leads || 0}</p>
-                        <span style="color: var(--color-text-light);">Funil Abidos Ativo</span>
+                    <div class="card" style="border-top: 4px solid #ec4899;">
+                        <h3 style="font-size: 11px; text-transform: uppercase; color: var(--color-text-dim);">🎯 Leads (Conversão)</h3>
+                        <p style="font-size: 32px; font-weight: 900; color: #fff; margin: 10px 0;">${data.leads || 0}</p>
+                        <span style="font-size: 10px; color: #ec4899; font-weight: 800;">🔥 Funil Abidos Ativo</span>
                     </div>
-                    <div class="card">
-                        <h3>🚀 Score de Autoridade</h3>
-                        <p style="font-size: 24px; font-weight: bold; color: var(--color-success);">${data.abidos_score || '92'}</p>
-                        <span style="color: var(--color-secondary);">Compliance CFP OK</span>
+                    <div class="card" style="border-top: 4px solid var(--color-success);">
+                        <h3 style="font-size: 11px; text-transform: uppercase; color: var(--color-text-dim);">🚀 Score de Autoridade</h3>
+                        <p style="font-size: 32px; font-weight: 900; color: #fff; margin: 10px 0;">${data.abidos_score || '92'}/100</p>
+                        <span style="font-size: 10px; color: var(--color-success); font-weight: 800;">🌟 Compliance CFP OK</span>
                     </div>
                 `;
             }
@@ -313,11 +314,7 @@ const app = {
     }
 };
 
-// Start system
-document.addEventListener('DOMContentLoaded', () => {
-    app.init();
-
-// Global Helpers
+// Global Helpers (V5.31 - Moved outside DOMContentLoaded for visibility)
 window.showSection = (id) => {
     const navBtn = document.querySelector(`.nav-btn[data-target="${id}"]`);
     if (navBtn) navBtn.click();
@@ -347,14 +344,20 @@ window.showToast = (msg, type = 'success') => {
     }, 3000);
 };
 
+// Start system
+document.addEventListener('DOMContentLoaded', () => {
+    app.init();
+});
+
 // Add slideIn animation
-const style = document.createElement('style');
-style.innerHTML = `
+const toastStyle = document.createElement('style');
+toastStyle.innerHTML = `
     @keyframes slideIn {
         from { transform: translateX(100%); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
     }
 `;
-document.head.appendChild(style);
-});
+document.head.appendChild(toastStyle);
+
 window.app = app;
+app.showSection = window.showSection; // Garantir retrocompatibilidade com chamadas window.app.showSection

@@ -6,7 +6,7 @@ window.marketingLab = {
     init() {
         console.log("📊 Marketing Lab Inicializado. Carregando estado persistente...");
         this.loadAnalytics(false);
-        this.runPSI(false);
+        // runPSI(false) removido para poupar cota. A auditoria ocorrerá apenas sob demanda ou ao navegar.
     },
 
     async loadAnalytics(force = false) {

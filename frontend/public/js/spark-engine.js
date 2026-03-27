@@ -220,14 +220,38 @@ window.sparkEngine = {
 
                 <div class="telemetry-card" style="background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2);">
                    <h5 style="color: white; font-size: 10px; margin-bottom: 10px; text-transform: uppercase;">Diagnóstico Onipresente</h5>
-                   <button id="btn-spark-health-check" class="btn-spark-action" onclick="window.sparkEngine.runFullCheck(this)" style="width: 100%; padding: 10px; border-radius: 8px; border: none; background: #6366f1; color: white; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                   <button id="btn-spark-health-check" class="btn-spark-action" onclick="window.sparkEngine.runFullCheck(this)" style="width: 100%; padding: 10px; border-radius: 8px; border: none; background: #6366f1; color: white; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
                        <i data-lucide="activity" style="width: 14px; height: 14px;"></i> CHECAR SEÇÃO ATUAL
+                   </button>
+                   <button id="btn-spark-design-audit" class="btn-spark-action" onclick="window.sparkEngine.runDesignCheck(this)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                       <i data-lucide="palette" style="width: 14px; height: 14px;"></i> AUDITORIA ESTÉTICA & UX
                    </button>
                 </div>
             </div>
         `;
     },
 
+    async runDesignCheck(btn) {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '⏳ ANALISANDO UI...';
+        btn.disabled = true;
+        
+        try {
+            await window.healthSystem.runDesignAudit(true); // true = current section only
+            btn.innerHTML = '✅ RELATÓRIO PRONTO';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }, 3000);
+        } catch (e) {
+            btn.innerHTML = '❌ ERRO VISUAL';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }, 3000);
+        }
+    },
+    
     async runFullCheck(btn) {
         const originalHtml = btn.innerHTML;
         btn.innerHTML = '⏳ EXECUTANDO...';

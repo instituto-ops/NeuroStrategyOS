@@ -261,6 +261,34 @@ app.get('/api/system/report/latest', (req, res) => {
     }
 });
 
+// Rota para pegar o histórico completo para a análise longitudinal
+app.get('/api/system/report/history', (req, res) => {
+    try {
+        const year = new Date().getFullYear().toString();
+        const yearDir = path.join(REPORTS_DIR, year);
+        let history = [];
+
+        if (fs.existsSync(yearDir)) {
+            const months = fs.readdirSync(yearDir);
+            for (const month of months) {
+                const monthDir = path.join(yearDir, month);
+                const files = fs.readdirSync(monthDir).filter(f => f.endsWith('.json'));
+                for (const file of files) {
+                    const content = JSON.parse(fs.readFileSync(path.join(monthDir, file), 'utf8'));
+                    history.push({
+                        date: content.timestamp,
+                        alerts: (content.modules.filter(m => m.status.includes('❌')).length + content.apis.filter(a => a.status.includes('❌')).length),
+                        summary: content.modules.filter(m => m.status.includes('❌')).map(m => m.name).concat(content.apis.filter(a => a.status.includes('❌')).map(a => a.name)).join(', ') || "Integridade Confirmada"
+                    });
+                }
+            }
+        }
+        res.json(history.sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10)); // Top 10 recentes
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Health Checks (Simples)
 app.get('/api/ai/health', async (req, res) => {
     try {
@@ -2025,6 +2053,49 @@ app.get('/api/health/lighthouse', async (req, res) => {
     }
 });
 
+app.post('/api/health/design-audit', async (req, res) => {
+    try {
+        const { image, context } = req.body;
+        console.log(`🖌️ [SERVER] Auditoria de Design Recebida. Processando Vision...`);
+
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL }); // Use Flash ou Pro vision
+        
+        // Remove prefixo base64 se houver
+        const base64Data = image.split(',')[1] || image;
+
+        const prompt = `
+        VOCÊ É O AUDITOR DE DESIGN E UX DO NEUROENGINE OS (SISTEMA DE GESTÃO CLÍNICA).
+        CONTEXTO: ${context}.
+
+        Analise a captura de tela anexada da interface administrativa do sistema (rodando em Desktop).
+        Sua missão:
+        1. Avaliar a Legibilidade (Tamanho da fonte, contraste, espaçamento dos selos e cards).
+        2. Avaliar a Estética da Interface (O sistema parece premium e limpo ou está com excesso de informação?).
+        3. Identificar Heurísticas de Usabilidade violadas.
+        4. Identificar inconsistências visuais (Cores fora do paleta, desalinhamentos).
+
+        [DIRETRIZES DE RELATÓRIO]:
+        - Seja direto, técnico e use termos como "Hierarquia Visual", "Afixação", "Contraste WCAG".
+        - Liste 3 pontos positivos e 3 pontos de melhoria prioritária.
+        - Se o design estiver nota 10, elogie de forma sóbria.
+
+        Retorne a resposta diretamente em texto (Markdown).
+        `;
+
+        const result = await model.generateContent([
+            prompt,
+            { inlineData: { data: base64Data, mimeType: "image/webp" } }
+        ]);
+
+        trackUsage(result.response.usageMetadata);
+        res.json({ text: result.response.text() });
+
+    } catch (e) {
+        console.error("❌ [DESIGN AUDIT ERROR]", e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.post('/api/reputation/analyze', async (req, res) => {
     try {
         const { platform, content } = req.body;
@@ -2411,11 +2482,27 @@ app.get('/api/marketing/audit', async (req, res) => {
 app.get('/api/marketing/psi', async (req, res) => {
     try {
         const force = req.query.force === 'true';
+        const cacheMaxAge = 24 * 60 * 60 * 1000; // 24 horas
 
-        // Cache PSI
-        if (!force && fs.existsSync(ANALYTICS_CACHE_FILE)) {
+        // 0. Verifica Cache & Estado de Cota
+        if (fs.existsSync(ANALYTICS_CACHE_FILE)) {
              const cache = JSON.parse(fs.readFileSync(ANALYTICS_CACHE_FILE, 'utf8'));
-             if (cache.psi) return res.json(cache.psi);
+             const lastAudit = cache.psi ? new Date(cache.psi.last_audit).getTime() : 0;
+             const isExpired = (Date.now() - lastAudit) > cacheMaxAge;
+
+             // Se a última tentativa deu "Quota Exceeded" nos últimos 60 min, não tenta de novo
+             if (cache.psi_quota_exceeded_at) {
+                 const quotaErrTime = new Date(cache.psi_quota_exceeded_at).getTime();
+                 if (Date.now() - quotaErrTime < 60 * 60 * 1000) {
+                     console.log("🚫 [PSI] Pulando auditoria real devido a bloqueio de cota recente (Caching Ativo).");
+                     return res.json(cache.psi || { error: "Cota Google Excedida. Tente em 60 min." });
+                 }
+             }
+
+             if (!force && cache.psi && !isExpired) {
+                 console.log("💾 [PSI] Carregando auditoria de Safe-Cache (V5.1).");
+                 return res.json(cache.psi);
+             }
         }
 
         const targetUrl = process.env.PSI_TARGET_URL || "https://instituto-ops.com.br"; 
@@ -2477,6 +2564,14 @@ app.get('/api/marketing/psi', async (req, res) => {
 
     } catch (e) {
         console.error("❌ [PSI] Erro na Auditoria:", e.message);
+        
+        // Se for erro de cota, persiste para evitar spam
+        if (e.message.includes('Quota exceeded') && fs.existsSync(ANALYTICS_CACHE_FILE)) {
+             let cache = JSON.parse(fs.readFileSync(ANALYTICS_CACHE_FILE, 'utf8'));
+             cache.psi_quota_exceeded_at = new Date().toISOString();
+             fs.writeFileSync(ANALYTICS_CACHE_FILE, JSON.stringify(cache, null, 2));
+        }
+
         res.status(500).json({ error: "Falha na auditoria PSI: " + e.message });
     }
 });

@@ -192,13 +192,14 @@ window.seoEngine = {
                         'background-color': '#475569',
                         'label': 'data(label)',
                         'color': '#cbd5e1',
-                        'font-size': '10px',
+                        'font-size': '11px',
                         'width': '22px',
                         'height': '22px',
                         'text-outline-width': 1,
                         'text-outline-color': '#020617',
-                        'text-valign': 'center',
+                        'text-valign': 'bottom',
                         'text-halign': 'center',
+                        'text-margin-y': 8,
                         'font-weight': '600',
                         'border-width': 2,
                         'border-color': '#1e293b'
@@ -234,7 +235,13 @@ window.seoEngine = {
                     }
                 }
             ],
-            layout: { name: 'cose', animate: true, padding: 30 }
+            layout: { 
+                name: 'cose', 
+                animate: true, 
+                padding: 60,
+                componentSpacing: 100,
+                nodeRepulsion: 8000
+            }
         });
 
         // Eventos de Toque/Clique no Grafo
@@ -302,15 +309,15 @@ window.seoEngine = {
         }
 
         tbody.innerHTML = this.upcomingPosts.map(p => `
-            <tr>
-                <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">${p.title}</td>
-                <td style="padding: 10px; border: 1px solid #e2e8f0; color: #64748b;">${p.focus}</td>
-                <td style="padding: 10px; border: 1px solid #e2e8f0;">
-                    <span style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 11px; color: #64748b;">${p.status}</span>
+            <tr style="border-bottom: 1px solid var(--color-border);">
+                <td style="padding: 12px; font-weight: 800; color: #fff;">${p.title}</td>
+                <td style="padding: 12px; color: var(--color-text-light); font-size: 12px;">${p.focus}</td>
+                <td style="padding: 12px;">
+                    <span style="background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);">${p.status}</span>
                 </td>
-                <td style="padding: 10px; border: 1px solid #e2e8f0; display: flex; gap: 5px;">
-                    <button onclick="window.seoEngine.writePost('${p.title}', '${p.focus}')" class="btn btn-primary" style="font-size: 10px; padding: 4px 8px; background: #6366f1;">📝 Escrever</button>
-                    <button onclick="window.seoEngine.removeUpcomingPost(${p.id})" class="btn" style="font-size: 10px; padding: 4px 8px; background: #fee2e2; color: #ef4444;">🗑️</button>
+                <td style="padding: 12px; display: flex; gap: 8px;">
+                    <button onclick="window.seoEngine.writePost('${p.title}', '${p.focus}')" class="btn btn-primary" style="font-size: 10px; padding: 6px 12px;">📝 Escrever</button>
+                    <button onclick="window.seoEngine.removeUpcomingPost(${p.id})" class="btn btn-danger" style="font-size: 10px; padding: 6px 12px;">🗑️</button>
                 </td>
             </tr>
         `).join('');

@@ -1,34 +1,34 @@
 {
-  "timestamp": "2026-03-26T16:24:09.000Z",
+  "timestamp": "2026-03-26T23:43:26.000Z",
   "version": "5.30 Alpha",
   "modules": [
     {
-      "name": "AI Studio Core",
+      "name": "Estúdio de Conteúdo",
       "status": "✅ ONLINE",
       "details": "DOM: true | Init: true"
     },
     {
-      "name": "Task Engine",
+      "name": "Execução e Metas",
       "status": "✅ ONLINE",
       "details": "DOM: true | Init: true"
     },
     {
-      "name": "Marketing Lab",
+      "name": "Inteligência de Tráfego",
       "status": "✅ ONLINE",
       "details": "DOM: true | Init: true"
     },
     {
-      "name": "NeuroEngine Spark",
+      "name": "Assistente de Apoio",
       "status": "✅ ONLINE",
       "details": "DOM: true | Init: true"
     },
     {
-      "name": "Silo/Menu Manager",
+      "name": "Arquitetura de Conteúdo",
       "status": "✅ ONLINE",
       "details": "DOM: true | Init: true"
     },
     {
-      "name": "Review Pipeline",
+      "name": "Curadoria e Aprovação",
       "status": "✅ ONLINE",
       "details": "DOM: true | Init: true"
     }
@@ -37,104 +37,99 @@
     {
       "name": "Gemini Hub",
       "status": "✅ CONECTADO",
-      "latency": "766ms"
+      "latency": "6ms"
     },
     {
       "name": "Media Assets",
       "status": "✅ CONECTADO",
-      "latency": "15ms"
+      "latency": "3ms"
     },
     {
       "name": "Strategic Analytics",
       "status": "✅ CONECTADO",
-      "latency": "935ms"
+      "latency": "980ms"
     },
     {
       "name": "Drafts Storage",
       "status": "✅ CONECTADO",
-      "latency": "2155ms"
+      "latency": "276ms"
     }
   ],
   "logs": [
     {
       "type": "log",
       "msg": "🤖 ChatApp (Abidos V4) Initialized.",
-      "time": "13:20:08"
+      "time": "20:42:58"
     },
     {
       "type": "log",
       "msg": "🧠 NeuroEngine Copilot Initialized",
-      "time": "13:20:08"
+      "time": "20:42:58"
     },
     {
       "type": "log",
       "msg": "🧠 Neuro-Training: Motor de Conversa Contínua v2.0 inicializado.",
-      "time": "13:20:08"
+      "time": "20:42:58"
     },
     {
       "type": "log",
       "msg": "🌳 Inicializando Gestor de Menus e Silos...",
-      "time": "13:20:08"
+      "time": "20:42:58"
     },
     {
       "type": "log",
       "msg": "📂 [neuroAPI] Sincronizando Acervo...",
-      "time": "13:20:08"
+      "time": "20:42:58"
     },
     {
       "type": "log",
       "msg": "📊 Marketing Lab Inicializado. Carregando estado persistente...",
-      "time": "13:20:08"
+      "time": "20:42:58"
     },
     {
       "type": "log",
       "msg": "👑 [MANAGER AGENT] Inicializando Orquestrador Central...",
-      "time": "13:20:08"
+      "time": "20:42:58"
     },
     {
       "type": "log",
       "msg": "🧠 [STUDIO] Missão Step-by-Step Iniciada...",
-      "time": "13:20:08"
+      "time": "20:42:58"
     },
     {
       "type": "log",
-      "msg": "🚀 [NeuroEngine] App Core Initialized.",
-      "time": "13:20:08"
+      "msg": "💓 [PULSO] Monitor de Latência Ativado.",
+      "time": "20:42:58"
+    },
+    {
+      "type": "log",
+      "msg": "🚀 [Núcleo de Marketing] App Core Initialized.",
+      "time": "20:42:58"
     },
     {
       "type": "log",
       "msg": "✨ [SPARK] Motor de Orquestração Inicializado.",
-      "time": "13:20:08"
+      "time": "20:42:58"
     },
     {
       "type": "log",
       "msg": "📡 Conectado ao Fluxo de Log Real-time.",
-      "time": "13:20:08"
-    },
-    {
-      "type": "error",
-      "msg": "Erro PSI: {}",
-      "time": "13:20:15"
+      "time": "20:42:59"
     },
     {
       "type": "log",
       "msg": "📂 [neuroAPI] Sincronizando inventário com o Acervo Vercel...",
-      "time": "13:20:16"
+      "time": "20:42:59"
     },
     {
       "type": "log",
       "msg": "📂 [neuroAPI] Sincronizando Acervo...",
-      "time": "13:20:16"
+      "time": "20:42:59"
     },
     {
       "type": "log",
       "msg": "✅ 6 páginas detectadas no Next.js.",
-      "time": "13:20:18"
-    },
-    {
-      "type": "log",
-      "msg": "💾 [HEALTH] Relatório Longitudinal Salvo com Sucesso.",
-      "time": "13:21:04"
+      "time": "20:42:59"
     }
   ]
 }

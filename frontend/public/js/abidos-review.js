@@ -31,9 +31,15 @@ window.abidosReview = {
         this.drafts.forEach(draft => {
             const tr = document.createElement('tr');
             
-            const abidosIcon = (draft.validacoes_automatizadas && draft.validacoes_automatizadas.metodo_abidos) ? '🟢' : '🔴';
-            const complianceIcon = (draft.validacoes_automatizadas && draft.validacoes_automatizadas.compliance_etico) ? '⚖️' : '⚠️';
-            const statusStr = `<span style="font-size: 11px;">${abidosIcon} Abidos<br>${complianceIcon} CFP</span>`;
+            const abidosStatus = (draft.validacoes_automatizadas && draft.validacoes_automatizadas.metodo_abidos) 
+                ? '<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.2); font-weight: 800; font-size: 9px;">ABIDOS: OK</span>' 
+                : '<span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.2); font-weight: 800; font-size: 9px;">ABIDOS: AJUSTAR</span>';
+            
+            const complianceStatus = (draft.validacoes_automatizadas && draft.validacoes_automatizadas.compliance_etico) 
+                ? '<span style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.2); font-weight: 800; font-size: 9px; margin-top: 4px; display: inline-block;">CFP/ETÍCO: OK</span>' 
+                : '<span style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.2); font-weight: 800; font-size: 9px; margin-top: 4px; display: inline-block;">CFP/ÉTICO: RISCO</span>';
+            
+            const statusStr = `<div style="display: flex; flex-direction: column;">${abidosStatus}${complianceStatus}</div>`;
 
             const fontesRag = Array.isArray(draft.fontes_rag_utilizadas) ? draft.fontes_rag_utilizadas.join('\\n') : 'Nenhuma fonte';
             
@@ -55,9 +61,9 @@ window.abidosReview = {
                 <td>${draftTheme}</td>
                 <td>${statusStr}</td>
                 <td><span style="font-size:11px; color:var(--color-secondary); cursor:pointer;" onclick="alert('Fontes:\\n' + '${fontesRag}')">Ver Fontes (RAG)</span></td>
-                <td style="display: flex; gap: 5px;">
-                    <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="window.abidosReview.openModal('${draftId}')">✏️ Revisar</button>
-                    <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="window.abidosReview.quickApprove('${draftId}')">✅ Exportar</button>
+                <td style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn btn-secondary" style="padding: 6px 14px; font-size: 11px;" onclick="window.abidosReview.openModal('${draftId}')">✏️ Revisar</button>
+                    <button class="btn btn-primary" style="padding: 6px 14px; font-size: 11px;" onclick="window.abidosReview.quickApprove('${draftId}')">✅ Exportar</button>
                 </td>
             `;
             list.appendChild(tr);
