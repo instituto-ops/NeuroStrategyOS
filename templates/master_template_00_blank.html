@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{seo_title}}</title>
+    <meta name="description" content="{{seo_resumo_indexacao}}">
+    
+    {{GOOGLE_TAG_HEAD}}
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Reveal on Scroll */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+    {{GOOGLE_TAG_BODY}}
+
+    <!-- [SOBERANIA ABIDOS] Camada SEO Invisível (Protocolo Abidos V5) -->
+    <div class="seo-hidden-structure" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+        <h1>{{seo_h1_tecnico}}</h1>
+        <p>{{seo_resumo_indexacao}}</p>
+        <h2>{{secao1_h2}}</h2>
+        <h2>{{secao2_h2}}</h2>
+        <h2>{{secao3_h2}}</h2>
+    </div>
+
+    <!-- [NEUROENGINE] Menu Dinâmico (Herdado do Sistema de Silos) -->
+    {{nav_menu_dinamico}}
+
+    <!-- [CORPO CUSTOMIZADO] Conteúdo HTML Importado -->
+    <main>
+        {{corpo_customizado}}
+    </main>
+
+    <!-- [SISTEMA] Auto-Reveal on Scroll -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            const reveals = document.querySelectorAll(".reveal");
+            const revealOnScroll = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("active");
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: "0px 0px -100px 0px" });
+            reveals.forEach(el => revealOnScroll.observe(el));
+        });
+    </script>
+</body>
+</html>

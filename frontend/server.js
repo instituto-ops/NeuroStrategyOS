@@ -831,21 +831,22 @@ app.post('/api/acervo/salvar-pagina', async (req, res) => {
             htmlSource = menuSchema + htmlSource;
         }
 
-        // --- INJEÇÃO GOOGLE TAG (GTM/GA4) ---
-        const googleTag = `
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-B0DM24E5FS"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-B0DM24E5FS');
-        </script>`;
+        // --- INJEÇÃO GOOGLE TAG MANAGER (GTM) - DINÂMICA ---
+        const googleTag = getGoogleTagSnippet();
+        const googleTagNoscript = getGoogleTagNoscript();
         
+        // 1. Script no <head>
         if (htmlSource.includes('</head>')) {
             htmlSource = htmlSource.replace('</head>', `${googleTag}\n</head>`);
         } else {
             htmlSource = googleTag + htmlSource;
+        }
+
+        // 2. Noscript após <body>
+        if (htmlSource.includes('<body>')) {
+            htmlSource = htmlSource.replace('<body>', `<body>\n${googleTagNoscript}`);
+        } else if (htmlSource.match(/<body[^>]*>/)) {
+            htmlSource = htmlSource.replace(/<body[^>]*>/, `$&\n${googleTagNoscript}`);
         }
 
         if (tocItems.length > 0 && ['02', '03', '04', '05', '06', '07', '10'].includes(templateId)) {
@@ -1096,6 +1097,337 @@ app.post('/api/acervo/alterar-status', async (req, res) => {
         console.error("Erro ao alterar status:", e);
         res.status(500).json({ success: false, error: e.message });
     }
+});
+
+// ==============================================================================
+// 🏷️ GOOGLE TAG MANAGER - CONFIGURAÇÃO GLOBAL
+// ==============================================================================
+const GOOGLE_TAG_FILE = path.join(__dirname, 'google_tag_config.json');
+
+const getGoogleTagConfig = () => {
+    try {
+        if (fs.existsSync(GOOGLE_TAG_FILE)) {
+            return JSON.parse(fs.readFileSync(GOOGLE_TAG_FILE, 'utf8'));
+        }
+    } catch (e) {
+        console.error("❌ Erro ao ler google_tag_config.json:", e);
+    }
+    return { tagId: 'GTM-5H4RLHC3', active: true };
+};
+
+// Retorna o snippet do <head> (script GTM)
+const getGoogleTagSnippet = () => {
+    const config = getGoogleTagConfig();
+    if (!config.active || !config.tagId) return '';
+    return `
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${config.tagId}');</script>
+<!-- End Google Tag Manager -->`;
+};
+
+// Retorna o snippet do <body> (noscript fallback)
+const getGoogleTagNoscript = () => {
+    const config = getGoogleTagConfig();
+    if (!config.active || !config.tagId) return '';
+    return `
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${config.tagId}"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->`;
+};
+
+app.get('/api/config/google-tag', (req, res) => {
+    try {
+        res.json(getGoogleTagConfig());
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/config/google-tag', (req, res) => {
+    try {
+        const { tagId, active } = req.body;
+        const config = { tagId: tagId || '', active: active !== false, lastUpdate: new Date().toISOString() };
+        fs.writeFileSync(GOOGLE_TAG_FILE, JSON.stringify(config, null, 2));
+        console.log(`🏷️ [GOOGLE TAG] Configuração atualizada: ${config.tagId} (${config.active ? 'ATIVO' : 'INATIVO'})`);
+        res.json({ success: true, config });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ==============================================================================
+// 📥 IMPORTAÇÃO MANUAL DE HTML (PÁGINAS CUSTOMIZADAS)
+// ==============================================================================
+const MANUAL_PAGES_FILE = path.join(__dirname, 'manual_pages.json');
+
+const getManualPages = () => {
+    try {
+        if (fs.existsSync(MANUAL_PAGES_FILE)) {
+            return JSON.parse(fs.readFileSync(MANUAL_PAGES_FILE, 'utf8'));
+        }
+    } catch (e) { console.error("❌ Erro ao ler manual_pages.json:", e); }
+    return [];
+};
+
+const saveManualPages = (pages) => {
+    fs.writeFileSync(MANUAL_PAGES_FILE, JSON.stringify(pages, null, 2));
+};
+
+// [API] Listar páginas manuais
+app.get('/api/acervo/manual', (req, res) => {
+    try {
+        res.json({ success: true, pages: getManualPages() });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// [API] Criar/Atualizar página manual (metadados)
+app.post('/api/acervo/manual', (req, res) => {
+    try {
+        const { id, title, slug, silo, menuId } = req.body;
+        let pages = getManualPages();
+        
+        if (id) {
+            // Atualizar existente
+            const idx = pages.findIndex(p => p.id === id);
+            if (idx >= 0) {
+                pages[idx].title = title || pages[idx].title;
+                pages[idx].slug = slug || pages[idx].slug;
+                pages[idx].silo = silo || pages[idx].silo;
+                pages[idx].menuId = menuId || pages[idx].menuId;
+                pages[idx].lastUpdate = new Date().toISOString();
+            }
+        } else {
+            // Criar nova
+            const newPage = {
+                id: 'MANUAL-' + Date.now(),
+                title: title || 'Página Manual',
+                slug: slug || '/nova-pagina-' + Date.now(),
+                silo: silo || '',
+                menuId: menuId || '',
+                status: 'DRAFT',
+                type: 'manual',
+                htmlContent: '',
+                useShell: true,
+                seoFields: { h1: '', resumo: '', h2s: [] },
+                versions: [],
+                createdAt: new Date().toISOString(),
+                lastUpdate: new Date().toISOString()
+            };
+            pages.push(newPage);
+        }
+
+        saveManualPages(pages);
+        res.json({ success: true, pages });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// [API] Importar/Salvar HTML customizado para uma página manual
+app.post('/api/acervo/manual/import-html', (req, res) => {
+    try {
+        const { pageId, htmlContent, useShell, seoFields } = req.body;
+        if (!pageId) throw new Error("pageId é obrigatório.");
+
+        let pages = getManualPages();
+        const idx = pages.findIndex(p => p.id === pageId);
+        if (idx < 0) throw new Error("Página manual não encontrada.");
+
+        // Parse inteligente: Extrai apenas o <body> se HTML completo for colado
+        let cleanHtml = htmlContent || '';
+        const bodyMatch = cleanHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        if (bodyMatch) {
+            cleanHtml = bodyMatch[1].trim();
+            console.log(`📥 [MANUAL] Parse inteligente: Extraído conteúdo do <body> (${cleanHtml.length} chars)`);
+        }
+
+        // Salvar versão anterior
+        if (pages[idx].htmlContent && pages[idx].htmlContent.length > 0) {
+            if (!pages[idx].versions) pages[idx].versions = [];
+            pages[idx].versions.push({
+                html: pages[idx].htmlContent,
+                timestamp: pages[idx].lastUpdate || new Date().toISOString()
+            });
+            // Manter apenas as últimas 5 versões
+            if (pages[idx].versions.length > 5) pages[idx].versions.shift();
+        }
+
+        pages[idx].htmlContent = cleanHtml;
+        pages[idx].useShell = useShell !== false;
+        if (seoFields) pages[idx].seoFields = seoFields;
+        pages[idx].lastUpdate = new Date().toISOString();
+        pages[idx].status = 'DRAFT';
+
+        saveManualPages(pages);
+        res.json({ success: true, message: `HTML importado com sucesso (${cleanHtml.length} caracteres)`, page: pages[idx] });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// [API] Ler HTML de uma página manual
+app.post('/api/acervo/manual/read-html', (req, res) => {
+    try {
+        const { pageId } = req.body;
+        const pages = getManualPages();
+        const page = pages.find(p => p.id === pageId);
+        if (!page) throw new Error("Página não encontrada.");
+        res.json({ success: true, page });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// [API] Gerar Preview de uma página manual (renderiza com Template 00)
+app.post('/api/acervo/manual/preview', (req, res) => {
+    try {
+        const { pageId } = req.body;
+        const pages = getManualPages();
+        const page = pages.find(p => p.id === pageId);
+        if (!page) throw new Error("Página não encontrada.");
+
+        let finalHtml = page.htmlContent || '<p>Nenhum conteúdo HTML importado ainda.</p>';
+
+        if (page.useShell) {
+            // Carrega Template 00
+            const shellPath = path.join(__dirname, '../templates/master_template_00_blank.html');
+            let shell = fs.readFileSync(shellPath, 'utf8');
+
+            // Injeta variáveis
+            shell = shell.replace(/\{\{corpo_customizado\}\}/g, finalHtml);
+            shell = shell.replace(/\{\{seo_title\}\}/g, page.title || 'Página');
+            shell = shell.replace(/\{\{seo_h1_tecnico\}\}/g, page.seoFields?.h1 || page.title || '');
+            shell = shell.replace(/\{\{seo_resumo_indexacao\}\}/g, page.seoFields?.resumo || '');
+            
+            // Injeta H2s do SEO
+            const h2s = page.seoFields?.h2s || [];
+            for (let i = 1; i <= 3; i++) {
+                shell = shell.replace(`{{secao${i}_h2}}`, h2s[i - 1] || '');
+            }
+
+            // Injeta Google Tag Manager (head + body)
+            shell = shell.replace(/\{\{GOOGLE_TAG_HEAD\}\}/g, getGoogleTagSnippet());
+            shell = shell.replace(/\{\{GOOGLE_TAG_BODY\}\}/g, getGoogleTagNoscript());
+
+            // Injeta Menu
+            let menuHtml = '';
+            if (page.menuId) {
+                menuHtml = generateMenuHtmlForTemplate(page.menuId, '00', { slug: page.slug, title: page.title });
+            }
+            shell = shell.replace(/\{\{nav_menu_dinamico\}\}/g, menuHtml);
+
+            // Limpa placeholders restantes
+            shell = shell.replace(/\{\{\w+\}\}/g, '');
+            finalHtml = shell;
+        }
+
+        res.send(finalHtml);
+    } catch (e) {
+        console.error("Erro no preview manual:", e);
+        res.status(500).send("Erro ao gerar preview.");
+    }
+});
+
+// [API] Publicar página manual no repositório Next.js
+app.post('/api/acervo/manual/publicar', async (req, res) => {
+    try {
+        const { pageId } = req.body;
+        const pages = getManualPages();
+        const page = pages.find(p => p.id === pageId);
+        if (!page) throw new Error("Página não encontrada.");
+        if (!page.htmlContent) throw new Error("Nenhum HTML importado para publicar.");
+
+        let finalHtml = page.htmlContent;
+
+        if (page.useShell) {
+            const shellPath = path.join(__dirname, '../templates/master_template_00_blank.html');
+            let shell = fs.readFileSync(shellPath, 'utf8');
+
+            shell = shell.replace(/\{\{corpo_customizado\}\}/g, finalHtml);
+            shell = shell.replace(/\{\{seo_title\}\}/g, page.title || 'Página');
+            shell = shell.replace(/\{\{seo_h1_tecnico\}\}/g, page.seoFields?.h1 || page.title || '');
+            shell = shell.replace(/\{\{seo_resumo_indexacao\}\}/g, page.seoFields?.resumo || '');
+            
+            const h2s = page.seoFields?.h2s || [];
+            for (let i = 1; i <= 3; i++) {
+                shell = shell.replace(`{{secao${i}_h2}}`, h2s[i - 1] || '');
+            }
+
+            shell = shell.replace(/\{\{GOOGLE_TAG_HEAD\}\}/g, getGoogleTagSnippet());
+            shell = shell.replace(/\{\{GOOGLE_TAG_BODY\}\}/g, getGoogleTagNoscript());
+
+            let menuHtml = '';
+            if (page.menuId) {
+                menuHtml = generateMenuHtmlForTemplate(page.menuId, '00', { slug: page.slug, title: page.title });
+            }
+            shell = shell.replace(/\{\{nav_menu_dinamico\}\}/g, menuHtml);
+            shell = shell.replace(/\{\{\w+\}\}/g, '');
+            finalHtml = shell;
+        }
+
+        // Gera slug limpo
+        const cleanSlug = (page.slug || '/pagina-manual')
+            .replace(/^\/|\/$/g, '')
+            .replace(/[^a-z0-9-]/g, '-')
+            .toLowerCase();
+
+        const targetDir = path.join(SITE_REPO_PATH, cleanSlug);
+        const targetPath = path.join(targetDir, 'page.tsx');
+
+        if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+
+        const finalPageCode = `"use client";
+import React from 'react';
+
+export default function Page() {
+    return (
+        <div 
+            className="neuroengine-page-container" 
+            dangerouslySetInnerHTML={{ __html: \`${finalHtml.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\` }} 
+        />
+    );
+}
+
+// 🧬 NEUROENGINE DATA BLOCK
+export const neuroEngineData = ${JSON.stringify({
+    SEO_TITLE: page.title,
+    H1: page.seoFields?.h1 || page.title,
+    THEME: page.title,
+    STATUS: 'DRAFT',
+    template: '00',
+    type: 'manual',
+    menuId: page.menuId || null
+}, null, 2)};
+`;
+
+        fs.writeFileSync(targetPath, finalPageCode);
+
+        // Atualiza status da página manual
+        const idx = pages.findIndex(p => p.id === pageId);
+        pages[idx].status = 'DRAFT';
+        pages[idx].caminhoFisico = targetPath;
+        pages[idx].lastUpdate = new Date().toISOString();
+        saveManualPages(pages);
+
+        // Git commit auto
+        try {
+            const { execSync } = require('child_process');
+            const repoRoot = path.join(SITE_REPO_PATH, '../../');
+            execSync(`git add . && git commit -m "feat(manual): add ${cleanSlug}" && git push`, { cwd: repoRoot });
+        } catch (gitErr) {
+            console.warn("Git push ignorado ou falhou:", gitErr.message);
+        }
+
+        res.json({ success: true, message: `Página manual salva como rascunho em /${cleanSlug}`, targetPath });
+    } catch (e) {
+        console.error("Erro ao publicar página manual:", e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// [API] Deletar página manual
+app.delete('/api/acervo/manual/:id', (req, res) => {
+    try {
+        let pages = getManualPages();
+        pages = pages.filter(p => p.id !== req.params.id);
+        saveManualPages(pages);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // [API] Pick Intelligent: O Agente solicita uma imagem estratégica para um bloco

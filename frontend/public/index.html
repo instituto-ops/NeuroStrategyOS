@@ -860,6 +860,7 @@
                                 <option value="gemini-2.5-flash-lite">⚡ FLASH LITE (Rápido)</option>
                             </select>
                             <button class="btn btn-secondary" onclick="acervoManager.loadAcervo()">🔄 Sincronizar Arquivos</button>
+                            <button class="btn btn-primary" onclick="acervoManager.openCreateManualModal()" style="background: var(--color-primary); font-weight: 800; font-size: 11px;">+ NOVO MANUAL 🔧</button>
                         </div>
                     </div>
                     
@@ -899,6 +900,25 @@
                                 <div style="font-size: 10px; color: var(--color-primary); font-weight: 900; margin-bottom: 5px;">DOMÍNIO ATIVO</div>
                                 <div style="font-size: 13px; color: #fff; font-weight: 800;">hipnolawrence.com</div>
                                 <div style="font-size: 9px; color: var(--color-text-dim); margin-top: 5px;">Hospedado no Vercel (Edge Network)</div>
+                            </div>
+
+                            <!-- GOOGLE TAG MANAGER CONFIG -->
+                            <div class="card" style="padding: 20px; border-top: 4px solid #f59e0b; background: rgba(30, 41, 59, 0.4);">
+                                <h3 style="margin: 0 0 10px; font-size: 13px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+                                    🏷️ GOOGLE TAG MANAGER
+                                    <span id="gtag-status-badge" style="font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.1);">✅ ATIVO</span>
+                                </h3>
+                                <p style="font-size: 10px; color: var(--color-text-dim); margin-bottom: 12px;">Tag injetada globalmente em todas as páginas e rascunhos.</p>
+                                
+                                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
+                                    <input type="text" id="gtag-id-input" value="GTM-5H4RLHC3" placeholder="GTM-XXXXX ou G-XXXXX"
+                                        style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--color-border); color: #fff; padding: 8px 10px; border-radius: 6px; font-family: monospace; font-size: 11px; font-weight: 700;">
+                                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                        <input type="checkbox" id="gtag-active-toggle" checked style="accent-color: var(--color-success); width: 16px; height: 16px;">
+                                        <span style="font-size: 9px; color: var(--color-text-dim); font-weight: 700;">ON</span>
+                                    </label>
+                                </div>
+                                <button class="btn btn-secondary" onclick="window.googleTagManager.save()" style="width: 100%; font-size: 10px; padding: 6px; border-color: #f59e0b; color: #f59e0b;">💾 SALVAR TAG</button>
                             </div>
                         </div>
                     </div>
@@ -1689,6 +1709,132 @@
     
     <!-- TOAST NOTIFICATIONS (NEW) -->
     <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 999999;"></div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: CRIAR PÁGINA MANUAL -->
+    <!-- ========================================== -->
+    <div id="manual-page-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header" style="border-bottom: 3px solid var(--color-primary);">
+                <h3 style="display: flex; align-items: center; gap: 10px;">🔧 Criar Página Manual <span style="background: rgba(99, 102, 241, 0.2); color: var(--color-primary); font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 4px;">TEMPLATE 00</span></h3>
+                <span class="close-modal" style="cursor:pointer; font-size:24px;" onclick="document.getElementById('manual-page-modal').style.display='none'">×</span>
+            </div>
+            <div class="modal-body" style="padding: 25px;">
+                <p style="font-size: 12px; color: var(--color-text-dim); margin-top: 0; margin-bottom: 20px;">Crie uma página com HTML customizado gerado externamente (Gemini, ChatGPT, etc). O sistema envolverá com o Shell Abidos (Menu, Fontes, GTM, SEO Invisível).</p>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-size: 11px; font-weight: 800; color: var(--color-primary); text-transform: uppercase;">📝 Título da Página</label>
+                    <input type="text" id="manual-title" placeholder="Ex: Psicólogo em Goiânia - Ansiedade" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg); color: #fff; font-weight: 700;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-size: 11px; font-weight: 800; color: var(--color-primary); text-transform: uppercase;">🔗 Slug (URL)</label>
+                    <input type="text" id="manual-slug" placeholder="/psicologo-goiania-ansiedade" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-secondary); font-family: monospace; font-weight: 700;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-size: 11px; font-weight: 800; color: var(--color-primary); text-transform: uppercase;">🧭 Menu Dinâmico</label>
+                    <select id="manual-menu-select" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg); color: #fff; font-weight: 700;">
+                        <option value="">-- Sem Menu (HTML Puro) --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 15px 25px; background: rgba(0,0,0,0.2); display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-secondary" onclick="document.getElementById('manual-page-modal').style.display='none'">Cancelar</button>
+                <button class="btn btn-primary" onclick="acervoManager.saveNewManualPage()" style="background: var(--color-primary); font-weight: 800;">CRIAR PÁGINA 🔧</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: IMPORTAR HTML (EDITOR COMPLETO) -->
+    <!-- ========================================== -->
+    <div id="html-import-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header" style="border-bottom: 3px solid var(--color-success);">
+                <h3 style="display: flex; align-items: center; gap: 10px;">
+                    📥 <span id="import-modal-title">Importar HTML</span>
+                    <span style="background: rgba(16, 185, 129, 0.2); color: var(--color-success); font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 4px;">SHELL ABIDOS</span>
+                </h3>
+                <span class="close-modal" style="cursor:pointer; font-size:24px;" onclick="document.getElementById('html-import-modal').style.display='none'">×</span>
+            </div>
+            <input type="hidden" id="import-page-id">
+            
+            <div class="modal-body" style="padding: 20px; flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 300px; gap: 20px;">
+                <!-- COLUNA 1: Editor de Código -->
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label style="font-size: 11px; font-weight: 800; color: var(--color-primary); text-transform: uppercase;">📋 CÓDIGO HTML</label>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <span id="import-version-info" style="font-size: 9px; color: var(--color-text-dim);"></span>
+                            <label id="import-file-upload-label" style="font-size: 9px; background: rgba(99, 102, 241, 0.1); color: var(--color-primary); padding: 3px 8px; border-radius: 4px; cursor: pointer; font-weight: 700; border: 1px dashed var(--color-primary);">
+                                📁 Upload .html
+                                <input type="file" id="import-file-upload" accept=".html,.htm" style="display: none;" onchange="
+                                    const f = this.files[0];
+                                    if (f) {
+                                        const reader = new FileReader();
+                                        reader.onload = (e) => { document.getElementById('import-html-editor').value = e.target.result; };
+                                        reader.readAsText(f);
+                                    }
+                                ">
+                            </label>
+                        </div>
+                    </div>
+                    <textarea id="import-html-editor" placeholder="Cole aqui o HTML gerado pelo Gemini, ChatGPT, ou qualquer fonte externa...&#10;&#10;O sistema extrairá automaticamente o conteúdo do <body> se um documento completo for colado." 
+                        style="flex: 1; min-height: 350px; width: 100%; font-family: 'Fira Code', 'Courier New', monospace; font-size: 12px; line-height: 1.5; padding: 15px; border-radius: 10px; border: 2px solid var(--color-border); background: #0f172a; color: #e2e8f0; resize: vertical; tab-size: 2;"></textarea>
+                </div>
+
+                <!-- COLUNA 2: Configurações SEO + Shell -->
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <!-- Toggle Shell -->
+                    <div style="padding: 15px; background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 11px; font-weight: 800; color: var(--color-success);">🛡️ USAR SHELL ABIDOS</span>
+                            <label style="position: relative; display: inline-block; width: 42px; height: 22px;">
+                                <input type="checkbox" id="import-use-shell" checked style="opacity: 0; width: 0; height: 0;">
+                                <span style="position: absolute; cursor: pointer; inset: 0; background: #334155; border-radius: 22px; transition: .3s;" 
+                                    onclick="this.previousElementSibling.checked = !this.previousElementSibling.checked; this.style.background = this.previousElementSibling.checked ? '#10b981' : '#334155';">
+                                    <span style="position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s;"></span>
+                                </span>
+                            </label>
+                        </div>
+                        <p style="font-size: 9px; color: var(--color-text-dim); margin: 0;">Ativado: Envolve com Menu, Tailwind, Fontes, GTM e SEO Invisível.<br>Desativado: Salva o HTML exatamente como colado (Raw).</p>
+                    </div>
+
+                    <!-- SEO Invisível -->
+                    <div style="padding: 15px; background: rgba(99, 102, 241, 0.06); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px;">
+                        <div style="font-size: 10px; font-weight: 900; color: var(--color-primary); text-transform: uppercase; margin-bottom: 10px;">🧬 SEO Invisível (Abidos)</div>
+                        
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label style="font-size: 9px; font-weight: 700; color: var(--color-text-dim);">H1 Técnico (Indexação)</label>
+                            <input type="text" id="import-seo-h1" placeholder="Psicólogo em Goiânia - Victor Lawrence" style="width: 100%; padding: 7px; font-size: 11px; border-radius: 6px; border: 1px solid var(--color-border); background: var(--color-bg); color: #fff;">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label style="font-size: 9px; font-weight: 700; color: var(--color-text-dim);">Resumo (Meta Description)</label>
+                            <textarea id="import-seo-resumo" rows="2" placeholder="Descrição otimizada para Google..." style="width: 100%; padding: 7px; font-size: 11px; border-radius: 6px; border: 1px solid var(--color-border); background: var(--color-bg); color: #fff; resize: none;"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="font-size: 9px; font-weight: 700; color: var(--color-text-dim);">H2s Estratégicos (um por linha)</label>
+                            <textarea id="import-seo-h2s" rows="3" placeholder="Ansiedade e Tratamento&#10;Hipnose Clínica&#10;Agende sua Sessão" style="width: 100%; padding: 7px; font-size: 11px; border-radius: 6px; border: 1px solid var(--color-border); background: var(--color-bg); color: #fff; resize: none;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Info de Auditoria -->
+                    <div style="padding: 12px; background: rgba(245, 158, 11, 0.06); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px;">
+                        <div style="font-size: 9px; font-weight: 900; color: #f59e0b; text-transform: uppercase; margin-bottom: 5px;">💡 DICA: LOOP DE AUDITORIA</div>
+                        <p style="font-size: 9px; color: var(--color-text-dim); margin: 0; line-height: 1.5;">Após importar, use o preview para auditar o resultado. Se houver erros, copie o HTML + relatório e envie de volta para a IA de criação para correção.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding: 15px 20px; background: rgba(0,0,0,0.2); display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--color-border);">
+                <button class="btn btn-secondary" onclick="document.getElementById('html-import-modal').style.display='none'">Cancelar</button>
+                <button class="btn btn-primary" onclick="acervoManager.saveImportedHtml()" style="background: var(--color-success); font-weight: 800;">💾 SALVAR HTML</button>
+            </div>
+        </div>
+    </div>
 
     <div id="spark-panel" class="spark-panel" style="display: none;">
         <div class="spark-header">
