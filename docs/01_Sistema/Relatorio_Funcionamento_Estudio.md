@@ -63,4 +63,36 @@ O Studo possui uma função `importIntoStudio(data)` que permite carregar uma p�
 O AI Studio não é uma ferramenta de desenho, mas um **Orquestrador de Autoridade**. Ele garante que, independentemente do tema, a página final siga rigorosamente os padrões de conversão e ética necessários para o ecossistema NeuroEngine.
 
 ---
+
+## 5. Catálogo de Templates Disponíveis (V5.6)
+
+Atualmente, o Studio dispõe de 11 estruturas base, cada uma com um objetivo de conversão ou autoridade específico:
+
+| ID | Nome | Tipo | Objetivo Estratégico |
+|:---|:---|:---|:---|
+| **01** | **Dark Glass** | Landing | Autoridade Clínica Máxima. Design de luxo com Glassmorphism. |
+| **02** | **Artigo Editorial** | Artigo | Post de blog padrão. Foco total na legibilidade e SEO de conteúdo. |
+| **03** | **Editorial Premium** | Artigo | Artigos de "capa". Design refinado, tons quentes e tipografia serifada. |
+| **04** | **Artigo Imersivo** | Artigo | Relatos e reflexões. Uso de Parallax e temática visual narrativa. |
+| **05** | **Tech Editorial** | Artigo | Lançamentos e tecnologia. Design moderno e escuro (estilo documentação). |
+| **06** | **Artigo Orgânico** | Artigo | Conteúdo de Bem-estar. Tons terrosos e layout leve e natural. |
+| **07** | **Ensaio Vintage** | Artigo | Ensaios densos ou acadêmicos. Estética jornalística clássica (grain). |
+| **08** | **Ethereal Glass** | Artigo | Foco em Criatividade e Inovação. Design futurista e cristalino. |
+| **09** | **Luxury Dark** | Artigo | Mentorias e Consultorias High-Ticket. Ouro sobre preto (High-End). |
+| **10** | **Tech Focus** | Artigo | Whitepapers e Documentação Técnica. Foco em dados e clareza. |
+| **11** | **Landing Abidos** | Landing | Conversão Direta (Tráfego Pago). Estilo SaaS moderno com botões 3D. |
+
+---
+
+## 6. Mecanismo Técnico de Preenchimento
+
+O preenchimento não é feito por substituição de código, mas por um motor de **Injeção de Variáveis** (`Placeholder Replacement`):
+
+1.  **Declaração no HTML**: Cada template possui tags no formato `{{NOME_DA_VARIAVEL}}`.
+2.  **Mapeamento Semântico**: O servidor (`server.js`) lê o arquivo HTML e identifica todas as tags presentes.
+3.  **Agrupamento por Módulos**: As variáveis são agrupadas em módulos (ex: `SEO_`, `HERO_`, `FAQ_`) para facilitar a interface do Studio.
+4.  **Processamento Final**: Ao clicar em "Gerar Preview" ou "Lançar", o motor percorre o dicionário de valores gerados pela IA e substitui as tags pelos textos finais.
+5.  **Limpeza**: Variáveis não preenchidas são removidas automaticamente antes do render final para não quebrar o layout.
+
+---
 *Documento Gerado automaticamente por Antigravity AI em 27/03/2026.*
