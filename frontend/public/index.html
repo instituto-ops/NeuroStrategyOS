@@ -552,9 +552,12 @@
                             <p id="studio-step-title" style="margin: 2px 0 0; font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">1ª ETAPA: CONFIGURAÇÃO (O CÉREBRO)</p>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <button id="btn-studio-prev" class="btn btn-secondary" onclick="window.aiStudioTemplate.prevStep()" style="display:none; font-weight: 800; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;">⬅️ VOLTAR</button>
-                        <button id="btn-studio-next" class="btn btn-primary" onclick="window.aiStudioTemplate.nextStep()" style="font-weight: 800; border-radius: 8px; background: #6366f1; border: none; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);">PRÓXIMO ➡️</button>
+                        <button id="btn-studio-prev" class="btn btn-secondary" onclick="window.aiStudioTemplate.prevStep()" style="display:none; font-weight: 800; border-radius: 8px;">
+                            <i data-lucide="chevron-left" style="width: 14px; height: 14px;"></i> VOLTAR
+                        </button>
+                        <button id="btn-studio-next" class="btn btn-primary hero-cta-pulse" onclick="window.aiStudioTemplate.nextStep()" style="font-weight: 800; border-radius: 8px;">
+                            PRÓXIMO <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -580,9 +583,15 @@
                             
                             <!-- Sub-abas dentro do Card para reduzir densidade -->
                             <div class="card-tabs" style="padding: 10px 24px 0; border-bottom: 0;">
-                                <button class="card-tab-btn active" onclick="window.aiStudioTemplate.switchTab('tab-geral', this)">🤖 MOTOR</button>
-                                <button class="card-tab-btn" onclick="window.aiStudioTemplate.switchTab('tab-conteudo', this)">🎯 TEMA</button>
-                                <button class="card-tab-btn" onclick="window.aiStudioTemplate.switchTab('tab-contexto', this)">📝 CONTEXTO</button>
+                                <button class="card-tab-btn active" onclick="window.aiStudioTemplate.switchTab('tab-geral', this)">
+                                    <i data-lucide="cpu" style="width: 12px; height: 12px; margin-right: 5px;"></i> MOTOR
+                                </button>
+                                <button class="card-tab-btn" onclick="window.aiStudioTemplate.switchTab('tab-conteudo', this)">
+                                    <i data-lucide="target" style="width: 12px; height: 12px; margin-right: 5px;"></i> TEMA
+                                </button>
+                                <button class="card-tab-btn" onclick="window.aiStudioTemplate.switchTab('tab-contexto', this)">
+                                    <i data-lucide="file-text" style="width: 12px; height: 12px; margin-right: 5px;"></i> CONTEXTO
+                                </button>
                             </div>
 
                             <div style="padding: 24px; flex: 1;">
@@ -590,8 +599,7 @@
                                 <div id="tab-geral" class="tab-pane-content active">
                                     <div style="display: flex; flex-direction: column; gap: 20px;">
                                         <div>
-                                            <label style="display: block; margin-bottom: 8px;">🤖 MOTOR DE INTELIGÊNCIA</label>
-                                            <select id="ai-studio-model" class="local-model-selector" data-section="ai-studio" onchange="app.updateLocalModel('ai-studio', this.value)" style="width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; border: 1px solid #e2e8f0;">
+                                            <select id="ai-studio-model" class="local-model-selector" data-section="ai-studio" onchange="app.updateLocalModel('ai-studio', this.value)" style="width: 100%;">
                                                 <option value="global">🌐 USAR GLOBAL (Padrão)</option>
                                                 <option value="gemini-2.5-flash-lite">⚡ GEMINI 2.5 FLASH LITE (Economia)</option>
                                                 <option value="gemini-2.5-flash" selected>⚡ GEMINI 2.5 FLASH (Otimizado Abidos)</option>
@@ -599,12 +607,16 @@
                                             </select>
                                         </div>
                                         <div style="display: flex; gap: 10px;">
-                                            <button class="btn btn-secondary" onclick="window.aiStudioTemplate.loadDraft()" style="flex: 1; height: 45px; font-weight: 800; font-size: 10px;">📂 CARREGAR</button>
-                                            <button class="btn btn-primary" onclick="window.aiStudioTemplate.newDraft()" style="flex: 1; height: 45px; font-weight: 800; font-size: 10px; background: #1e293b; border: none;">🆕 NOVO</button>
+                                            <button class="btn btn-secondary" onclick="window.aiStudioTemplate.loadDraft()" style="flex: 1; height: 45px; font-weight: 800; font-size: 10px;">
+                                                <i data-lucide="folder-open" style="width: 14px; height: 14px;"></i> CARREGAR
+                                            </button>
+                                            <button class="btn btn-primary" onclick="window.aiStudioTemplate.newDraft()" style="flex: 1; height: 45px; font-weight: 800; font-size: 10px;">
+                                                <i data-lucide="plus-circle" style="width: 14px; height: 14px;"></i> NOVO
+                                            </button>
                                         </div>
-                                        <div style="background: #eff6ff; padding: 15px; border-radius: 10px; border-left: 4px solid #3b82f6;">
-                                            <p style="font-size: 10px; color: #1e40af; line-height: 1.5; margin: 0; font-weight: 600;">
-                                                O motor padrão é otimizado para a Identidade Verbal do Protocolo Abidos. Modelos PRO são recomendados para revisões clínicas complexas.
+                                        <div class="abidos-insight-card" style="margin-top: 20px;">
+                                            <p style="font-size: 10px; color: var(--color-secondary); line-height: 1.5; margin: 0; font-weight: 700;">
+                                                <i data-lucide="info" style="width: 12px; height: 12px; margin-right: 5px;"></i> O motor padrão é otimizado para a Identidade Verbal do Protocolo Abidos.
                                             </p>
                                         </div>
                                     </div>
@@ -614,18 +626,17 @@
                                 <div id="tab-conteudo" class="tab-pane-content">
                                     <div style="display: flex; flex-direction: column; gap: 20px;">
                                         <div>
-                                            <label style="display: block; margin-bottom: 8px;">🎯 OBJETIVO DO CONTEÚDO</label>
-                                            <select id="ai-studio-objective" style="width: 100%; padding: 12px; border-radius: 10px; font-weight: 600;">
-                                                <option value="landing_page">🚀 Landing Page (Conversão)</option>
-                                                <option value="content_page">📄 Página de Conteúdo / Site</option>
-                                                <option value="blog_post">✍️ Artigo para Blog / SEO</option>
+                                            <label>OBJETIVO DO CONTEÚDO</label>
+                                            <select id="ai-studio-objective" style="width: 100%;">
+                                                <option value="landing_page">Landing Page (Conversão)</option>
+                                                <option value="content_page">Página de Conteúdo / Site</option>
+                                                <option value="blog_post">Artigo para Blog / SEO</option>
                                             </select>
                                         </div>
                                         <div>
-                                            <label style="display: block; margin-bottom: 8px;">🔖 TEMA / PALAVRA-CHAVE</label>
-                                            <input type="text" id="ai-studio-theme" placeholder="Ex: Avaliação Neuropsicológica..." 
-                                                   style="width: 100%; padding: 12px 15px; border-radius: 8px; font-weight: 600;">
-                                            <p style="font-size: 9px; color: #94a3b8; margin-top: 5px;">Este tema será a espinha dorsal do seu Silo de autoridade.</p>
+                                            <label>TEMA / PALAVRA-CHAVE</label>
+                                            <input type="text" id="ai-studio-theme" placeholder="Ex: Avaliação Neuropsicológica..." style="width: 100%;">
+                                            <p style="font-size: 9px; color: var(--color-text-dim); margin-top: 5px;">Este tema será a espinha dorsal do seu Silo de autoridade.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -633,58 +644,58 @@
                                 <!-- Aba: Contexto -->
                                 <div id="tab-contexto" class="tab-pane-content">
                                     <div>
-                                        <label style="display: block; margin-bottom: 8px;">📝 RASCUNHO DE IDEIAS & CONTEXTO</label>
+                                        <label>RASCUNHO DE IDEIAS & CONTEXTO</label>
                                         <textarea id="ai-studio-context" placeholder="Descreva os diferenciais, público-alvo ou pontos clínicos específicos..." 
-                                                  style="width: 100%; height: 180px; padding: 12px 15px; border-radius: 8px; resize: none;"></textarea>
-                                        <p style="font-size: 9px; color: #94a3b8; margin-top: 8px;">Quanto mais rico o contexto, mais precisa será a voz do Dr. Victor Lawrence no rascunho.</p>
+                                                  style="width: 100%; height: 180px; resize: none;"></textarea>
+                                        <p style="font-size: 9px; color: var(--color-text-dim); margin-top: 8px;">Quanto mais rico o contexto, mais precisa será a voz do Dr. Victor Lawrence no rascunho.</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Coluna 2: SEO & Arquitetura -->
-                        <div class="card" style="padding: 24px; min-height: 520px; border: 1px solid #e2e8f0;">
-                            <h3 style="margin-top:0; font-size: 12px; color: #10b981; margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; font-weight: 900;">🌐 SEO & ARQUITETURA</h3>
+                        <div class="card" style="padding: 24px; min-height: 520px;">
+                            <h3 style="margin-top:0; font-size: 11px; color: var(--color-secondary); margin-bottom: 25px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; font-weight: 900; letter-spacing: 1px;">ARQUITETURA DE CONTEÚDO</h3>
                             <div style="display: flex; flex-direction: column; gap: 20px;">
                                 <div>
-                                    <label style="display: block; margin-bottom: 8px;">📁 SELEÇÃO DE SILO / CATEGORIA</label>
-                                    <select id="ai-studio-silo" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: 600;">
+                                    <label>SELEÇÃO DE SILO / CATEGORIA</label>
+                                    <select id="ai-studio-silo" style="width: 100%;">
                                         <!-- Preenchido via JS -->
                                     </select>
                                 </div>
                                 <div>
-                                    <label style="display: block; margin-bottom: 8px;">🌳 SELEÇÃO DO MENU</label>
-                                    <select id="ai-studio-menu" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: 600;">
+                                    <label>SELEÇÃO DO MENU</label>
+                                    <select id="ai-studio-menu" style="width: 100%;">
                                         <!-- Preenchido via JS -->
                                     </select>
                                 </div>
-                                <div style="background: #f0fdf4; padding: 20px; border-radius: 12px; border: 1px dashed #10b981; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);">
-                                    <p style="font-size: 13px; color: #065f46; line-height: 1.6; margin: 0; font-weight: 700;">
-                                        💡 <strong>Dica Estratégica Abidos:</strong> Ao selecionar o Silo, o Agente mapeará automaticamente os links internos da estrutura Hub and Spoke para garantir o E-E-A-T (Expertise, Experiência, Autoridade e Confiança).
+                                <div class="abidos-insight-card" style="margin-top: 20px; border-left-color: var(--color-accent);">
+                                    <p style="font-size: 11px; color: var(--color-text-light); line-height: 1.6; margin: 0; font-weight: 500;">
+                                        <i data-lucide="sparkles" style="width: 14px; height: 14px; color: var(--color-accent); margin-right: 5px;"></i> <strong>Dica Abidos:</strong> O Agente mapeará automaticamente os links internos da estrutura **Hub and Spoke** para garantir o E-E-A-T.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Coluna 3: Dados de Contato -->
-                        <div class="card" style="padding: 24px; min-height: 520px; border: 1px solid #e2e8f0;">
-                            <h3 style="margin-top:0; font-size: 12px; color: #f59e0b; margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; font-weight: 900;">📱 CTA & DADOS DE CONTATO</h3>
+                        <div class="card" style="padding: 24px; min-height: 520px;">
+                            <h3 style="margin-top:0; font-size: 11px; color: var(--color-accent); margin-bottom: 25px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; font-weight: 900; letter-spacing: 1px;">CONVERSÃO & CTAS</h3>
                             <div style="display: flex; flex-direction: column; gap: 15px;">
                                 <div class="input-group">
-                                    <label style="display: block; margin-bottom: 5px;">WHATSAPP</label>
-                                    <input type="text" id="studio-contact-wa" value="62991545295" style="width: 100%; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                                    <label>WHATSAPP</label>
+                                    <input type="text" id="studio-contact-wa" value="62991545295" style="width: 100%;">
                                 </div>
                                 <div class="input-group">
-                                    <label style="display: block; margin-bottom: 5px;">EMAIL</label>
-                                    <input type="text" id="studio-contact-email" value="instituto@hipnolawrence.com" style="width: 100%; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                                    <label>EMAIL</label>
+                                    <input type="text" id="studio-contact-email" value="instituto@hipnolawrence.com" style="width: 100%;">
                                 </div>
                                 <div class="input-group">
-                                    <label style="display: block; margin-bottom: 5px;">INSTAGRAM</label>
-                                    <input type="text" id="studio-contact-insta" value="https://instagram.com/hipnolawrence" style="width: 100%; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                                    <label>INSTAGRAM</label>
+                                    <input type="text" id="studio-contact-insta" value="https://instagram.com/hipnolawrence" style="width: 100%;">
                                 </div>
                                 <div class="input-group">
-                                    <label style="display: block; margin-bottom: 5px;">LINK AGENDAMENTO</label>
-                                    <input type="text" id="studio-contact-link" value="www.hipnolawrence.com/agendamento" style="width: 100%; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                                    <label>LINK AGENDAMENTO</label>
+                                    <input type="text" id="studio-contact-link" value="www.hipnolawrence.com/agendamento" style="width: 100%;">
                                 </div>
                                 <div style="margin-top: 10px; padding: 15px; background: #fffbeb; border-radius: 8px; border: 1px solid #fef3c7;">
                                     <p style="font-size: 10px; color: #92400e; font-style: italic; margin: 0;">Dados padrão do Dr. Victor Lawrence aplicados. Reutilizados nos CTAs e rodapés.</p>
@@ -720,21 +731,37 @@
                         <div style="padding: 15px 30px; background: #1e293b; display: flex; justify-content: space-between; align-items: center;">
                             <div style="display: flex; align-items: center; gap: 15px;">
                                 <span style="color: #94a3b8; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">👁️ Preview Real-time (Protocolo Abidos V5)</span>
-                                <button class="btn btn-secondary" onclick="window.aiStudioTemplate.fullPreview()" style="font-size: 10px; padding: 4px 12px; border-radius: 20px; background: #6366f122; border: 1px solid #6366f144; color: #6366f1; font-weight: 800;">👁️ PREVIEW AMPLO</button>
+                                <button class="btn btn-secondary" onclick="window.aiStudioTemplate.fullPreview()" style="font-size: 10px; padding: 4px 12px; border-radius: 20px;">
+                                    <i data-lucide="maximize" style="width: 12px; height: 12px; margin-right: 5px;"></i> PREVIEW AMPLO
+                                </button>
                             </div>
-                            <div style="display: flex; gap: 8px; background: #0f172a; padding: 4px; border-radius: 8px;">
-                                <button class="device-btn active" onclick="window.aiStudioTemplate.setPreviewSize('mobile')" title="Mobile First">📱</button>
-                                <button class="device-btn" onclick="window.aiStudioTemplate.setPreviewSize('tablet')" title="Tablet View"> tablet </button>
-                                <button class="device-btn" onclick="window.aiStudioTemplate.setPreviewSize('desktop')" title="Desktop View">🖥️</button>
+                            <div style="display: flex; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 8px;">
+                                <button class="device-btn active" onclick="window.aiStudioTemplate.setPreviewSize('mobile')" title="Mobile First">
+                                    <i data-lucide="smartphone" style="width: 14px; height: 14px;"></i>
+                                </button>
+                                <button class="device-btn" onclick="window.aiStudioTemplate.setPreviewSize('tablet')" title="Tablet View">
+                                    <i data-lucide="tablet" style="width: 14px; height: 14px;"></i>
+                                </button>
+                                <button class="device-btn" onclick="window.aiStudioTemplate.setPreviewSize('desktop')" title="Desktop View">
+                                    <i data-lucide="monitor" style="width: 14px; height: 14px;"></i>
+                                </button>
                             </div>
                         </div>
                         <div id="preview-wrapper" style="flex: 1; display:flex; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto;">
                             <!-- O preview será injetado aqui -->
-                            <div id="studio-preview-frame" style="width: 375px; height: 667px; background: white; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; position: relative;">
-                                <div style="padding: 100px 40px; text-align: center; color: #64748b;">
-                                    <span style="font-size: 50px; display: block; margin-bottom: 20px;">🚀</span>
-                                    <h4 style="color: #cbd5e1;">Aguardando Geração</h4>
-                                    <p style="font-size: 12px;">Seu rascunho clínico aparecerá aqui em tempo real.</p>
+                            <div id="studio-preview-frame" class="preview-master-dark" style="width: 375px; height: 667px; border-radius: 24px; box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; position: relative;">
+                                <div style="padding: 100px 40px; text-align: center; color: var(--color-text-dim);">
+                                    <div class="skeleton-premium" style="width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+                                        <i data-lucide="rocket" style="width: 30px; height: 30px; color: var(--color-primary);"></i>
+                                    </div>
+                                    <h4 style="color: white; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;">Aguardando Geração</h4>
+                                    <p style="font-size: 11px; margin-top: 10px;">Seu rascunho clínico aparecerá aqui em tempo real através da orquestração AI Abidos.</p>
+                                    
+                                    <div style="margin-top: 40px; display: flex; flex-direction: column; gap: 10px;">
+                                        <div class="skeleton-premium" style="height: 12px; width: 80%; margin: 0 auto;"></div>
+                                        <div class="skeleton-premium" style="height: 12px; width: 60%; margin: 0 auto;"></div>
+                                        <div class="skeleton-premium" style="height: 12px; width: 90%; margin: 0 auto;"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

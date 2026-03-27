@@ -20,12 +20,11 @@ const app = {
         // Pulso do Sistema (V5.1)
         if (window.healthSystem) window.healthSystem.startHeartbeat();
 
-        // Sistema de Tooltips Inteligentes (V5.1)
-        this.initTooltips();
+        // Inicializa ícones Lucide
+        if (window.lucide) window.lucide.createIcons();
 
         console.log("🚀 [Núcleo de Marketing] App Core Initialized.");
-    },
-
+}
     async loadSystemAlerts() {
         try {
             const res = await fetch('/api/system/report/latest');
@@ -119,6 +118,9 @@ const app = {
 
                 // Load section data
                 this.loadSectionData(targetId);
+
+                // Re-render icons for new section
+                if (window.lucide) window.lucide.createIcons();
             });
         });
 

@@ -19,6 +19,9 @@
     --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.2);
     --shadow-md: 0 20px 25px -5px rgba(0,0,0,0.5);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --glass-bg: rgba(15, 23, 42, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-blur: blur(12px);
 }
 * {
     box-sizing: border-box;
@@ -460,6 +463,68 @@ select:focus {
     outline: none;
     border-color: var(--color-secondary);
     box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* 💎 UI PREMIUM ABIDOS (V5.5) */
+.input-abidos {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text) !important;
+    backdrop-filter: var(--glass-blur);
+    transition: var(--transition);
+}
+
+.input-abidos:focus {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border-color: var(--color-secondary) !important;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+}
+
+.preview-master-dark {
+    background: #070b14 !important;
+    color: var(--color-text) !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+.skeleton-premium {
+    background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%);
+    background-size: 200% 100%;
+    animation: skeleton-glow 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes skeleton-glow {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.abidos-insight-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-left: 4px solid var(--color-secondary);
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+.hero-cta-pulse {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-cta-pulse::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
 }
 
 /* 🔘 HIERARQUIA DE BOTÕES (ABIDOS) */
@@ -2046,16 +2111,16 @@ label:not(.nav-btn)[style*="background: white"] {
    ✨ AI STUDIO REFINEMENTS (UI/UX)
    ========================================================================== */
 
-/* Estilo de Alto Contraste para o Studio */
+/* Estilo Dark Premium para o Studio (Correção V5.5) */
 #ai-studio {
-    background: #f1f5f9 !important;
+    background: var(--color-bg) !important;
 }
 
 #ai-studio label {
-    color: #475569 !important; /* Slate 600 - High Contrast */
+    color: var(--color-text-dim) !important;
     font-size: 10px !important;
     text-transform: uppercase !important;
-    letter-spacing: 1px !important;
+    letter-spacing: 1.2px !important;
     font-weight: 900 !important;
     display: block !important;
     margin-bottom: 8px !important;
@@ -2064,44 +2129,48 @@ label:not(.nav-btn)[style*="background: white"] {
 #ai-studio input, 
 #ai-studio select, 
 #ai-studio textarea {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    color: #0f172a !important;
-    font-weight: 600 !important;
+    background: rgba(15, 23, 42, 0.4) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text) !important;
+    font-weight: 500 !important;
+    backdrop-filter: var(--glass-blur);
+    border-radius: 12px !important;
+    padding: 12px 15px !important;
 }
 
 #ai-studio .btn-secondary {
-    background: #e2e8f0 !important;
-    border: 1px solid #94a3b8 !important;
-    color: #020617 !important;
-    font-weight: 900 !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text-light) !important;
 }
 
 #ai-studio .btn-secondary:hover {
-    background: #e2e8f0 !important;
-    color: #1e293b !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: var(--color-secondary) !important;
+    color: white !important;
 }
 
 #ai-studio .btn-primary {
-    background: #1e293b !important;
+    background: var(--color-primary) !important;
     color: #ffffff !important;
     border: none !important;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2) !important;
 }
 
 #ai-studio input:hover, 
 #ai-studio select:hover, 
 #ai-studio textarea:hover {
-    border-color: #6366f1 !important;
-    background: #f8fafc;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.05);
+    border-color: rgba(99, 102, 241, 0.4) !important;
+    background: rgba(15, 23, 42, 0.6) !important;
 }
 
 #ai-studio input:focus, 
 #ai-studio select:focus, 
 #ai-studio textarea:focus {
-    border-color: #6366f1 !important;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-    background: #fff;
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    background: rgba(15, 23, 42, 0.8) !important;
+    outline: none;
 }
 
 /* Responsividade da Grid do Studio */
@@ -2119,37 +2188,39 @@ label:not(.nav-btn)[style*="background: white"] {
 
 /* Hover suave nos Cards do Studio */
 #ai-studio .card {
-    background: #ffffff !important;
-    color: #0f172a !important;
-    border: 1px solid #e2e8f0 !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease !important;
+    background: var(--color-card) !important;
+    color: var(--color-text) !important;
+    border: 1px solid var(--color-border) !important;
+    box-shadow: var(--shadow-md) !important;
+    backdrop-filter: var(--glass-blur);
 }
 
 #ai-studio .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
-    border-color: #6366f133 !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4) !important;
+    border-color: rgba(99, 102, 241, 0.2) !important;
 }
 
 /* Tabs Internas */
 .card-tabs {
-    background: #f8fafc;
-    border-bottom: 2px solid #e2e8f0;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .card-tab-btn {
     border: none !important;
     background: transparent !important;
-    color: #64748b !important;
+    color: var(--color-text-dim) !important;
     font-weight: 800 !important;
     padding: 12px 20px !important;
     font-size: 10px !important;
+    letter-spacing: 1px;
 }
 
 .card-tab-btn.active {
-    color: #6366f1 !important;
-    border-bottom: 3px solid #6366f1 !important;
+    color: var(--color-primary) !important;
+    background: rgba(99, 102, 241, 0.1) !important;
+    border-bottom: 2px solid var(--color-primary) !important;
 }
 
 .tab-pane-content {
@@ -2210,28 +2281,35 @@ label:not(.nav-btn)[style*="background: white"] {
 /* 🎨 Override Studio: Botões de Mídia de Alto Contraste */
 #ai-studio .btn-secondary,
 .studio-step-content .btn-secondary {
-    background: #ffffff !important;
-    border: 2.5px solid #cbd5e1 !important;
-    color: #1e293b !important;
-    font-weight: 800 !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text-light) !important;
+    box-shadow: var(--shadow-sm) !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
 }
 
 #ai-studio .btn-secondary:hover,
 .studio-step-content .btn-secondary:hover {
-    background: #f8fafc !important;
-    border-color: #6366f1 !important;
-    color: #4f46e5 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: var(--color-primary) !important;
+    color: white !important;
 }
 
 #ai-studio .btn-primary, 
 .studio-step-content .btn-primary {
-    background: #6366f1 !important;
+    background: var(--color-primary) !important;
     border: none !important;
     color: white !important;
     font-weight: 800 !important;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
+}
+
+#ai-studio .btn-primary:hover,
+.studio-step-content .btn-primary:hover {
+    background: #4f46e5 !important;
+    transform: translateY(-2px);
+}
 }
 
 #ai-studio input[type="text"], 

@@ -121,6 +121,9 @@ window.aiStudioTemplate = {
         this.currentStep = 1;
         this.updateStepUI();
 
+        // Re-render Icons
+        if (window.lucide) window.lucide.createIcons();
+
         // Toast de confirmação
         if(window.showToast) window.showToast("🚀 Conteúdo importado para o AI Studio.");
     },
@@ -240,6 +243,9 @@ window.aiStudioTemplate = {
         // Reset scroll do conteúdo
         const scrollEl = document.getElementById(`studio-step-${this.currentStep}`);
         if (scrollEl) scrollEl.scrollTop = 0;
+
+        // Atualiza Lucide
+        if (window.lucide) window.lucide.createIcons();
     },
 
     // ── PREVIEW & DISPOSITIVOS ───────────────────────────────────────────────
@@ -357,6 +363,9 @@ window.aiStudioTemplate = {
                 </div>
             </div>
         `; }).join('');
+
+        // Re-render Icons
+        if (window.lucide) window.lucide.createIcons();
     },
 
     getModuleColor: function(t) {
