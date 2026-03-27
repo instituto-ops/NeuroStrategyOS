@@ -1027,6 +1027,52 @@ app.post('/api/acervo/alterar-slug', async (req, res) => {
     }
 });
 
+// [API] Alterar Título Amigável de uma Página Existente (E-E-A-T)
+app.post('/api/acervo/alterar-titulo', async (req, res) => {
+    try {
+        const { caminhoFisico, novoTitulo } = req.body;
+        if(!caminhoFisico || !novoTitulo) throw new Error("Dados incompletos.");
+
+        const content = fs.readFileSync(caminhoFisico, 'utf8');
+        const dnaMatch = content.match(/export const neuroEngineData = (\{[\s\S]*?\});/);
+        
+        if (dnaMatch) {
+            let dna = JSON.parse(dnaMatch[1]);
+            dna.THEME = novoTitulo;
+            dna.H1 = novoTitulo; // Sincroniza H1 por padrão para SEO
+            const newDNAString = `export const neuroEngineData = ${JSON.stringify(dna, null, 2)};`;
+            const newContent = content.replace(/export const neuroEngineData = \{[\s\S]*?\};/, newDNAString);
+            fs.writeFileSync(caminhoFisico, newContent);
+        }
+
+        res.json({ success: true, novoTitulo });
+
+    } catch (e) {
+        console.error("Erro ao alterar título:", e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// [API] Definir Homepage Fixa (/)
+app.post('/api/acervo/definir-home', async (req, res) => {
+    try {
+        const { caminhoFisico } = req.body;
+        if(!caminhoFisico) throw new Error("Caminho físico não informado.");
+
+        const targetPath = path.join(process.env.SITE_REPO_PATH || '../site-nextjs/src/app', 'page.tsx');
+        
+        // Simplesmente copia o conteúdo da página selecionada para a raiz
+        // Importante: Mantém o DNA intacto
+        fs.copyFileSync(caminhoFisico, targetPath);
+
+        res.json({ success: true, message: "Página inicial atualizada com sucesso." });
+
+    } catch (e) {
+        console.error("Erro ao definir home:", e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
 // [API] Alterar Status (DRAFT/PUBLICADO) de uma Página
 app.post('/api/acervo/alterar-status', async (req, res) => {
     try {

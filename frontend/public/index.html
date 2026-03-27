@@ -98,15 +98,6 @@
                 <button class="nav-btn" data-target="manager-agent" style="background: linear-gradient(135deg, #6366f122, #2dd4bf22); border: 1px solid #6366f144;">👑 <span style="font-weight: 900; color: #fff;">NeuroEngineAI</span></button>
                 
             </nav>
-            
-            <!-- [NOVO] Sidebar Help/Resource Center (Audit Point #10) -->
-            <div style="padding: 15px; margin-top: 20px; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; font-size: 11px;">
-                <div style="font-weight: 800; color: #6366f1; margin-bottom: 5px; text-transform: uppercase;">📚 CENTRO DE APOIO</div>
-                <div style="color: var(--color-text-dim); line-height: 1.4;">
-                    Dúvidas sobre o Método Abidos ou Silos? Clique no link abaixo ou consulte o Dr. Lawrence.
-                </div>
-                <button class="btn btn-secondary" style="width: 100%; margin-top: 10px; font-size: 10px; padding: 6px;" onclick="window.sparkEngine?._openManager()">📖 Wiki Estratégica</button>
-            </div>
         </aside>
 
         <!-- Main Content Area -->
@@ -843,22 +834,48 @@
                         </div>
                     </div>
                     
-                    <div class="table-container">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Título da Página</th>
-                                    <th>URL / Slug</th>
-                                    <th>Status Mod.</th>
-                                    <th>Status Pub.</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="acervo-list-body">
-                                <tr><td colspan="5" style="text-align: center; color: var(--color-text-light); padding: 40px;">Sincronizando com o sistema de arquivos do Next.js...</td></tr>
-                            </tbody>
-                        </table>
+                    <div style="display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; margin-bottom: 25px;">
+                        <!-- Coluna 1: Tabela -->
+                        <div class="table-container" style="background: rgba(0,0,0,0.1); border-radius: 12px; padding: 10px;">
+                            <table class="table" style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+                                <thead>
+                                    <tr style="color: var(--color-text-light); font-size: 11px; text-transform: uppercase;">
+                                        <th style="text-align: left; padding: 10px;">Título da Página</th>
+                                        <th style="text-align: left; padding: 10px;">URL / Slug (Neuro-Mapping)</th>
+                                        <th style="text-align: left; padding: 10px;">Status Mod.</th>
+                                        <th style="text-align: left; padding: 10px;">Status Pub.</th>
+                                        <th style="text-align: center; padding: 10px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="acervo-list-body">
+                                    <!-- Conteúdo Dinâmico -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Coluna 2: Configurações Globais (Home Fixa) -->
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            <div class="card" style="padding: 20px; border-top: 4px solid var(--color-primary); background: rgba(30, 41, 59, 0.4);">
+                                <h3 style="margin: 0 0 10px; font-size: 13px; font-weight: 800; color: #fff;">🏠 PÁGINA INICIAL FIXA</h3>
+                                <p style="font-size: 11px; color: var(--color-text-dim); margin-bottom: 15px;">Defina qual página publicada será a Home do seu site (/).</p>
+                                
+                                <select id="acervo-homepage-select" style="width: 100%; background: var(--color-bg); border: 1px solid var(--color-border); color: #fff; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; margin-bottom: 12px;">
+                                    <option value="">Carregando páginas...</option>
+                                </select>
+                                
+                                <button class="btn btn-primary" onclick="acervoManager.defineHomepage()" style="width: 100%; border-radius: 8px; font-weight: 800; font-size: 11px;">DEFINIR COMO HOME 🚀</button>
+                            </div>
+
+                            <div class="card" style="padding: 15px; border: 1px dashed var(--color-primary); background: transparent;">
+                                <div style="font-size: 10px; color: var(--color-primary); font-weight: 900; margin-bottom: 5px;">DOMÍNIO ATIVO</div>
+                                <div style="font-size: 13px; color: #fff; font-weight: 800;">hipnolawrence.com</div>
+                                <div style="font-size: 9px; color: var(--color-text-dim); margin-top: 5px;">Hospedado no Vercel (Edge Network)</div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Datalist para Slugs Dinâmicos (Sincronizado com Estratégia de Conteúdo) -->
+                    <datalist id="planning-slugs-list"></datalist>
                 </div>
             </section>
 

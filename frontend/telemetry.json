@@ -1,10 +1,10 @@
 {
   "tokens": {
-    "prompt": 28135,
-    "candidates": 76969,
-    "total": 277711
+    "prompt": 29346,
+    "candidates": 82029,
+    "total": 296454
   },
-  "calls": 123,
+  "calls": 130,
   "errors": 0,
-  "last_sync": "2026-03-27T01:45:14.619Z"
+  "last_sync": "2026-03-27T02:22:23.286Z"
 }

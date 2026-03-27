@@ -215,6 +215,13 @@ const app = {
             window.marketingLab.loadAnalytics();
             window.marketingLab.runPSI(false); // Carrega PSI apenas se entrar na aba
         }
+        if (targetId === 'acervo-publicacoes' && window.acervoManager) {
+            window.acervoManager.loadAcervo();
+        }
+        if (targetId === 'menu-manager' && window.menuSystem) {
+            window.menuSystem.loadMenus();
+            window.menuSystem.loadSilos();
+        }
     },
 
     async loadDashboardData() {
