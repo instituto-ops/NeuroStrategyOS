@@ -2366,3 +2366,58 @@ label:not(.nav-btn)[style*="background: white"] {
 .sidebar-divider::before { content: ''; width: 3px; height: 12px; background: var(--color-secondary); border-radius: 20px; opacity: 0.6; }
 
 
+
+/* ?? CINEMATIC DARK - STUDIO MODERNIZATION (V5.34 PATCH) */
+#ai-studio .card, 
+.studio-module-card, 
+.module-header, 
+.module-body, 
+.template-selector-bar, 
+.compliance-panel, 
+.compliance-header,
+.timeline-content,
+.menu-item-row,
+.preflight-panel {
+    background: var(--color-card) !important;
+    background-color: var(--color-card) !important;
+    color: var(--color-text) !important;
+    border-color: var(--color-border) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+#ai-studio .card h3, 
+#ai-studio .card h4, 
+.module-title h4, 
+.module-title p,
+.var-field-group label,
+.timeline-actor {
+    color: var(--color-text) !important;
+}
+
+#ai-studio input, 
+#ai-studio textarea, 
+#ai-studio select,
+.var-field-group input,
+.var-field-group textarea {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text) !important;
+}
+
+.var-field-group label code,
+.prompt-chip,
+.preflight-pill {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text-light) !important;
+}
+
+.module-number {
+    background: rgba(99, 102, 241, 0.2) !important;
+    color: var(--color-primary) !important;
+}
+
+.glow-highlight {
+    background-color: rgba(45, 212, 191, 0.1) !important;
+}
