@@ -3,66 +3,73 @@
     {
       "id": "autismo-adulto",
       "hub": "Transtorno do Espectro Autista (TEA)",
+      "scope": "national",
       "spokes": [
-        "Sinais Sutis em Mulheres",
-        "Alta Funcionalidade e Burnout",
-        "Relacionamentos e TEA"
+        { "title": "Sinais Sutis em Mulheres", "slug": "sinais-sutis-em-mulheres-adultas" },
+        { "title": "Alta Funcionalidade e Burnout", "slug": "alta-funcionalidade-e-burnout-autista" },
+        { "title": "Relacionamentos e TEA", "slug": "relacionamentos-e-tea-adulto" }
       ],
-      "slug": "autismo-em-adultos"
+      "slug": "autismo-em-adultos-goiania"
     },
     {
       "id": "ansiedade-burnout",
       "hub": "Ansiedade",
+      "scope": "local",
       "spokes": [
-        "Sintomas Físicos da Ansiedade",
-        "Terapia Estratégica Breve",
-        "Como Parar Ataques de Pânico"
+        { "title": "Sintomas Físicos da Ansiedade", "slug": "sintomas-fisicos-da-ansiedade" },
+        { "title": "Terapia Estratégica Breve", "slug": "terapia-estrategica-breve" },
+        { "title": "Como Parar Ataques de Pânico", "slug": "como-parar-ataques-de-panico" }
       ],
-      "slug": "ansiedade"
+      "slug": "ansiedade-em-goiania"
     },
     {
       "id": "hipnose-clinica",
       "hub": "Hipnose Clínica",
+      "scope": "local",
       "spokes": [
-        "O que é Hipnose Clínica",
-        "Hipnose para Fobias",
-        "Mitos e Verdades"
+        { "title": "O que é Hipnose Clínica", "slug": "o-que-e-hipnose-clinica" },
+        { "title": "Hipnose para Fobias", "slug": "hipnose-para-fobias" },
+        { "title": "Mitos e Verdades", "slug": "mitos-e-verdades-sobre-hipnose" }
       ],
-      "slug": "hipnose-clinica"
+      "slug": "hipnose-clinica-em-goiania"
     },
     {
       "id": "silo_1774323523068",
       "hub": "Saúde Mental no Trabalho e Produtividade",
+      "scope": "national",
       "slug": "saude-mental-trabalho-produtividade",
       "spokes": [
-        "Como o estresse afeta a produtividade no trabalho e como a hipnose pode ajudar",
-        "Gerenciamento de estresse e ansiedade para profissionais de alta performance",
-        "Prevenção e tratamento do burnout em ambientes corporativos"
+        { "title": "Como o estresse afeta a produtividade", "slug": "estresse-e-produtividade-no-trabalho" },
+        { "title": "Gerenciamento de estresse para alta performance", "slug": "gerenciamento-estresse-alta-performance" },
+        { "title": "Prevenção e tratamento do burnout corporativo", "slug": "prevencao-burnout-corporativo" }
       ]
     },
     {
       "id": "silo_1774323541222",
       "hub": "Relacionamentos Afetivos e Intimidade",
+      "scope": "local",
       "slug": "relacionamentos-afetivos-intimidade",
       "spokes": [
-        "Superando inseguranças e medos em relacionamentos amorosos com hipnose",
-        "Como a hipnose clínica pode melhorar a comunicação e a conexão em casais",
-        "Tratamento de disfunções sexuais e bloqueios emocionais com hipnose"
+        { "title": "Superando inseguranças amorosas", "slug": "superando-insegurancas-amorosas" },
+        { "title": "Hipnose clínica para conexão em casais", "slug": "hipnose-conexao-casais" },
+        { "title": "Tratamento de disfunções sexuais", "slug": "tratamento-disfuncoes-sexuais" }
       ]
     },
     {
       "id": "silo_1774323544462",
       "hub": "Autoconhecimento e Desenvolvimento Pessoal",
+      "scope": "national",
       "slug": "autoconhecimento-desenvolvimento-pessoal",
       "spokes": [
-        "Descobrindo seu potencial máximo através da hipnose para autoconfiança",
-        "Como a hipnose ajuda a reprogramar crenças limitantes e a alcançar objetivos",
-        "Explorando memórias reprimidas e traumas passados com segurança através da hipnose"
+        { "title": "Descobrindo seu potencial máximo", "slug": "descobrindo-potencial-maximo-hipnose" },
+        { "title": "Reprogramar crenças limitantes", "slug": "reprogramar-crencas-limitantes-hipnose" },
+        { "title": "Explorando memórias e traumas", "slug": "explorando-memorias-traumas-passados" }
       ]
     },
     {
       "id": "silo_1774329262766",
       "hub": "Transtornos de Humor",
+      "scope": "local",
       "slug": "transtornos-de-humor",
       "spokes": []
     }

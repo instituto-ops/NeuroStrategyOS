@@ -63,15 +63,25 @@ window.seoEngine = {
             const spokeCount = silo.spokes ? silo.spokes.length : 0;
             const hubAudit = this.auditData ? this.auditData.hubs[silo.id] : null;
 
+            // Seletor de Alcance (v2.0)
+            const scopeLabel = silo.scope === 'national' ? '🌐 Nacional' : '📍 Local';
+            const scopeColor = silo.scope === 'national' ? '#38bdf8' : '#94a3b8';
+
             return `
                 <tr class="hub-row" style="background: rgba(30, 41, 59, 0.5); cursor: pointer; transition: background 0.3s;" onclick="window.seoEngine.toggleSilo('${silo.id}')">
                     <td style="padding: 15px; text-align: center; color: var(--color-primary); font-family: monospace;">
                         <span style="font-size: 10px;">${isExpanded ? '▼' : '▶'}</span>
                     </td>
                     <td style="padding: 15px; color: #fff; font-weight: 700;">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.innerText)" onclick="event.stopPropagation()">${silo.hub}</span>
-                            ${this.renderStatusIcon(silo.id, 'title', hubAudit?.title)}
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.innerText)" onclick="event.stopPropagation()">${silo.hub}</span>
+                                ${this.renderStatusIcon(silo.id, 'title', hubAudit?.title)}
+                            </div>
+                            <button onclick="event.stopPropagation(); window.seoEngine.toggleScope('${silo.id}')" 
+                                    style="width: fit-content; font-size: 8px; font-weight: 800; background: rgba(255,255,255,0.05); color: ${scopeColor}; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                ${scopeLabel}
+                            </button>
                         </div>
                     </td>
                     <td style="padding: 15px; font-family: monospace; font-size: 12px; color: #94a3b8;">
@@ -172,6 +182,16 @@ window.seoEngine = {
             this.expandedHubs.add(id);
         }
         this.renderSilos();
+    },
+
+    toggleScope(id) {
+        const silo = this.fullData.silos.find(s => s.id === id);
+        if (silo) {
+            silo.scope = silo.scope === 'national' ? 'local' : 'national';
+            this.saveSilos();
+            this.renderSilos();
+            console.log(`🌍 Alcance de [${silo.hub}] alterado para: ${silo.scope}`);
+        }
     },
 
     async updateSiloField(id, field, value) {
@@ -536,27 +556,34 @@ window.seoEngine = {
 
         const table = document.querySelector('.table-container');
         const led = document.getElementById('abidos-led');
+        const btn = document.getElementById('btn-abidos-analysis');
         
         if (table) table.classList.add('abidos-scanning');
-        if (led) led.style.background = '#38bdf8'; // Azul processando
+        if (led) led.style.background = '#38bdf8'; 
+        if (btn) btn.innerHTML = '🕒 AUDITANDO...';
 
         try {
-            const prompt = `Atue como Auditor Estratégico Abidos. Analise esta Arquitetura SEO e forneça status (GREEN/YELLOW/RED) e uma breve justificativa (1 frase) para CADA item.
-            Padrão Abidos: 
-            - Slugs: /servico-em-cidade/ (ex: psicologo-ansiedade-goiania).
-            - Títulos: Foco na dor + Solução + Autoridade.
-            - Herarquia: Spoke deve conter keyword específica sem canibalizar o Hub.
-            
-            Arquitetura: ${JSON.stringify(this.fullData.silos)}
-            
+            const prompt = `Você é o Auditor Estratégico Abidos v2.0. 
+            Sua missão é realizar uma análise de "Caçador de Oceano Azul" para a arquitetura JSON abaixo.
+
+            ARQUITETURA: ${JSON.stringify(this.fullData.silos)}
+
+            DIRETRIZES v2.0:
+            1. ALCANCE: Hubs 'local' DEVEM ter cidade. Hubs 'national' DEVEM focar em nicho nacional (sem cidade).
+            2. COPY FATIADO: Verifique se itens respeitam os limites: Kicker(6w), H1(8w), Subtitle(20w).
+            3. CANIBALIZAÇÃO: Marque RED se Spokes repetirem a mesma intenção.
+            4. EEAT: Aplique Whitelist(Manejo, Regulação) e Blacklist(Cura, Garantido).
+            5. STATUS GREEN: Apenas para termos de nicho/cauda longa. Termos saturados = YELLOW.
+
             Responda APENAS em JSON:
             {
               "global_status": "GREEN|YELLOW|RED",
+              "fullReport": "MARKDOWN_COMPLETO_DO_RELATORIO",
               "hubs": {
-                "ID_HUBS": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} }
+                "ID": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} }
               },
               "spokes": {
-                "IDHUB_SPOKEORDER": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} }
+                "HUBID_IDX": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} }
               }
             }`;
 
@@ -565,21 +592,29 @@ window.seoEngine = {
             if (!jsonMatch) throw new Error("IA falhou no diagnóstico");
             
             const result = JSON.parse(jsonMatch[0]);
-            this.auditData = result; // Persistir auditoria em memória
+            this.auditData = result;
             
-            // Atualizar UI Global
+            if (result.fullReport) {
+                console.log("📊 RELATÓRIO ESTRATÉGICO v2.0 DISPONÍVEL.");
+                if (window.chatManager) {
+                    window.chatManager.addMessage('agent', `### 🚨 RELATÓRIO ESTRATÉGICO ABIDOS v2.0\n\n${result.fullReport}`);
+                }
+            }
+
             const colors = { GREEN: '#10b981', YELLOW: '#f59e0b', RED: '#ef4444' };
             if (led) {
                 led.style.background = colors[result.global_status] || '#94a3b8';
                 led.style.boxShadow = `0 0 10px ${colors[result.global_status]}`;
             }
 
-            this.renderSilos(); // Re-renderizar para mostrar os indicadores
+            this.renderSilos();
+            alert("✅ Auditoria v2.0 Concluída! O relatório estratégico foi enviado para o seu chat.");
 
         } catch (e) {
             console.error("Erro na Auditoria Abidos:", e);
         } finally {
             if (table) setTimeout(() => table.classList.remove('abidos-scanning'), 1500);
+            if (btn) btn.innerHTML = '🔎 ANÁLISE ABIDOS';
         }
     },
 
@@ -588,7 +623,6 @@ window.seoEngine = {
         const content = document.getElementById('abidos-suggestions-content');
         if (!popover || !content) return;
 
-        // Resetar card
         this.currentAuditItem = { itemId, field };
         const statusColors = { GREEN: '#10b981', YELLOW: '#f59e0b', RED: '#ef4444' };
         
@@ -599,8 +633,8 @@ window.seoEngine = {
             </div>
             
             <div id="abidos-deep-suggestions" style="display: flex; flex-direction: column; gap: 8px;">
-                <button class="btn btn-primary" style="width:100%; font-size: 11px; padding: 10px;" onclick="window.seoEngine.generateAbidosSuggestions()">
-                    ✨ GERAR SUGESTÕES DE ELITE
+                <button class="btn btn-primary" style="width:100%; font-size: 11px; padding: 10px; background: linear-gradient(135deg, #6366f1, #a855f7); border:none;" onclick="window.seoEngine.generateAbidosSuggestions()">
+                    ✨ GERAR SUGESTÕES DE ELITE (V2.0)
                 </button>
             </div>
         `;
@@ -613,51 +647,72 @@ window.seoEngine = {
         const content = document.getElementById('abidos-deep-suggestions');
         if (!content) return;
 
-        content.innerHTML = '<div class="abidos-loading"><span>💎</span> Criando Alternativas...</div>';
+        content.innerHTML = '<div class="abidos-loading"><span>💎</span> Criando Blocos Hero...</div>';
 
         const item = this.currentAuditItem;
-        const silo = this.fullData.silos.find(s => s.id === item.itemId.split('_')[0]);
+        const siloId = item.itemId.split('_')[0];
+        const silo = this.fullData.silos.find(s => s.id === siloId);
         
         try {
-            const prompt = `Gerar 3 alternativas de "Título" e "Slug" de Padrão Ouro para o item:
-            Contexto Hub (Tema): ${silo.hub} (/${silo.slug})
-            Item Atual: ${item.field.replace('_', ' ')}
+            const prompt = `Gere 3 Alternativas de Elite (Bloco Hero v2.0) para o ${item.field.replace('_', ' ')}: "${silo.hub}"
+            Contexto Hub: ${silo.hub} (Scope: ${silo.scope})
             
-            REGRAS ABIDOS:
-            1. Slugs: /servico-em-cidade/ obrigatório.
-            2. Títulos: Dor Emocional + Promessa Clínica + Victor Lawrence.
-            3. Diferencie os 3 níveis: Conversão Rápida, Autoridade Acadêmica e Busca de Cauda Longa.
-            
+            REGRAS OBRIGATÓRIAS v2.0:
+            1. ESTRUTURA FATIADA: Cada opção deve conter Kicker, H1 e Subtitle.
+            2. LIMITES RÍGIDOS: Kicker (5-6 words), H1 (8 words), Subtitle (20 words).
+            3. EEAT: Use Whitelist (Manejo, Regulação). Proibido Blacklist (Cura).
+            4. ALCANCE: Respeite o Scope: ${silo.scope}.
+
             Responda APENAS JSON:
-            { "options": [ { "title": "...", "slug": "..." }, { "title": "...", "slug": "..." }, { "title": "...", "slug": "..." } ] }`;
+            { "options": [ 
+               { "title": "H1 Texto", "slug": "slug-texto", "kicker": "...", "subtitle": "...", "strategy": "Conversão" }, 
+               ... 
+            ] }`;
 
             const response = await window.gemini.ask(prompt, { section: 'planning', temperature: 0.7 });
             const json = JSON.parse(response.match(/\{[\s\S]*\}/)[0]);
 
             content.innerHTML = json.options.map((opt, idx) => `
-                <div class="abidos-suggestion-item" onclick="window.seoEngine.applyEliteSuggestion('${opt.title.replace(/'/g, "\\'")}', '${opt.slug}')">
-                    <div style="font-size:11px; font-weight:700; color:#fff;">${opt.title}</div>
-                    <div style="font-size:9px; color:#10b981;">/${opt.slug}</div>
+                <div class="abidos-suggestion-item" onclick="window.seoEngine.applyEliteSuggestion('${opt.title.replace(/'/g, "\\'")}', '${opt.slug}', '${opt.kicker.replace(/'/g, "\\'")}', '${opt.subtitle.replace(/'/g, "\\'")}')" style="margin-bottom:12px;">
+                    <div style="font-size:9px; color:var(--color-primary); font-weight:900; margin-bottom:4px; display:flex; justify-content:space-between;">
+                        <span>ESTRATÉGIA: ${opt.strategy}</span>
+                        <span style="color:#10b981;">PERFEITO ✓</span>
+                    </div>
+                    <div style="font-size:10px; color:#94a3b8; font-style:italic;">"${opt.kicker}"</div>
+                    <div style="font-size:13px; font-weight:800; color:#fff; border-left: 2px solid #6366f1; padding-left:8px; margin:4px 0;">${opt.title}</div>
+                    <div style="font-size:10px; color:#cbd5e1; line-height:1.3; margin-bottom:6px;">${opt.subtitle}</div>
+                    <div style="font-size:9px; color:#6366f1; font-family:monospace; background: rgba(99,102,241,0.1); padding:2px 6px; border-radius:4px; width:fit-content;">/${opt.slug}</div>
                 </div>
-            `).join('');
+            `).join('') + `
+            <button class="btn btn-secondary" style="width:100%; font-size: 10px; margin-top:5px; border-style:dashed;" onclick="window.seoEngine.generateAbidosSuggestions()">🔄 GERAR NOVAS OPÇÕES</button>
+            `;
 
         } catch (e) {
             content.innerHTML = '<div style="color:#ef4444; font-size:10px;">Erro ao gerar. Tente novamente.</div>';
         }
     },
 
-    applyEliteSuggestion(title, slug) {
+    applyEliteSuggestion(title, slug, kicker, subtitle) {
         const item = this.currentAuditItem;
         const [hubId, spokeIdx] = item.itemId.split('_');
         const silo = this.fullData.silos.find(s => s.id === hubId);
         
-        if (item.field === 'title') silo.hub = title;
+        if (item.field === 'title') {
+            silo.hub = title;
+            silo.kicker = kicker;
+            silo.subtitle = subtitle;
+        }
         if (item.field === 'slug') silo.slug = slug;
+        
         if (item.field === 'spoke_title' || item.field === 'spoke_slug') {
             if (typeof silo.spokes[spokeIdx] === 'string') {
                 silo.spokes[spokeIdx] = { title: silo.spokes[spokeIdx], slug: '' };
             }
-            if (item.field === 'spoke_title') silo.spokes[spokeIdx].title = title;
+            if (item.field === 'spoke_title') {
+                silo.spokes[spokeIdx].title = title;
+                silo.spokes[spokeIdx].kicker = kicker;
+                silo.spokes[spokeIdx].subtitle = subtitle;
+            }
             if (item.field === 'spoke_slug' || (item.field === 'spoke_title' && !silo.spokes[spokeIdx].slug)) {
                 silo.spokes[spokeIdx].slug = slug;
             }
@@ -666,6 +721,7 @@ window.seoEngine = {
         this.saveSilos();
         this.renderSilos();
         document.getElementById('abidos-analysis-popover').style.display = 'none';
+        console.log(`✅ Bloco Hero v2.0 aplicado: ${title}`);
     },
 
     async updateAbidosUI(result) {
