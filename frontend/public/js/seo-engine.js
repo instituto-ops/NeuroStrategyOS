@@ -84,8 +84,10 @@ window.seoEngine = {
                             ${spokeCount} SPOKES
                         </span>
                     </td>
-                    <td style="padding: 12px; text-align: right;">
-                        <button class="btn" style="background: transparent; color: #ef4444; border: none;" onclick="event.stopPropagation(); window.seoEngine.deleteSilo('${silo.id}')">🗑️</button>
+                    <td style="padding: 12px; text-align: right; display: flex; gap: 5px; justify-content: flex-end;">
+                        <button class="btn" style="background: transparent; color: #94a3b8; border: none; font-size: 14px; padding: 0 5px;" onclick="event.stopPropagation(); window.seoEngine.moveSilo('${silo.id}', -1)">▲</button>
+                        <button class="btn" style="background: transparent; color: #94a3b8; border: none; font-size: 14px; padding: 0 5px;" onclick="event.stopPropagation(); window.seoEngine.moveSilo('${silo.id}', 1)">▼</button>
+                        <button class="btn" style="background: transparent; color: #ef4444; border: none; padding: 0 5px;" onclick="event.stopPropagation(); window.seoEngine.deleteSilo('${silo.id}')">🗑️</button>
                     </td>
                 </tr>
             `;
@@ -182,6 +184,22 @@ window.seoEngine = {
         this.analyze();
         this.expandedHubs.add(newSilo.id);
         setTimeout(() => this.renderSilos(), 100);
+    },
+
+    moveSilo(id, direction) {
+        const idx = this.fullData.silos.findIndex(s => s.id === id);
+        if (idx === -1) return;
+        
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= this.fullData.silos.length) return;
+        
+        // Trocar posições
+        const temp = this.fullData.silos[idx];
+        this.fullData.silos[idx] = this.fullData.silos[newIdx];
+        this.fullData.silos[newIdx] = temp;
+        
+        this.saveSilos();
+        this.renderSilos();
     },
 
     async deleteSilo(id) {
