@@ -1,70 +1,185 @@
 {
   "silos": [
     {
+      "id": "hipnose-clinica",
+      "hub": "Hipnose Clínica",
+      "scope": "local",
+      "spokes": [
+        {
+          "title": "O que é Hipnose Clínica",
+          "slug": "o-que-e-hipnose-clinica",
+          "audit": {
+            "title": {
+              "status": "YELLOW",
+              "reason": "Termo informativo básico e saturado. Não é um termo de nicho/cauda longa."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        },
+        {
+          "title": "Hipnose para Fobias",
+          "slug": "hipnose-para-fobias",
+          "audit": {
+            "title": {
+              "status": "YELLOW",
+              "reason": "Intenção de busca comum e saturada. Não é um termo de nicho/cauda longa."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        },
+        {
+          "title": "Mitos e Verdades",
+          "slug": "mitos-e-verdades-sobre-hipnose",
+          "audit": {
+            "title": {
+              "status": "YELLOW",
+              "reason": "Termo genérico e saturado. Não é um termo de nicho/cauda longa."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        }
+      ],
+      "slug": "hipnose-clinica-em-goiania"
+    },
+    {
       "id": "autismo-adulto",
       "hub": "Transtorno do Espectro Autista (TEA)",
       "scope": "national",
       "spokes": [
-        { "title": "Sinais Sutis em Mulheres", "slug": "sinais-sutis-em-mulheres-adultas" },
-        { "title": "Alta Funcionalidade e Burnout", "slug": "alta-funcionalidade-e-burnout-autista" },
-        { "title": "Relacionamentos e TEA", "slug": "relacionamentos-e-tea-adulto" }
+        {
+          "title": "Sinais Sutis em Mulheres",
+          "slug": "sinais-sutis-em-mulheres-adultas",
+          "audit": {
+            "title": {
+              "status": "GREEN",
+              "reason": "Termo nichado e long-tail."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        },
+        {
+          "title": "Alta Funcionalidade e Burnout",
+          "slug": "alta-funcionalidade-e-burnout-autista",
+          "audit": {
+            "title": {
+              "status": "GREEN",
+              "reason": "Termo nichado e long-tail."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        },
+        {
+          "title": "Relacionamentos e TEA",
+          "slug": "relacionamentos-e-tea-adulto",
+          "audit": {
+            "title": {
+              "status": "GREEN",
+              "reason": "Termo nichado e long-tail."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        }
       ],
-      "slug": "autismo-em-adultos-goiania"
+      "slug": "autismo-em-adultos-goiania",
+      "audit": {
+        "title": {
+          "status": "GREEN",
+          "reason": "OK para escopo nacional."
+        },
+        "slug": {
+          "status": "RED",
+          "reason": "Conflito de escopo: `slug` contém menção a cidade ('Goiania') enquanto o `scope` é `national`."
+        },
+        "timestamp": "2026-03-28T07:31:24.628Z"
+      }
     },
     {
       "id": "ansiedade-burnout",
       "hub": "Ansiedade",
       "scope": "local",
       "spokes": [
-        { "title": "Sintomas Físicos da Ansiedade", "slug": "sintomas-fisicos-da-ansiedade" },
-        { "title": "Terapia Estratégica Breve", "slug": "terapia-estrategica-breve" },
-        { "title": "Como Parar Ataques de Pânico", "slug": "como-parar-ataques-de-panico" }
+        {
+          "title": "Sintomas Físicos da Ansiedade",
+          "slug": "sintomas-fisicos-da-ansiedade",
+          "audit": {
+            "title": {
+              "status": "YELLOW",
+              "reason": "Termo comum e saturado. Não é um termo de nicho/cauda longa."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        },
+        {
+          "title": "Terapia Estratégica Breve",
+          "slug": "terapia-estrategica-breve",
+          "audit": {
+            "title": {
+              "status": "YELLOW",
+              "reason": "Termo de terapia genérico e não diretamente alinhado com um nicho específico de ansiedade."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        },
+        {
+          "title": "Como Parar Ataques de Pânico",
+          "slug": "como-parar-ataques-de-panico",
+          "audit": {
+            "title": {
+              "status": "YELLOW",
+              "reason": "Intenção de busca comum e saturada. Não é um termo de nicho/cauda longa."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        }
       ],
-      "slug": "ansiedade-em-goiania"
-    },
-    {
-      "id": "hipnose-clinica",
-      "hub": "Hipnose Clínica",
-      "scope": "local",
-      "spokes": [
-        { "title": "O que é Hipnose Clínica", "slug": "o-que-e-hipnose-clinica" },
-        { "title": "Hipnose para Fobias", "slug": "hipnose-para-fobias" },
-        { "title": "Mitos e Verdades", "slug": "mitos-e-verdades-sobre-hipnose" }
-      ],
-      "slug": "hipnose-clinica-em-goiania"
-    },
-    {
-      "id": "silo_1774323523068",
-      "hub": "Saúde Mental no Trabalho e Produtividade",
-      "scope": "national",
-      "slug": "saude-mental-trabalho-produtividade",
-      "spokes": [
-        { "title": "Como o estresse afeta a produtividade", "slug": "estresse-e-produtividade-no-trabalho" },
-        { "title": "Gerenciamento de estresse para alta performance", "slug": "gerenciamento-estresse-alta-performance" },
-        { "title": "Prevenção e tratamento do burnout corporativo", "slug": "prevencao-burnout-corporativo" }
-      ]
-    },
-    {
-      "id": "silo_1774323541222",
-      "hub": "Relacionamentos Afetivos e Intimidade",
-      "scope": "local",
-      "slug": "relacionamentos-afetivos-intimidade",
-      "spokes": [
-        { "title": "Superando inseguranças amorosas", "slug": "superando-insegurancas-amorosas" },
-        { "title": "Hipnose clínica para conexão em casais", "slug": "hipnose-conexao-casais" },
-        { "title": "Tratamento de disfunções sexuais", "slug": "tratamento-disfuncoes-sexuais" }
-      ]
-    },
-    {
-      "id": "silo_1774323544462",
-      "hub": "Autoconhecimento e Desenvolvimento Pessoal",
-      "scope": "national",
-      "slug": "autoconhecimento-desenvolvimento-pessoal",
-      "spokes": [
-        { "title": "Descobrindo seu potencial máximo", "slug": "descobrindo-potencial-maximo-hipnose" },
-        { "title": "Reprogramar crenças limitantes", "slug": "reprogramar-crencas-limitantes-hipnose" },
-        { "title": "Explorando memórias e traumas", "slug": "explorando-memorias-traumas-passados" }
-      ]
+      "slug": "ansiedade-em-goiania",
+      "audit": {
+        "title": {
+          "status": "RED",
+          "reason": "Hub 'Ansiedade' é genérico e não inclui a cidade para o escopo 'local'. O termo é muito amplo e saturado."
+        },
+        "slug": {
+          "status": "GREEN",
+          "reason": "OK para escopo local, inclui a cidade."
+        },
+        "timestamp": "2026-03-28T07:31:24.628Z"
+      }
     },
     {
       "id": "silo_1774329262766",
@@ -72,6 +187,134 @@
       "scope": "local",
       "slug": "transtornos-de-humor",
       "spokes": []
+    },
+    {
+      "id": "silo_1774323541222",
+      "hub": "Relacionamentos Afetivos e Intimidade",
+      "scope": "local",
+      "slug": "relacionamentos-afetivos-intimidade",
+      "spokes": [
+        {
+          "title": "Superando inseguranças amorosas",
+          "slug": "superando-insegurancas-amorosas",
+          "audit": {
+            "title": {
+              "status": "GREEN",
+              "reason": "Termo nichado e long-tail."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        },
+        {
+          "title": "Hipnose clínica para conexão em casais",
+          "slug": "hipnose-conexao-casais",
+          "audit": {
+            "title": {
+              "status": "GREEN",
+              "reason": "Termo nichado e long-tail."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        },
+        {
+          "title": "Tratamento de disfunções sexuais",
+          "slug": "tratamento-disfuncoes-sexuais",
+          "audit": {
+            "title": {
+              "status": "GREEN",
+              "reason": "Termo nichado e long-tail."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        }
+      ],
+      "audit": {
+        "title": {
+          "status": "RED",
+          "reason": "Hub 'Relacionamentos Afetivos e Intimidade' não inclui a cidade para o escopo 'local'."
+        },
+        "slug": {
+          "status": "RED",
+          "reason": "Conflito de escopo: `slug` não inclui a cidade para o `scope` `local`."
+        },
+        "timestamp": "2026-03-28T07:31:24.628Z"
+      }
+    },
+    {
+      "id": "silo_1774323544462",
+      "hub": "Autoconhecimento e Desenvolvimento Pessoal",
+      "scope": "national",
+      "slug": "autoconhecimento-desenvolvimento-pessoal",
+      "spokes": [
+        {
+          "title": "Descobrindo seu potencial máximo",
+          "slug": "descobrindo-potencial-maximo-hipnose",
+          "audit": {
+            "title": {
+              "status": "GREEN",
+              "reason": "Termo nichado e long-tail."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        },
+        {
+          "title": "Reprogramar crenças limitantes",
+          "slug": "reprogramar-crencas-limitantes-hipnose",
+          "audit": {
+            "title": {
+              "status": "GREEN",
+              "reason": "Termo nichado e long-tail."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        },
+        {
+          "title": "Explorando memórias e traumas",
+          "slug": "explorando-memorias-traumas-passados",
+          "audit": {
+            "title": {
+              "status": "GREEN",
+              "reason": "Termo nichado e long-tail."
+            },
+            "slug": {
+              "status": "GREEN",
+              "reason": "OK."
+            },
+            "timestamp": "2026-03-28T07:31:24.628Z"
+          }
+        }
+      ],
+      "audit": {
+        "title": {
+          "status": "GREEN",
+          "reason": "OK para escopo nacional."
+        },
+        "slug": {
+          "status": "GREEN",
+          "reason": "OK para escopo nacional."
+        },
+        "timestamp": "2026-03-28T07:31:24.628Z"
+      }
     }
   ]
 }

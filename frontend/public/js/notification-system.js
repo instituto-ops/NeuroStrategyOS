@@ -15,13 +15,25 @@ window.notificationSystem = {
         });
     },
 
-    push(title, message, type = 'success') {
+    push(title, message, type = 'success', options = {}) {
         const id = Date.now();
+        const { isFixed = false, actionLabel = null, actionMethod = null, suggestions = [], onSuggestionClick = null } = options;
+
+        // Se for fixa, remove outras fixas do mesmo tipo para não poluir
+        if (isFixed) {
+            this.notifications = this.notifications.filter(n => !n.isFixed);
+        }
+
         const notification = {
             id,
             title,
             message,
             type, // success, warning, error, audit
+            isFixed,
+            actionLabel,
+            actionMethod,
+            suggestions, // Array de { label: '...', value: '...' } ou apenas strings
+            onSuggestionClick, // Nome do método global para clique
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             read: false
         };
@@ -31,7 +43,7 @@ window.notificationSystem = {
         this.render();
         this.updateBadge();
         
-        // Se estiver fechado, faça um pulso extra (Shake ou algo sutil)
+        // Se estiver fechado, faça um pulso extra
         if (!this.isOpen) {
             const trigger = document.getElementById('nnc-trigger');
             if (trigger) {
@@ -40,7 +52,7 @@ window.notificationSystem = {
             }
         }
 
-        console.log(`🔔 NNC: Nova Notificação - ${title}`);
+        console.log(`🔔 NNC: Nova Notificação [${type}${isFixed ? ':FIXED' : ''}] - ${title}`);
     },
 
     toggle() {
@@ -64,6 +76,13 @@ window.notificationSystem = {
 
     remove(id) {
         this.notifications = this.notifications.filter(n => n.id !== id);
+        this.save();
+        this.render();
+        this.updateBadge();
+    },
+
+    removeByTitle(title) {
+        this.notifications = this.notifications.filter(n => n.title !== title);
         this.save();
         this.render();
         this.updateBadge();
@@ -110,13 +129,42 @@ window.notificationSystem = {
         }
 
         list.innerHTML = this.notifications.map(n => `
-            <div class="nnc-card ${n.type} ${n.read ? '' : 'unread'}" id="nnc-node-${n.id}">
-                <span class="nnc-card-close" onclick="window.notificationSystem.remove(${n.id})">&times;</span>
-                <div class="nnc-card-title">${n.title}</div>
+            <div class="nnc-card ${n.type} ${n.read ? '' : 'unread'} ${n.isFixed ? 'fixed' : ''}" id="nnc-node-${n.id}">
+                ${n.isFixed ? '<span style="position:absolute; top:12px; left:12px; color:var(--nnc-primary);"><i data-lucide="pin" style="width:10px; height:10px;"></i></span>' : ''}
+                <div style="position:absolute; top:12px; right:12px; display:flex; gap:10px; align-items:center;">
+                    ${n.onSuggestionClick ? `<i data-lucide="refresh-cw" title="Recalcular" onclick="window.seoEngine.runAbidosAudit();" style="width:12px; height:12px; cursor:pointer; color:var(--nnc-primary); opacity:0.6;"></i>` : ''}
+                    <span class="nnc-card-close" onclick="window.notificationSystem.remove(${n.id})">&times;</span>
+                </div>
+                
+                <div class="nnc-card-title" style="${n.isFixed ? 'padding-left:18px;' : ''}">${n.title}</div>
                 <div class="nnc-card-body">${n.message}</div>
-                <div class="nnc-card-time">${n.time}</div>
+
+                ${n.suggestions && n.suggestions.length > 0 ? `
+                    <div class="nnc-suggestions" style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+                        <span style="font-size:8px; font-weight:900; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">Sugestões de Elite:</span>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                            ${n.suggestions.map(s => `
+                                <button class="nnc-chip" onclick="${n.onSuggestionClick}('${s.value || s}'); window.notificationSystem.remove(${n.id});">
+                                    <i data-lucide="sparkles" style="width:10px; height:10px;"></i>
+                                    ${s.label || s}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${n.actionLabel ? `
+                    <button class="nnc-btn-action" style="margin-top:15px;" onclick="${n.actionMethod}; window.notificationSystem.toggle();">
+                        ${n.actionLabel}
+                    </button>
+                ` : ''}
+                <div class="nnc-card-time" style="margin-top: 15px;">
+                    <span>${n.time}</span>
+                    ${n.isFixed ? '<span style="color:var(--nnc-primary); font-weight:900; font-size:7px; letter-spacing:1px;">FIXADO</span>' : ''}
+                </div>
             </div>
         `).join('');
+        if (window.lucide) window.lucide.createIcons();
     }
 };
 

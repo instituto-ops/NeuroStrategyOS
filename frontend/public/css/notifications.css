@@ -13,17 +13,17 @@
 /* Glassmorphism Side Panel */
 #nnc-drawer {
     position: fixed;
-    top: 60px; /* Logo abaixo do header */
-    right: -360px; /* Começa escondido */
-    width: 350px;
-    height: calc(100vh - 60px);
-    background: var(--nnc-bg);
-    backdrop-filter: var(--nnc-blur);
-    -webkit-backdrop-filter: var(--nnc-blur);
-    border-left: 1px solid var(--nnc-border);
-    box-shadow: -10px 0 40px rgba(0,0,0,0.6);
-    z-index: 11000;
-    transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.1);
+    top: 0; 
+    right: -420px; 
+    width: 400px;
+    height: 100vh;
+    background: rgba(10, 15, 28, 0.98);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-left: 1px solid rgba(255,255,255,0.05);
+    box-shadow: -20px 0 60px rgba(0,0,0,0.8);
+    z-index: 100000;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
 }
@@ -107,14 +107,13 @@
     border-color: rgba(255,255,255,0.2);
 }
 
-.nnc-card.unread {
-    border-left: 3px solid var(--nnc-primary);
-}
-
-.nnc-card.success { border-left: 3px solid var(--nnc-success); }
-.nnc-card.warning { border-left: 3px solid var(--nnc-warning); }
-.nnc-card.error { border-left: 3px solid var(--nnc-error); }
-.nnc-card.audit { border-left: 3px solid var(--nnc-secondary); }
+.nnc-card.unread { border-left: 4px solid var(--nnc-primary); background: rgba(99, 102, 241, 0.05); }
+.nnc-card.success { border-left: 4px solid var(--nnc-success); }
+.nnc-card.warning { border-left: 4px solid var(--nnc-warning); }
+.nnc-card.error { border-left: 4px solid var(--nnc-error); }
+.nnc-card.audit { border-left: 4px solid var(--nnc-secondary); background: rgba(14, 165, 233, 0.05); }
+.nnc-card.fixed { border: 1px solid var(--nnc-primary); box-shadow: 0 0 20px rgba(99, 102, 241, 0.1); border-radius: 16px; background: rgba(15, 23, 42, 0.6); }
+.nnc-card.fixed:hover { box-shadow: 0 0 30px rgba(99, 102, 241, 0.2); }
 
 .nnc-card-title {
     font-size: 12px;
@@ -133,8 +132,32 @@
 .nnc-card-time {
     font-size: 9px;
     color: rgba(255,255,255,0.3);
-    margin-top: 8px;
-    font-family: monospace;
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nnc-btn-action {
+    margin-top: 12px;
+    width: 100%;
+    height: 30px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 6px;
+    background: var(--nnc-primary);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nnc-btn-action:hover {
+    filter: brightness(1.2);
+    transform: translateY(-1px);
 }
 
 .nnc-card-close {
@@ -150,6 +173,43 @@
 
 .nnc-card-close:hover {
     color: var(--nnc-error);
+}
+
+/* Sugestões de Elite (Actionable Chips) */
+.nnc-suggestions {
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 12px;
+}
+
+.nnc-chip {
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    color: #a5b4fc;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    width: 100%;
+}
+
+.nnc-chip:hover {
+    background: linear-gradient(135deg, var(--nnc-primary), #818cf8);
+    color: #fff;
+    transform: scale(1.02) translateX(5px);
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+    border-color: transparent;
+}
+
+.nnc-chip i {
+    width: 12px !important;
+    height: 12px !important;
+    color: #fff;
 }
 
 /* Empty State */

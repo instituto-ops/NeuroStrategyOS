@@ -213,9 +213,78 @@ input, textarea, select {
     letter-spacing: 1px;
 }
 
-/* Section Visibility & Layout Consolidado */
-.content-section {
-    display: none !important;
+/* 💎 NEUROSTRATEGY MINIMAL-PRO: TABELA DE GOVERNANÇA */
+.hub-row {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+}
+
+.hub-row:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.hub-row.active {
+    background: rgba(99, 102, 241, 0.08) !important;
+}
+
+.spoke-card {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.spoke-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    border-color: var(--nnc-primary) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.inline-edit {
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.inline-edit:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.1);
+}
+
+.inline-edit:focus {
+    outline: none;
+    background: rgba(255,255,255,0.1);
+    border-color: var(--color-primary);
+}
+
+.scope-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.scope-local {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.scope-national {
+    background: rgba(14, 165, 233, 0.1);
+    color: #0ea5e9;
+    border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.scope-badge:hover {
+    filter: brightness(1.2);
+    transform: scale(1.05);
 }
 
 .content-section.active {

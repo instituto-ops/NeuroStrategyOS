@@ -14,8 +14,9 @@ window.devTools = {
         if (this.isCapturing) return;
         this.isCapturing = true;
         
-        const originalStatus = document.querySelector('.engine-pulse span').innerText;
-        document.querySelector('.engine-pulse span').innerText = "📸 CAPTURANDO...";
+        // Indicador apenas visual no led (OPCIONAL se houver ID)
+        const led = document.querySelector('.pulse-dot');
+        if(led) led.style.boxShadow = "0 0 15px #fff"; 
 
         try {
             // Tenta capturar a seção ativa ou o body inteiro se não houver
@@ -27,17 +28,18 @@ window.devTools = {
                 try {
                     const item = new ClipboardItem({ "image/png": blob });
                     await navigator.clipboard.write([item]);
-                    window.showToast("📸 Captura copiada para a área de transferência!", "success");
+                    window.notificationSystem.push("Captura de Tela", "A imagem da seção ativa foi copiada para sua área de transferência com sucesso.", "success");
                 } catch (err) {
                     console.error("Erro ao copiar para clipboard:", err);
-                    window.showToast("❌ Erro ao copiar. Tente salvar o arquivo.", "error");
+                    window.notificationSystem.push("Sistema", "Falha ao gravar captura no clipboard.", "error");
                 }
             });
 
         } catch (e) {
             console.error("Erro no capture:", e);
+            window.notificationSystem.push("Sistema", "Erro crítico durante o processo de renderização visual.", "error");
         } finally {
-            document.querySelector('.engine-pulse span').innerText = originalStatus;
+            if(led) led.style.boxShadow = "0 0 10px #2dd4bf"; 
             this.isCapturing = false;
         }
     },
@@ -108,11 +110,15 @@ window.devTools = {
                 }
             }
 
-            window.showToast("✅ Backup Visual concluído com sucesso!", "success");
+            window.notificationSystem.push("Backup Completo", `O backup visual de todas as ${sections.length} telas foi gerado e armazenado com sucesso no servidor.`, "success", {
+                isFixed: true,
+                actionLabel: "VER LOGS",
+                actionMethod: "console.table(window._neuroLogs)" 
+            });
 
         } catch (e) {
             console.error("Erro no backup completo:", e);
-            window.showToast("❌ Erro durante o backup visual.", "error");
+            window.notificationSystem.push("Erro de Backup", "Falha na sincronização visual de múltiplas seções. Alguns arquivos podem estar ausentes.", "error");
         } finally {
             this.isCapturing = false;
             // Garante que voltamos para a seção correta

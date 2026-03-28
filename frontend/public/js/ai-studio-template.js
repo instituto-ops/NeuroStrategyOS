@@ -495,7 +495,7 @@ window.aiStudioTemplate = {
         const theme = document.getElementById('ai-studio-theme')?.value;
         const extra = document.getElementById('ai-studio-context')?.value;
         if (!theme) return alert("Defina o Tema Central.");
-        const modelType = document.getElementById('ai-studio-model')?.value || 'gemini-2.5-pro';
+        const modelType = app.getActiveModel('ai-studio');
         this.setProductionProgress(true, `Refinando módulo via GEMINI 2.5 ${modelType.toUpperCase()}...`, 40);
         try {
             const prompt = `[DR VICTOR LAWRENCE]: CRP 09/012681 (Psicólogo | MESTRANDO UFU 2028).
@@ -582,7 +582,7 @@ window.aiStudioTemplate = {
     },
 
     runFullAudit: async function() {
-        const modelType = document.getElementById('ai-studio-model')?.value || 'gemini-2.5-pro';
+        const modelType = app.getActiveModel('ai-studio');
         this.setProductionProgress(true, `Executando Auditoria Abidos via GAIA...`, 30);
         const container = document.getElementById('abidos-audit-results');
         if(container) container.innerHTML = '<div style="text-align: center; padding: 60px 0;">🚀 Analizando neuromarketing...</div>';
@@ -608,7 +608,7 @@ window.aiStudioTemplate = {
     },
 
     runClinicalAudit: async function() {
-        const modelType = document.getElementById('ai-studio-model')?.value || 'gemini-2.5-pro';
+        const modelType = app.getActiveModel('ai-studio');
         this.setProductionProgress(true, `Auditoria Clínica Ética em curso...`, 30);
         const container = document.getElementById('clinical-audit-results');
         if(container) container.innerHTML = '<div style="text-align: center; padding: 60px 0;">🛡️ Validando ética e CRP...</div>';
@@ -635,7 +635,7 @@ window.aiStudioTemplate = {
 
     applyAuditSuggestions: async function(type) {
         const feedback = document.getElementById(`${type}-audit-results`).innerText;
-        const modelType = document.getElementById('ai-studio-model')?.value || 'gemini-2.5-pro';
+        const modelType = app.getActiveModel('ai-studio');
         this.setProductionProgress(true, `Aplicando refinamentos da auditoria ${type.toUpperCase()}...`, 50);
         
         try {

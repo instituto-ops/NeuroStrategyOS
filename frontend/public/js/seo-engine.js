@@ -3,8 +3,9 @@ window.seoEngine = {
     fullData: null,
     expandedHubs: new Set(),
 
-    init() {
+    async init() {
         this.analyze();
+        await this.syncAbidosReportFromServer(); // Recuperar última estratégia do servidor
     },
 
     async analyze() {
@@ -99,46 +100,50 @@ window.seoEngine = {
             const scoreColor = hubScore > 80 ? '#10b981' : (hubScore > 50 ? '#f59e0b' : '#ef4444');
 
             return `
-                <tr class="silo-row ${isExpanded ? 'active' : ''}" onclick="window.seoEngine.toggleSilo('${silo.id}')">
-                    <td style="width: 40px; text-align: center; color: var(--color-text-dim); font-size: 10px;">
+                <tr class="hub-row ${isExpanded ? 'active' : ''}" onclick="window.seoEngine.toggleSilo('${silo.id}')">
+                    <td style="width: 40px; text-align: center; color: var(--color-text-dim); font-size: 10px; border-bottom: 1px solid rgba(255,255,255,0.03);">
                         <i data-lucide="${isExpanded ? 'chevron-down' : 'chevron-right'}" style="width: 14px; height: 14px;"></i>
                     </td>
-                    <td>
+                    <td style="padding: 18px 15px; border-bottom: 1px solid rgba(255,255,255,0.03);">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="inline-edit" contenteditable="true" style="font-weight:800; color:#fff;" onblur="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.innerText)" onclick="event.stopPropagation()">${silo.hub}</span>
+                            <span class="inline-edit" contenteditable="true" style="font-size: 14px; font-weight:800; color:#fff;" onblur="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.innerText)" onclick="event.stopPropagation()">${silo.hub}</span>
                             ${this.renderStatusIcon(silo.id, 'title', hAudit?.title)}
                         </div>
                         
-                        ${silo.kicker ? `
-                            <div style="font-size: 9px; color: #94a3b8; font-style: italic; margin-top: 2px;">K: "${silo.kicker}"</div>
-                        ` : ''}
-
                         <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
-                            <span class="scope-badge scope-${silo.scope || 'national'}" onclick="event.stopPropagation(); window.seoEngine.toggleScope('${silo.id}')">
+                            <span class="scope-badge scope-${silo.scope || 'national'}" onclick="event.stopPropagation(); window.seoEngine.toggleScope('${silo.id}')" style="height: 20px; font-size: 9px; padding: 0 10px; border-radius: 6px;">
                                 <i data-lucide="${(silo.scope === 'local') ? 'map-pin' : 'globe'}" style="width: 10px; height: 10px;"></i>
-                                ${silo.scope === 'local' ? 'ESTRATÉGIA LOCAL' : 'ESTRATÉGIA NACIONAL'}
+                                ${silo.scope === 'local' ? 'Estratégia Local' : 'Estratégia Nacional'}
                             </span>
-                            ${silo.subtitle ? `<span style="font-size: 8px; color: rgba(255,255,255,0.3); text-transform:uppercase; font-weight:700;">+ DNA APLICADO</span>` : ''}
+                            ${silo.subtitle ? `<span style="font-size: 8px; color: var(--color-primary); text-transform:uppercase; font-weight:900; background: rgba(99, 102, 241, 0.1); padding: 2px 6px; border-radius: 4px;">✓ DNA ATIVO</span>` : ''}
                         </div>
                         
-                        ${silo.subtitle ? `
-                            <div style="font-size: 9px; color: #64748b; margin-top: 4px; line-height: 1.2; max-width: 400px;">S: ${silo.subtitle}</div>
+                        ${silo.kicker ? `
+                            <div style="font-size: 10px; color: #94a3b8; font-style: italic; margin-top: 6px; padding-left: 5px; border-left: 2px solid var(--color-primary);">"${silo.kicker}"</div>
                         ` : ''}
                     </td>
-                    <td style="font-family: monospace; font-size: 11px; color: var(--color-text-dim);">
-                        / <span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'slug', this.innerText)" onclick="event.stopPropagation()">${silo.slug}</span>
+                    <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--color-text-dim); border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <span style="opacity: 0.3;">/</span><span class="inline-edit" contenteditable="true" style="color: #6366f1; font-weight: 700;" onblur="window.seoEngine.updateSiloField('${silo.id}', 'slug', this.innerText)" onclick="event.stopPropagation()">${silo.slug}</span>
                         ${this.renderStatusIcon(silo.id, 'slug', hAudit?.slug)}
                     </td>
-                    <td style="padding: 15px; text-align: center;">
-                        <div style="font-size: 11px; font-weight: 900; color: ${scoreColor}; margin-bottom: 2px;">${hubScore}%</div>
-                        <span style="font-size: 8px; background: rgba(99, 102, 241, 0.1); color: #6366f1; padding: 2px 10px; border-radius: 20px; font-weight: 800; letter-spacing: 0.5px;">
-                            ${spokeCount} SPOKES
+                    <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <div style="font-size: 12px; font-weight: 900; color: ${scoreColor}; margin-bottom: 2px;">${hubScore}%</div>
+                        <span style="font-size: 9px; color: #94a3b8; font-weight: 700;">
+                            ${spokeCount} Spokes
                         </span>
                     </td>
-                    <td style="padding: 15px; text-align: right; display: flex; gap: 5px; justify-content: flex-end;">
-                        <button class="btn" title="Subir" style="background: transparent; color: #94a3b8; border: none; font-size: 11px;" onclick="event.stopPropagation(); window.seoEngine.moveSilo('${silo.id}', -1)">▲</button>
-                        <button class="btn" title="Descer" style="background: transparent; color: #94a3b8; border: none; font-size: 11px;" onclick="event.stopPropagation(); window.seoEngine.moveSilo('${silo.id}', 1)">▼</button>
-                        <button class="btn" title="Excluir" style="background: transparent; color: #ef4444; border: none;" onclick="event.stopPropagation(); window.seoEngine.deleteSilo('${silo.id}')">🗑️</button>
+                    <td style="padding: 15px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+                            <button class="btn btn-secondary" title="Subir" style="width: 28px; height: 28px; padding:0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);" onclick="event.stopPropagation(); window.seoEngine.moveSilo('${silo.id}', -1)">
+                                <i data-lucide="chevron-up" style="width: 14px; height: 14px;"></i>
+                            </button>
+                            <button class="btn btn-secondary" title="Descer" style="width: 28px; height: 28px; padding:0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);" onclick="event.stopPropagation(); window.seoEngine.moveSilo('${silo.id}', 1)">
+                                <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
+                            </button>
+                            <button class="btn btn-danger" title="Excluir" style="width: 28px; height: 28px; padding:0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444;" onclick="event.stopPropagation(); window.seoEngine.deleteSilo('${silo.id}')">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
                 ${isExpanded ? this.renderSpokeDetails(silo) : ''}
@@ -201,45 +206,50 @@ window.seoEngine = {
         const spokesAudit = this.auditData ? this.auditData.spokes : {};
 
         return `
-            <tr class="spoke-detail-row" style="background: rgba(15, 23, 42, 0.4); border-left: 2px solid var(--color-primary);">
-                <td colspan="5" style="padding: 20px 40px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h4 style="margin:0; font-size: 11px; color: #94a3b8; text-transform: uppercase;">📄 Artigos de Apoio para: ${silo.hub}</h4>
-                        <button class="btn btn-secondary" onclick="window.seoEngine.addSpokePrompt('${silo.id}')" style="font-size: 9px; padding: 4px 12px; border-style: dashed;">+ NOVO SPOKE</button>
+            <tr class="spoke-detail-row" style="background: rgba(0, 0, 0, 0.2); border-left: 3px solid var(--color-primary);">
+                <td colspan="5" style="padding: 25px 50px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <div>
+                            <h4 style="margin:0; font-size: 12px; color: #fff; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Pauta de Sustentação: ${silo.hub}</h4>
+                            <p style="font-size: 10px; color: var(--color-text-dim); margin: 4px 0 0 0;">Artigos de apoio (Spokes) para dominação semântica do Hub.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="window.seoEngine.addSpokePrompt('${silo.id}')" style="height: 30px; font-size: 9px; padding: 0 15px; background: transparent; border: 1px dashed var(--color-primary); color: var(--color-primary); font-weight: 900;">+ NOVO SPOKE</button>
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px;">
                         ${spokes.map((spoke, idx) => {
                             const spokeId = `${silo.id}_${idx}`;
                             const sAudit = spokesAudit[spokeId] || null;
                             
                             return `
-                                <div class="card" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 15px; position: relative; overflow: hidden;">
-                                    ${spoke.kicker ? `<div style="position: absolute; top:0; right:0; font-size: 7px; background: var(--color-primary); color:#fff; padding: 2px 8px; border-bottom-left-radius: 8px; text-transform:uppercase; font-weight:900; letter-spacing:0.5px;">✓ DNA APLICADO</div>` : ''}
-                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                                        <div style="width: 85%;">
-                                            <div style="display:flex; align-items:center; gap:5px;">
-                                                <span class="inline-edit" contenteditable="true" style="font-size: 13px; font-weight: 700; color: #fff;" onblur="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, 'title', this.innerText)">${spoke.title}</span>
+                                <div class="card spoke-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; transition: all 0.3s; position: relative; overflow: hidden;">
+                                    ${spoke.kicker ? `<div style="position: absolute; top:0; right:0; font-size: 7px; background: var(--color-primary); color:#fff; padding: 4px 10px; border-bottom-left-radius: 10px; text-transform:uppercase; font-weight:900; letter-spacing:1px; box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);">DNA APLICADO</div>` : ''}
+                                    
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                        <div style="flex: 1; padding-right: 15px;">
+                                            <div style="display:flex; align-items:center; gap:6px;">
+                                                <span class="inline-edit" contenteditable="true" style="font-size: 14px; font-weight: 800; color: #fff; line-height: 1.3;" onblur="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, 'title', this.innerText)">${spoke.title}</span>
                                                 ${this.renderStatusIcon(spokeId, 'spoke_title', sAudit?.title || spoke.audit?.title)}
                                             </div>
                                             
                                             ${spoke.kicker ? `
-                                                <div style="font-size: 9px; color: #94a3b8; font-style: italic; margin-top:2px;">K: "${spoke.kicker}"</div>
+                                                <div style="font-size: 11px; color: #94a3b8; font-style: italic; margin-top:4px;">K: "${spoke.kicker}"</div>
                                             ` : ''}
 
-                                            <div style="font-size: 10px; color: #64748b; font-family: monospace; display: flex; align-items: center; gap: 4px; margin-top:5px;">
-                                                /${silo.slug}/<span class="inline-edit" contenteditable="true" style="color:#6366f1;" onblur="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, 'slug', this.innerText)">${spoke.slug}</span>
+                                            <div style="font-size: 11px; color: #64748b; font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 4px; margin-top:8px;">
+                                                <span style="opacity:0.3;">/${silo.slug}/</span><span class="inline-edit" contenteditable="true" style="color:#6366f1; font-weight:700;" onblur="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, 'slug', this.innerText)">${spoke.slug}</span>
                                                 ${this.renderStatusIcon(spokeId, 'spoke_slug', sAudit?.slug || spoke.audit?.slug)}
                                             </div>
-                                            
-                                            ${spoke.subtitle ? `
-                                                <div style="font-size: 9px; color: #64748b; margin-top:4px; line-height:1.2; border-top: 1px solid rgba(255,255,255,0.03); padding-top:4px;">S: ${spoke.subtitle}</div>
-                                            ` : ''}
                                         </div>
-                                        <button class="btn" style="background:transparent; border:none; color:#ef4444; font-size:12px; padding:0;" onclick="window.seoEngine.removeSpoke('${silo.id}', ${idx})">&times;</button>
+                                        <button class="btn" style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.2); color:#ef4444; width:24px; height:24px; padding:0; border-radius: 6px; display: flex; align-items: center; justify-content: center;" onclick="window.seoEngine.removeSpoke('${silo.id}', ${idx})">
+                                            <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                                        </button>
                                     </div>
-                                    <div style="display: flex; gap: 8px;">
-                                        <button class="btn btn-primary" style="font-size: 9px; padding: 4px 10px;" onclick="window.seoEngine.writePostPrompt('${spoke.title.replace(/'/g, "\\'")}', 'Audit Hub: ${silo.hub}')">ESCREVER</button>
-                                    </div>
+
+                                    ${spoke.subtitle ? `
+                                        <div style="font-size: 10px; color: #64748b; margin: 10px 0 15px 0; line-height:1.4; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 2px solid var(--color-primary);">S: ${spoke.subtitle}</div>
+                                    ` : ''}
+
+                                    <button class="btn btn-primary" style="width: 100%; height: 32px; font-size: 10px; font-weight: 800; letter-spacing: 1px; border-radius: 8px;" onclick="window.seoEngine.writePostPrompt('${spoke.title.replace(/'/g, "\\'")}', 'Hub: ${silo.hub}')">ESCREVER ARTIGO</button>
                                 </div>
                             `;
                         }).join('')}
@@ -636,6 +646,8 @@ window.seoEngine = {
         }
     },
 
+    // [Sincronizado via app.getActiveModel('planning')]
+
     async runAbidosAudit() {
         if (!this.fullData || !this.fullData.silos || this.fullData.silos.length === 0) {
             window.notificationSystem.push("Ação Necessária", "Adicione Hubs e Spokes antes de rodar a análise Abidos.", "warning");
@@ -651,79 +663,100 @@ window.seoEngine = {
         if (btn) btn.innerHTML = '🕒 AUDITANDO...';
 
         try {
-            const prompt = `Você é o Auditor Estratégico Abidos v2.0. 
-            Sua missão é realizar uma análise de "Caçador de Oceano Azul" para a arquitetura JSON abaixo.
+            const prompt = `Você é o Auditor Estratégico Abidos v2.0. Sua missão é realizar uma análise de "Caçador de Oceano Azul" para a arquitetura JSON abaixo. 
 
             ARQUITETURA: ${JSON.stringify(this.fullData.silos)}
 
-            DIRETRIZES v2.0:
-            1. ALCANCE: Hubs 'local' DEVEM ter cidade. Hubs 'national' DEVEM focar em nicho nacional (sem cidade).
-            2. COPY FATIADO: Verifique se itens respeitam os limites: Kicker(6w), H1(8w), Subtitle(20w).
-            3. CANIBALIZAÇÃO: Marque RED se Spokes repetirem a mesma intenção.
-            4. EEAT: Aplique Whitelist(Manejo, Regulação) e Blacklist(Cura, Garantido).
-            5. STATUS GREEN: Apenas para termos de nicho/cauda longa. Termos saturados = YELLOW.
-
-            6. ESTRUTURA DO RELATÓRIO (fullReport):
-               Para cada Hub ou Spoke com status YELLOW ou RED, você DEVE incluir no markdown:
-               - O Problema detectado.
-               - 3 Sugestões de Elite (H1/Slug/Kicker/Subtitle).
-
-            Responda APENAS em JSON:
+            DIRETRIZES TÉCNICAS (JSON UNIVERSAL):
+            1. STATUS: GREEN|YELLOW|RED para cada Hub e Spoke.
+            2. EEAT CLÍNICO: Marque RED para termos saturados ou sem foco local (se o Hub for local).
+            3. SUGESTÕES: Para qualquer item não-GREEN, forneça EXATAMENTE 3 SUGESTÕES de elite (Título ou Slug otimizado).
+            
+            Responda EXCLUSIVAMENTE em JSON no formato:
             {
-              "global_status": "GREEN|YELLOW|RED",
-              "fullReport": "MARKDOWN_RELATORIO",
-              "hubs": { "ID": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} } },
-              "spokes": { "HUBID_IDX": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} } }
+              "global_status": "RED|YELLOW|GREEN",
+              "global_summary": "Resumo executivo da vulnerabilidade da arquitetura.",
+              "score": 0-100,
+              "audit_nodes": {
+                "ID_HUBS": {
+                  "status": "...",
+                  "reason": "O Problema...",
+                  "suggestions": ["S1", "S2", "S3"]
+                },
+                "ID_HUB_SPOKE_IDX": {
+                  "status": "...",
+                  "reason": "O Problema...",
+                  "suggestions": ["S1", "S2", "S3"]
+                }
+              }
             }`;
 
-            const response = await window.gemini.ask(prompt, { section: 'planning', temperature: 0.2 });
+            const modelId = window.app.getActiveModel('planning');
+            const response = await window.gemini.ask(prompt, { section: 'planning', temperature: 0.2, model: modelId });
+            
+            if (!response) {
+                throw new Error("Ocorreu uma falha na comunicação com o motor cerebral (Timeout ou Erro 500).");
+            }
+
             const jsonMatch = response.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) throw new Error("IA falhou no diagnóstico");
+            if (!jsonMatch) {
+                console.warn("Resposta da IA sem bloco JSON válido:", response);
+                throw new Error("A IA falhou ao estruturar o diagnóstico (Formato Inválido).");
+            }
             
             const result = JSON.parse(jsonMatch[0]);
             this.auditData = result;
             
-            if (result.fullReport) {
-                console.log("📊 RELATÓRIO ESTRATÉGICO v2.0 DISPONÍVEL.");
-                if (window.chatManager) {
-                    window.chatManager.addMessage('agent', `### 🚨 RELATÓRIO ESTRATÉGICO ABIDOS v2.0\n\n${result.fullReport}`);
-                }
-            }
-
             const colors = { GREEN: '#10b981', YELLOW: '#f59e0b', RED: '#ef4444' };
             if (led) {
                 led.style.background = colors[result.global_status] || '#94a3b8';
                 led.style.boxShadow = `0 0 10px ${colors[result.global_status]}`;
             }
 
-            // [PERSISTÊNCIA DNA] Salvar o resultado da auditoria diretamente no JSON dos Silos
-            if (result.hubs) {
+            // [SINCRONIZAÇÃO DNA UNIVERSAL]
+            if (result.audit_nodes) {
+                // Atualizar silos com o novo diagnóstico para persistência
                 this.fullData.silos.forEach(silo => {
-                    if (result.hubs[silo.id]) {
-                        silo.audit = result.hubs[silo.id];
+                    const hubAudit = result.audit_nodes[silo.id];
+                    if (hubAudit) {
+                        silo.audit = hubAudit;
                         silo.audit.timestamp = new Date().toISOString();
                     }
-                    if (result.spokes) {
-                        silo.spokes.forEach((spoke, idx) => {
-                            const spokeId = `${silo.id}_${idx}`;
-                            if (result.spokes[spokeId]) {
-                                spoke.audit = result.spokes[spokeId];
-                                spoke.audit.timestamp = new Date().toISOString();
+                    
+                    silo.spokes.forEach((spoke, idx) => {
+                        const spokeId = `${silo.id}_${idx}`;
+                        const spokeAudit = result.audit_nodes[spokeId];
+                        if (spokeAudit) {
+                            if (typeof spoke === 'string') {
+                                silo.spokes[idx] = { title: spoke, audit: spokeAudit };
+                            } else {
+                                spoke.audit = spokeAudit;
                             }
-                        });
-                    }
+                            silo.audit.timestamp = new Date().toISOString();
+                        }
+                    });
                 });
-                this.saveSilos(); // Persistir no arquivo
+                this.saveSilos();
             }
 
-            // Salvar no Vault (localStorage para acesso rápido)
-            if (result.fullReport) {
-                localStorage.setItem('abidos_last_report', result.fullReport);
-                localStorage.setItem('abidos_report_time', new Date().toLocaleString());
-            }
+            // Gerar Relatório MD a partir do JSON Universal (Frontend Engine)
+            const generatedReport = this.buildMarkdownReportFromJson(result);
+            localStorage.setItem('abidos_last_report', generatedReport);
+            localStorage.setItem('abidos_report_time', new Date().toLocaleString());
+            localStorage.setItem('abidos_universal_audit', JSON.stringify(result)); // Base Universal
+            
+            await this.saveAbidosReportToServer(generatedReport, localStorage.getItem('abidos_report_time'), result);
+            this.renderAbidosReport(); 
 
-            this.renderSilos();
-            window.notificationSystem.push("Auditoria Abidos v2.0", "Diagnóstico concluído! Clique em 'VER ÚLTIMO RELATÓRIO' para detalhes.", "audit");
+            // Notificação Inicial (Apenas Status)
+            window.notificationSystem.push("Auditoria Abidos v2.0", `Diagnóstico concluído (Score: ${result.score}/100). Verifique os ícones na tabela para refinamento imediato.`, result.global_status.toLowerCase(), {
+                isFixed: false,
+                actionLabel: "VER RELATÓRIO",
+                actionMethod: "window.seoEngine.openAbidosVault()"
+            });
+            
+            this.renderSilos(); // Re-renderizar tabela com os ícones ⚠️
+            console.log("✅ Auditoria Abidos v2.0: Base Universal Sincronizada.");
 
         } catch (e) {
             console.error("Erro na Auditoria Abidos:", e);
@@ -738,73 +771,156 @@ window.seoEngine = {
         const content = document.getElementById('abidos-suggestions-content');
         if (!popover || !content) return;
 
-        this.currentAuditItem = { itemId, field };
+        // Persistir contexto atual para ações subsequentes
+        this.currentAuditItem = { itemId, field, status, reason };
+        
+        // 1. Tentar recuperar sugestões da Base Universal JSON
+        const universalAudit = JSON.parse(localStorage.getItem('abidos_universal_audit') || '{}');
+        const nodeAudit = (universalAudit.audit_nodes && universalAudit.audit_nodes[itemId]) ? universalAudit.audit_nodes[itemId] : null;
+        const suggestions = nodeAudit ? nodeAudit.suggestions : [];
+
+        // 2. Renderizar o Card de Refinamento com as sugestões encontradas
+        this.renderRefinementCard(suggestions, status, reason);
+
+        // 3. Posicionamento e Exibição do Popover
+        popover.style.display = 'block';
+        const statusColors = { GREEN: '#10b981', YELLOW: '#f59e0b', RED: '#ef4444' };
+        popover.style.boxShadow = `0 20px 60px rgba(0,0,0,0.9), 0 0 20px ${statusColors[status]}33`;
+    },
+
+    renderRefinementCard(suggestions, status, reason) {
+        const content = document.getElementById('abidos-suggestions-content');
         const statusColors = { GREEN: '#10b981', YELLOW: '#f59e0b', RED: '#ef4444' };
         
+        let suggestionsHtml = '';
+        if (suggestions && suggestions.length > 0) {
+            suggestionsHtml = `
+                <div style="margin-top:15px; display:flex; flex-direction:column; gap:8px;">
+                    <span style="font-size:9px; font-weight:900; color:#64748b; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:5px;">
+                        <i data-lucide="zap" style="width:8px; height:8px;"></i> Caminhos de Elite sugeridos:
+                    </span>
+                    ${suggestions.map(s => `
+                        <button class="abidos-suggestion-chip" onclick="window.seoEngine.applyUniversalSuggestion('${s.replace(/'/g, "\\'")}')">
+                            <i data-lucide="sparkles"></i>
+                            <span>${s}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            suggestionsHtml = `
+                <div style="margin-top:15px; text-align:center; padding:25px; border:1px dashed rgba(255,255,255,0.1); border-radius:16px; background: rgba(0,0,0,0.1);">
+                    <i data-lucide="help-circle" style="width:24px; height:24px; color:#64748b; margin-bottom:10px; opacity:0.3;"></i>
+                    <p style="font-size:10px; color:#64748b; font-style:italic; margin:0; line-height:1.4;">Nenhuma sugestão disponível para este ponto na base universal. <br>Tente "Recalcular" abaixo.</p>
+                </div>
+            `;
+        }
+
         content.innerHTML = `
-            <div style="border-left: 3px solid ${statusColors[status]}; padding-left: 10px; margin-bottom: 15px;">
-                <div style="font-size: 11px; font-weight: 900; color: ${statusColors[status]};">STATUS: ${status}</div>
-                <div style="font-size: 12px; color: #fff; margin-top: 5px; line-height: 1.4;">${reason}</div>
+            <div style="border-left: 3px solid ${statusColors[status]}; padding-left: 14px; margin-bottom: 25px; position:relative;">
+                <div style="font-size: 10px; font-weight: 900; color: ${statusColors[status]}; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Diagnóstico Abidos</div>
+                <div style="font-size: 13px; color: #fff; line-height: 1.5; font-weight:500;">${reason}</div>
             </div>
             
-            <div id="abidos-deep-suggestions" style="display: flex; flex-direction: column; gap: 8px;">
-                <button class="btn btn-primary" style="width:100%; font-size: 11px; padding: 10px; background: linear-gradient(135deg, #6366f1, #a855f7); border:none;" onclick="window.seoEngine.generateAbidosSuggestions()">
-                    ✨ GERAR SUGESTÕES DE ELITE (V2.0)
-                </button>
+            ${suggestionsHtml}
+
+            <div style="margin-top:25px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:20px;">
+                 <button class="btn-refresh-suggestions" title="Regerar 3 Novas Sugestões de Elite" onclick="window.seoEngine.regenerateSpecificSuggestions()">
+                    <i data-lucide="refresh-cw"></i> Recalcular
+                 </button>
+                 <button class="btn-exit-card" onclick="document.getElementById('abidos-analysis-popover').style.display='none';">ENCERRAR</button>
+            </div>
+        `;
+        
+        if (window.lucide) window.lucide.createIcons();
+    },
+
+    async regenerateSpecificSuggestions() {
+        const content = document.getElementById('abidos-suggestions-content');
+        if (!content) return;
+
+        const item = this.currentAuditItem;
+        const [hubId, spokeIdx] = item.itemId.split('_');
+        const silo = this.fullData.silos.find(s => s.id === hubId);
+        const currentValue = (item.field === 'title') ? silo.hub : (item.field === 'slug' ? silo.slug : (typeof silo.spokes[spokeIdx] === 'string' ? silo.spokes[spokeIdx] : silo.spokes[spokeIdx].title));
+
+        // Loading state
+        content.innerHTML = `
+            <div style="text-align:center; padding: 40px 0;">
+                <div class="dot" style="width:12px; height:12px; background:#6366f1; border-radius:50%; display:inline-block; animation: bounce 1.4s infinite; margin-bottom:15px;"></div>
+                <p style="font-size:11px; font-weight:900; color:var(--color-primary); text-transform:uppercase; letter-spacing:1px;">Recalculando Caminhos...</p>
+                <p style="font-size:10px; color:#64748b;">A IA está processando novas alternativas EEAT v2.0</p>
             </div>
         `;
 
-        popover.style.display = 'block';
-        popover.style.boxShadow = `0 10px 40px rgba(0,0,0,0.8), 0 0 10px ${statusColors[status]}33`;
-    },
-
-    async generateAbidosSuggestions() {
-        const content = document.getElementById('abidos-deep-suggestions');
-        if (!content) return;
-
-        content.innerHTML = '<div class="abidos-loading"><span>💎</span> Criando Blocos Hero...</div>';
-
-        const item = this.currentAuditItem;
-        const siloId = item.itemId.split('_')[0];
-        const silo = this.fullData.silos.find(s => s.id === siloId);
-        
         try {
-            const prompt = `Gere 3 Alternativas de Elite (Bloco Hero v2.0) para o ${item.field.replace('_', ' ')}: "${silo.hub}"
+            const prompt = `Gere 3 Sugestões de Elite (Máximo 10 palavras cada) para o ${item.field.replace('_', ' ')}: "${currentValue}"
             Contexto Hub: ${silo.hub} (Scope: ${silo.scope})
             
-            REGRAS OBRIGATÓRIAS v2.0:
-            1. ESTRUTURA FATIADA: Cada opção deve conter Kicker, H1 e Subtitle.
-            2. LIMITES RÍGIDOS: Kicker (5-6 words), H1 (8 words), Subtitle (20 words).
-            3. EEAT: Use Whitelist (Manejo, Regulação). Proibido Blacklist (Cura).
-            4. ALCANCE: Respeite o Scope: ${silo.scope}.
+            REGRAS OBRIGATÓRIAS:
+            1. FOCO: Conversão e Autoridade Clínica.
+            2. EEAT: Use termos médicos precisos (whitelist).
+            3. LIMITE: Responda APENAS JSON: { "suggestions": ["Opt 1", "Opt 2", "Opt 3"] }`;
 
-            Responda APENAS JSON:
-            { "options": [ 
-               { "title": "H1 Texto", "slug": "slug-texto", "kicker": "...", "subtitle": "...", "strategy": "Conversão" }, 
-               ... 
-            ] }`;
-
-            const response = await window.gemini.ask(prompt, { section: 'planning', temperature: 0.7 });
+            const response = await window.gemini.ask(prompt, { section: 'planning', temperature: 0.8 });
             const json = JSON.parse(response.match(/\{[\s\S]*\}/)[0]);
 
-            content.innerHTML = json.options.map((opt, idx) => `
-                <div class="abidos-suggestion-item" onclick="window.seoEngine.applyEliteSuggestion('${opt.title.replace(/'/g, "\\'")}', '${opt.slug}', '${opt.kicker.replace(/'/g, "\\'")}', '${opt.subtitle.replace(/'/g, "\\'")}')" style="margin-bottom:12px;">
-                    <div style="font-size:9px; color:var(--color-primary); font-weight:900; margin-bottom:4px; display:flex; justify-content:space-between;">
-                        <span>ESTRATÉGIA: ${opt.strategy}</span>
-                        <span style="color:#10b981;">PERFEITO ✓</span>
-                    </div>
-                    <div style="font-size:10px; color:#94a3b8; font-style:italic;">"${opt.kicker}"</div>
-                    <div style="font-size:13px; font-weight:800; color:#fff; border-left: 2px solid #6366f1; padding-left:8px; margin:4px 0;">${opt.title}</div>
-                    <div style="font-size:10px; color:#cbd5e1; line-height:1.3; margin-bottom:6px;">${opt.subtitle}</div>
-                    <div style="font-size:9px; color:#6366f1; font-family:monospace; background: rgba(99,102,241,0.1); padding:2px 6px; border-radius:4px; width:fit-content;">/${opt.slug}</div>
-                </div>
-            `).join('') + `
-            <button class="btn btn-secondary" style="width:100%; font-size: 10px; margin-top:5px; border-style:dashed;" onclick="window.seoEngine.generateAbidosSuggestions()">🔄 GERAR NOVAS OPÇÕES</button>
-            `;
+            // Atualizar base universal local para este node
+            const universalAudit = JSON.parse(localStorage.getItem('abidos_universal_audit') || '{}');
+            if(!universalAudit.audit_nodes) universalAudit.audit_nodes = {};
+            
+            if(!universalAudit.audit_nodes[item.itemId]) {
+                universalAudit.audit_nodes[item.itemId] = { status: item.status, reason: item.reason, suggestions: [] };
+            }
+            universalAudit.audit_nodes[item.itemId].suggestions = json.suggestions;
+            localStorage.setItem('abidos_universal_audit', JSON.stringify(universalAudit));
+
+            // Re-renderizar com novos dados
+            this.renderRefinementCard(json.suggestions, item.status, item.reason);
 
         } catch (e) {
-            content.innerHTML = '<div style="color:#ef4444; font-size:10px;">Erro ao gerar. Tente novamente.</div>';
+            console.error("Erro ao regenerar sugestões:", e);
+            content.innerHTML = '<div style="color:#ef4444; font-size:10px; text-align:center; padding:20px;">Falha técnica na regeneração. Tente novamente.</div>';
         }
+    },
+
+    applyUniversalSuggestion(suggestedText) {
+        const item = this.currentAuditItem;
+        const [hubId, spokeIdx] = item.itemId.split('_');
+        const silo = this.fullData.silos.find(s => s.id === hubId);
+        
+        console.log(`🚀 Aplicando Refinamento Universal: "${suggestedText}" em ${item.itemId}`);
+
+        if (item.field === 'title') {
+            silo.hub = suggestedText;
+            if (silo.audit) delete silo.audit;
+        } else if (item.field === 'slug') {
+            silo.slug = suggestedText;
+            if (silo.audit) delete silo.audit;
+        } else if (item.field === 'spoke_title' || item.field === 'spoke_slug') {
+            if (typeof silo.spokes[spokeIdx] === 'string') {
+                silo.spokes[spokeIdx] = { title: silo.spokes[spokeIdx], slug: '' };
+            }
+            if (item.field === 'spoke_title') {
+                silo.spokes[spokeIdx].title = suggestedText;
+            } else {
+                silo.spokes[spokeIdx].slug = suggestedText;
+            }
+            if (silo.spokes[spokeIdx].audit) delete silo.spokes[spokeIdx].audit;
+        }
+
+        // Limpar node na base universal para remover o ícone de aviso
+        const universalAudit = JSON.parse(localStorage.getItem('abidos_universal_audit') || '{}');
+        if (universalAudit.audit_nodes && universalAudit.audit_nodes[item.itemId]) {
+            delete universalAudit.audit_nodes[item.itemId];
+            localStorage.setItem('abidos_universal_audit', JSON.stringify(universalAudit));
+        }
+        
+        this.saveSilos();
+        this.renderSilos();
+        document.getElementById('abidos-analysis-popover').style.display = 'none';
+        
+        window.notificationSystem.push("Refinamento Aplicado", `O conteúdo de "${item.field}" foi atualizado com sucesso.`, "success");
     },
 
     applyEliteSuggestion(title, slug, kicker, subtitle) {
@@ -874,17 +990,19 @@ window.seoEngine = {
             if (window.lucide) window.lucide.createIcons();
         } else {
             time.innerText = `Última Auditoria: ${timestamp}`;
-            // Renderização Markdown ultra-básica
+            // Renderização Markdown Premium
             const html = report
-                .replace(/^### (.*$)/gim, '<h3 style="color:var(--color-primary); margin-top:40px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">$1</h3>')
-                .replace(/^## (.*$)/gim, '<h2 style="color:var(--color-secondary); margin-top:30px;">$1</h2>')
-                .replace(/^# (.*$)/gim, '<h1 style="color:#fff; text-align:center; border-bottom:2px solid var(--color-primary); padding-bottom:20px; margin-bottom:40px;">$1</h1>')
-                .replace(/^\* (.*$)/gim, '<li style="margin-left:20px; margin-bottom:8px; color:rgba(255,255,255,0.8);">$1</li>')
-                .replace(/^\d\. (.*$)/gim, '<li style="margin-left:20px; margin-bottom:8px; color:rgba(255,255,255,0.8);">$1</li>')
-                .replace(/\*\*(.*)\*\*/gim, '<strong style="color:#fff;">$1</strong>')
+                .replace(/\\/g, '') // Corrigir caracteres de escape (\) do modelo
+                .replace(/^### (.*$)/gim, '<h3 style="color:var(--color-primary); font-size: 16px; font-weight: 900; margin: 40px 0 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:10px; display: flex; align-items:center; gap:10px;"><i data-lucide="shield-check" style="width:18px; height:18px;"></i> $1</h3>')
+                .replace(/^## (.*$)/gim, '<h2 style="color:var(--color-secondary); font-size: 18px; font-weight: 900; margin: 50px 0 20px 0; letter-spacing:-0.5px;">$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1 style="color:#fff; font-size: 24px; font-weight: 900; text-align:center; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), transparent); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 16px; padding: 40px; margin-bottom: 50px; letter-spacing: -1px;">$1</h1>')
+                .replace(/^\* (.*$)/gim, '<div style="margin: 10px 0 10px 25px; color:rgba(255,255,255,0.85); display: flex; align-items: flex-start; gap: 10px;"><span style="color:var(--color-primary); font-weight:900;">•</span> <span>$1</span></div>')
+                .replace(/^\d\. (.*$)/gim, '<div style="margin: 10px 0 10px 25px; color:rgba(255,255,255,0.85); display: flex; align-items: flex-start; gap: 10px;"><span style="color:var(--color-secondary); font-weight:900;">$1.</span> <span>$1</span></div>')
+                .replace(/\*\*(.*)\*\*/gim, '<strong style="color:#fff; font-weight: 800;">$1</strong>')
                 .replace(/\n/gim, '<br>');
 
-            content.innerHTML = `<div class="vault-rendered-md" style="animation: nnc-slide-in 0.6s ease; line-height:1.6; font-size:14px;">${html}</div>`;
+            content.innerHTML = `<div class="vault-rendered-md" style="animation: nnc-slide-in 0.6s ease; line-height:1.7; font-size:15px; padding: 20px;">${html}</div>`;
+            if (window.lucide) window.lucide.createIcons();
         }
         modal.style.display = 'flex';
     },
@@ -895,6 +1013,102 @@ window.seoEngine = {
         navigator.clipboard.writeText(report).then(() => {
             window.notificationSystem.push("Vault Copiado", "O relatório estratégico foi enviado para o seu clipboard.", "success");
         });
+    },
+
+    // --- RENDERIZAÇÃO DE RELATÓRIO PREMIUM (REUSÁVEL) ---
+    renderAbidosReport() {
+        const card = document.getElementById('abidos-inline-report-card');
+        const content = document.getElementById('abidos-card-content');
+        const time = document.getElementById('abidos-card-timestamp');
+        if (!card || !content) return;
+
+        const report = localStorage.getItem('abidos_last_report');
+        const timestamp = localStorage.getItem('abidos_report_time');
+
+        if (!report) {
+            card.style.display = 'none';
+            return;
+        }
+
+        card.style.display = 'block';
+        if (time) time.innerText = `Gerado em: ${timestamp}`;
+
+        // Motor de Renderização Premium (Markdown para HTML High-End)
+        const html = report
+            .replace(/\\/g, '') // Corrigir escapes
+            .replace(/^### (.*$)/gim, '<h3 style="color:var(--color-primary); font-size: 15px; font-weight: 900; margin: 30px 0 12px 0; border-left: 3px solid var(--color-primary); padding-left: 12px; display: flex; align-items:center; gap:8px;">$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2 style="color:#fff; font-size: 17px; font-weight: 900; margin: 40px 0 15px 0; letter-spacing:-0.4px; display: flex; align-items:center; gap:10px;"><span style="color:var(--color-secondary); opacity:0.5;">#</span> $1</h2>')
+            .replace(/^# (.*$)/gim, '<h1 style="color:#fff; font-size: 20px; font-weight: 900; text-align:center; padding-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.05); margin-bottom: 30px;">$1</h1>')
+            .replace(/^\* (.*$)/gim, '<div style="margin: 8px 0 8px 15px; color:#cbd5e1; display: flex; align-items: flex-start; gap: 8px;"><span style="color:var(--color-primary); font-weight:900;">•</span> <span>$1</span></div>')
+            .replace(/\*\*(.*)\*\*/gim, '<strong style="color:var(--color-secondary); font-weight: 800;">$1</strong>')
+            .replace(/\n/gim, '<br>');
+
+        content.innerHTML = `<div class="vault-rendered-md" style="line-height:1.6; font-size:14px; color: #94a3b8;">${html}</div>`;
+        
+        // Re-inicializa ícones Lucide no card
+        if (window.lucide) window.lucide.createIcons({
+            attrs: { 'stroke-width': 2 }
+        });
+    },
+
+    // --- MÉTODOS DE SINCRONIZAÇÃO COM O SERVIDOR ---
+    async saveAbidosReportToServer(report, timestamp, universalAudit) {
+        try {
+            await fetch('/api/seo/abidos-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ report, timestamp, universalAudit })
+            });
+            console.log("🛡️ ABIDOS: Relatório e Base Universal persistidos no servidor.");
+        } catch (e) {
+            console.error("Erro ao salvar relatório no servidor:", e);
+        }
+    },
+
+    async syncAbidosReportFromServer() {
+        try {
+            const res = await fetch('/api/seo/abidos-report');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.report) {
+                    localStorage.setItem('abidos_last_report', data.report);
+                    localStorage.setItem('abidos_report_time', data.timestamp);
+                }
+                if (data.universalAudit) {
+                    localStorage.setItem('abidos_universal_audit', JSON.stringify(data.universalAudit));
+                    this.auditData = data.universalAudit; // Sincroniza estado para renderização
+                    console.log("🛡️ ABIDOS: Base Universal recuperada do servidor.");
+                }
+            }
+        } catch (e) {
+            console.warn("🛡️ ABIDOS: Falha ao sincronizar com o servidor.");
+        }
+        this.renderAbidosReport(); 
+        this.renderSilos(); // Garante ícones se houver dados
+    },
+
+    // --- GENERADOR DE RELATÓRIO FRONTEND (UI COHESION) ---
+    buildMarkdownReportFromJson(json) {
+        if (!json || !json.audit_nodes) return "Nenhum dado de auditoria disponível.";
+
+        let md = `# RELATÓRIO ESTRATÉGICO ABIDOS v2.0\n`;
+        md += `**Score de Dominação**: ${json.score}/100 | **Status**: ${json.global_status}\n\n`;
+        md += `> ${json.global_summary}\n\n`;
+        md += `---\n\n`;
+
+        Object.entries(json.audit_nodes).forEach(([id, audit]) => {
+            if (audit.status === 'GREEN') return;
+
+            const emoji = audit.status === 'RED' ? '🚨' : '⚠️';
+            md += `### ${emoji} ${id.includes('_spoke') ? 'SPOKE' : 'HUB ID'}: ${id}\n`;
+            md += `**Problema**: ${audit.reason}\n\n`;
+            md += `**Sugestões de Elite**:\n`;
+            audit.suggestions.forEach(s => md += `* **${s}**\n`);
+            md += `\n`;
+        });
+
+        md += `\n---\n*Relatório gerado automaticamente pelo motor NeuroEngine. Sincronizado com a base universal de governança.*`;
+        return md;
     }
 };
 

@@ -57,10 +57,11 @@ window.marketingLab = {
         }
 
         try {
+            const modelType = window.app ? window.app.getActiveModel('analytics') : 'gemini-2.5-flash';
             const response = await fetch('/api/analytics/suggestions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ analyticsData, force })
+                body: JSON.stringify({ analyticsData, force, modelType })
             });
             const data = await response.json();
             this.renderSuggestions(data.suggestions);

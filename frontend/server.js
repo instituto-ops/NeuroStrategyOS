@@ -246,6 +246,53 @@ app.post('/api/system/report/save', (req, res) => {
     }
 });
 
+// [ABIDOS] Persistência do Último Relatório Estratégico
+const ABIDOS_REPORT_FILE = path.join(REPORTS_DIR, 'abidos_report_latest.md');
+
+// Rota para recuperar o último relatório Abidos + Base Universal
+app.get('/api/seo/abidos-report', (req, res) => {
+    try {
+        let response = { success: true };
+        
+        if (fs.existsSync(ABIDOS_REPORT_FILE)) {
+            response.report = fs.readFileSync(ABIDOS_REPORT_FILE, 'utf8');
+            const stats = fs.statSync(ABIDOS_REPORT_FILE);
+            response.timestamp = stats.mtime.toLocaleString();
+        }
+
+        const universalJsonPath = path.join(REPORTS_DIR, 'abidos_universal_latest.json');
+        if (fs.existsSync(universalJsonPath)) {
+            response.universalAudit = JSON.parse(fs.readFileSync(universalJsonPath, 'utf8'));
+        }
+
+        if (response.report || response.universalAudit) {
+            res.json(response);
+        } else {
+            res.status(404).json({ error: "Nenhum relatório Abidos encontrado." });
+        }
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Rota para salvar relatório Abidos (Markdown + Universal JSON)
+app.post('/api/seo/abidos-report', (req, res) => {
+    try {
+        const { report, universalAudit } = req.body;
+        if (!fs.existsSync(REPORTS_DIR)) fs.mkdirSync(REPORTS_DIR, { recursive: true });
+        
+        fs.writeFileSync(ABIDOS_REPORT_FILE, report);
+        
+        // Também salvar a base universal em JSON para persistência servidor se necessário
+        const universalJsonPath = path.join(REPORTS_DIR, 'abidos_universal_latest.json');
+        fs.writeFileSync(universalJsonPath, JSON.stringify(universalAudit || {}, null, 2));
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Rota para pegar o último status para o Dashboard
 app.get('/api/system/report/latest', (req, res) => {
     try {
@@ -319,9 +366,7 @@ app.post('/api/dev/screenshot', (req, res) => {
 app.get('/api/ai/health', async (req, res) => {
     try {
         if (!process.env.GEMINI_API_KEY) throw new Error("API Key Ausente");
-        // Tenta listar o modelo para validar a chave (rápido)
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: MAIN_MODEL });
         res.json({ status: "OK", engine: "Gemini 2.5 Hub", auth: "Validada" });
     } catch (e) {
         res.status(503).json({ status: "OFFLINE", error: e.message });
@@ -1883,42 +1928,10 @@ app.post('/api/ai/generate', async (req, res) => {
         const { prompt, modelType } = req.body;
         
         // Mapeamento dinâmico de modelos Abidos Next (v5)
-        let targetModel = MAIN_MODEL; // Default: gemini-2.5-flash
-        
-        switch (modelType) {
-            case 'lite':
-            case 'gemini-2.5-flash-lite':
-                targetModel = LITE_MODEL;
-                break;
-            case 'flash':
-            case 'gemini-2.5-flash':
-                targetModel = MAIN_MODEL;
-                break;
-            case 'pro':
-            case 'gemini-2.5-pro':
-                targetModel = PRO_MODEL;
-                break;
-            case 'gemini-1.5-flash':
-                targetModel = "gemini-1.5-flash";
-                break;
-            case 'gemini-1.5-pro':
-                targetModel = "gemini-1.5-pro";
-                break;
-            default:
-                // Se for um ID de modelo direto (o frontend agora envia isso), usamos ele
-                if (modelType && modelType.includes("gemini")) targetModel = modelType;
-        }
+        const model = getAIModel(modelType, "text/plain");
 
-        console.log(`🧠 [AI PROXY] Gerando conteúdo com o motor: ${targetModel}...`);
+        console.log(`🧠 [AI PROXY] Gerando conteúdo via Protocolo 2.5...`);
         
-        const model = genAI.getGenerativeModel({ 
-            model: targetModel,
-            generationConfig: { 
-                responseMimeType: "application/json",
-                temperature: 0.8
-            }
-        });
-
         const result = await model.generateContent(prompt);
         trackUsage(result.response.usageMetadata);
         const text = result.response.text();
@@ -3054,7 +3067,7 @@ app.post('/api/analytics/suggestions', async (req, res) => {
         {"suggestions": [{"title": "Nome da Sugestão", "description": "Explicação técnica", "impact": "Alto/Médio/Baixo"}]}
         `;
 
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        const model = getAIModel(req.body.modelType);
         const result = await model.generateContent(pSuggestions);
         trackUsage(result.response.usageMetadata);
         const responseText = result.response.text();
@@ -3574,8 +3587,7 @@ app.post('/api/neuro-training/chat', async (req, res) => {
 app.post('/api/doctoralia/generate-reply', async (req, res) => {
     try {
         const { question, modelType } = req.body;
-        const modelId = (modelType && modelType.includes('gemini')) ? modelType : (modelType === 'flash' ? VISION_MODEL : HEAVY_MODEL);
-        const targetModel = genAI.getGenerativeModel({ model: modelId });
+        const targetModel = getAIModel(modelType, 'text/plain');
         console.log(`🧠 [DOCTORALIA] Gerando resposta via motor ${modelType}...`);
 
         const dnaInjetado = getDnaContext();
@@ -3612,8 +3624,7 @@ PERGUNTA DO PACIENTE: "${question}"`;
 app.post('/api/doctoralia/audit', async (req, res) => {
     try {
         const { original_message, generated_reply, modelType } = req.body;
-        const modelId = (modelType && modelType.includes('gemini')) ? modelType : (modelType === 'flash' ? VISION_MODEL : HEAVY_MODEL);
-        const targetModel = genAI.getGenerativeModel({ model: modelId });
+        const targetModel = getAIModel(modelType, 'text/plain');
         
         const systemPrompt = `Você é um Auditor de Compliance Médico e Ético do Conselho Federal de Psicologia (CFP).
 Sua ÚNICA missão é ler a resposta que uma IA gerou para um paciente e procurar por ALUCINAÇÕES ou INFRAÇÕES ÉTICAS.
@@ -3661,8 +3672,7 @@ Sua tarefa é REESCREVER a resposta abaixo aplicando as correções solicitadas 
 - Retorne APENAS o texto corrigido, em parágrafos limpos, sem markdown.
         `;
 
-        const modelId = (req.body.modelType && req.body.modelType.includes('gemini')) ? req.body.modelType : (req.body.modelType === 'flash' ? VISION_MODEL : HEAVY_MODEL);
-        const targetModel = genAI.getGenerativeModel({ model: modelId });
+        const targetModel = getAIModel(req.body.modelType, 'text/plain');
         const result = await targetModel.generateContent(refinePrompt);
         const reply = result.response.text()
             .replace(/\*\*/g, '').replace(/###/g, '').replace(/##/g, '')
