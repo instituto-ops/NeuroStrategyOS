@@ -1,4 +1,8 @@
-const gemini = {
+window.gemini = {
+    // Alias para compatibilidade
+    async ask(prompt, options = {}) {
+        return this.callAPI(prompt, options.model || null);
+    },
     // Configurações do Proxy Seguro (NeuroEngine Backend)
     // Nenhuma API Key do Google é exposta ao navegador.
     proxyUrl: "/api/ai/generate",
