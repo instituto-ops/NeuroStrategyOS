@@ -131,6 +131,11 @@
                     <i data-lucide="camera" style="width: 14px; height: 14px;"></i> <span>PRINT</span>
                 </button>
 
+                <!-- 🏆 ABIDOS GLOBAL PERFORMANCE SCORE -->
+                <div id="abidos-global-score" title="Saúde Geral da Arquitetura" style="height: 32px; padding: 0 12px; font-size: 11px; border-radius: 8px; display: flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #10b981; font-weight: 900; letter-spacing: 0.5px;">
+                    <i data-lucide="award" style="width: 14px; height: 14px;"></i> <span id="abidos-score-val">0/100</span>
+                </div>
+
                 <!-- 💎 ABIDOS VAULT TRIGGER -->
                 <button class="btn btn-secondary" onclick="window.seoEngine.openAbidosVault()" style="height: 32px; padding: 0 12px; font-size: 11px; border-radius: 8px; display: flex; align-items: center; gap: 6px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: #fff;">
                     <i data-lucide="shield-check" style="width: 14px; height: 14px; color: var(--color-primary);"></i> <span>ESTRATÉGIA</span>
@@ -747,7 +752,7 @@
                     <!-- Painel Esquerdo: Cards de Edição -->
                     <div style="width: 380px; background: var(--color-card); border-right: 1px solid var(--color-border); display: flex; flex-direction: column;">
                         <div style="padding: 20px; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                            <h3 style="margin:0; font-size: 11px; color: var(--color-text); text-transform: uppercase; font-weight: 900; letter-spacing: 1.5px;">MÓDULOS</h3>
+                            <h3 style="margin:0; font-size: 11px; color: var(--color-text); text-transform: uppercase; font-weight: 900; letter-spacing: 1.5px; letter-spacing: 1.5px;">MÓDULOS</h3>
                             <div style="display: flex; gap: 6px;">
                                 <button id="btn-generate-all" class="btn btn-primary" onclick="window.aiStudioTemplate.generateAllWithIA()" style="font-size: 9px; padding: 5px 12px; border-radius: 20px;">GERAR ✨</button>
                                 <button class="btn btn-secondary" onclick="window.aiStudioTemplate.nextStep()" style="font-size: 9px; padding: 5px 12px; border-radius: 20px; border-color: var(--color-success) !important; color: var(--color-success) !important;">AUDITAR</button>

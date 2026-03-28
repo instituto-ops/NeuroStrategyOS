@@ -57,10 +57,46 @@ window.seoEngine = {
 
         const hubsAudit = this.auditData ? this.auditData.hubs : {};
 
+        let totalPossible = 0;
+        let totalCurrent = 0;
+
         tbody.innerHTML = this.fullData.silos.map(silo => {
             const isExpanded = this.expandedHubs.has(silo.id);
             const spokeCount = silo.spokes ? silo.spokes.length : 0;
             const hAudit = hubsAudit[silo.id] || silo.audit || null;
+
+            // [PHASE 4] CÁLCULO DE SCORE INDIVIDUAL
+            let hubPoints = 0;
+            let hubPossible = 20; // Hub title + Hub slug (cada um vale 10 se GREEN)
+            
+            if (hAudit) {
+                if (hAudit.title?.status === 'GREEN') hubPoints += 10;
+                else if (hAudit.title?.status === 'YELLOW') hubPoints += 5;
+
+                if (hAudit.slug?.status === 'GREEN') hubPoints += 10;
+                else if (hAudit.slug?.status === 'YELLOW') hubPoints += 5;
+            }
+
+            // Spokes points
+            if (silo.spokes) {
+                silo.spokes.forEach((spoke, idx) => {
+                    const sId = `${silo.id}_${idx}`;
+                    const sAudit = (this.auditData?.spokes?.[sId]) || spoke.audit;
+                    hubPossible += 20;
+                    if (sAudit) {
+                        if (sAudit.title?.status === 'GREEN') hubPoints += 10;
+                        else if (sAudit.title?.status === 'YELLOW') hubPoints += 5;
+
+                        if (sAudit.slug?.status === 'GREEN') hubPoints += 10;
+                        else if (sAudit.slug?.status === 'YELLOW') hubPoints += 5;
+                    }
+                });
+            }
+
+            totalPossible += hubPossible;
+            totalCurrent += hubPoints;
+            const hubScore = Math.round((hubPoints / hubPossible) * 100);
+            const scoreColor = hubScore > 80 ? '#10b981' : (hubScore > 50 ? '#f59e0b' : '#ef4444');
 
             return `
                 <tr class="silo-row ${isExpanded ? 'active' : ''}" onclick="window.seoEngine.toggleSilo('${silo.id}')">
@@ -90,13 +126,12 @@ window.seoEngine = {
                         ` : ''}
                     </td>
                     <td style="font-family: monospace; font-size: 11px; color: var(--color-text-dim);">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            / <span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'slug', this.innerText)" onclick="event.stopPropagation()">${silo.slug}</span>
-                            ${this.renderStatusIcon(silo.id, 'slug', hAudit?.slug)}
-                        </div>
+                        / <span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'slug', this.innerText)" onclick="event.stopPropagation()">${silo.slug}</span>
+                        ${this.renderStatusIcon(silo.id, 'slug', hAudit?.slug)}
                     </td>
                     <td style="padding: 15px; text-align: center;">
-                        <span style="font-size: 10px; background: rgba(99, 102, 241, 0.1); color: #6366f1; padding: 4px 12px; border-radius: 20px; font-weight: 800;">
+                        <div style="font-size: 11px; font-weight: 900; color: ${scoreColor}; margin-bottom: 2px;">${hubScore}%</div>
+                        <span style="font-size: 8px; background: rgba(99, 102, 241, 0.1); color: #6366f1; padding: 2px 10px; border-radius: 20px; font-weight: 800; letter-spacing: 0.5px;">
                             ${spokeCount} SPOKES
                         </span>
                     </td>
@@ -109,6 +144,19 @@ window.seoEngine = {
                 ${isExpanded ? this.renderSpokeDetails(silo) : ''}
             `;
         }).join('');
+
+        // [PHASE 4] ATUALIZAÇÃO DO SCORE GLOBAL NO HEADER
+        const globalValue = totalPossible > 0 ? Math.round((totalCurrent / totalPossible) * 100) : 0;
+        const scoreEl = document.getElementById('abidos-score-val');
+        const scoreBadge = document.getElementById('abidos-global-score');
+        if (scoreEl) scoreEl.innerText = `${globalValue}/100`;
+        if (scoreBadge) {
+            const gColor = globalValue > 80 ? '#10b981' : (globalValue > 50 ? '#f59e0b' : '#ef4444');
+            scoreBadge.style.color = gColor;
+            scoreBadge.style.borderColor = gColor + '33';
+            scoreBadge.style.background = gColor + '11';
+        }
+
         if (window.lucide) window.lucide.createIcons();
     },
 
