@@ -131,6 +131,11 @@
                     <i data-lucide="camera" style="width: 14px; height: 14px;"></i> <span>PRINT</span>
                 </button>
 
+                <!-- 💎 ABIDOS VAULT TRIGGER -->
+                <button class="btn btn-secondary" onclick="window.seoEngine.openAbidosVault()" style="height: 32px; padding: 0 12px; font-size: 11px; border-radius: 8px; display: flex; align-items: center; gap: 6px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: #fff;">
+                    <i data-lucide="shield-check" style="width: 14px; height: 14px; color: var(--color-primary);"></i> <span>ESTRATÉGIA</span>
+                </button>
+
                 <!-- 🔔 NEURO-NOTIFICATION TRIGGER -->
                 <div id="nnc-trigger" class="nnc-trigger" onclick="window.notificationSystem.toggle()">
                     <i data-lucide="bell"></i>
@@ -1503,6 +1508,11 @@
                             <p style="color: #64748b; font-size: 14px; margin: 0;">Dominação semântica: Gestão centralizada de Hubs, Spokes e Pauta Editorial.</p>
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
+                            <!-- 📜 BOTÃO DE RELATÓRIO PERSISTENTE -->
+                            <button class="btn btn-secondary" onclick="window.seoEngine.openAbidosVault()" style="height: 32px; padding: 0 15px; font-size: 11px; border-radius: 8px; display: flex; align-items: center; gap: 8px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); color: #fff;">
+                                <i data-lucide="scroll-text" style="width: 14px; height: 14px; color: var(--color-primary);"></i> <span>VER ÚLTIMO RELATÓRIO</span>
+                            </button>
+
                             <select class="local-model-selector" data-section="planning" onchange="app.updateLocalModel('planning', this.value)">
                                 <option value="global">🌐 USAR GLOBAL</option>
                                 <option value="gemini-2.5-flash">⚡ FLASH (Estratégico)</option>
@@ -1903,6 +1913,35 @@
         <div style="margin-top: 20px; text-align: center;">
             <button class="btn btn-secondary" style="font-size: 10px; width: 100%;" onclick="document.getElementById('abidos-analysis-popover').style.display='none'">ENCERRAR CONSULTA</button>
         </div>
+        <!-- 💎 ABIDOS VAULT MODAL (HISTÓRICO ESTRATÉGICO) -->
+        <div id="abidos-vault-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:20000; justify-content:center; align-items:center;">
+            <div class="card" style="width:90%; max-width:850px; height:85vh; display:flex; flex-direction:column; border: 1px solid var(--nnc-border); box-shadow: 0 30px 60px rgba(0,0,0,0.8);">
+                <div style="padding:20px; border-bottom:1px solid var(--nnc-border); display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.9);">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <i data-lucide="shield-check" style="color:var(--color-primary);"></i>
+                        <div>
+                            <h3 style="margin:0; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Abidos Strategy Vault</h3>
+                            <p id="vault-timestamp" style="margin:0; font-size:10px; color:var(--color-text-dim);">Última Auditoria: --:--</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="document.getElementById('abidos-vault-modal').style.display='none'" style="background:transparent; color:#fff; font-size:24px;">&times;</button>
+                </div>
+                <div id="vault-content" style="flex:1; overflow-y:auto; padding:40px; line-height:1.7; font-size:14px; color:var(--color-text-light); background: #070b14;">
+                    <!-- Markdown Injetado -->
+                </div>
+                <div style="padding:15px; border-top:1px solid var(--nnc-border); background:rgba(15,23,42,0.9); display:flex; justify-content:flex-end; gap:15px;">
+                     <button class="btn btn-secondary" onclick="window.seoEngine.copyVaultReport()" style="font-size:11px;">📋 COPIAR RELATÓRIO</button>
+                     <button class="btn btn-primary" onclick="document.getElementById('abidos-vault-modal').style.display='none'" style="font-size:11px;">FECHAR EXPLORADOR</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Ensure lucide is updated globally
+            app.onSectionShow = function() {
+                if(window.lucide) window.lucide.createIcons();
+            };
+        </script>
     </div>
 </body>
 </html>

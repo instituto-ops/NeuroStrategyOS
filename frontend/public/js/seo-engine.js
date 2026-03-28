@@ -49,45 +49,40 @@ window.seoEngine = {
             console.error('Erro ao copiar:', err);
             window.notificationSystem.push("Erro de Clipboard", "Não foi possível copiar a arquitetura.", "error");
         });
-    },    renderSilos() {
+    },
+
+    renderSilos() {
         const tbody = document.getElementById('silo-table-body');
-        if (!tbody || !this.fullData) return;
+        if (!tbody || !this.fullData || !this.fullData.silos) return;
 
-        if (!this.fullData.silos || this.fullData.silos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: #94a3b8;">Nenhum Hub Silo definido. Clique em "+ NOVO HUB SILO".</td></tr>';
-            return;
-        }
+        const hubsAudit = this.auditData ? this.auditData.hubs : {};
 
-        tbody.innerHTML = this.fullData.silos.map((silo, index) => {
+        tbody.innerHTML = this.fullData.silos.map(silo => {
             const isExpanded = this.expandedHubs.has(silo.id);
             const spokeCount = silo.spokes ? silo.spokes.length : 0;
-            const hubAudit = this.auditData ? this.auditData.hubs[silo.id] : null;
-
-            // Seletor de Alcance (v2.0)
-            const scopeLabel = silo.scope === 'national' ? '🌐 Nacional' : '📍 Local';
-            const scopeColor = silo.scope === 'national' ? '#38bdf8' : '#94a3b8';
+            const hAudit = hubsAudit[silo.id] || silo.audit || null;
 
             return `
-                <tr class="hub-row" style="background: rgba(30, 41, 59, 0.5); cursor: pointer; transition: background 0.3s;" onclick="window.seoEngine.toggleSilo('${silo.id}')">
-                    <td style="padding: 15px; text-align: center; color: var(--color-primary); font-family: monospace;">
-                        <span style="font-size: 10px;">${isExpanded ? '▼' : '▶'}</span>
+                <tr class="silo-row ${isExpanded ? 'active' : ''}" onclick="window.seoEngine.toggleSilo('${silo.id}')">
+                    <td style="width: 40px; text-align: center; color: var(--color-text-dim); font-size: 10px;">
+                        <i data-lucide="${isExpanded ? 'chevron-down' : 'chevron-right'}" style="width: 14px; height: 14px;"></i>
                     </td>
-                    <td style="padding: 15px; color: #fff; font-weight: 700;">
-                        <div style="display:flex; flex-direction:column; gap:4px;">
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.innerText)" onclick="event.stopPropagation()">${silo.hub}</span>
-                                ${this.renderStatusIcon(silo.id, 'title', hubAudit?.title)}
-                            </div>
-                            <button onclick="event.stopPropagation(); window.seoEngine.toggleScope('${silo.id}')" 
-                                    style="width: fit-content; font-size: 8px; font-weight: 800; background: rgba(255,255,255,0.05); color: ${scopeColor}; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                ${scopeLabel}
-                            </button>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.innerText)" onclick="event.stopPropagation()">${silo.hub}</span>
+                            ${this.renderStatusIcon(silo.id, 'title', hAudit?.title)}
+                        </div>
+                        <div style="margin-top: 4px;">
+                            <span class="scope-badge scope-${silo.scope}" onclick="event.stopPropagation(); window.seoEngine.toggleScope('${silo.id}')">
+                                <i data-lucide="${silo.scope === 'local' ? 'map-pin' : 'globe'}" style="width: 8px; height: 8px;"></i>
+                                ${silo.scope ? silo.scope.toUpperCase() : 'NATIONAL'}
+                            </span>
                         </div>
                     </td>
-                    <td style="padding: 15px; font-family: monospace; font-size: 12px; color: #94a3b8;">
+                    <td style="font-family: monospace; font-size: 11px; color: var(--color-text-dim);">
                         <div style="display:flex; align-items:center; gap:8px;">
-                            /<span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'slug', this.innerText)" onclick="event.stopPropagation()">${silo.slug}</span>
-                            ${this.renderStatusIcon(silo.id, 'slug', hubAudit?.slug)}
+                            / <span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'slug', this.innerText)" onclick="event.stopPropagation()">${silo.slug}</span>
+                            ${this.renderStatusIcon(silo.id, 'slug', hAudit?.slug)}
                         </div>
                     </td>
                     <td style="padding: 15px; text-align: center;">
@@ -104,19 +99,27 @@ window.seoEngine = {
                 ${isExpanded ? this.renderSpokeDetails(silo) : ''}
             `;
         }).join('');
+        if (window.lucide) window.lucide.createIcons();
     },
 
     renderStatusIcon(id, field, audit) {
-        if (!audit || !audit.status) return '';
+        const liveAudit = (this.auditData && this.auditData.hubs && this.auditData.hubs[id]) ? this.auditData.hubs[id][field] : 
+                         ((this.auditData && this.auditData.spokes && this.auditData.spokes[id]) ? this.auditData.spokes[id][field] : null);
+        
+        const finalAudit = liveAudit || audit;
+        
+        if (!finalAudit || !finalAudit.status) return '';
+        
         const colors = { GREEN: '#10b981', YELLOW: '#f59e0b', RED: '#ef4444' };
         const icons = { GREEN: '✅', YELLOW: '💡', RED: '⚠️' };
-        const color = colors[audit.status] || '#94a3b8';
-        const icon = icons[audit.status] || '⚪';
+        const color = colors[finalAudit.status] || '#94a3b8';
+        const icon = icons[finalAudit.status] || '⚪';
 
         return `
             <span class="abidos-indicator" 
+                  title="${finalAudit.reason?.replace(/"/g, '&quot;')}"
                   style="cursor: pointer; font-size: 10px; color: ${color}; filter: drop-shadow(0 0 3px ${color}99);" 
-                  onclick="event.stopPropagation(); window.seoEngine.openItemAuditCard('${id}', '${field}', '${audit.status}', '${audit.reason.replace(/'/g, "\\'")}')">
+                  onclick="event.stopPropagation(); window.seoEngine.openItemAuditCard('${id}', '${field}', '${finalAudit.status}', '${finalAudit.reason.replace(/'/g, "\\'")}')">
                 ${icon}
             </span>
         `;
@@ -154,11 +157,11 @@ window.seoEngine = {
                                         <div style="width: 85%;">
                                             <div style="display:flex; align-items:center; gap:5px;">
                                                 <span class="inline-edit" contenteditable="true" style="font-size: 13px; font-weight: 700; color: #fff;" onblur="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, 'title', this.innerText)">${spoke.title}</span>
-                                                ${this.renderStatusIcon(spokeId, 'spoke_title', sAudit?.title)}
+                                                ${this.renderStatusIcon(spokeId, 'spoke_title', sAudit?.title || spoke.audit?.title)}
                                             </div>
                                             <div style="font-size: 10px; color: #64748b; font-family: monospace; display: flex; align-items: center; gap: 4px; margin-top:5px;">
                                                 /${silo.slug}/<span class="inline-edit" contenteditable="true" style="color:#6366f1;" onblur="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, 'slug', this.innerText)">${spoke.slug}</span>
-                                                ${this.renderStatusIcon(spokeId, 'spoke_slug', sAudit?.slug)}
+                                                ${this.renderStatusIcon(spokeId, 'spoke_slug', sAudit?.slug || spoke.audit?.slug)}
                                             </div>
                                         </div>
                                         <button class="btn" style="background:transparent; border:none; color:#ef4444; font-size:12px; padding:0;" onclick="window.seoEngine.removeSpoke('${silo.id}', ${idx})">&times;</button>
@@ -198,6 +201,13 @@ window.seoEngine = {
         const silo = this.fullData.silos.find(s => s.id === id);
         if (silo) {
             silo[field] = value;
+            
+            // [INVALIDAÇÃO DNA]
+            if (silo.audit) {
+                console.log("⚠️ Auditoria Hub invalidada por edição manual.");
+                delete silo.audit;
+            }
+
             await this.saveSilos();
             this.renderUpcomingPosts(); // Update selectors
             if(window.cytoscape && document.getElementById('cy-map')) this.renderGraph(this.fullData);
@@ -215,6 +225,13 @@ window.seoEngine = {
                 };
             }
             silo.spokes[idx][field] = value;
+            
+            // [INVALIDAÇÃO DNA] Limpar auditoria anterior pois o dado mudou
+            if (silo.spokes[idx].audit) {
+                console.log("⚠️ Auditoria Spoke invalidada por edição manual.");
+                delete silo.spokes[idx].audit;
+            }
+
             await this.saveSilos();
             if(window.cytoscape && document.getElementById('cy-map')) this.renderGraph(this.fullData);
         }
@@ -607,8 +624,34 @@ window.seoEngine = {
                 led.style.boxShadow = `0 0 10px ${colors[result.global_status]}`;
             }
 
+            // [PERSISTÊNCIA DNA] Salvar o resultado da auditoria diretamente no JSON dos Silos
+            if (result.hubs) {
+                this.fullData.silos.forEach(silo => {
+                    if (result.hubs[silo.id]) {
+                        silo.audit = result.hubs[silo.id];
+                        silo.audit.timestamp = new Date().toISOString();
+                    }
+                    if (result.spokes) {
+                        silo.spokes.forEach((spoke, idx) => {
+                            const spokeId = `${silo.id}_${idx}`;
+                            if (result.spokes[spokeId]) {
+                                spoke.audit = result.spokes[spokeId];
+                                spoke.audit.timestamp = new Date().toISOString();
+                            }
+                        });
+                    }
+                });
+                this.saveSilos(); // Persistir no arquivo
+            }
+
+            // Salvar no Vault (localStorage para acesso rápido)
+            if (result.fullReport) {
+                localStorage.setItem('abidos_last_report', result.fullReport);
+                localStorage.setItem('abidos_report_time', new Date().toLocaleString());
+            }
+
             this.renderSilos();
-            window.notificationSystem.push("Auditoria Abidos v2.0", "Diagnóstico concluído! O relatório estratégico foi enviado para o chat.", "audit");
+            window.notificationSystem.push("Auditoria Abidos v2.0", "Diagnóstico concluído! Clique em 'VER ÚLTIMO RELATÓRIO' para detalhes.", "audit");
 
         } catch (e) {
             console.error("Erro na Auditoria Abidos:", e);
@@ -701,8 +744,12 @@ window.seoEngine = {
             silo.hub = title;
             silo.kicker = kicker;
             silo.subtitle = subtitle;
+            if (silo.audit) delete silo.audit; // Reiniciar estado
         }
-        if (item.field === 'slug') silo.slug = slug;
+        if (item.field === 'slug') {
+            silo.slug = slug;
+            if (silo.audit) delete silo.audit;
+        }
         
         if (item.field === 'spoke_title' || item.field === 'spoke_slug') {
             if (typeof silo.spokes[spokeIdx] === 'string') {
@@ -715,6 +762,9 @@ window.seoEngine = {
             }
             if (item.field === 'spoke_slug' || (item.field === 'spoke_title' && !silo.spokes[spokeIdx].slug)) {
                 silo.spokes[spokeIdx].slug = slug;
+            }
+            if (silo.spokes[spokeIdx].audit) {
+                delete silo.spokes[spokeIdx].audit;
             }
         }
         
@@ -730,6 +780,49 @@ window.seoEngine = {
 
     async applyAbidosSuggestion(sg) {
         // Obsoleto, integrado no applyEliteSuggestion
+    },
+
+    // --- ABIDOS VAULT (GERENCIAMENTO DE RELATÓRIOS) ---
+    openAbidosVault() {
+        const modal = document.getElementById('abidos-vault-modal');
+        const content = document.getElementById('vault-content');
+        const time = document.getElementById('vault-timestamp');
+        if (!modal || !content) return;
+
+        const report = localStorage.getItem('abidos_last_report');
+        const timestamp = localStorage.getItem('abidos_report_time');
+
+        if (!report) {
+            content.innerHTML = `
+                <div style="text-align:center; padding-top:100px; opacity:0.5;">
+                    <i data-lucide="ghost" style="width:64px; height:64px; margin-bottom:20px;"></i>
+                    <p>O Vault está vazio. Rode uma Auditoria Abidos para gerar seu primeiro relatório estratégico.</p>
+                </div>
+            `;
+            if (window.lucide) window.lucide.createIcons();
+        } else {
+            time.innerText = `Última Auditoria: ${timestamp}`;
+            // Renderização Markdown ultra-básica
+            const html = report
+                .replace(/^### (.*$)/gim, '<h3 style="color:var(--color-primary); margin-top:40px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2 style="color:var(--color-secondary); margin-top:30px;">$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1 style="color:#fff; text-align:center; border-bottom:2px solid var(--color-primary); padding-bottom:20px; margin-bottom:40px;">$1</h1>')
+                .replace(/^\* (.*$)/gim, '<li style="margin-left:20px; margin-bottom:8px; color:rgba(255,255,255,0.8);">$1</li>')
+                .replace(/^\d\. (.*$)/gim, '<li style="margin-left:20px; margin-bottom:8px; color:rgba(255,255,255,0.8);">$1</li>')
+                .replace(/\*\*(.*)\*\*/gim, '<strong style="color:#fff;">$1</strong>')
+                .replace(/\n/gim, '<br>');
+
+            content.innerHTML = `<div class="vault-rendered-md" style="animation: nnc-slide-in 0.6s ease; line-height:1.6; font-size:14px;">${html}</div>`;
+        }
+        modal.style.display = 'flex';
+    },
+
+    copyVaultReport() {
+        const report = localStorage.getItem('abidos_last_report');
+        if (!report) return;
+        navigator.clipboard.writeText(report).then(() => {
+            window.notificationSystem.push("Vault Copiado", "O relatório estratégico foi enviado para o seu clipboard.", "success");
+        });
     }
 };
 
