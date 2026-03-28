@@ -467,6 +467,107 @@ window.seoEngine = {
         if (this.cy) {
             this.cy.layout({ name: 'cose', animate: true }).run();
         }
+    },
+
+    async runAbidosAudit() {
+        if (!this.fullData || !this.fullData.silos || this.fullData.silos.length === 0) {
+            alert("Adicione Hubs e Spokes antes de rodar a análise.");
+            return;
+        }
+
+        const popover = document.getElementById('abidos-analysis-popover');
+        const content = document.getElementById('abidos-suggestions-content');
+        const led = document.getElementById('abidos-led');
+        const table = document.querySelector('.table-container');
+
+        if (popover) popover.style.display = 'block';
+        if (content) content.innerHTML = '<div class="abidos-loading"><span>💎</span> Analisando Arquitetura...</div>';
+        
+        // Efeito de Scanning na tabela
+        if (table) table.classList.add('abidos-scanning');
+
+        try {
+            const prompt = `Analise esta Arquitetura de Domínio (Abidos Strategy):
+            ${JSON.stringify(this.fullData.silos)}
+            
+            1. Dê um veredito de saúde SEO: GREEN (Ótimo), YELLOW (Melhorável), RED (Crítico/Genérico).
+            2. Selecione os 3 itens (Hubs ou Spokes) com mais potencial de melhoria em Título ou Slug.
+            3. Responda APENAS em JSON:
+            {
+              "status": "GREEN|YELLOW|RED",
+              "suggestions": [
+                { "type": "hub", "target_id": "ID_DO_HUB", "old": "TITULO_ANTIGO", "new_title": "NOVO_TITULO", "new_slug": "NOVO_SLUG", "reason": "PORQUE?" },
+                ... (3 itens)
+              ]
+            }`;
+
+            const response = await window.gemini.ask(prompt, { section: 'planning', temperature: 0.3 });
+            
+            // Extrair JSON da resposta do Gemini
+            const jsonMatch = response.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error("Resposta IA inválida");
+            
+            const result = JSON.parse(jsonMatch[0]);
+            this.updateAbidosUI(result);
+
+        } catch (e) {
+            console.error("Erro na Auditoria Abidos:", e);
+            if (content) content.innerHTML = '<div style="color:#ef4444; font-size:11px;">Erro ao processar auditoria. Tente novamente.</div>';
+        } finally {
+            if (table) setTimeout(() => table.classList.remove('abidos-scanning'), 1500);
+        }
+    },
+
+    updateAbidosUI(result) {
+        const led = document.getElementById('abidos-led');
+        const content = document.getElementById('abidos-suggestions-content');
+        
+        // Update LED
+        const colors = { GREEN: '#10b981', YELLOW: '#f59e0b', RED: '#ef4444' };
+        if (led) {
+            led.style.background = colors[result.status] || '#94a3b8';
+            led.style.boxShadow = `0 0 10px ${colors[result.status]}`;
+        }
+
+        if (content) {
+            if (!result.suggestions || result.suggestions.length === 0) {
+                content.innerHTML = '<div style="color:#10b981; text-align:center; padding:10px;">✨ Arquitetura Impecável! Nenhuma sugestão necessária.</div>';
+                return;
+            }
+
+            content.innerHTML = result.suggestions.map((sg, idx) => `
+                <div class="abidos-suggestion-item" onclick="window.seoEngine.applyAbidosSuggestion(${JSON.stringify(sg).replace(/"/g, '&quot;')})">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span style="font-size:9px; color:#6366f1; font-weight:900;">SUGESTÃO #${idx+1} (${sg.type.toUpperCase()})</span>
+                        <span style="font-size:8px; color:#94a3b8;">Click para aplicar</span>
+                    </div>
+                    <div style="font-size:12px; font-weight:700; color:#fff;">${sg.new_title}</div>
+                    <div style="font-size:9px; color:#10b981; font-family:monospace;">/${sg.new_slug}</div>
+                    <div style="font-size:9px; color:#64748b; margin-top:5px; font-style:italic;">"${sg.reason}"</div>
+                </div>
+            `).join('');
+        }
+    },
+
+    async applyAbidosSuggestion(sg) {
+        const silo = this.fullData.silos.find(s => s.id === sg.target_id || s.hub === sg.old);
+        if (!silo) return;
+
+        if (sg.type === 'hub') {
+            silo.hub = sg.new_title;
+            silo.slug = sg.new_slug;
+        } else {
+            // Find the specific spoke index
+            const spokeIdx = silo.spokes.indexOf(sg.old);
+            if (spokeIdx !== -1) silo.spokes[spokeIdx] = sg.new_title;
+        }
+
+        await this.saveSilos();
+        this.renderSilos();
+        
+        // Fechar popover após aplicação bem sucedida
+        document.getElementById('abidos-analysis-popover').style.display = 'none';
+        console.log(`✅ [ABIDOS] Sugestão aplicada: ${sg.new_title}`);
     }
 };
 
@@ -477,5 +578,34 @@ _styleSeo.textContent = `
     .inline-edit:focus { background: rgba(99, 102, 241, 0.15) !important; outline: 1px solid #6366f1 !important; color: #fff !important; }
     .hub-row:hover { background: rgba(99, 102, 241, 0.05) !important; }
     .spoke-detail-row:hover { background: rgba(0,0,0,0.2) !important; }
+
+    /* ABIDOS AUDIT STYLES */
+    .abidos-scanning { position: relative; overflow: hidden; }
+    .abidos-scanning::after {
+        content: "";
+        position: absolute;
+        top: -100%;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.2), transparent);
+        animation: abidos-scan 1.5s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 100;
+    }
+    @keyframes abidos-scan {
+        0% { top: -100%; }
+        100% { top: 100%; }
+    }
+
+    .abidos-loading { text-align: center; padding: 20px; font-size: 11px; color: #94a3b8; }
+    .abidos-loading span { display: block; font-size: 24px; animation: abidos-pulse 1s infinite alternate; margin-bottom: 10px; }
+    @keyframes abidos-pulse { from { opacity: 0.3; transform: scale(0.8); } to { opacity: 1; transform: scale(1.1); } }
+
+    .abidos-suggestion-item { 
+        padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); 
+        border-radius: 10px; cursor: pointer; transition: all 0.2s;
+    }
+    .abidos-suggestion-item:hover { background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.4); transform: translateX(5px); }
 `;
 document.head.appendChild(_styleSeo);

@@ -1485,6 +1485,43 @@
                                 <option value="gemini-2.5-flash">⚡ FLASH (Estratégico)</option>
                                 <option value="gemini-2.5-pro">🧠 PRO (Análise Profunda)</option>
                             </select>
+                            
+                            <!-- BOTÃO ANÁLISE ABIDOS COM LED -->
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <button id="btn-abidos-analysis" class="btn btn-secondary" 
+                                    style="font-size: 11px; font-weight: 800; border-color: rgba(99, 102, 241, 0.4); display: flex; align-items: center; gap: 8px;" 
+                                    onclick="window.seoEngine.runAbidosAudit()">
+                                    <span id="abidos-led" style="width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; box-shadow: 0 0 5px rgba(0,0,0,0.3); transition: all 0.3s;"></span>
+                                    🔎 ANÁLISE ABIDOS
+                                </button>
+                                
+                                <!-- CARD FLUTUANTE DE SUGESTÕES (POPOVER) -->
+                                <div id="abidos-analysis-popover" class="card" 
+                                    style="display: none; position: absolute; top: 45px; right: 0; width: 320px; z-index: 2000; padding: 20px; 
+                                           background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); border: 1px solid rgba(99, 102, 241, 0.3); 
+                                           box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: 16px;">
+                                    
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <h4 style="margin:0; font-size: 11px; color: #6366f1; text-transform: uppercase; letter-spacing: 1px; font-weight: 900;">🧠 Sugestões Abidos</h4>
+                                        <button class="btn" style="background: transparent; border: none; color: #94a3b8; padding: 0; cursor: pointer;" 
+                                                onclick="window.seoEngine.runAbidosAudit()" title="Atualizar Sugestões">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="abidos-suggestions-content" style="display: flex; flex-direction: column; gap: 10px;">
+                                        <!-- Sugestões injetadas via JS -->
+                                        <div style="text-align: center; color: #64748b; font-size: 11px; padding: 20px;">
+                                            Processando auditoria...
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); text-align: right;">
+                                        <button class="btn" style="font-size: 10px; color: #94a3b8; background: transparent; border: none;" onclick="document.getElementById('abidos-analysis-popover').style.display='none'">FECHAR</button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <button class="btn btn-primary" style="font-size: 11px; font-weight: 800;" onclick="window.seoEngine.addSiloPrompt()">+ NOVO HUB SILO</button>
                             <button class="btn btn-secondary" style="font-size: 11px; font-weight: 800; border-color: #6366f1; color: #6366f1;" onclick="window.seoEngine.copyArchitecture()">📋 COPIAR ARQUITETURA</button>
                             <button class="btn btn-secondary" style="font-size: 11px; font-weight: 800; border-style: dashed;" onclick="window.seoEngine.suggestSilos()">🧠 Sugestões Abidos (IA)</button>
