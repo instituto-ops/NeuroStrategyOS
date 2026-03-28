@@ -69,15 +69,25 @@ window.seoEngine = {
                     </td>
                     <td>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.innerText)" onclick="event.stopPropagation()">${silo.hub}</span>
+                            <span class="inline-edit" contenteditable="true" style="font-weight:800; color:#fff;" onblur="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.innerText)" onclick="event.stopPropagation()">${silo.hub}</span>
                             ${this.renderStatusIcon(silo.id, 'title', hAudit?.title)}
                         </div>
-                        <div style="margin-top: 4px;">
-                            <span class="scope-badge scope-${silo.scope}" onclick="event.stopPropagation(); window.seoEngine.toggleScope('${silo.id}')">
-                                <i data-lucide="${silo.scope === 'local' ? 'map-pin' : 'globe'}" style="width: 8px; height: 8px;"></i>
-                                ${silo.scope ? silo.scope.toUpperCase() : 'NATIONAL'}
+                        
+                        ${silo.kicker ? `
+                            <div style="font-size: 9px; color: #94a3b8; font-style: italic; margin-top: 2px;">K: "${silo.kicker}"</div>
+                        ` : ''}
+
+                        <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+                            <span class="scope-badge scope-${silo.scope || 'national'}" onclick="event.stopPropagation(); window.seoEngine.toggleScope('${silo.id}')">
+                                <i data-lucide="${(silo.scope === 'local') ? 'map-pin' : 'globe'}" style="width: 10px; height: 10px;"></i>
+                                ${silo.scope === 'local' ? 'ESTRATÉGIA LOCAL' : 'ESTRATÉGIA NACIONAL'}
                             </span>
+                            ${silo.subtitle ? `<span style="font-size: 8px; color: rgba(255,255,255,0.3); text-transform:uppercase; font-weight:700;">+ DNA APLICADO</span>` : ''}
                         </div>
+                        
+                        ${silo.subtitle ? `
+                            <div style="font-size: 9px; color: #64748b; margin-top: 4px; line-height: 1.2; max-width: 400px;">S: ${silo.subtitle}</div>
+                        ` : ''}
                     </td>
                     <td style="font-family: monospace; font-size: 11px; color: var(--color-text-dim);">
                         <div style="display:flex; align-items:center; gap:8px;">
@@ -115,9 +125,12 @@ window.seoEngine = {
         const color = colors[finalAudit.status] || '#94a3b8';
         const icon = icons[finalAudit.status] || '⚪';
 
+        // Timestamp formatado
+        const timeStr = finalAudit.timestamp ? ` (Auditado: ${new Date(finalAudit.timestamp).toLocaleTimeString()})` : '';
+
         return `
             <span class="abidos-indicator" 
-                  title="${finalAudit.reason?.replace(/"/g, '&quot;')}"
+                  title="${finalAudit.reason?.replace(/"/g, '&quot;')}${timeStr}"
                   style="cursor: pointer; font-size: 10px; color: ${color}; filter: drop-shadow(0 0 3px ${color}99);" 
                   onclick="event.stopPropagation(); window.seoEngine.openItemAuditCard('${id}', '${field}', '${finalAudit.status}', '${finalAudit.reason.replace(/'/g, "\\'")}')">
                 ${icon}
@@ -152,17 +165,27 @@ window.seoEngine = {
                             const sAudit = spokesAudit[spokeId] || null;
                             
                             return `
-                                <div class="card" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 15px;">
+                                <div class="card" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 15px; position: relative; overflow: hidden;">
+                                    ${spoke.kicker ? `<div style="position: absolute; top:0; right:0; font-size: 7px; background: var(--color-primary); color:#fff; padding: 2px 8px; border-bottom-left-radius: 8px; text-transform:uppercase; font-weight:900; letter-spacing:0.5px;">✓ DNA APLICADO</div>` : ''}
                                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                                         <div style="width: 85%;">
                                             <div style="display:flex; align-items:center; gap:5px;">
                                                 <span class="inline-edit" contenteditable="true" style="font-size: 13px; font-weight: 700; color: #fff;" onblur="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, 'title', this.innerText)">${spoke.title}</span>
                                                 ${this.renderStatusIcon(spokeId, 'spoke_title', sAudit?.title || spoke.audit?.title)}
                                             </div>
+                                            
+                                            ${spoke.kicker ? `
+                                                <div style="font-size: 9px; color: #94a3b8; font-style: italic; margin-top:2px;">K: "${spoke.kicker}"</div>
+                                            ` : ''}
+
                                             <div style="font-size: 10px; color: #64748b; font-family: monospace; display: flex; align-items: center; gap: 4px; margin-top:5px;">
                                                 /${silo.slug}/<span class="inline-edit" contenteditable="true" style="color:#6366f1;" onblur="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, 'slug', this.innerText)">${spoke.slug}</span>
                                                 ${this.renderStatusIcon(spokeId, 'spoke_slug', sAudit?.slug || spoke.audit?.slug)}
                                             </div>
+                                            
+                                            ${spoke.subtitle ? `
+                                                <div style="font-size: 9px; color: #64748b; margin-top:4px; line-height:1.2; border-top: 1px solid rgba(255,255,255,0.03); padding-top:4px;">S: ${spoke.subtitle}</div>
+                                            ` : ''}
                                         </div>
                                         <button class="btn" style="background:transparent; border:none; color:#ef4444; font-size:12px; padding:0;" onclick="window.seoEngine.removeSpoke('${silo.id}', ${idx})">&times;</button>
                                     </div>
@@ -592,16 +615,17 @@ window.seoEngine = {
             4. EEAT: Aplique Whitelist(Manejo, Regulação) e Blacklist(Cura, Garantido).
             5. STATUS GREEN: Apenas para termos de nicho/cauda longa. Termos saturados = YELLOW.
 
+            6. ESTRUTURA DO RELATÓRIO (fullReport):
+               Para cada Hub ou Spoke com status YELLOW ou RED, você DEVE incluir no markdown:
+               - O Problema detectado.
+               - 3 Sugestões de Elite (H1/Slug/Kicker/Subtitle).
+
             Responda APENAS em JSON:
             {
               "global_status": "GREEN|YELLOW|RED",
-              "fullReport": "MARKDOWN_COMPLETO_DO_RELATORIO",
-              "hubs": {
-                "ID": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} }
-              },
-              "spokes": {
-                "HUBID_IDX": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} }
-              }
+              "fullReport": "MARKDOWN_RELATORIO",
+              "hubs": { "ID": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} } },
+              "spokes": { "HUBID_IDX": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} } }
             }`;
 
             const response = await window.gemini.ask(prompt, { section: 'planning', temperature: 0.2 });
@@ -862,5 +886,11 @@ _styleSeo.textContent = `
         border-radius: 10px; cursor: pointer; transition: all 0.2s;
     }
     .abidos-suggestion-item:hover { background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.4); transform: translateX(5px); }
+    
+    .scope-badge { font-size: 8px; font-weight: 900; padding: 3px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s; }
+    .scope-local { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+    .scope-local:hover { background: rgba(245, 158, 11, 0.2); }
+    .scope-national { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+    .scope-national:hover { background: rgba(16, 185, 129, 0.2); }
 `;
 document.head.appendChild(_styleSeo);
