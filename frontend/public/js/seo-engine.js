@@ -33,8 +33,9 @@ window.seoEngine = {
             text += `## HUB: ${silo.hub} (/${silo.slug})\n`;
             if (silo.spokes && silo.spokes.length > 0) {
                 silo.spokes.forEach(spoke => {
-                    const spokeSlug = spoke.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
-                    text += `- SPOKE: ${spoke} (/${silo.slug}/${spokeSlug})\n`;
+                    const sTitle = typeof spoke === 'string' ? spoke : spoke.title;
+                    const sSlug = typeof spoke === 'string' ? spoke.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-') : spoke.slug;
+                    text += `- SPOKE: ${sTitle} (/${silo.slug}/${sSlug})\n`;
                 });
             } else {
                 text += `(Nenhum spoke definido)\n`;
@@ -48,97 +49,123 @@ window.seoEngine = {
             console.error('Erro ao copiar:', err);
             alert("Erro ao copiar arquitetura.");
         });
-    },
-
-    renderSilos() {
+    },    renderSilos() {
         const tbody = document.getElementById('silo-table-body');
         if (!tbody || !this.fullData) return;
 
-        if (this.fullData.silos.length === 0) {
+        if (!this.fullData.silos || this.fullData.silos.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: #94a3b8;">Nenhum Hub Silo definido. Clique em "+ NOVO HUB SILO".</td></tr>';
             return;
         }
 
-        let html = '';
-        this.fullData.silos.forEach(silo => {
+        tbody.innerHTML = this.fullData.silos.map((silo, index) => {
             const isExpanded = this.expandedHubs.has(silo.id);
             const spokeCount = silo.spokes ? silo.spokes.length : 0;
-            
-            html += `
-                <tr class="hub-row" onclick="window.seoEngine.toggleHub('${silo.id}')" style="cursor: pointer; transition: background 0.2s;">
-                    <td style="text-align: center; color: #6366f1; font-size: 14px;">${isExpanded ? '▼' : '▶'}</td>
-                    <td style="padding: 12px;">
-                        <input type="text" value="${silo.hub}" class="inline-edit" 
-                            style="background: transparent; border: none; color: #fff; font-weight: 700; width: 100%;"
-                            onchange="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.value)"
-                            onclick="event.stopPropagation()">
+            const hubAudit = this.auditData ? this.auditData.hubs[silo.id] : null;
+
+            return `
+                <tr class="hub-row" style="background: rgba(30, 41, 59, 0.5); cursor: pointer; transition: background 0.3s;" onclick="window.seoEngine.toggleSilo('${silo.id}')">
+                    <td style="padding: 15px; text-align: center; color: var(--color-primary); font-family: monospace;">
+                        <span style="font-size: 10px;">${isExpanded ? '▼' : '▶'}</span>
                     </td>
-                    <td style="padding: 12px;">
-                        <input type="text" value="${silo.slug}" class="inline-edit" 
-                            style="background: transparent; border: none; color: #94a3b8; font-family: monospace; font-size: 11px; width: 100%;"
-                            onchange="window.seoEngine.updateSiloField('${silo.id}', 'slug', this.value)"
-                            onclick="event.stopPropagation()">
+                    <td style="padding: 15px; color: #fff; font-weight: 700;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'hub', this.innerText)" onclick="event.stopPropagation()">${silo.hub}</span>
+                            ${this.renderStatusIcon(silo.id, 'title', hubAudit?.title)}
+                        </div>
                     </td>
-                    <td style="padding: 12px; text-align: center;">
-                        <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2); font-size: 10px; padding: 2px 10px;">
+                    <td style="padding: 15px; font-family: monospace; font-size: 12px; color: #94a3b8;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            /<span class="inline-edit" contenteditable="true" onblur="window.seoEngine.updateSiloField('${silo.id}', 'slug', this.innerText)" onclick="event.stopPropagation()">${silo.slug}</span>
+                            ${this.renderStatusIcon(silo.id, 'slug', hubAudit?.slug)}
+                        </div>
+                    </td>
+                    <td style="padding: 15px; text-align: center;">
+                        <span style="font-size: 10px; background: rgba(99, 102, 241, 0.1); color: #6366f1; padding: 4px 12px; border-radius: 20px; font-weight: 800;">
                             ${spokeCount} SPOKES
                         </span>
                     </td>
-                    <td style="padding: 12px; text-align: right; display: flex; gap: 5px; justify-content: flex-end;">
-                        <button class="btn" style="background: transparent; color: #94a3b8; border: none; font-size: 14px; padding: 0 5px;" onclick="event.stopPropagation(); window.seoEngine.moveSilo('${silo.id}', -1)">▲</button>
-                        <button class="btn" style="background: transparent; color: #94a3b8; border: none; font-size: 14px; padding: 0 5px;" onclick="event.stopPropagation(); window.seoEngine.moveSilo('${silo.id}', 1)">▼</button>
-                        <button class="btn" style="background: transparent; color: #ef4444; border: none; padding: 0 5px;" onclick="event.stopPropagation(); window.seoEngine.deleteSilo('${silo.id}')">🗑️</button>
+                    <td style="padding: 15px; text-align: right; display: flex; gap: 5px; justify-content: flex-end;">
+                        <button class="btn" title="Subir" style="background: transparent; color: #94a3b8; border: none; font-size: 11px;" onclick="event.stopPropagation(); window.seoEngine.moveSilo('${silo.id}', -1)">▲</button>
+                        <button class="btn" title="Descer" style="background: transparent; color: #94a3b8; border: none; font-size: 11px;" onclick="event.stopPropagation(); window.seoEngine.moveSilo('${silo.id}', 1)">▼</button>
+                        <button class="btn" title="Excluir" style="background: transparent; color: #ef4444; border: none;" onclick="event.stopPropagation(); window.seoEngine.deleteSilo('${silo.id}')">🗑️</button>
                     </td>
                 </tr>
-            `;
-
-            if (isExpanded) {
-                html += `
-                    <tr class="spoke-detail-row" style="background: rgba(0,0,0,0.15);">
-                        <td colspan="5" style="padding: 0;">
-                            <div style="padding: 20px; border-left: 4px solid #6366f1; margin: 10px 20px; background: rgba(255,255,255,0.02); border-radius: 0 8px 8px 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                    <h4 style="margin: 0; font-size: 11px; color: #818cf8; text-transform: uppercase; letter-spacing: 1px;">📄 Artigos de Apoio (Spokes) para: ${silo.hub}</h4>
-                                    <button class="btn btn-secondary" style="font-size: 9px; padding: 4px 12px; border-color: #10b981; color: #10b981;" onclick="window.seoEngine.addSpokePrompt('${silo.id}')">+ NOVO SPOKE</button>
-                                </div>
-                                <div id="spoke-list-${silo.id}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px;">
-                                    ${this.renderSpokeItems(silo)}
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-        });
-
-        tbody.innerHTML = html;
-    },
-
-    renderSpokeItems(silo) {
-        if (!silo.spokes || silo.spokes.length === 0) {
-            return `<div style="grid-column: 1/-1; text-align: center; color: #64748b; font-size: 11px; padding: 10px; font-style: italic;">Nenhum spoke vinculado.</div>`;
-        }
-
-        return silo.spokes.map((spoke, idx) => {
-            const spokeSlug = spoke.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
-            return `
-                <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
-                    <div style="overflow: hidden; flex: 1; margin-right: 10px;">
-                        <input type="text" value="${spoke}" class="inline-edit" 
-                            style="background: transparent; border: none; color: #cbd5e1; font-size: 12px; font-weight: 500; width: 100%;"
-                            onchange="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, this.value)">
-                        <div style="font-size: 9px; color: #64748b; font-family: monospace;">/${silo.slug}/${spokeSlug}</div>
-                    </div>
-                    <div style="display: flex; gap: 5px;">
-                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 9px; border-color: #10b981; color: #10b981;" onclick="window.seoEngine.writePostPrompt('${spoke}', 'Foco no Hub: ${silo.hub}')">ESCREVER</button>
-                        <button class="btn" style="background: transparent; color: #ef4444; border: none; font-size: 12px; padding: 0 5px;" onclick="window.seoEngine.removeSpoke('${silo.id}', ${idx})">&times;</button>
-                    </div>
-                </div>
+                ${isExpanded ? this.renderSpokeDetails(silo) : ''}
             `;
         }).join('');
     },
 
-    toggleHub(id) {
+    renderStatusIcon(id, field, audit) {
+        if (!audit || !audit.status) return '';
+        const colors = { GREEN: '#10b981', YELLOW: '#f59e0b', RED: '#ef4444' };
+        const icons = { GREEN: '✅', YELLOW: '💡', RED: '⚠️' };
+        const color = colors[audit.status] || '#94a3b8';
+        const icon = icons[audit.status] || '⚪';
+
+        return `
+            <span class="abidos-indicator" 
+                  style="cursor: pointer; font-size: 10px; color: ${color}; filter: drop-shadow(0 0 3px ${color}99);" 
+                  onclick="event.stopPropagation(); window.seoEngine.openItemAuditCard('${id}', '${field}', '${audit.status}', '${audit.reason.replace(/'/g, "\\'")}')">
+                ${icon}
+            </span>
+        `;
+    },
+
+    renderSpokeDetails(silo) {
+        // Garantir que spokes sejam objetos {title, slug}
+        const spokes = (silo.spokes || []).map(s => {
+            if (typeof s === 'string') {
+                return { 
+                    title: s, 
+                    slug: s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-') 
+                };
+            }
+            return s;
+        });
+
+        const spokesAudit = this.auditData ? this.auditData.spokes : {};
+
+        return `
+            <tr class="spoke-detail-row" style="background: rgba(15, 23, 42, 0.4); border-left: 2px solid var(--color-primary);">
+                <td colspan="5" style="padding: 20px 40px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h4 style="margin:0; font-size: 11px; color: #94a3b8; text-transform: uppercase;">📄 Artigos de Apoio para: ${silo.hub}</h4>
+                        <button class="btn btn-secondary" onclick="window.seoEngine.addSpokePrompt('${silo.id}')" style="font-size: 9px; padding: 4px 12px; border-style: dashed;">+ NOVO SPOKE</button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                        ${spokes.map((spoke, idx) => {
+                            const spokeId = `${silo.id}_${idx}`;
+                            const sAudit = spokesAudit[spokeId] || null;
+                            
+                            return `
+                                <div class="card" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 15px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                        <div style="width: 85%;">
+                                            <div style="display:flex; align-items:center; gap:5px;">
+                                                <span class="inline-edit" contenteditable="true" style="font-size: 13px; font-weight: 700; color: #fff;" onblur="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, 'title', this.innerText)">${spoke.title}</span>
+                                                ${this.renderStatusIcon(spokeId, 'spoke_title', sAudit?.title)}
+                                            </div>
+                                            <div style="font-size: 10px; color: #64748b; font-family: monospace; display: flex; align-items: center; gap: 4px; margin-top:5px;">
+                                                /${silo.slug}/<span class="inline-edit" contenteditable="true" style="color:#6366f1;" onblur="window.seoEngine.updateSpokeField('${silo.id}', ${idx}, 'slug', this.innerText)">${spoke.slug}</span>
+                                                ${this.renderStatusIcon(spokeId, 'spoke_slug', sAudit?.slug)}
+                                            </div>
+                                        </div>
+                                        <button class="btn" style="background:transparent; border:none; color:#ef4444; font-size:12px; padding:0;" onclick="window.seoEngine.removeSpoke('${silo.id}', ${idx})">&times;</button>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="btn btn-primary" style="font-size: 9px; padding: 4px 10px;" onclick="window.seoEngine.writePostPrompt('${spoke.title.replace(/'/g, "\\'")}', 'Audit Hub: ${silo.hub}')">ESCREVER</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </td>
+            </tr>
+        `;
+    },
+
+    toggleSilo(id) {
         if (this.expandedHubs.has(id)) {
             this.expandedHubs.delete(id);
         } else {
@@ -157,10 +184,17 @@ window.seoEngine = {
         }
     },
 
-    async updateSpokeField(siloId, idx, value) {
+    async updateSpokeField(siloId, idx, field, value) {
         const silo = this.fullData.silos.find(s => s.id === siloId);
         if (silo) {
-            silo.spokes[idx] = value;
+            // Migrar se necessário
+            if (typeof silo.spokes[idx] === 'string') {
+                silo.spokes[idx] = { 
+                    title: silo.spokes[idx], 
+                    slug: silo.spokes[idx].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-') 
+                };
+            }
+            silo.spokes[idx][field] = value;
             await this.saveSilos();
             if(window.cytoscape && document.getElementById('cy-map')) this.renderGraph(this.fullData);
         }
@@ -213,11 +247,16 @@ window.seoEngine = {
     async addSpokePrompt(siloId) {
         const silo = this.fullData.silos.find(s => s.id === siloId);
         if (!silo) return;
-        const spoke = prompt(`Qual o novo Spoke para o Silo "${silo.hub}"?`);
-        if (!spoke) return;
+        const spokeTitle = prompt(`Qual o novo Spoke para o Silo "${silo.hub}"?`);
+        if (!spokeTitle) return;
         
+        const newSpoke = {
+            title: spokeTitle,
+            slug: spokeTitle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-')
+        };
+
         if (!silo.spokes) silo.spokes = [];
-        silo.spokes.push(spoke);
+        silo.spokes.push(newSpoke);
         await this.saveSilos();
         this.renderSilos();
         if(window.cytoscape && document.getElementById('cy-map')) this.renderGraph(this.fullData);
@@ -323,8 +362,9 @@ window.seoEngine = {
             options += `<option value="${hub.hub}" ${currentValue === hub.hub ? 'selected' : ''}>[HUB] ${hub.hub}</option>`;
             if (hub.spokes) {
                 hub.spokes.forEach(spoke => {
-                    const combined = `${hub.hub} > ${spoke}`;
-                    options += `<option value="${combined}" ${currentValue === combined ? 'selected' : ''}>↳ Spoke: ${spoke}</option>`;
+                    const sTitle = typeof spoke === 'string' ? spoke : spoke.title;
+                    const combined = `${hub.hub} > ${sTitle}`;
+                    options += `<option value="${combined}" ${currentValue === combined ? 'selected' : ''}>↳ Spoke: ${sTitle}</option>`;
                 });
             }
             options += `</optgroup>`;
@@ -388,18 +428,19 @@ window.seoEngine = {
 
             if (silo.spokes) {
                 silo.spokes.forEach(spoke => {
-                    const spPublished = publishedPages.some(p => p.title.toLowerCase() === spoke.toLowerCase());
-                    const spDraft = activeDrafts.some(d => d.theme.toLowerCase() === spoke.toLowerCase());
+                    const sTitle = typeof spoke === 'string' ? spoke : spoke.title;
+                    const spPublished = publishedPages.some(p => p.title.toLowerCase() === sTitle.toLowerCase());
+                    const spDraft = activeDrafts.some(d => d.theme.toLowerCase() === sTitle.toLowerCase());
 
                     elements.push({ 
                         data: { 
-                            id: spoke, 
-                            label: spoke, 
+                            id: sTitle, 
+                            label: sTitle, 
                             type: 'spoke',
                             status: spPublished ? 'published' : (spDraft ? 'draft' : 'planned')
                         } 
                     });
-                    elements.push({ data: { source: spoke, target: silo.hub } });
+                    elements.push({ data: { source: sTitle, target: silo.hub } });
                 });
             }
         });
@@ -493,99 +534,146 @@ window.seoEngine = {
             return;
         }
 
-        const popover = document.getElementById('abidos-analysis-popover');
-        const content = document.getElementById('abidos-suggestions-content');
-        const led = document.getElementById('abidos-led');
         const table = document.querySelector('.table-container');
-
-        if (popover) popover.style.display = 'block';
-        if (content) content.innerHTML = '<div class="abidos-loading"><span>💎</span> Analisando Arquitetura...</div>';
+        const led = document.getElementById('abidos-led');
         
-        // Efeito de Scanning na tabela
         if (table) table.classList.add('abidos-scanning');
+        if (led) led.style.background = '#38bdf8'; // Azul processando
 
         try {
-            const prompt = `Analise esta Arquitetura de Domínio (Abidos Strategy):
-            ${JSON.stringify(this.fullData.silos)}
+            const prompt = `Atue como Auditor Estratégico Abidos. Analise esta Arquitetura SEO e forneça status (GREEN/YELLOW/RED) e uma breve justificativa (1 frase) para CADA item.
+            Padrão Abidos: 
+            - Slugs: /servico-em-cidade/ (ex: psicologo-ansiedade-goiania).
+            - Títulos: Foco na dor + Solução + Autoridade.
+            - Herarquia: Spoke deve conter keyword específica sem canibalizar o Hub.
             
-            1. Dê um veredito de saúde SEO: GREEN (Ótimo), YELLOW (Melhorável), RED (Crítico/Genérico).
-            2. Selecione os 3 itens (Hubs ou Spokes) com mais potencial de melhoria em Título ou Slug.
-            3. Responda APENAS em JSON:
+            Arquitetura: ${JSON.stringify(this.fullData.silos)}
+            
+            Responda APENAS em JSON:
             {
-              "status": "GREEN|YELLOW|RED",
-              "suggestions": [
-                { "type": "hub", "target_id": "ID_DO_HUB", "old": "TITULO_ANTIGO", "new_title": "NOVO_TITULO", "new_slug": "NOVO_SLUG", "reason": "PORQUE?" },
-                ... (3 itens)
-              ]
+              "global_status": "GREEN|YELLOW|RED",
+              "hubs": {
+                "ID_HUBS": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} }
+              },
+              "spokes": {
+                "IDHUB_SPOKEORDER": { "title": {"status": "...", "reason": "..."}, "slug": {"status": "...", "reason": "..."} }
+              }
             }`;
 
-            const response = await window.gemini.ask(prompt, { section: 'planning', temperature: 0.3 });
-            
-            // Extrair JSON da resposta do Gemini
+            const response = await window.gemini.ask(prompt, { section: 'planning', temperature: 0.2 });
             const jsonMatch = response.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) throw new Error("Resposta IA inválida");
+            if (!jsonMatch) throw new Error("IA falhou no diagnóstico");
             
             const result = JSON.parse(jsonMatch[0]);
-            this.updateAbidosUI(result);
+            this.auditData = result; // Persistir auditoria em memória
+            
+            // Atualizar UI Global
+            const colors = { GREEN: '#10b981', YELLOW: '#f59e0b', RED: '#ef4444' };
+            if (led) {
+                led.style.background = colors[result.global_status] || '#94a3b8';
+                led.style.boxShadow = `0 0 10px ${colors[result.global_status]}`;
+            }
+
+            this.renderSilos(); // Re-renderizar para mostrar os indicadores
 
         } catch (e) {
             console.error("Erro na Auditoria Abidos:", e);
-            if (content) content.innerHTML = '<div style="color:#ef4444; font-size:11px;">Erro ao processar auditoria. Tente novamente.</div>';
         } finally {
             if (table) setTimeout(() => table.classList.remove('abidos-scanning'), 1500);
         }
     },
 
-    updateAbidosUI(result) {
-        const led = document.getElementById('abidos-led');
+    openItemAuditCard(itemId, field, status, reason) {
+        const popover = document.getElementById('abidos-analysis-popover');
         const content = document.getElementById('abidos-suggestions-content');
+        if (!popover || !content) return;
+
+        // Resetar card
+        this.currentAuditItem = { itemId, field };
+        const statusColors = { GREEN: '#10b981', YELLOW: '#f59e0b', RED: '#ef4444' };
         
-        // Update LED
-        const colors = { GREEN: '#10b981', YELLOW: '#f59e0b', RED: '#ef4444' };
-        if (led) {
-            led.style.background = colors[result.status] || '#94a3b8';
-            led.style.boxShadow = `0 0 10px ${colors[result.status]}`;
-        }
+        content.innerHTML = `
+            <div style="border-left: 3px solid ${statusColors[status]}; padding-left: 10px; margin-bottom: 15px;">
+                <div style="font-size: 11px; font-weight: 900; color: ${statusColors[status]};">STATUS: ${status}</div>
+                <div style="font-size: 12px; color: #fff; margin-top: 5px; line-height: 1.4;">${reason}</div>
+            </div>
+            
+            <div id="abidos-deep-suggestions" style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn btn-primary" style="width:100%; font-size: 11px; padding: 10px;" onclick="window.seoEngine.generateAbidosSuggestions()">
+                    ✨ GERAR SUGESTÕES DE ELITE
+                </button>
+            </div>
+        `;
 
-        if (content) {
-            if (!result.suggestions || result.suggestions.length === 0) {
-                content.innerHTML = '<div style="color:#10b981; text-align:center; padding:10px;">✨ Arquitetura Impecável! Nenhuma sugestão necessária.</div>';
-                return;
-            }
+        popover.style.display = 'block';
+        popover.style.boxShadow = `0 10px 40px rgba(0,0,0,0.8), 0 0 10px ${statusColors[status]}33`;
+    },
 
-            content.innerHTML = result.suggestions.map((sg, idx) => `
-                <div class="abidos-suggestion-item" onclick="window.seoEngine.applyAbidosSuggestion(${JSON.stringify(sg).replace(/"/g, '&quot;')})">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                        <span style="font-size:9px; color:#6366f1; font-weight:900;">SUGESTÃO #${idx+1} (${sg.type.toUpperCase()})</span>
-                        <span style="font-size:8px; color:#94a3b8;">Click para aplicar</span>
-                    </div>
-                    <div style="font-size:12px; font-weight:700; color:#fff;">${sg.new_title}</div>
-                    <div style="font-size:9px; color:#10b981; font-family:monospace;">/${sg.new_slug}</div>
-                    <div style="font-size:9px; color:#64748b; margin-top:5px; font-style:italic;">"${sg.reason}"</div>
+    async generateAbidosSuggestions() {
+        const content = document.getElementById('abidos-deep-suggestions');
+        if (!content) return;
+
+        content.innerHTML = '<div class="abidos-loading"><span>💎</span> Criando Alternativas...</div>';
+
+        const item = this.currentAuditItem;
+        const silo = this.fullData.silos.find(s => s.id === item.itemId.split('_')[0]);
+        
+        try {
+            const prompt = `Gerar 3 alternativas de "Título" e "Slug" de Padrão Ouro para o item:
+            Contexto Hub (Tema): ${silo.hub} (/${silo.slug})
+            Item Atual: ${item.field.replace('_', ' ')}
+            
+            REGRAS ABIDOS:
+            1. Slugs: /servico-em-cidade/ obrigatório.
+            2. Títulos: Dor Emocional + Promessa Clínica + Victor Lawrence.
+            3. Diferencie os 3 níveis: Conversão Rápida, Autoridade Acadêmica e Busca de Cauda Longa.
+            
+            Responda APENAS JSON:
+            { "options": [ { "title": "...", "slug": "..." }, { "title": "...", "slug": "..." }, { "title": "...", "slug": "..." } ] }`;
+
+            const response = await window.gemini.ask(prompt, { section: 'planning', temperature: 0.7 });
+            const json = JSON.parse(response.match(/\{[\s\S]*\}/)[0]);
+
+            content.innerHTML = json.options.map((opt, idx) => `
+                <div class="abidos-suggestion-item" onclick="window.seoEngine.applyEliteSuggestion('${opt.title.replace(/'/g, "\\'")}', '${opt.slug}')">
+                    <div style="font-size:11px; font-weight:700; color:#fff;">${opt.title}</div>
+                    <div style="font-size:9px; color:#10b981;">/${opt.slug}</div>
                 </div>
             `).join('');
+
+        } catch (e) {
+            content.innerHTML = '<div style="color:#ef4444; font-size:10px;">Erro ao gerar. Tente novamente.</div>';
         }
     },
 
-    async applyAbidosSuggestion(sg) {
-        const silo = this.fullData.silos.find(s => s.id === sg.target_id || s.hub === sg.old);
-        if (!silo) return;
-
-        if (sg.type === 'hub') {
-            silo.hub = sg.new_title;
-            silo.slug = sg.new_slug;
-        } else {
-            // Find the specific spoke index
-            const spokeIdx = silo.spokes.indexOf(sg.old);
-            if (spokeIdx !== -1) silo.spokes[spokeIdx] = sg.new_title;
-        }
-
-        await this.saveSilos();
-        this.renderSilos();
+    applyEliteSuggestion(title, slug) {
+        const item = this.currentAuditItem;
+        const [hubId, spokeIdx] = item.itemId.split('_');
+        const silo = this.fullData.silos.find(s => s.id === hubId);
         
-        // Fechar popover após aplicação bem sucedida
+        if (item.field === 'title') silo.hub = title;
+        if (item.field === 'slug') silo.slug = slug;
+        if (item.field === 'spoke_title' || item.field === 'spoke_slug') {
+            if (typeof silo.spokes[spokeIdx] === 'string') {
+                silo.spokes[spokeIdx] = { title: silo.spokes[spokeIdx], slug: '' };
+            }
+            if (item.field === 'spoke_title') silo.spokes[spokeIdx].title = title;
+            if (item.field === 'spoke_slug' || (item.field === 'spoke_title' && !silo.spokes[spokeIdx].slug)) {
+                silo.spokes[spokeIdx].slug = slug;
+            }
+        }
+        
+        this.saveSilos();
+        this.renderSilos();
         document.getElementById('abidos-analysis-popover').style.display = 'none';
-        console.log(`✅ [ABIDOS] Sugestão aplicada: ${sg.new_title}`);
+    },
+
+    async updateAbidosUI(result) {
+        // Obsoleto, integrado no runAbidosAudit
+    },
+
+    async applyAbidosSuggestion(sg) {
+        // Obsoleto, integrado no applyEliteSuggestion
     }
 };
 
