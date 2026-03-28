@@ -44,10 +44,10 @@ window.seoEngine = {
         });
 
         navigator.clipboard.writeText(text).then(() => {
-            alert("✅ Arquitetura copiada para o clipboard!\nIdeal para enviar a chats externos (ChatGPT/Gemini).");
+            window.notificationSystem.push("Arquitetura Copiada", "Ideal para enviar a chats externos (ChatGPT/Gemini).", "success");
         }).catch(err => {
             console.error('Erro ao copiar:', err);
-            alert("Erro ao copiar arquitetura.");
+            window.notificationSystem.push("Erro de Clipboard", "Não foi possível copiar a arquitetura.", "error");
         });
     },    renderSilos() {
         const tbody = document.getElementById('silo-table-body');
@@ -421,7 +421,7 @@ window.seoEngine = {
             });
             if(window.sparkEngine) console.log(`✨ [SPARK] Flow: Planning ➔ AI Studio: "${title}"`);
         } else {
-            alert("Studio não carregado.");
+            window.notificationSystem.push("Studio Offline", "O módulo de AI Studio não foi carregado corretamente.", "error");
         }
     },
 
@@ -550,7 +550,7 @@ window.seoEngine = {
 
     async runAbidosAudit() {
         if (!this.fullData || !this.fullData.silos || this.fullData.silos.length === 0) {
-            alert("Adicione Hubs e Spokes antes de rodar a análise.");
+            window.notificationSystem.push("Ação Necessária", "Adicione Hubs e Spokes antes de rodar a análise Abidos.", "warning");
             return;
         }
 
@@ -608,7 +608,7 @@ window.seoEngine = {
             }
 
             this.renderSilos();
-            alert("✅ Auditoria v2.0 Concluída! O relatório estratégico foi enviado para o seu chat.");
+            window.notificationSystem.push("Auditoria Abidos v2.0", "Diagnóstico concluído! O relatório estratégico foi enviado para o chat.", "audit");
 
         } catch (e) {
             console.error("Erro na Auditoria Abidos:", e);

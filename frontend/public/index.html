@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Núcleo de Marketing - Estratégia e Autoridade Clínica</title>
     <link rel="stylesheet" href="css/dashboard.css?v=8">
+    <link rel="stylesheet" href="css/notifications.css?v=1">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
@@ -67,6 +68,7 @@
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="js/dev-tools.js"></script>
+    <script src="js/notification-system.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -128,12 +130,33 @@
                 <button class="btn btn-secondary" onclick="window.devTools?.copyCurrentToClipboard()" style="height: 32px; padding: 0 12px; font-size: 11px; border-radius: 8px; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--color-border);">
                     <i data-lucide="camera" style="width: 14px; height: 14px;"></i> <span>PRINT</span>
                 </button>
+
+                <!-- 🔔 NEURO-NOTIFICATION TRIGGER -->
+                <div id="nnc-trigger" class="nnc-trigger" onclick="window.notificationSystem.toggle()">
+                    <i data-lucide="bell"></i>
+                    <div id="nnc-badge" class="nnc-pulse-dot"></div>
+                </div>
+
                 <div class="user-profile" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                     <span style="font-size: 10px; color: var(--color-text-dim); font-weight: 800;">DR. LAWRENCE</span>
                     <img src="https://ui-avatars.com/api/?name=Victor+Lawrence&background=6366f1&color=fff&bold=true" style="width: 28px; height: 28px; border-radius: 8px;">
                 </div>
             </div>
         </header>
+
+        <!-- 💎 NEURO-NOTIFICATION DRAWER (NNC) -->
+        <div id="nnc-drawer">
+            <div class="nnc-header">
+                <h3>Notificações</h3>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <div class="nnc-clear-all" onclick="window.notificationSystem.clearAll()">LIMPAR TUDO</div>
+                    <span style="cursor:pointer; color:var(--color-text-dim); font-size:18px;" onclick="window.notificationSystem.toggle()">&times;</span>
+                </div>
+            </div>
+            <div id="nnc-list">
+                <!-- Injetado via JS -->
+            </div>
+        </div>
 
         <!-- Main Content Area -->
         <main class="main-content">

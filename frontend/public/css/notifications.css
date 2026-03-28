@@ -1,0 +1,222 @@
+/* 💎 NEURO-NOTIFICATION CENTER (NNC) - V1.0 */
+:root {
+    --nnc-bg: rgba(15, 23, 42, 0.95);
+    --nnc-blur: blur(25px);
+    --nnc-border: rgba(255, 255, 255, 0.1);
+    --nnc-primary: #6366f1;
+    --nnc-secondary: #0ea5e9;
+    --nnc-success: #10b981;
+    --nnc-warning: #f59e0b;
+    --nnc-error: #ef4444;
+}
+
+/* Glassmorphism Side Panel */
+#nnc-drawer {
+    position: fixed;
+    top: 60px; /* Logo abaixo do header */
+    right: -360px; /* Começa escondido */
+    width: 350px;
+    height: calc(100vh - 60px);
+    background: var(--nnc-bg);
+    backdrop-filter: var(--nnc-blur);
+    -webkit-backdrop-filter: var(--nnc-blur);
+    border-left: 1px solid var(--nnc-border);
+    box-shadow: -10px 0 40px rgba(0,0,0,0.6);
+    z-index: 11000;
+    transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.1);
+    display: flex;
+    flex-direction: column;
+}
+
+#nnc-drawer.active {
+    right: 0;
+}
+
+/* Header do Painel */
+.nnc-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--nnc-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nnc-header h3 {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--nnc-primary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 0;
+}
+
+.nnc-clear-all {
+    font-size: 10px;
+    color: var(--color-text-dim);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--nnc-border);
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nnc-clear-all:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--nnc-error);
+    border-color: var(--nnc-error);
+}
+
+/* Lista de Notificações */
+#nnc-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#nnc-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+#nnc-list::-webkit-scrollbar-thumb {
+    background: var(--nnc-border);
+    border-radius: 10px;
+}
+
+/* Card de Notificação Individual */
+.nnc-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--nnc-border);
+    border-radius: 12px;
+    padding: 15px;
+    position: relative;
+    transition: all 0.3s;
+    animation: nnc-slide-in 0.4s ease forwards;
+}
+
+@keyframes nnc-slide-in {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.nnc-card:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.2);
+}
+
+.nnc-card.unread {
+    border-left: 3px solid var(--nnc-primary);
+}
+
+.nnc-card.success { border-left: 3px solid var(--nnc-success); }
+.nnc-card.warning { border-left: 3px solid var(--nnc-warning); }
+.nnc-card.error { border-left: 3px solid var(--nnc-error); }
+.nnc-card.audit { border-left: 3px solid var(--nnc-secondary); }
+
+.nnc-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+    padding-right: 20px;
+}
+
+.nnc-card-body {
+    font-size: 11px;
+    color: var(--color-text-dim);
+    line-height: 1.4;
+}
+
+.nnc-card-time {
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    margin-top: 8px;
+    font-family: monospace;
+}
+
+.nnc-card-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    color: rgba(255,255,255,0.2);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.nnc-card-close:hover {
+    color: var(--nnc-error);
+}
+
+/* Empty State */
+.nnc-empty {
+    text-align: center;
+    padding-top: 50px;
+    opacity: 0.3;
+}
+
+.nnc-empty i { font-size: 40px; }
+.nnc-empty p { font-size: 11px; margin-top: 10px; }
+
+/* Trigger Button & Pulse */
+.nnc-trigger {
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--nnc-border);
+    transition: all 0.2s;
+}
+
+.nnc-trigger:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.nnc-trigger i {
+    width: 18px;
+    height: 18px;
+    color: var(--color-text-dim);
+}
+
+.nnc-pulse-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: var(--nnc-primary);
+    border-radius: 50%;
+    border: 2px solid var(--color-bg);
+    display: none;
+}
+
+.nnc-pulse-dot.active {
+    display: block;
+    animation: nnc-pulse 2s infinite;
+}
+
+@keyframes nnc-pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+.nnc-shake {
+    animation: nnc-shake-anim 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes nnc-shake-anim {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
