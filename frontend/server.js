@@ -3970,6 +3970,168 @@ app.use('/api/*', (req, res) => {
     });
 });
 
+// ==============================================================================
+// 🌀 VÓRTEX AI STUDIO — API ROUTES
+// ==============================================================================
+
+// [VORTEX] Endpoint: Geração de Código via Gemini 2.5
+app.post('/api/vortex/generate', async (req, res) => {
+    try {
+        const { prompt, model, currentCode, abidosRules, context } = req.body;
+        if (!prompt) return res.status(400).json({ error: 'Prompt vazio.' });
+
+        const modelId = model || 'gemini-2.5-flash';
+        const aiModel = getAIModel(modelId, 'text/plain');
+
+        // Build Abidos System Prompt
+        const systemPrompt = `[VÓRTEX AI STUDIO — GERADOR DE CÓDIGO NEXT.JS]
+Você é um engenheiro de frontend sênior especializado em Next.js 14 App Router, React, Tailwind CSS e SEO.
+Você GERA código production-ready para o ecossistema clínico do Dr. Victor Lawrence (Hipnoterapeuta).
+
+[REGRAS ABIDOS — INVIOLÁVEIS]
+${context || 'Sem regras especiais ativas.'}
+
+[DESIGN SYSTEM]
+- Tema: OLED Black (#050810) com acentos Teal (#14b8a6) e Indigo (#6366f1)
+- Tipografia: Inter (body), Outfit (headings)
+- Mobile-first, Core Web Vitals nota 100
+- Componentes atomizados em React Server Components quando possível
+- Tailwind CSS classes otimizadas (sem @apply)
+
+[FORMATO DE RESPOSTA]
+Retorne APENAS um bloco JSON com esta estrutura (sem markdown):
+{
+  "code": "// código React/JSX completo aqui",
+  "language": "typescriptreact",
+  "filename": "page.tsx",
+  "explanation": "Explicação do que foi gerado e decisões tomadas",
+  "preview": "<html completa renderizável para preview>"
+}
+
+IMPORTANTE:
+- O campo "code" deve conter o componente Next.js completo
+- O campo "preview" deve conter uma versão HTML estática renderizável (com Tailwind via CDN)
+- NÃO use markdown no JSON. NÃO faça escape desnecessário.`;
+
+        const fullPrompt = currentCode 
+            ? `${systemPrompt}\n\n[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
+            : `${systemPrompt}\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`;
+
+        const result = await aiModel.generateContent(fullPrompt);
+        const responseText = result.response.text();
+        
+        // Track usage
+        trackUsage(result.response.usageMetadata);
+
+        // Parse response
+        let parsed = extractJSON(responseText);
+        if (!parsed) {
+            // Fallback: treat entire response as code
+            parsed = {
+                code: responseText,
+                language: 'typescriptreact',
+                filename: 'page.tsx',
+                explanation: 'Código gerado pelo Gemini 2.5.',
+                preview: responseText
+            };
+        }
+
+        res.json(parsed);
+    } catch (e) {
+        console.error('❌ [VORTEX GENERATE]', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// [VORTEX] Endpoint: Commit & Push via Servidor (Zero-Credential Exposure)
+app.post('/api/vortex/commit', async (req, res) => {
+    try {
+        const { filename, content, message } = req.body;
+        if (!filename || !content) return res.status(400).json({ error: 'Filename e content são obrigatórios.' });
+
+        // Usa o GITHUB_TOKEN do .env (nunca exposto ao client)
+        const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+        const repoOwner = process.env.GITHUB_REPO_OWNER || 'instituto-ops';
+        const repoName = process.env.GITHUB_REPO_NAME || 'HipnoLawrence-Site';
+        const branch = process.env.GITHUB_BRANCH || 'main';
+
+        if (!token) {
+            return res.status(400).json({ error: 'GITHUB_TOKEN não configurado no servidor.' });
+        }
+
+        const filePath = `src/app/(pages)/${filename}`;
+        
+        // 1. Try to get existing file SHA
+        let sha = null;
+        try {
+            const getRes = await axios.get(
+                `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}?ref=${branch}`,
+                { headers: { Authorization: `token ${token}` } }
+            );
+            sha = getRes.data.sha;
+        } catch (e) {
+            // File doesn't exist yet, that's OK
+        }
+
+        // 2. Create or update file
+        const payload = {
+            message: message || `[Vórtex] Update ${filename}`,
+            content: Buffer.from(content).toString('base64'),
+            branch
+        };
+        if (sha) payload.sha = sha;
+
+        const commitRes = await axios.put(
+            `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`,
+            payload,
+            { headers: { Authorization: `token ${token}` } }
+        );
+
+        res.json({
+            success: true,
+            sha: commitRes.data.content?.sha,
+            message: payload.message,
+            url: commitRes.data.content?.html_url
+        });
+
+    } catch (e) {
+        console.error('❌ [VORTEX COMMIT]', e.message);
+        res.status(500).json({ error: e.message, success: false });
+    }
+});
+
+// [VORTEX] Endpoint: Listar Arquivos do VFS Local
+app.get('/api/vortex/files', (req, res) => {
+    // VFS lives on client (IndexedDB), this is a placeholder for server-side file listing
+    try {
+        const repoPath = SITE_REPO_PATH;
+        if (fs.existsSync(repoPath)) {
+            const readDir = (dir, prefix = '') => {
+                const items = [];
+                const entries = fs.readdirSync(dir, { withFileTypes: true });
+                for (const entry of entries) {
+                    if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+                    const fullPath = path.join(dir, entry.name);
+                    const relPath = prefix ? `${prefix}/${entry.name}` : entry.name;
+                    if (entry.isDirectory()) {
+                        items.push({ path: relPath, type: 'dir', children: readDir(fullPath, relPath) });
+                    } else {
+                        items.push({ path: relPath, type: 'file', size: fs.statSync(fullPath).size });
+                    }
+                }
+                return items;
+            };
+            res.json({ files: readDir(repoPath), basePath: repoPath });
+        } else {
+            res.json({ files: [], basePath: repoPath, warning: 'Repository path not found locally.' });
+        }
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+console.log('🌀 [VORTEX] API Routes registered.');
+
 const server = app.listen(port, () => {
     console.log(`\n🚀 AntiGravity CMS: Mission Control Ativo!`);
     console.log(`📡 Frontend & API rodando em http://localhost:${port}`);

@@ -14,6 +14,7 @@ const app = {
         if (window.marketingLab) window.marketingLab.init();
         if (window.managerAgent) window.managerAgent.init();
         if (window.aiStudioTemplate) window.aiStudioTemplate.init();
+        if (window.vortexStudio) window.vortexStudio.init();
         this.loadSystemAlerts();
         
         // Pulso do Sistema (V5.1)
@@ -109,8 +110,8 @@ const app = {
         const targetSec = document.getElementById(id);
         if (targetSec) {
             targetSec.classList.add('active');
-            // AI-Studio precisa de flex para o grid 3-col
-            const displayType = (id === 'ai-studio') ? 'flex' : 'block';
+            // AI-Studio e Vórtex precisam de flex para o grid
+            const displayType = (id === 'ai-studio' || id === 'vortex-studio') ? 'flex' : 'block';
             targetSec.style.setProperty('display', displayType, 'important');
             
             // Re-render ícones Lucide
@@ -211,6 +212,11 @@ const app = {
         if (targetId === 'menu-manager' && window.menuSystem) {
             window.menuSystem.loadMenus();
             window.menuSystem.loadSilos();
+        }
+        if (targetId === 'vortex-studio' && window.vortexStudio) {
+            // Monaco precisa de re-layout ao mostrar a seção
+            const st = window.vortexStudio.getState();
+            if (st && st.editor) setTimeout(() => st.editor.layout(), 100);
         }
     },
 

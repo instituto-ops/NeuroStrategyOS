@@ -6,6 +6,7 @@
     <title>Núcleo de Marketing - Estratégia e Autoridade Clínica</title>
     <link rel="stylesheet" href="css/dashboard.css?v=8">
     <link rel="stylesheet" href="css/notifications.css?v=1">
+    <link rel="stylesheet" href="css/vortex.css?v=1">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
@@ -181,6 +182,7 @@
                             <div class="dropdown-item" onclick="app.showSection('acervo-publicacoes')"><i data-lucide="file-text"></i> Gestão de Páginas</div>
                             <div class="dropdown-item" onclick="app.showSection('menu-manager')"><i data-lucide="layout-template"></i> Gestão de Menus</div>
                             <div class="dropdown-item" onclick="app.showSection('media-library')"><i data-lucide="image"></i> Acervo Visual</div>
+                            <div class="dropdown-item" onclick="app.showSection('vortex-studio')" style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4px; padding-top: 8px;"><i data-lucide="tornado"></i> 🌀 Vórtex AI IDE</div>
                         </div>
                     </div>
                     <!-- DOCTORALIA -->
@@ -1981,7 +1983,13 @@
         </div>
     </div>
 
+    <!-- Section: Vórtex AI Studio (IDE) -->
+    <section id="vortex-studio" class="content-section" style="padding: 0;">
+        <!-- Rendered dynamically by vortex-studio.js -->
+    </section>
+
     <!-- SCRIPTS -->
+    <script src="js/vortex-studio.js?v=1"></script>
     <script src="js/spark-engine.js?v=5"></script>
     <!-- [POPOVER GLOBAL] Auditoria Abidos -->
     <div id="abidos-analysis-popover" class="card" 

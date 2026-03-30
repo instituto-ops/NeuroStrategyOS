@@ -1,0 +1,708 @@
+/* ============================================================================
+   🌀 VÓRTEX AI STUDIO — Design System (OLED Black IDE)
+   NeuroEngine OS | Fase 1: Fundação
+   ============================================================================ */
+
+/* === WORKSPACE LAYOUT (3-Column IDE) === */
+#vortex-studio {
+    display: none;
+    flex-direction: column;
+    height: calc(100vh - 60px);
+    background: #050810;
+    overflow: hidden;
+    padding: 0 !important;
+}
+
+#vortex-studio.active {
+    display: flex !important;
+}
+
+.vortex-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+    backdrop-filter: blur(20px);
+    z-index: 10;
+    min-height: 48px;
+}
+
+.vortex-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.vortex-toolbar-center {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vortex-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.vortex-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.5px;
+}
+
+.vortex-brand .brand-icon {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.vortex-brand .brand-icon i {
+    width: 16px;
+    height: 16px;
+    color: #fff;
+}
+
+.vortex-brand span {
+    font-weight: 400;
+    opacity: 0.5;
+    font-size: 11px;
+    margin-left: -4px;
+}
+
+/* Status Badges */
+.vortex-status-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.vortex-status-badge.online {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.vortex-status-badge.offline {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.vortex-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: vortex-pulse 2s ease-in-out infinite;
+}
+
+@keyframes vortex-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* Toolbar Buttons */
+.vortex-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+}
+
+.vortex-btn i {
+    width: 12px;
+    height: 12px;
+}
+
+.vortex-btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.vortex-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+.vortex-btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vortex-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.vortex-btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.vortex-btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+/* === 3-COLUMN WORKSPACE === */
+.vortex-workspace {
+    display: grid;
+    grid-template-columns: 340px 1fr 1fr;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* Panel Generic */
+.vortex-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.vortex-panel:last-child {
+    border-right: none;
+}
+
+.vortex-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: rgba(15, 23, 42, 0.6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 40px;
+}
+
+.vortex-panel-title {
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vortex-panel-title i {
+    width: 14px;
+    height: 14px;
+    color: #6366f1;
+}
+
+.vortex-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* === CHAT PANEL (Left Column) === */
+.vortex-chat-panel {
+    background: #0a0f1a;
+}
+
+.vortex-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.vortex-chat-messages::-webkit-scrollbar {
+    width: 4px;
+}
+
+.vortex-chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 4px;
+}
+
+/* Chat Messages */
+.vortex-msg {
+    max-width: 90%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    animation: vortex-msg-in 0.3s ease-out;
+}
+
+@keyframes vortex-msg-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.vortex-msg-user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+.vortex-msg-ai {
+    align-self: flex-start;
+    background: rgba(30, 41, 59, 0.8);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom-left-radius: 4px;
+}
+
+.vortex-msg-system {
+    align-self: center;
+    background: rgba(99, 102, 241, 0.08);
+    color: #a5b4fc;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-align: center;
+}
+
+/* Chat Input */
+.vortex-chat-input-area {
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.8);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.vortex-chat-input-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 16px;
+    padding: 8px 12px;
+    transition: border-color 0.2s;
+}
+
+.vortex-chat-input-wrapper:focus-within {
+    border-color: rgba(99, 102, 241, 0.5);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+}
+
+.vortex-chat-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    resize: none;
+    outline: none;
+    max-height: 120px;
+    min-height: 20px;
+    line-height: 1.5;
+}
+
+.vortex-chat-input::placeholder {
+    color: #475569;
+}
+
+.vortex-chat-send {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.vortex-chat-send:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.vortex-chat-send i {
+    width: 16px;
+    height: 16px;
+}
+
+/* Abidos Toggles */
+.vortex-abidos-toggles {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(15, 23, 42, 0.4);
+}
+
+.vortex-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+}
+
+.vortex-toggle-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.vortex-toggle-label i {
+    width: 12px;
+    height: 12px;
+}
+
+/* Toggle Switch */
+.vortex-switch {
+    position: relative;
+    width: 32px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.vortex-switch.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.vortex-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.vortex-switch.active::after {
+    transform: translateX(14px);
+}
+
+/* === EDITOR PANEL (Center Column) === */
+.vortex-editor-panel {
+    background: #1e1e1e;
+}
+
+#vortex-monaco-container {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Editor File Tabs */
+.vortex-file-tabs {
+    display: flex;
+    gap: 1px;
+    background: rgba(30, 30, 30, 0.9);
+    overflow-x: auto;
+    padding: 0 8px;
+}
+
+.vortex-file-tabs::-webkit-scrollbar {
+    height: 2px;
+}
+
+.vortex-file-tab {
+    padding: 8px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6a737d;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.vortex-file-tab:hover {
+    color: #e1e4e8;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.vortex-file-tab.active {
+    color: #fff;
+    background: #1e1e1e;
+    border-bottom-color: #6366f1;
+}
+
+.vortex-file-tab .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #f59e0b;
+    display: none;
+}
+
+.vortex-file-tab.modified .dot {
+    display: block;
+}
+
+/* === PREVIEW PANEL (Right Column) === */
+.vortex-preview-panel {
+    background: #fff;
+}
+
+.vortex-preview-panel .vortex-panel-header {
+    background: rgba(248, 250, 252, 0.95);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.vortex-preview-panel .vortex-panel-title {
+    color: #475569;
+}
+
+.vortex-preview-panel .vortex-panel-title i {
+    color: #10b981;
+}
+
+.vortex-preview-frame {
+    flex: 1;
+    border: none;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+}
+
+/* Preview Device Selector */
+.vortex-device-selector {
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.03);
+    padding: 3px;
+    border-radius: 8px;
+}
+
+.vortex-device-btn {
+    padding: 4px 10px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.vortex-device-btn i {
+    width: 12px;
+    height: 12px;
+}
+
+.vortex-device-btn.active {
+    background: #fff;
+    color: #1e293b;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Web Vitals Bar */
+.vortex-vitals-bar {
+    display: flex;
+    gap: 16px;
+    padding: 8px 16px;
+    background: rgba(248, 250, 252, 0.95);
+    border-top: 1px solid #e2e8f0;
+}
+
+.vortex-vital-metric {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.vortex-vital-label {
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.vortex-vital-value {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 800;
+}
+
+.vortex-vital-value.good {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.vortex-vital-value.warn {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.vortex-vital-value.bad {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* === EMPTY STATE / WELCOME === */
+.vortex-welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 60px 30px;
+    text-align: center;
+    height: 100%;
+}
+
+.vortex-welcome-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.vortex-welcome-icon i {
+    width: 28px;
+    height: 28px;
+    color: #6366f1;
+}
+
+.vortex-welcome h3 {
+    font-size: 16px;
+    font-weight: 900;
+    color: #e2e8f0;
+    margin: 0;
+    letter-spacing: -0.3px;
+}
+
+.vortex-welcome p {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0;
+    max-width: 280px;
+    line-height: 1.6;
+}
+
+/* === LOADING / GENERATING STATE === */
+.vortex-generating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+    border-radius: 12px;
+    margin: 12px 16px;
+}
+
+.vortex-generating-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.vortex-generating-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6366f1;
+    animation: vortex-dot-bounce 1.4s ease-in-out infinite;
+}
+
+.vortex-generating-dots span:nth-child(2) {
+    animation-delay: 0.16s;
+}
+
+.vortex-generating-dots span:nth-child(3) {
+    animation-delay: 0.32s;
+}
+
+@keyframes vortex-dot-bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+.vortex-generating-text {
+    font-size: 11px;
+    font-weight: 700;
+    color: #a5b4fc;
+}
+
+/* === MODEL SELECTOR (Toolbar) === */
+.vortex-model-select {
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+}
+
+.vortex-model-select option {
+    background: #1e293b;
+    color: #e2e8f0;
+}
+
+/* === RESPONSIVE ADJUSTMENTS === */
+@media (max-width: 1200px) {
+    .vortex-workspace {
+        grid-template-columns: 280px 1fr 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .vortex-workspace {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr 1fr;
+    }
+}
