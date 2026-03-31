@@ -12,9 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "neurostrategy-os",
-        "width": 800,
-        "height": 600
+        "title": "NeuroStrategy OS",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
       }
     ],
     "security": {
