@@ -4,3 +4,7 @@ dist/
 *.log
 .DS_Store
 .env
+
+# Antigravity Framework
+/Antigravity/*
+!/Antigravity/estado_atual.md
