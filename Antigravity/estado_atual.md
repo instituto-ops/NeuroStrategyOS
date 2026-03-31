@@ -9,6 +9,7 @@ A sessão de hoje marcou a transição da organização documental passiva para 
 - [x] Criação do ecossistema `/Antigravity` com diretórios de memória e diretrizes.
 - [x] Inicialização do **Bootstrap Cognitivo** (`regras_base.md`).
 - [x] Definição da **Ontologia Sistêmica** (`manual_do_arquiteto.md` e `dicionario_de_traducao.md`).
+- [x] Criação do **Documento Mestre do Núcleo Clínico** (`00_NUCLEO_CLINICO_MESTRE_ABSOLUTO.md`).
 
 ### Estado Psicológico do Sistema:
 *   **Status**: Homeostase em nível estrutural. Sistema pronto para a "Individuação" de funcionalidades nos núcleos específicos.
