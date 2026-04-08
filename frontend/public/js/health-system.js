@@ -358,9 +358,9 @@ window.healthSystem = {
     // ── PULSO DO SISTEMA (V5.1) ─────────────────────────────────────────────
     
     startHeartbeat() {
-        console.log("💓 [PULSO] Monitor de Latência Ativado.");
+        console.log("💓 [PULSO] Monitor de Latência Inicializado (On-Demand).");
         this.updatePulse();
-        setInterval(() => this.updatePulse(), 15000); // Check every 15s
+        // setInterval REMOVIDO: A checagem de saúde agora é 100% On-Demand guiada por eventos
     },
 
     async updatePulse() {

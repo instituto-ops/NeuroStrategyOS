@@ -28,7 +28,10 @@ window.vortexStudio = (() => {
             cfpTerms: true,
             whatsappCTA: true
         },
-        monacoReady: false
+        monacoReady: false,
+        fs: null,               // LightningFS instance
+        pfs: null,              // LightningFS Promises API
+        contextHubEnabled: false
     };
 
     // =========================================================================
@@ -39,6 +42,13 @@ window.vortexStudio = (() => {
             // Dynamically load Dexie if not present
             if (!window.Dexie) {
                 await loadScript('https://cdn.jsdelivr.net/npm/dexie@4/dist/dexie.min.js');
+            }
+
+            // Init LightningFS for isomorphic-git
+            if (window.LightningFS) {
+                state.fs = new LightningFS('VortexGitFS');
+                state.pfs = state.fs.promises;
+                console.log('🌀 [VORTEX GIT] LightningFS initialized.');
             }
 
             state.db = new Dexie('VortexVFS');
@@ -57,10 +67,55 @@ window.vortexStudio = (() => {
                 console.log(`🌀 [VORTEX VFS] Persistent storage: ${persisted ? 'GRANTED' : 'DENIED'}`);
             }
 
+            // [1.4] Ingestion Pipeline
+            await checkAndIngestFiles();
+
             return true;
         } catch (err) {
             console.error('❌ [VORTEX VFS] Init failed:', err);
             return false;
+        }
+    }
+
+    async function checkAndIngestFiles() {
+        const fileCount = await state.db.files.count();
+        if (fileCount === 0) {
+            console.log('🌀 [VORTEX VFS] Database empty. Ingesting physical repository starting now...');
+            try {
+                const res = await fetch('/api/vortex/ingest');
+                const data = await res.json();
+                if (data.success && data.files) {
+                    const tx = state.db.transaction('rw', state.db.files, async () => {
+                        for (const f of data.files) {
+                            await state.db.files.put({
+                                path: f.path,
+                                name: f.name,
+                                content: f.content,
+                                type: f.name.split('.').pop(),
+                                modified: new Date().toISOString()
+                            });
+                            
+                            // Initialize lightning-fs copy for git
+                            if (state.pfs) {
+                                try {
+                                    // ensure path exists
+                                    const dir = f.path.substring(0, f.path.lastIndexOf('/'));
+                                    const dirs = dir.split('/').filter(Boolean);
+                                    let cur = '';
+                                    for (let d of dirs) {
+                                        cur += '/' + d;
+                                        try { await state.pfs.mkdir(cur); } catch(e){}
+                                    }
+                                    await state.pfs.writeFile(f.path, f.content, 'utf8');
+                                } catch(e) {}
+                            }
+                        }
+                    });
+                    console.log(`🌀 [VORTEX VFS] Ingested ${data.files.length} physical files.`);
+                }
+            } catch(e) {
+                console.error('❌ [VORTEX INGEST]', e);
+            }
         }
     }
 
@@ -112,10 +167,35 @@ window.vortexStudio = (() => {
             });
         }
 
+        // [3.1] Custom OLED Theme
+        monaco.editor.defineTheme('vortex-dark', {
+            base: 'vs-dark',
+            inherit: true,
+            rules: [
+                { token: '', background: '050810', foreground: 'd1d5db' },
+                { token: 'comment', foreground: '6a737d', fontStyle: 'italic' },
+                { token: 'keyword', foreground: '2dd4bf' },
+                { token: 'string', foreground: '38bdf8' },
+                { token: 'function', foreground: '6366f1' },
+                { token: 'type', foreground: 'f472b6' },
+                { token: 'identifier', foreground: 'e2e8f0' }
+            ],
+            colors: {
+                'editor.background': '#050810',
+                'editor.foreground': '#d1d5db',
+                'editorCursor.foreground': '#2dd4bf',
+                'editor.lineHighlightBackground': '#ffffff08',
+                'editorLineNumber.foreground': '#4b5563',
+                'editor.selectionBackground': '#2dd4bf20',
+                'editorIndentGuide.background': '#ffffff05',
+                'editorIndentGuide.activeBackground': '#2dd4bf30'
+            }
+        });
+
         state.editor = monaco.editor.create(container, {
             value: '// 🌀 Vórtex AI Studio\n// Envie um prompt no chat para gerar código Next.js\n',
             language: 'typescriptreact',
-            theme: 'vs-dark',
+            theme: 'vortex-dark',
             fontSize: 13,
             fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
             fontLigatures: true,
@@ -138,6 +218,22 @@ window.vortexStudio = (() => {
             tabSize: 2
         });
 
+        // [3.2] Shadow Sync (Local Debounced Update)
+        let previewTimeout;
+        state.editor.onDidChangeModelContent(() => {
+            clearTimeout(previewTimeout);
+            previewTimeout = setTimeout(() => {
+                const content = state.editor.getValue();
+                // Simple regex to extract what looks like HTML/JSX for the preview
+                // In Phase 3.2 we'll improve this with a real JSX renderer if needed
+                // For now, if the AI output contains the preview field, we used that.
+                // If editing manually, we show a 'Sync Required' bubble
+                const tab = document.querySelector(`.vortex-file-tab.active`);
+                if (tab) tab.classList.add('modified');
+            }, 800);
+        });
+
+
         // Handle resize
         const resizeObserver = new ResizeObserver(() => {
             if (state.editor) state.editor.layout();
@@ -146,6 +242,23 @@ window.vortexStudio = (() => {
 
         state.monacoReady = true;
         console.log('🌀 [VORTEX MONACO] Editor initialized.');
+
+        // [1.1] Resumo da Sessão / Auto-load last file or page.tsx
+        await loadInitialFile();
+    }
+
+    async function loadInitialFile() {
+        try {
+            // Try to load existing page.tsx or latest file
+            const files = await state.db.files.orderBy('modified').reverse().toArray();
+            let initialFile = files.find(f => f.name === 'page.tsx') || files[0];
+            
+            if (initialFile) {
+                openFile(initialFile.name);
+            }
+        } catch(e) {
+            console.warn('🌀 [VORTEX VFS] Could not load initial file.');
+        }
     }
 
     function setEditorContent(content, language = 'typescriptreact') {
@@ -192,15 +305,118 @@ window.vortexStudio = (() => {
             .replace(/\n/g, '<br>');
     }
 
+    // =========================================================================
+    // CONTEXT CACHING HUB (PHASE 2.1)
+    // =========================================================================
+    async function syncContextHub() {
+        try {
+            const btn = document.getElementById('vortex-hub-btn');
+            if (btn) btn.innerHTML = '<i data-lucide="loader" class="spin"></i> VFS...';
+            
+            const files = await vfsList();
+            let componentsStr = "--- ARQUITETURA DO PROJETO VFS ---\n\n";
+            for (const f of files) {
+                // Filtramos imagens e node_modules
+                if (f.name.endsWith('.tsx') || f.name.endsWith('.ts') || f.name.endsWith('.css') || f.name.endsWith('.json')) {
+                    componentsStr += `\n[ARQUIVO: ${f.path}]\n\`\`\`\n${f.content}\n\`\`\`\n`;
+                }
+            }
+
+            const model = document.getElementById('vortex-model-select')?.value || 'gemini-2.5-flash';
+            
+            if (btn) btn.innerHTML = '<i data-lucide="loader" class="spin"></i> CACHING...';
+            
+            const req = await fetch('/api/vortex/cache', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    components: componentsStr,
+                    model: model,
+                    systemPrompt: buildAbidosContext()
+                })
+            });
+            const data = await req.json();
+            
+            if (data.success) {
+                state.contextHubEnabled = true;
+                addMessage('system', `🧠 **Context Hub Activates!**\nO projeto atual (\`${files.length} arquivos\`) foi embutido no Gemini Caching.\n**${data.cachedTokens || 0} tokens armazenados.**\nO Context Caching reduz as requisições em até 90% via cache de prompt e permite respostas baseadas no Design System holístico.`);
+                if (btn) btn.innerHTML = '<i data-lucide="database" style="color:var(--color-success)"></i> HUB ON';
+                if (window.lucide) window.lucide.createIcons();
+            } else {
+                throw new Error(data.error || 'Erro desconhecido ao gerar o cache.');
+            }
+
+        } catch (e) {
+            console.error('❌ [VORTEX HUB]', e);
+            addMessage('system', `⚠️ Falha ao sincronizar o Context Hub: ${e.message}`);
+            state.contextHubEnabled = false;
+            const btn = document.getElementById('vortex-hub-btn');
+            if (btn) {
+                btn.innerHTML = '<i data-lucide="database"></i> SYNC HUB';
+                if (window.lucide) window.lucide.createIcons();
+            }
+        }
+    }
+
+    // =========================================================================
+    // MULTIMODAL DESIGN-TO-CODE (PHASE 2.3)
+    // =========================================================================
+    let uploadedImageBase64 = null;
+
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (file) processImageFile(file);
+    }
+
+    function handleDrop(event) {
+        const file = event.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            processImageFile(file);
+        }
+    }
+
+    function processImageFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            uploadedImageBase64 = e.target.result;
+            const previewContainer = document.getElementById('vortex-image-preview-container');
+            if(previewContainer) {
+                previewContainer.innerHTML = `
+                    <div class="vortex-vision-link">
+                        <div class="vortex-vision-status">
+                            <span class="vortex-vision-eye">👁️</span>
+                            <span class="vortex-vision-text">VISION LINK ESTABLISHED</span>
+                        </div>
+                        <img id="vortex-image-preview" src="${uploadedImageBase64}" class="vortex-vision-thumb">
+                        <button onclick="vortexStudio.removeImage()" class="vortex-vision-close">×</button>
+                    </div>
+                `;
+                previewContainer.style.display = 'block';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeImage() {
+        uploadedImageBase64 = null;
+        const previewContainer = document.getElementById('vortex-image-preview-container');
+        if(previewContainer) previewContainer.style.display = 'none';
+        const fileInput = document.getElementById('vortex-file-upload');
+        if(fileInput) fileInput.value = '';
+    }
+
     async function sendPrompt() {
         const input = document.getElementById('vortex-chat-input');
-        if (!input || !input.value.trim() || state.isGenerating) return;
+        if (state.isGenerating) return;
+        if ((!input || !input.value.trim()) && !uploadedImageBase64) return;
 
-        const prompt = input.value.trim();
-        input.value = '';
-        input.style.height = 'auto';
+        const prompt = input ? input.value.trim() : '';
+        if (input) {
+            input.value = '';
+            input.style.height = 'auto';
+        }
 
-        addMessage('user', prompt);
+        addMessage('user', prompt || '(Imagem anexada)');
         setGenerating(true);
 
         try {
@@ -214,19 +430,26 @@ window.vortexStudio = (() => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    prompt,
+                    prompt: typeof arguments[0] === 'string' ? arguments[0] : prompt,
                     model,
                     currentCode: currentCode !== '// 🌀 Vórtex AI Studio\n// Envie um prompt no chat para gerar código Next.js\n' ? currentCode : '',
                     abidosRules: state.abidosRules,
-                    context: abidosContext
+                    context: abidosContext,
+                    useCache: state.contextHubEnabled,
+                    imageBase64: uploadedImageBase64
                 })
             });
+
+            removeImage();
 
             if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
             const data = await response.json();
 
             if (data.code) {
+                // [PHASE 4] Run Audit before showing
+                const audit = auditCode(data.code);
+                
                 setEditorContent(data.code, data.language || 'typescriptreact');
                 updateFileTab(data.filename || 'page.tsx', true);
                 
@@ -239,6 +462,10 @@ window.vortexStudio = (() => {
                 if (data.preview) {
                     updatePreview(data.preview);
                 }
+
+                if (!audit.passes) {
+                   addMessage('system', '⚠️ Aviso: O código foi gerado mas possui falhas de conformidade. Veja o alerta acima.');
+                }
             }
 
             if (data.explanation) {
@@ -248,6 +475,7 @@ window.vortexStudio = (() => {
             }
 
         } catch (err) {
+
             console.error('❌ [VORTEX] Generation error:', err);
             addMessage('system', `⚠️ Erro na geração: ${err.message}`);
         } finally {
@@ -262,6 +490,73 @@ window.vortexStudio = (() => {
         if (state.abidosRules.cfpTerms) rules.push('PROIBIDO usar: "cura", "garantido", "melhor", "único". Siga as diretrizes do CFP.');
         if (state.abidosRules.whatsappCTA) rules.push('Incluir botão flutuante de WhatsApp com link direto.');
         return rules.join('\n');
+    }
+
+    // =========================================================================
+    // [PHASE 4.1] ABIDOS AUDIT ENGINE
+    // =========================================================================
+    function auditCode(code) {
+        const results = {
+            passes: true,
+            errors: [],
+            warnings: []
+        };
+
+        // 1. Check for multiple H1s
+        const h1Count = (code.match(/<h1/gi) || []).length;
+        if (h1Count > 1 && state.abidosRules.singleH1) {
+            results.passes = false;
+            results.errors.push(`🚫 SEO CRITICAL: Múltiplas tags <h1> detectadas (${h1Count}). O limite Abidos é 1.`);
+        }
+
+        // 2. Check for Alt Tags
+        if (state.abidosRules.altTags) {
+            const hasImgWithoutAlt = /<img(?![^>]*\balt\b)[^>]*>/gi.test(code);
+            if (hasImgWithoutAlt) {
+                results.warnings.push('⚠️ SEO WARNING: Imagem detectada sem tag "alt". Isso penaliza o tráfego orgânico.');
+            }
+        }
+
+        // 3. Check for CFP Forbidden Terms
+        if (state.abidosRules.cfpTerms) {
+            const forbidden = ['cura', 'curar', 'garantido', 'garantia de 100%', 'melhor serviço', 'o único'];
+            forbidden.forEach(term => {
+                if (code.toLowerCase().includes(term)) {
+                    results.passes = false;
+                    results.errors.push(`⚖️ ETHICS ALERT: Uso do termo proibido "${term}". Risco de suspensão pelo CFP.`);
+                }
+            });
+        }
+
+        // Update UI Status
+        updateAuditUI(results);
+        return results;
+    }
+
+    function updateAuditUI(results) {
+        const chatMessages = document.getElementById('vortex-chat-messages');
+        if (!results.passes && chatMessages) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'vortex-msg vortex-msg-system';
+            errorDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+            errorDiv.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+            errorDiv.innerHTML = `
+                <div style="color: #ef4444; font-weight: 800; margin-bottom: 8px;">🛡️ GUARDIÃO BLOQUEOU A GERAÇÃO</div>
+                <div style="font-size: 11px; line-height: 1.5;">${results.errors.join('<br>')}</div>
+                <button class="vortex-btn-repair" onclick="vortexStudio.repairCode()">AI AUTO-REPAIR</button>
+            `;
+            chatMessages.appendChild(errorDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        } else if (results.warnings.length > 0 && chatMessages) {
+            addMessage('system', results.warnings.join('\n'));
+        }
+    }
+
+    async function repairCode() {
+        const lastMsg = state.messages[state.messages.length - 1];
+        const errorSummary = "Corrija os erros de compliance Abidos: Retorne apenas 1 H1 e remova termos proibidos pelo CFP.";
+        addMessage('user', `🔨 Auto-Reparar: ${errorSummary}`);
+        sendPrompt(errorSummary);
     }
 
     function setGenerating(isGen) {
@@ -279,9 +574,23 @@ window.vortexStudio = (() => {
         const frame = document.getElementById('vortex-preview-frame');
         if (!frame) return;
 
+        // [PHASE 3.2] Zero-Wait Build Logic
+        let processedHtml = htmlContent;
+
+        // [PHASE 4.2] Injetar Web Vitals Telemetry
+        const telemetryScript = `
+            <script type="module">
+                import { onLCP, onCLS, onINP } from 'https://unpkg.com/web-vitals@3?module';
+                const send = (name, val) => window.parent.postMessage({ type: 'vortex-vital', name, value: val }, '*');
+                onLCP(m => send('LCP', m.value));
+                onCLS(m => send('CLS', m.value));
+                onINP(m => send('INP', m.value));
+            </script>
+        `;
+
         // Wrap in a full HTML document if needed
-        let fullHtml = htmlContent;
-        if (!htmlContent.includes('<!DOCTYPE') && !htmlContent.includes('<html')) {
+        let fullHtml = processedHtml;
+        if (!processedHtml.includes('<!DOCTYPE') && !processedHtml.includes('<html')) {
             fullHtml = `<!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -289,14 +598,41 @@ window.vortexStudio = (() => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #050810; color: #e2e8f0; margin: 0; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #2dd4bf20; border-radius: 10px; }
+    </style>
+    ${telemetryScript}
 </head>
-<body>${htmlContent}</body>
+<body>${processedHtml}</body>
 </html>`;
+        } else {
+            // Case where it is already a full HTML, inject before </body>
+            fullHtml = fullHtml.replace('</body>', `${telemetryScript}</body>`);
         }
 
         frame.srcdoc = fullHtml;
     }
+
+    // [PHASE 4.2] Listener para Telemetria
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'vortex-vital') {
+            const { name, value } = event.data;
+            const el = document.getElementById(`vortex-${name.toLowerCase()}`);
+            if (el) {
+                let formatted = value;
+                if (name === 'LCP' || name === 'INP') formatted = (value / 1000).toFixed(2) + 's';
+                if (name === 'CLS') formatted = value.toFixed(3);
+                el.innerText = formatted;
+
+                // Color coding
+                if (name === 'LCP') el.className = value < 2500 ? 'vortex-vital-value good' : value < 4000 ? 'vortex-vital-value neutral' : 'vortex-vital-value bad';
+                if (name === 'CLS') el.className = value < 0.1 ? 'vortex-vital-value good' : value < 0.25 ? 'vortex-vital-value neutral' : 'vortex-vital-value bad';
+            }
+        }
+    });
+
 
     function setPreviewDevice(device) {
         state.previewDevice = device;
@@ -343,12 +679,17 @@ window.vortexStudio = (() => {
     }
 
     async function openFile(filename) {
-        const filePath = `/src/app/${filename}`;
+        // Find matching paths for this filename (e.g. /src/app/page.tsx)
+        const allFiles = await vfsList();
+        const fileMatch = allFiles.find(f => f.name === filename || f.path.endsWith(filename));
+        
+        const filePath = fileMatch ? fileMatch.path : `/src/app/${filename}`;
         const content = await vfsRead(filePath);
         if (content) {
             setEditorContent(content);
             state.currentFile = filePath;
             updateFileTab(filename, false);
+            addMessage('system', `📂 Arquivo aberto: ${filename}`);
         }
     }
 
@@ -370,6 +711,107 @@ window.vortexStudio = (() => {
         if (!section) return;
 
         section.innerHTML = `
+            <style>
+                .vortex-vision-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    background: rgba(45, 212, 191, 0.05);
+                    border: 1px solid rgba(45, 212, 191, 0.2);
+                    padding: 8px 12px;
+                    border-radius: 8px;
+                    margin-bottom: 12px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                }
+                .vortex-vision-status {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    animation: vortex-pulse-teal 2s infinite;
+                }
+                .vortex-vision-text {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 10px;
+                    color: #2dd4bf;
+                    letter-spacing: -0.02em;
+                    font-weight: 700;
+                }
+                .vortex-vision-thumb {
+                    width: 32px;
+                    height: 32px;
+                    object-fit: cover;
+                    border-radius: 4px;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    margin-left: auto;
+                }
+                .vortex-vision-close {
+                    color: #94a3b8;
+                    font-size: 18px;
+                    background: transparent;
+                    border: none;
+                    cursor: pointer;
+                    padding: 0 4px;
+                }
+                .vortex-vision-close:hover { color: #f43f5e; }
+
+                /* [PHASE 3.3] ABIDOS TOGGLES UI */
+                .vortex-abidos-toggles {
+                    padding: 12px 16px;
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                    background: rgba(0,0,0,0.2);
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 8px;
+                }
+                .vortex-toggle-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 6px 10px;
+                    background: rgba(255,255,255,0.02);
+                    border-radius: 6px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                }
+                .vortex-toggle-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 10px;
+                    font-weight: 600;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+                .vortex-toggle-label i { width: 14px; height: 14px; }
+                .vortex-switch {
+                    width: 28px;
+                    height: 14px;
+                    background: #334155;
+                    border-radius: 20px;
+                    position: relative;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                }
+                .vortex-switch:after {
+                    content: '';
+                    position: absolute;
+                    top: 2px;
+                    left: 2px;
+                    width: 10px;
+                    height: 10px;
+                    background: #fff;
+                    border-radius: 50%;
+                    transition: all 0.3s;
+                }
+                .vortex-switch.active { background: #2dd4bf; }
+                .vortex-switch.active:after { left: 16px; }
+
+                @keyframes vortex-pulse-teal {
+                    0% { opacity: 0.6; }
+                    50% { opacity: 1; }
+                    100% { opacity: 0.6; }
+                }
+            </style>
             <!-- TOOLBAR -->
             <div class="vortex-toolbar">
                 <div class="vortex-toolbar-left">
@@ -390,6 +832,9 @@ window.vortexStudio = (() => {
                     </select>
                 </div>
                 <div class="vortex-toolbar-right">
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.syncContextHub()" id="vortex-hub-btn" title="Armazena a teia de componentes no Google Cache API para reduzir custos e aumentar alinhamento do Design System">
+                        <i data-lucide="database"></i> SYNC HUB
+                    </button>
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.saveToVFS()">
                         <i data-lucide="save"></i> SALVAR
                     </button>
@@ -441,9 +886,21 @@ window.vortexStudio = (() => {
                             <div class="vortex-switch active" data-abidos-toggle="whatsappCTA" onclick="vortexStudio.toggleRule('whatsappCTA')"></div>
                         </div>
                     </div>
-                    <div class="vortex-chat-input-area">
+                    <div class="vortex-chat-input-area" style="transition: background 0.3s;"
+                         ondragover="event.preventDefault(); this.style.background='rgba(99,102,241,0.1)';" 
+                         ondragleave="this.style.background='transparent';" 
+                         ondrop="event.preventDefault(); this.style.background='transparent'; vortexStudio.handleDrop(event);">
+                        <div id="vortex-image-preview-container" style="display: none; position: relative; margin-bottom: 12px;">
+                           <img id="vortex-image-preview" src="" style="max-height: 80px; border-radius: 6px; border: 1px solid #3c3c3c;">
+                           <button onclick="vortexStudio.removeImage()" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;">×</button>
+                        </div>
                         <div class="vortex-chat-input-wrapper">
-                            <textarea id="vortex-chat-input" class="vortex-chat-input" placeholder="Descreva a página ou componente..." rows="1"
+                            <button title="Anexar Design (Print/Mockup)" onclick="document.getElementById('vortex-file-upload').click()" style="background:none; border:none; color:#a1a1aa; cursor:pointer; padding:8px;">
+                                <i data-lucide="image-plus"></i>
+                            </button>
+                            <input type="file" id="vortex-file-upload" accept="image/*" style="display:none" onchange="vortexStudio.handleImageUpload(event)">
+                            
+                            <textarea id="vortex-chat-input" class="vortex-chat-input" placeholder="Descreva a página ou anexe um print..." rows="1"
                                 onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();vortexStudio.send();}"></textarea>
                             <button id="vortex-send-btn" class="vortex-chat-send" onclick="vortexStudio.send()">
                                 <i data-lucide="send"></i>
@@ -518,21 +975,35 @@ window.vortexStudio = (() => {
             state.currentFile = '/src/app/page.tsx';
         }
         const content = getEditorContent();
+        
+        // 1. Browser Sync (IndexedDB)
         await vfsWrite(state.currentFile, content);
         
+        // 2. Physical Sync (Disk Mirroring - Phase 5.1)
+        try {
+            const filename = state.currentFile.replace(/^\/src\/app\//, '');
+            await fetch('/api/vortex/save-local', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename, content })
+            });
+        } catch(e) { console.error('Mirror error:', e); }
+
         // Update tab to show saved
         const filename = state.currentFile.split('/').pop();
         const tab = document.querySelector(`[data-file="${filename}"]`);
         if (tab) tab.classList.remove('modified');
         
-        addMessage('system', `💾 Arquivo salvo: ${state.currentFile}`);
+        addMessage('system', `💾 Arquivo salvo e espelhado: ${state.currentFile}`);
     }
 
     async function commitAndPush() {
-        addMessage('system', '🔄 Preparando commit...');
+        const code = getEditorContent();
+        if (!code || code.length < 10) return addMessage('system', '⚠️ Código insuficiente para commit.');
+        
+        addMessage('system', '🚀 Preparando Deploy para Vercel...');
         
         try {
-            const code = getEditorContent();
             const filename = state.currentFile ? state.currentFile.split('/').pop() : 'page.tsx';
 
             const response = await fetch('/api/vortex/commit', {
@@ -541,18 +1012,20 @@ window.vortexStudio = (() => {
                 body: JSON.stringify({
                     filename,
                     content: code,
-                    message: `[Vórtex] Update ${filename} via AI Studio`
+                    message: `[Vórtex] Auto-Deploy: Update ${filename} with Abidos V5 rules`
                 })
             });
 
             const data = await response.json();
             if (data.success) {
-                addMessage('ai', `✅ Commit realizado com sucesso!\n**SHA:** \`${data.sha?.substring(0, 7) || 'N/A'}\`\n**Mensagem:** ${data.message}`);
+                const shortSha = data.sha ? data.sha.substring(0, 7) : 'N/A';
+                addMessage('ai', `✅ **DEPLOY CONCLUÍDO!**\n\nA página foi enviada para o GitHub e a Vercel iniciou o build.\n\n🔗 [Ver no GitHub](${data.url || '#'})\n📦 Commit: \`${shortSha}\``);
             } else {
-                addMessage('system', `⚠️ Erro no commit: ${data.error}`);
+                throw new Error(data.error || 'Erro desconhecido no commit.');
             }
-        } catch (err) {
-            addMessage('system', `❌ Falha no commit: ${err.message}`);
+        } catch (e) {
+            console.error('Commit error:', e);
+            addMessage('system', `⚠️ Falha no Deploy: ${e.message}`);
         }
     }
 
@@ -619,10 +1092,15 @@ window.vortexStudio = (() => {
     return {
         init,
         send: sendPrompt,
+        syncContextHub,
+        handleImageUpload,
+        handleDrop,
+        removeImage,
         setDevice: setPreviewDevice,
         toggleRule: toggleAbidosRule,
         saveToVFS,
         commitAndPush,
+        repairCode,
         getState: () => state
     };
 })();

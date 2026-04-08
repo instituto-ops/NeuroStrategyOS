@@ -10,6 +10,61 @@ const ttsClient = new textToSpeech.TextToSpeechClient();
 const { BetaAnalyticsDataClient } = require('@google-analytics/data');
 require('dotenv').config({ path: '../.env' }); 
 
+// [QUEUE SYSTEM FOR 429 RATE-LIMIT - METODOLOGIA ANTIGRAVITY]
+const aiQueue = [];
+let isProcessingQueue = false;
+
+async function processQueue() {
+    if (isProcessingQueue) return;
+    isProcessingQueue = true;
+    while (aiQueue.length > 0) {
+        const { model, parts, resolve, reject, retries, delay } = aiQueue[0];
+        try {
+            const executeCall = async (r, d) => {
+                try {
+                    const res = await model.generateContent(parts);
+                    return res;
+                } catch (e) {
+                    if (e.message.includes('429') && r > 0) {
+                        console.warn(`⚠️ [AI QUEUE] 429 Hit. Waiting ${d}ms... (${r} retries left)`);
+                        await new Promise(res => setTimeout(res, d));
+                        return await executeCall(r - 1, d * 2);
+                    }
+                    throw e;
+                }
+            };
+            const result = await executeCall(retries, delay || 2000);
+            aiQueue.shift();
+            resolve(result);
+            // Throttle: Max 1 request per second to respect RPM quotas
+            await new Promise(res => setTimeout(res, 1000));
+        } catch (err) {
+            aiQueue.shift();
+            reject(err);
+        }
+    }
+    isProcessingQueue = false;
+}
+
+function queuedGenerate(model, parts, retries = 3) {
+    return new Promise((resolve, reject) => {
+        aiQueue.push({ model, parts, resolve, reject, retries });
+        processQueue();
+    });
+}
+
+const wrapModel = (rawModel) => {
+    if (!rawModel) return rawModel;
+    return new Proxy(rawModel, {
+        get(target, prop, receiver) {
+            if (prop === 'generateContent') {
+                return (parts) => queuedGenerate(target, parts);
+            }
+            return Reflect.get(target, prop, receiver);
+        }
+    });
+};
+
 // Inicializa cliente GA4 se as credenciais existirem
 let analyticsClient;
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
@@ -30,28 +85,28 @@ if (!process.env.GOOGLE_CLOUD_PROJECT && !process.env.GEMINI_API_KEY) {
 }
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleAICacheManager } = require('@google/generative-ai/server');
 const fs = require('fs');
-
 const pdf = require('pdf-parse');
 const mammoth = require('mammoth');
-const app = express();
-const port = 3000; // Unificando na porta 3000 (Frontend + API)
 
-// Memória temporária para Previews (Evita QuotaExceededError no LocalStorage)
+const app = express();
+const port = 3000; 
+
+// Memória temporária para Previews
 const tempPreviews = {};
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Rotas de Preview (Protocolo Agente Gerente)
+// Rotas de Preview
 app.post('/api/previews/save', (req, res) => {
     try {
         const { html, title } = req.body;
         const id = Date.now().toString();
         tempPreviews[id] = { html, title, timestamp: Date.now() };
         
-        // Cleanup: Remove previews com mais de 30 minutos
         Object.keys(tempPreviews).forEach(k => {
             if (Date.now() - tempPreviews[k].timestamp > 1800000) delete tempPreviews[k];
         });
@@ -69,17 +124,17 @@ app.get('/api/previews/get/:id', (req, res) => {
     }
 });
 
-// 1. SERVIR ARQUIVOS ESTÁTICOS (Frontend & Templates)
+// 1. SERVIR ARQUIVOS ESTÁTICOS
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/templates', express.static(path.join(__dirname, '../templates')));
 
 const storage = multer.memoryStorage();
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 50 * 1024 * 1024 } // 50MB
+    limits: { fileSize: 50 * 1024 * 1024 } 
 });
 
-// [SMART MEDIA] Cloudinary Config (Se houver no .env)
+// [SMART MEDIA] Cloudinary Config
 const isCloudinaryActive = !!process.env.CLOUDINARY_API_KEY;
 if (isCloudinaryActive) {
     cloudinary.config({
@@ -87,13 +142,12 @@ if (isCloudinaryActive) {
         api_key: process.env.CLOUDINARY_API_KEY,
         api_secret: process.env.CLOUDINARY_API_SECRET
     });
-    console.log("☁️ [SMART MEDIA] Cloudinary Engine: ON (Conectado ao " + process.env.CLOUDINARY_CLOUD_NAME + ")");
+    console.log("☁️ [SMART MEDIA] Cloudinary Engine: ON");
 } else {
-    console.log("📍 [SMART MEDIA] Cloudinary Engine: OFF (Operando em modo Local-Only)");
+    console.log("📍 [SMART MEDIA] Cloudinary Engine: OFF");
 }
 
-// [GLOBAL] Servidor WebSocket para Logs em Tempo Real e Voz
-let wss; 
+let wss;
 
 /**
  * Função global para reportar status dos agentes via WebSocket
@@ -134,7 +188,8 @@ function getAIModel(modelType, mimeType = "application/json") {
     const config = { temperature: 0.8 };
     if (mimeType === "application/json") config.responseMimeType = "application/json";
 
-    return genAI.getGenerativeModel({ model: target, generationConfig: config });
+    const rawModel = genAI.getGenerativeModel({ model: target, generationConfig: config });
+    return wrapModel(rawModel);
 }
 
 // Hemisfério Esquerdo (FLASH): Rápido, Multimodal e Estruturado
@@ -3230,9 +3285,6 @@ app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, 
     }
 });
 
-// [DUPLICATA REMOVIDA - ROTA CONSOLIDADA EM /api/neuro-training/chat ABAIXO]
-
-
 app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) throw new Error("Arquivo não recebido.");
@@ -3875,8 +3927,6 @@ app.post('/api/ai/audit-clinical', async (req, res) => {
     }
 });
 
-// [DUPLICATA REMOVIDA - ROTA CONSOLIDADA EM /api/blueprint/cluster ACIMA]
-
 // [API] SEO Silos (Arquitetura Hub & Spoke)
 app.get('/api/seo/silos', (req, res) => {
     const siloPath = path.join(__dirname, 'silos.json');
@@ -3912,11 +3962,6 @@ app.post('/api/seo/silos', (req, res) => {
         console.error("❌ [API-SILO FATAL ERROR]:", e);
         res.status(500).json({ error: e.message });
     }
-});
-
-// [OBSOLETO] Rota duplicada removida para evitar conflito com a rota principal em /api/acervo/listar (linha 908)
-app.get('/api/acervo/listar-status', (req, res) => {
-    res.json({ message: "Use /api/acervo/listar para inventário real." });
 });
 
 // [API] Sugestão de Silos e STAGs via IA Abidos (Motor Semântico V5)
@@ -3963,61 +4008,181 @@ app.get('/api/seo/analyze-silos', async (req, res) => {
     }
 });
 
-app.use('/api/*', (req, res) => {
-    res.status(404).json({ 
-        success: false, 
-        error: "Endpoint não encontrado no ecossistema NeuroEngine (Protocolo V5)." 
-    });
-});
-
-// ==============================================================================
 // 🌀 VÓRTEX AI STUDIO — API ROUTES
-// ==============================================================================
+// [VORTEX] Global Cache State
+let vortexActiveCache = null;
+const cacheManager = process.env.GEMINI_API_KEY ? new GoogleAICacheManager(process.env.GEMINI_API_KEY) : null;
+
+// Helper: Carregar Contexto Antigravity
+async function getAntigravityContext() {
+    const basePath = path.join(__dirname, 'Antigravity', '1_Diretrizes_e_Memoria');
+    let context = '';
+    try {
+        const rules = fs.readFileSync(path.join(basePath, 'regras_base.md'), 'utf8');
+        const manual = fs.readFileSync(path.join(basePath, 'manual_do_arquiteto.md'), 'utf8');
+        const dictionary = fs.readFileSync(path.join(basePath, 'dicionario_de_traducao.md'), 'utf8');
+        context = `[ANTIGRAVITY SYSTEM CONTEXT]\n${rules}\n\n[MANUAL DO ARQUITETO]\n${manual}\n\n[DICIONÁRIO ONTOLÓGICO]\n${dictionary}`;
+    } catch (e) {
+        console.warn('⚠️ [VORTEX] Falha ao carregar diretrizes Antigravity:', e.message);
+    }
+    return context;
+}
+
+// Helper: Atualizar Estado Atual (RAM de Contexto)
+async function updateVortexState(action) {
+    const statePath = path.join(__dirname, 'Antigravity', 'estado_atual.md');
+    const timestamp = new Date().toLocaleString('pt-BR');
+    const logEntry = `\n- **[${timestamp}]**: ${action}`;
+    try {
+        fs.appendFileSync(statePath, logEntry);
+    } catch (e) {
+        console.error('❌ Erro ao atualizar estado_atual:', e.message);
+    }
+}
+
+// Helper: Registrar Sugestão do Subconsciente
+async function logSubconsciousIdea(ideas) {
+    if (!ideas || !Array.isArray(ideas)) return;
+    const ideaPath = path.join(__dirname, 'Antigravity', '2_Estrategia_e_Produto', 'sugestoes_agente.md');
+    const date = new Date().toLocaleDateString('pt-BR');
+    const entries = ideas.map(idea => `- [Pendente] - ${date} - ${idea}`).join('\n');
+    try {
+        fs.appendFileSync(ideaPath, `\n${entries}`);
+    } catch (e) {}
+}
+
+
+// [VORTEX] Endpoint: Context Caching Hub (Phase 2.1)
+app.post('/api/vortex/cache', async (req, res) => {
+    try {
+        if (!cacheManager) return res.status(400).json({ error: 'Cache Manager indisponível.'});
+        
+        const { systemPrompt, components, model } = req.body;
+        const targetModel = model || 'gemini-2.5-flash';
+        const modelPath = targetModel.startsWith('models/') ? targetModel : `models/${targetModel}`;
+
+        // Limpar cache existente para renovar
+        if (vortexActiveCache) {
+            try { await cacheManager.delete(vortexActiveCache.name); } catch(e) {}
+            vortexActiveCache = null;
+        }
+
+        // Carregar diretrizes reais da metodologia
+        const antigravityContext = await getAntigravityContext();
+        const baseSystem = systemPrompt || 'Você é o orquestrador sênior do Vórtex AI Studio.';
+        const fullSystemInstruction = `${baseSystem}\n\n${antigravityContext}`;
+
+        const cacheObj = await cacheManager.create({
+            model: modelPath,
+            displayName: 'vortex-context-hub',
+            systemInstruction: fullSystemInstruction,
+            contents: [
+                {
+                    role: 'user',
+                    parts: [{ text: components || 'Contexto inicial vazio.' }]
+                }
+            ],
+            ttlSeconds: 3600 // 1 hr de cache
+        });
+
+        vortexActiveCache = { name: cacheObj.name, model: targetModel, obj: cacheObj };
+        res.json({ success: true, cacheName: cacheObj.name, cachedTokens: cacheObj.usageMetadata?.totalTokenCount || 0 });
+    } catch (e) {
+        console.error('❌ [VORTEX CACHE]', e);
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // [VORTEX] Endpoint: Geração de Código via Gemini 2.5
 app.post('/api/vortex/generate', async (req, res) => {
     try {
-        const { prompt, model, currentCode, abidosRules, context } = req.body;
+        const { prompt, model, currentCode, abidosRules, context, useCache } = req.body;
         if (!prompt) return res.status(400).json({ error: 'Prompt vazio.' });
 
         const modelId = model || 'gemini-2.5-flash';
-        const aiModel = getAIModel(modelId, 'text/plain');
+        
+        let aiModel;
+        // Utilize cache se o frontend pedir e os modelos baterem
+        if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
+            aiModel = wrapModel(genAI.getGenerativeModelFromCachedContent(vortexActiveCache.obj));
+            console.log(`🌀 [VORTEX] Hub Ativado. Utilizando cache: ${vortexActiveCache.name}`);
+        } else {
+            aiModel = getAIModel(modelId, 'text/plain');
+        }
 
-        // Build Abidos System Prompt
+        // Build Specialized System Prompt based on Model Role (Vortex Phase 2.2)
+        const isPro = modelId.includes('pro');
+        const roleSpecialization = isPro 
+            ? `[ROLE: BRAIN/ARCHITECT]
+               Foco: Arquitetura de Silos, Domain-Driven Design (NeuroEngine), Lógica Complexa e Pacing & Leading Clínico.
+               Siga rigorosamente a Ontologia do Arquiteto.`
+            : `[ROLE: FLASH/VIBE]
+               Foco: Estética OLED Black, Performance Lighthouse 100, Tailwind CSS e Animações Glassmorphism.
+               Materialize a intenção visual com máxima velocidade.`;
+
+        // Ativar modo Vision se houver imagem (Phase 2.3)
+        const visionPrompt = req.body.imageBase64 
+            ? `\n[MODO VISION ATIVO — ANALISE A IMAGEM ANEXADA]
+               1. DECODIFIQUE a hierarquia visual (Grids, Flexbox, Spacing).
+               2. TRADUZA os elementos visuais para o Design System OLED Black.
+               3. MAPIE os textos e botões para o padrão Abidos (Micro-copy de conversão).
+               4. SEJA FIEL ao layout original, mas atualize-o para estética Cinematográfica.`
+            : "";
+
+        const antigravityDirectives = await getAntigravityContext();
+
         const systemPrompt = `[VÓRTEX AI STUDIO — GERADOR DE CÓDIGO NEXT.JS]
-Você é um engenheiro de frontend sênior especializado em Next.js 14 App Router, React, Tailwind CSS e SEO.
-Você GERA código production-ready para o ecossistema clínico do Dr. Victor Lawrence (Hipnoterapeuta).
+${roleSpecialization}${visionPrompt}
+
+[DIRETRIZES ANTIGRAVITY — SSOT]
+${antigravityDirectives}
 
 [REGRAS ABIDOS — INVIOLÁVEIS]
-${context || 'Sem regras especiais ativas.'}
+${context || 'Sem regras especiais em execução.'}
 
-[DESIGN SYSTEM]
-- Tema: OLED Black (#050810) com acentos Teal (#14b8a6) e Indigo (#6366f1)
-- Tipografia: Inter (body), Outfit (headings)
+[DESIGN SYSTEM OLED BLACK]
+- Background: #050810 (Pure Black)
+- Accents: Teal (#14b8a6), Indigo (#6366f1), Cyan (#06b6d4)
+- Text: Gray-300 (body), White (headings)
+- Typography: Inter / Outfit
 - Mobile-first, Core Web Vitals nota 100
-- Componentes atomizados em React Server Components quando possível
-- Tailwind CSS classes otimizadas (sem @apply)
 
-[FORMATO DE RESPOSTA]
-Retorne APENAS um bloco JSON com esta estrutura (sem markdown):
+[FORMATO DE RESPOSTA - JSON ESTRITO]
+Retorne APENAS um bloco JSON (sem markdown):
 {
-  "code": "// código React/JSX completo aqui",
+  "code": "// código React/JSX completo",
   "language": "typescriptreact",
   "filename": "page.tsx",
-  "explanation": "Explicação do que foi gerado e decisões tomadas",
-  "preview": "<html completa renderizável para preview>"
+  "explanation": "Decisões técnicas tomadas",
+  "preview": "<html com CDN Tailwind>",
+  "subconscious_suggestions": ["ideia de refatoração 1", "ideia de nova feature"]
 }
 
 IMPORTANTE:
-- O campo "code" deve conter o componente Next.js completo
-- O campo "preview" deve conter uma versão HTML estática renderizável (com Tailwind via CDN)
-- NÃO use markdown no JSON. NÃO faça escape desnecessário.`;
+- "subconscious_suggestions": Use este campo para registrar silenciosamente melhorias que você identificou enquanto codificava.
+- NÃO use markdown triplo (\`\`\`) fora do campo "code".
+- NÃO faça escape exagerado de caracteres.`;
 
         const fullPrompt = currentCode 
             ? `${systemPrompt}\n\n[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
             : `${systemPrompt}\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`;
 
-        const result = await aiModel.generateContent(fullPrompt);
+        const requestParts = [ fullPrompt ];
+        
+        if (req.body.imageBase64) {
+            try {
+                const base64Content = req.body.imageBase64.split(',')[1];
+                const mimeType = req.body.imageBase64.split(';')[0].split(':')[1];
+                requestParts.push({
+                    inlineData: {
+                        data: base64Content,
+                        mimeType: mimeType
+                    }
+                });
+            } catch(e) { console.error('Erro no parser da imagem Multimodal', e); }
+        }
+
+        const result = await aiModel.generateContent(requestParts);
         const responseText = result.response.text();
         
         // Track usage
@@ -4026,15 +4191,25 @@ IMPORTANTE:
         // Parse response
         let parsed = extractJSON(responseText);
         if (!parsed) {
-            // Fallback: treat entire response as code
             parsed = {
                 code: responseText,
                 language: 'typescriptreact',
                 filename: 'page.tsx',
-                explanation: 'Código gerado pelo Gemini 2.5.',
-                preview: responseText
+                explanation: 'Aviso: Falha no parser JSON da IA.',
+                preview: responseText,
+                subconscious_suggestions: []
             };
         }
+
+        // --- ATUALIZAÇÕES SILENCIOSAS ANTIGRAVITY ---
+        // 1. Log do Subconsciente (Phase 2.3)
+        if (parsed.subconscious_suggestions && parsed.subconscious_suggestions.length > 0) {
+            await logSubconsciousIdea(parsed.subconscious_suggestions);
+        }
+
+        // 2. Atualizar Memória RAM do Contexto
+        await updateVortexState(`Geração de código para [${parsed.filename || 'Página'}] via ${modelId}. Decisão: ${parsed.explanation?.substring(0, 100)}...`);
+        // ---------------------------------------------
 
         res.json(parsed);
     } catch (e) {
@@ -4130,7 +4305,68 @@ app.get('/api/vortex/files', (req, res) => {
     }
 });
 
+// [VORTEX] Endpoint: Pipeline de Ingestão (Local -> VFS)
+app.get('/api/vortex/ingest', (req, res) => {
+    try {
+        const repoPath = SITE_REPO_PATH;
+        const result = [];
+
+        if (fs.existsSync(repoPath)) {
+            const readDirContent = (dir, prefix = '') => {
+                const entries = fs.readdirSync(dir, { withFileTypes: true });
+                for (const entry of entries) {
+                    if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name.endsWith('.png') || entry.name.endsWith('.jpg') || entry.name.endsWith('.ico')) continue;
+                    const fullPath = path.join(dir, entry.name);
+                    const relPath = prefix ? `${prefix}/${entry.name}` : entry.name;
+                    if (entry.isDirectory()) {
+                        readDirContent(fullPath, relPath);
+                    } else {
+                        const content = fs.readFileSync(fullPath, 'utf8');
+                        result.push({ path: `/src/app/${relPath}`, name: entry.name, content });
+                    }
+                }
+            };
+            readDirContent(repoPath);
+            res.json({ success: true, base: '/src/app', files: result });
+        } else {
+            res.json({ success: false, error: 'Repository path not found locally.' });
+        }
+    } catch (e) {
+        console.error('❌ [VORTEX INGEST]', e.message);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+// [VORTEX] Endpoint: Salvar no Disco Local (Phase 5.1)
+app.post('/api/vortex/save-local', (req, res) => {
+    try {
+        const { filename, content } = req.body;
+        if (!filename || !content) return res.status(400).json({ error: 'Filename e content são obrigatórios.' });
+
+        const repoPath = SITE_REPO_PATH;
+        // Remove prefixos redundantes
+        const cleanName = filename.replace(/^\/?src\/app\//, '');
+        const filePath = path.join(repoPath, cleanName);
+        
+        const dir = path.dirname(filePath);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+        fs.writeFileSync(filePath, content, 'utf8');
+        res.json({ success: true, path: filePath });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+
 console.log('🌀 [VORTEX] API Routes registered.');
+
+// CATCH-ALL API (Movido para o final para não quebrar rotas dinâmicas)
+app.use('/api/*', (req, res) => {
+    res.status(404).json({ 
+        success: false, 
+        error: `Endpoint '${req.originalUrl}' não encontrado no ecossistema NeuroEngine (Protocolo V5). Verifique se o backend está atualizado e se a rota existe no server.js.` 
+    });
+});
 
 const server = app.listen(port, () => {
     console.log(`\n🚀 AntiGravity CMS: Mission Control Ativo!`);
@@ -4139,90 +4375,83 @@ const server = app.listen(port, () => {
     console.log(`🎙️ WebSocket Voice Live: Disponível em ws://localhost:${port}`);
 });
 
-// [PRIORIDADE 2] MOTOR DE VOZ LIVE (DR. VICTOR LIVE-DNA)
-wss = new WebSocket.Server({ server });
-wss.on('connection', (ws) => {
-    console.log("🎙️ [NEURO-LIVE] Dr. Victor Lawrence conectou ao canal de voz.");
-    
-    ws.on('message', async (message) => {
-        try {
-            // Buffer contém o áudio capturado em tempo real (webm/ogg)
-            const audioBuffer = Buffer.isBuffer(message) ? message : Buffer.from(message);
-            console.log(`📡 [NEURO-LIVE] Analisando ${Math.round(audioBuffer.length/1024)}KB de voz multimodal...`);
-            
-            const prompt = `Analise este segmento de voz do Dr. Victor Lawrence.
-            Ele está em uma sessão de 'Neuro-Training' (Digital Twin Training).
-            
-            1. Transcreva o que foi dito.
-            2. Identifique o Tom de Voz Clínico (ex: Ericksoniano, Autoritário, Acolhedor).
-            3. Se houver um padrão recorrente ou uma regra de ouro dita, extraia como Insight.
-            4. Responda ao Dr. Victor com sabedoria, mantendo a persona de seu Digital Twin.
-
-            RETORNE EXATAMENTE UM JSON:
-            {
-              "transcript": "...",
-              "tone": "...",
-              "insight": { "categoria": "...", "titulo": "...", "regra": "..." } (ou null),
-              "reply": "..."
-            }`;
-
-            // Usando Gemini Pro (Capacidade Multimodal Espelhada)
-            const modelId = HEAVY_MODEL; // Live voice defaults to Pro
-            const model = genAI.getGenerativeModel({ model: modelId });
-            const result = await model.generateContent([
-                { inlineData: { data: audioBuffer.toString('base64'), mimeType: 'audio/webm' } },
-                prompt
-            ]);
-
-            const response = extractJSON(result.response.text());
-            if (response) {
-                // Automação: Se houver insight, salva no DNA automaticamente para fechar o loop PRIORIDADE 3 & 2
-                if (response.insight) {
-                    const memory = getVictorStyle();
-                    response.insight.id = `live_${Date.now()}`;
-                    response.insight.data_extracao = new Date().toISOString();
-                    memory.style_rules.push(response.insight);
-                    fs.writeFileSync(path.join(__dirname, 'estilo_victor.json'), JSON.stringify(memory, null, 2));
-                    console.log(`✨ [LIVE-DNA] Novo insight extraído e salvo: ${response.insight.titulo}`);
-                    response.saved_new_dna = true;
-                }
-                
-                ws.send(JSON.stringify({ type: 'reply', ...response }));
-            }
-        } catch (e) {
-            console.error("❌ [NEURO-LIVE ERROR]", e);
-            ws.send(JSON.stringify({ type: 'error', message: "Falha no processamento neural da voz." }));
-        }
-    });
-
-    ws.on('close', () => console.log("🎙️ [NEURO-LIVE] Canal de voz encerrado."));
-});
-
-// =======================================================================
-// ROTA: GERADOR DE VOZ PREMIUM (GOOGLE TTS NEURAL)
-// =======================================================================
-app.post('/api/neuro-training/tts', async (req, res) => {
+// [VORTEX] Endpoint: Ingestão de Texto/PDF para DNA Verbal
+app.post('/api/neuro-training/ingest-text', upload.array('files'), async (req, res) => {
     try {
-        const { text } = req.body;
-        if (!text) return res.status(400).json({ error: 'Texto vazio.' });
+        const { manualText } = req.body;
+        let combinedText = '';
 
-        const request = {
-            input: { text: text },
-            // Voz pt-BR-Neural2-B (Masculina, natural, excelente cadência)
-            voice: { languageCode: 'pt-BR', name: 'pt-BR-Neural2-B' }, 
-            audioConfig: { 
-                audioEncoding: 'MP3',
-                speakingRate: 1.05, // Ligeiramente acelerado para tom coloquial
-                pitch: -1.0         // Tom ligeiramente mais grave
-            },
-        };
+        if (manualText) combinedText += manualText + '\n';
 
-        const [response] = await ttsClient.synthesizeSpeech(request);
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                if (file.mimetype === 'application/pdf') {
+                    const data = await pdf(file.buffer);
+                    combinedText += data.text + '\n';
+                } else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                    const result = await mammoth.extractRawText({ buffer: file.buffer });
+                    combinedText += result.value + '\n';
+                } else {
+                    combinedText += file.buffer.toString('utf8') + '\n';
+                }
+            }
+        }
+
+        if (!combinedText.trim()) return res.status(400).json({ error: 'Nenhum texto para processar.' });
+
+        const prompt = `Analise o seguinte material (transcrições/textos) do Dr. Victor Lawrence.
+        Extraia padrões de: CADÊNCIA, SINTAXE, VOCABULÁRIO DE IDENTIDADE e TONALIDADE.
+        Foque em regras que permitam a um LLM mimetizar a escrita dele com precisão cirúrgica.
         
-        res.set('Content-Type', 'audio/mpeg');
-        res.send(response.audioContent);
+        RETORNE EXATAMENTE UM JSON:
+        {
+          "new_rules": [
+            {
+              "categoria": "Cadência | Sintaxe | Vocabulário de Identidade | Tonabilidade Estrutural",
+              "titulo": "Nome curto da regra",
+              "regra": "Descrição detalhada do padrão linguístico"
+            }
+          ]
+        }
+
+        TEXTO:
+        ${combinedText.substring(0, 25000)}`;
+
+        const model = genAI.getGenerativeModel({ model: HEAVY_MODEL });
+        const result = await model.generateContent(prompt);
+        const responseData = extractJSON(result.response.text());
+
+        if (responseData && responseData.new_rules) {
+            const memoryPath = path.join(__dirname, 'estilo_victor.json');
+            const memory = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
+            
+            responseData.new_rules.forEach(rule => {
+                rule.id = `ext_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                rule.data_extracao = new Date().toISOString();
+                memory.style_rules.push(rule);
+            });
+            
+            memory.last_update = new Date().toISOString();
+            fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
+            
+            res.json({ success: true, count: responseData.new_rules.length, added: responseData.new_rules });
+        } else {
+            res.status(500).json({ error: 'Falha ao extrair padrões do texto.' });
+        }
     } catch (error) {
-        console.error('❌ [ERRO GOOGLE TTS]', error);
-        res.status(500).json({ error: 'Falha ao gerar voz neural' });
+        console.error('❌ [INGEST-TEXT ERROR]', error);
+        res.status(500).json({ error: error.message });
     }
 });
+
+// [PRIORIDADE 2] MOTOR DE STATUS (DASHBOARD)
+wss = new WebSocket.Server({ server });
+wss.on('connection', (ws) => {
+    console.log("📡 [NEURO-CONNECT] Cliente conectado ao canal de status.");
+    ws.on('close', () => console.log("📡 [NEURO-CONNECT] Canal de status encerrado."));
+});
+
+// =======================================================================
+// ROTA: GERADOR DE STATUS (FINALIZADO)
+// =======================================================================
+// TTS MÓDULO REMOVIDO EM FAVOR DO FOCO EM PERFIL VERBAL TEXTUAL

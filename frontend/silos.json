@@ -315,6 +315,17 @@
         },
         "timestamp": "2026-03-28T07:31:24.628Z"
       }
+    },
+    {
+      "id": "silo_1774902529712",
+      "hub": "Impactos da Pandemia da Saúde Mental",
+      "slug": "impactos-da-pandemia-da-saude-mental",
+      "spokes": [
+        {
+          "title": "Politicas Publicas para lidar com isso",
+          "slug": "politicas-publicas-para-lidar-com-isso"
+        }
+      ]
     }
   ]
 }

@@ -507,7 +507,7 @@ window.aiStudioTemplate = {
 
             const res = await fetch('/api/ai/generate', {
                 method: "POST", headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({ prompt, modelType })
+                body: JSON.stringify({ prompt, modelType, useCache: true })
             });
             const data = await res.json();
             if(data.error) throw new Error(data.error);
@@ -529,8 +529,9 @@ window.aiStudioTemplate = {
         } catch(e) { console.error(e); alert("Erro na geração: " + e.message); }
         finally { this.setProductionProgress(false, "", 0); }
         
-        // Sincroniza mídias inteligentes após a geração do texto
-        await this.autoAssignIntelligentImages();
+        // Chamadas em background suspensas em favor da Arquitetura On-Demand pura a fim de economizar requisições concorrentes.
+        // O resgate de mídias inteligentes deve ser chamado pelo usuário quando necessário.
+        // await this.autoAssignIntelligentImages();
     },
 
     autoAssignIntelligentImages: async function() {
@@ -646,7 +647,7 @@ window.aiStudioTemplate = {
 
             const res = await fetch('/api/ai/generate', {
                 method: "POST", headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({ prompt, modelType })
+                body: JSON.stringify({ prompt, modelType, useCache: true })
             });
             const data = await res.json();
             if(!data.text) throw new Error("A IA retornou um resultado vazio.");
