@@ -1029,6 +1029,7 @@ window.vortexStudio = (() => {
             setEditorContent(content, language);
             state.currentFile = filePath;
             updateFileTab(filename, false);
+            updateBreadcrumbs(filePath);
             renderFileTree(); // Refresh active state
         }
     }
@@ -1342,6 +1343,9 @@ window.vortexStudio = (() => {
                     <button class="vortex-btn vortex-btn-success" onclick="vortexStudio.commitAndPush()">
                         <i data-lucide="git-branch"></i> COMMIT & PUSH
                     </button>
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.toggleZenMode()" title="Modo Zen — Foco no Editor">
+                        <i data-lucide="maximize-2"></i>
+                    </button>
                     <button class="vortex-btn vortex-btn-secondary" onclick="app.showSection('dashboard')">
                         <i data-lucide="x"></i>
                     </button>
@@ -1432,12 +1436,21 @@ window.vortexStudio = (() => {
                         <div id="vortex-file-tabs" class="vortex-file-tabs">
                             <button class="vortex-file-tab active" data-file="page.tsx">
                                 <span class="dot"></span><span class="tab-icon">⚛️</span>page.tsx
+                                <span class="tab-close" onclick="event.stopPropagation(); vortexStudio.closeTab('page.tsx')">×</span>
                             </button>
                         </div>
                         <div class="vortex-panel-title" style="color: #6a737d;">
                             <i data-lucide="code-2" style="color: #6366f1;"></i>
                             EDITOR
                         </div>
+                    </div>
+                    <!-- [PHASE 3.4] Breadcrumbs -->
+                    <div id="vortex-breadcrumbs" class="vortex-breadcrumbs">
+                        <span class="breadcrumb-segment">src</span>
+                        <span class="breadcrumb-sep">/</span>
+                        <span class="breadcrumb-segment">app</span>
+                        <span class="breadcrumb-sep">/</span>
+                        <span class="breadcrumb-segment active">page.tsx</span>
                     </div>
                     <div id="vortex-monaco-container" class="vortex-panel-body" style="background: #1e1e1e;"></div>
                 </div>
@@ -1461,6 +1474,9 @@ window.vortexStudio = (() => {
                             </button>
                             <button class="vortex-device-btn active" data-device="desktop" onclick="vortexStudio.setDevice('desktop')">
                                 <i data-lucide="monitor"></i> Desktop
+                            </button>
+                            <button class="vortex-device-btn" onclick="vortexStudio.popOutPreview()" title="Abrir em nova aba">
+                                <i data-lucide="external-link"></i>
                             </button>
                         </div>
                     </div>
@@ -1633,6 +1649,190 @@ window.vortexStudio = (() => {
     }
 
     // =========================================================================
+    // [PHASE 3.4] BREADCRUMBS
+    // =========================================================================
+    function updateBreadcrumbs(filePath) {
+        const bc = document.getElementById('vortex-breadcrumbs');
+        if (!bc) return;
+        const parts = (filePath || '/src/app/page.tsx').replace(/^\//, '').split('/');
+        bc.innerHTML = parts.map((p, i) => {
+            const isLast = i === parts.length - 1;
+            const cls = isLast ? 'breadcrumb-segment active' : 'breadcrumb-segment';
+            const sep = i < parts.length - 1 ? '<span class="breadcrumb-sep">/</span>' : '';
+            return `<span class="${cls}">${p}</span>${sep}`;
+        }).join('');
+    }
+
+    // =========================================================================
+    // [PHASE 3.5] QUICK OPEN (Cmd+P / Ctrl+P)
+    // =========================================================================
+    function initQuickOpen() {
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                showQuickOpen();
+            }
+            if (e.key === 'Escape') {
+                closeQuickOpen();
+            }
+        });
+    }
+
+    function showQuickOpen() {
+        let overlay = document.getElementById('vortex-quick-open');
+        if (overlay) { overlay.style.display = 'flex'; return; }
+
+        overlay = document.createElement('div');
+        overlay.id = 'vortex-quick-open';
+        overlay.className = 'vortex-quick-open-overlay';
+        overlay.innerHTML = `
+            <div class="vortex-quick-open-modal">
+                <input type="text" id="vortex-quick-open-input" class="vortex-quick-open-input" placeholder="Buscar arquivo..." autofocus>
+                <div id="vortex-quick-open-results" class="vortex-quick-open-results"></div>
+            </div>
+        `;
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeQuickOpen(); });
+        document.body.appendChild(overlay);
+
+        const input = document.getElementById('vortex-quick-open-input');
+        input.addEventListener('input', async () => {
+            const query = input.value.toLowerCase();
+            const allFiles = await vfsList();
+            const filtered = allFiles.filter(f => f.path.toLowerCase().includes(query));
+            const results = document.getElementById('vortex-quick-open-results');
+            results.innerHTML = filtered.slice(0, 10).map(f => {
+                const name = f.path.split('/').pop();
+                return `<div class="vortex-quick-open-item" onclick="vortexStudio.openFilePath('${f.path}'); vortexStudio.closeQuickOpen();">
+                    <span class="vortex-tree-icon">${getFileIcon(name)}</span>
+                    <span>${f.path}</span>
+                </div>`;
+            }).join('') || '<div class="vortex-quick-open-item" style="opacity: 0.5;">Nenhum arquivo encontrado</div>';
+        });
+
+        input.dispatchEvent(new Event('input'));
+        input.focus();
+    }
+
+    function closeQuickOpen() {
+        const overlay = document.getElementById('vortex-quick-open');
+        if (overlay) overlay.style.display = 'none';
+    }
+
+    // =========================================================================
+    // [PHASE 3.6] @MENTIONS NO CHAT
+    // =========================================================================
+    function initMentions() {
+        const textarea = document.getElementById('vortex-chat-input');
+        if (!textarea) return;
+
+        textarea.addEventListener('input', async () => {
+            const val = textarea.value;
+            const atPos = val.lastIndexOf('@');
+            if (atPos === -1 || val.substring(atPos).includes(' ')) {
+                closeMentionsMenu();
+                return;
+            }
+            const query = val.substring(atPos + 1).toLowerCase();
+            const allFiles = await vfsList();
+            const matches = allFiles.filter(f => f.path.toLowerCase().includes(query)).slice(0, 5);
+            showMentionsMenu(matches, atPos);
+        });
+    }
+
+    function showMentionsMenu(files, atPos) {
+        closeMentionsMenu();
+        if (files.length === 0) return;
+        const menu = document.createElement('div');
+        menu.id = 'vortex-mentions-menu';
+        menu.className = 'vortex-mentions-menu';
+        menu.innerHTML = files.map(f => {
+            const name = f.path.split('/').pop();
+            return `<div class="vortex-mention-item" data-path="${f.path}">
+                <span class="vortex-tree-icon">${getFileIcon(name)}</span> ${name}
+            </div>`;
+        }).join('');
+
+        menu.querySelectorAll('.vortex-mention-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const textarea = document.getElementById('vortex-chat-input');
+                const val = textarea.value;
+                textarea.value = val.substring(0, atPos) + '@' + item.dataset.path + ' ';
+                closeMentionsMenu();
+                textarea.focus();
+            });
+        });
+
+        const inputArea = document.querySelector('.vortex-chat-input-area');
+        if (inputArea) inputArea.appendChild(menu);
+    }
+
+    function closeMentionsMenu() {
+        const menu = document.getElementById('vortex-mentions-menu');
+        if (menu) menu.remove();
+    }
+
+    // =========================================================================
+    // [PHASE 3.8] POP-OUT PREVIEW
+    // =========================================================================
+    function popOutPreview() {
+        const frame = document.getElementById('vortex-preview-frame');
+        if (!frame || !frame.srcdoc) return;
+        const win = window.open('', '_blank');
+        if (win) {
+            win.document.write(frame.srcdoc);
+            win.document.close();
+            addAuditLog('info', '🪟 Preview aberto em nova aba.');
+        }
+    }
+
+    // =========================================================================
+    // [PHASE 3.10] MODO ZEN
+    // =========================================================================
+    function toggleZenMode() {
+        const studio = document.getElementById('vortex-studio');
+        if (!studio) return;
+        studio.classList.toggle('zen-mode');
+        const isZen = studio.classList.contains('zen-mode');
+        addAuditLog('info', isZen ? '🧘 Modo Zen ativado.' : '🧘 Modo Zen desativado.');
+        if (state.editor) setTimeout(() => state.editor.layout(), 300);
+    }
+
+    // =========================================================================
+    // [PHASE 3.12] BIBLIOTECA DE TEMPLATES
+    // =========================================================================
+    const TEMPLATES_LIBRARY = [
+        { id: 'landing-clinic', name: 'Landing Clínica', icon: '🏥', description: 'Landing page para profissional de saúde com hero, serviços e CTA WhatsApp.' },
+        { id: 'article-page', name: 'Página de Artigo', icon: '📰', description: 'Estrutura para artigos longos com índice lateral e breadcrumbs SEO.' },
+        { id: 'service-page', name: 'Página de Serviço', icon: '💼', description: 'Página focada em apresentar um serviço específico com FAQ e schema.' },
+        { id: 'bio-page', name: 'Biografia/Sobre', icon: '👤', description: 'Página sobre o profissional com timeline, formação e credenciais.' },
+        { id: 'contact-form', name: 'Contato + Formulário', icon: '📋', description: 'Página de contato com formulário, mapa e informações de atendimento.' }
+    ];
+
+    function showTemplateLibrary() {
+        const html = TEMPLATES_LIBRARY.map(t => `
+            <div class="vortex-template-card" onclick="vortexStudio.useTemplate('${t.id}')">
+                <span class="template-icon">${t.icon}</span>
+                <div class="template-info">
+                    <strong>${t.name}</strong>
+                    <small>${t.description}</small>
+                </div>
+            </div>
+        `).join('');
+        addMessage('ai', `📦 **Biblioteca de Templates**\\n\\nEscolha um template para começar:\\n\\n${html}`);
+    }
+
+    function useTemplate(templateId) {
+        const tpl = TEMPLATES_LIBRARY.find(t => t.id === templateId);
+        if (!tpl) return;
+        const input = document.getElementById('vortex-chat-input');
+        if (input) {
+            input.value = `Gere uma ${tpl.name} completa seguindo o Design System OLED Black do Dr. Victor Lawrence. ${tpl.description}`;
+            sendPrompt();
+        }
+    }
+
+
+    // =========================================================================
     // HELPERS
     // =========================================================================
     function loadScript(src) {
@@ -1671,7 +1871,13 @@ window.vortexStudio = (() => {
         // 6. Render File Tree
         await renderFileTree();
 
-        // 7. Set initial preview
+        // 7. Init Quick Open (Ctrl+P)
+        initQuickOpen();
+
+        // 8. Init @Mentions
+        initMentions();
+
+        // 9. Set initial preview
         updatePreview(`
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: #f8fafc; color: #64748b; text-align: center; padding: 40px;">
                 <div style="font-size: 48px; margin-bottom: 20px;">🌀</div>
@@ -1706,6 +1912,13 @@ window.vortexStudio = (() => {
         addAuditLog,
         createSnapshot,
         auditSemantic,
+        // Phase 3
+        toggleZenMode,
+        popOutPreview,
+        closeQuickOpen,
+        showTemplateLibrary,
+        useTemplate,
+        updateBreadcrumbs,
         getState: () => state
     };
 })();

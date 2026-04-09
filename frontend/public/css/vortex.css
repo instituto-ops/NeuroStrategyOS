@@ -1136,3 +1136,197 @@
     }
 }
 
+/* ============================================================================
+   PHASE 3 — POLIMENTO PREMIUM
+   ============================================================================ */
+
+/* === 3.4 BREADCRUMBS === */
+.vortex-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px 12px;
+    background: #1a1a2e;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    font-size: 11px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    min-height: 22px;
+}
+
+.breadcrumb-segment {
+    color: #64748b;
+    cursor: pointer;
+    padding: 1px 3px;
+    border-radius: 3px;
+    transition: all 0.15s;
+}
+
+.breadcrumb-segment:hover {
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.breadcrumb-segment.active {
+    color: #a5b4fc;
+    font-weight: 600;
+}
+
+.breadcrumb-sep {
+    color: #334155;
+    font-size: 10px;
+}
+
+/* === 3.5 QUICK OPEN (Cmd+P) === */
+.vortex-quick-open-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(5, 8, 16, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    padding-top: 15vh;
+    z-index: 10000;
+}
+
+.vortex-quick-open-modal {
+    width: 480px;
+    max-height: 400px;
+    background: #0f172a;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.vortex-quick-open-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    color: #e2e8f0;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+}
+
+.vortex-quick-open-input::placeholder {
+    color: #475569;
+}
+
+.vortex-quick-open-results {
+    overflow-y: auto;
+    max-height: 300px;
+}
+
+.vortex-quick-open-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    color: #94a3b8;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.1s;
+}
+
+.vortex-quick-open-item:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: #e2e8f0;
+}
+
+/* === 3.6 @MENTIONS MENU === */
+.vortex-mentions-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: #0f172a;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 8px;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    z-index: 100;
+    margin-bottom: 4px;
+}
+
+.vortex-mention-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    color: #94a3b8;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.1s;
+}
+
+.vortex-mention-item:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: #e2e8f0;
+}
+
+/* === 3.10 MODO ZEN === */
+#vortex-studio.zen-mode .vortex-chat-panel,
+#vortex-studio.zen-mode .vortex-preview-panel,
+#vortex-studio.zen-mode .vortex-splitter:first-of-type,
+#vortex-studio.zen-mode .vortex-drawer {
+    display: none !important;
+}
+
+#vortex-studio.zen-mode .vortex-workspace {
+    grid-template-columns: 1fr !important;
+}
+
+#vortex-studio.zen-mode .vortex-editor-panel {
+    border: none;
+}
+
+/* === 3.12 TEMPLATE CARDS === */
+.vortex-template-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    margin: 4px 0;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.vortex-template-card:hover {
+    background: rgba(99, 102, 241, 0.08);
+    border-color: rgba(99, 102, 241, 0.3);
+    transform: translateY(-1px);
+}
+
+.template-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.template-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.template-info strong {
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.template-info small {
+    color: #64748b;
+    font-size: 10px;
+    line-height: 1.4;
+}
