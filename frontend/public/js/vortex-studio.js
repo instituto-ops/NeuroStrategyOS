@@ -776,22 +776,122 @@ window.vortexStudio = (() => {
     }
 
     // =========================================================================
-    // FILE TABS
+    // FILE TREE EXPLORER (Etapa 1.1)
+    // =========================================================================
+    function getFileIcon(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const icons = {
+            tsx: '⚛️', jsx: '⚛️', ts: '🔷', js: '🟡',
+            css: '🎨', scss: '🎨', html: '🌐', json: '📋',
+            md: '📝', svg: '🖼️', png: '🖼️', jpg: '🖼️',
+            env: '🔒', gitignore: '🚫', txt: '📄'
+        };
+        return icons[ext] || '📄';
+    }
+
+    function getLanguageFromExt(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const langs = {
+            tsx: 'typescriptreact', jsx: 'javascript', ts: 'typescript',
+            js: 'javascript', css: 'css', scss: 'scss', html: 'html',
+            json: 'json', md: 'markdown', svg: 'xml', txt: 'plaintext'
+        };
+        return langs[ext] || 'plaintext';
+    }
+
+    async function renderFileTree() {
+        const container = document.getElementById('vortex-file-tree');
+        if (!container) return;
+
+        const files = await vfsList();
+        if (files.length === 0) {
+            container.innerHTML = `
+                <div class="vortex-tree-empty">
+                    <span>📂</span>
+                    <small>Nenhum arquivo no VFS.<br>Envie um prompt para gerar.</small>
+                </div>`;
+            return;
+        }
+
+        // Build tree structure from flat paths
+        const tree = {};
+        files.forEach(f => {
+            const parts = f.path.split('/').filter(Boolean);
+            let current = tree;
+            parts.forEach((part, i) => {
+                if (i === parts.length - 1) {
+                    current[part] = { _file: f };
+                } else {
+                    if (!current[part]) current[part] = {};
+                    current = current[part];
+                }
+            });
+        });
+
+        function renderNode(node, depth = 0) {
+            let html = '';
+            const entries = Object.entries(node).sort(([a, av], [b, bv]) => {
+                const aIsDir = !av._file;
+                const bIsDir = !bv._file;
+                if (aIsDir && !bIsDir) return -1;
+                if (!aIsDir && bIsDir) return 1;
+                return a.localeCompare(b);
+            });
+
+            for (const [name, value] of entries) {
+                const pad = depth * 12;
+                if (value._file) {
+                    const isActive = state.currentFile === value._file.path;
+                    html += `<div class="vortex-tree-file ${isActive ? 'active' : ''}" 
+                                 data-path="${value._file.path}" 
+                                 onclick="vortexStudio.openFilePath('${value._file.path}')"
+                                 style="padding-left:${pad + 8}px">
+                                <span class="vortex-tree-icon">${getFileIcon(name)}</span>
+                                <span class="vortex-tree-name">${name}</span>
+                            </div>`;
+                } else {
+                    html += `<div class="vortex-tree-dir" style="padding-left:${pad + 4}px" 
+                                  onclick="this.classList.toggle('collapsed'); this.nextElementSibling.classList.toggle('hidden')">
+                                <span class="vortex-tree-arrow">▼</span>
+                                <span class="vortex-tree-icon">📁</span>
+                                <span class="vortex-tree-name">${name}</span>
+                            </div>`;
+                    html += `<div class="vortex-tree-children">${renderNode(value, depth + 1)}</div>`;
+                }
+            }
+            return html;
+        }
+
+        container.innerHTML = renderNode(tree);
+    }
+
+    async function openFilePath(filePath) {
+        const content = await vfsRead(filePath);
+        if (content !== null) {
+            const filename = filePath.split('/').pop();
+            const language = getLanguageFromExt(filename);
+            setEditorContent(content, language);
+            state.currentFile = filePath;
+            updateFileTab(filename, false);
+            renderFileTree(); // Refresh active state
+        }
+    }
+
+    // =========================================================================
+    // FILE TABS (Etapa 1.3)
     // =========================================================================
     function updateFileTab(filename, modified = false) {
         const tabs = document.getElementById('vortex-file-tabs');
         if (!tabs) return;
 
-        // Check if tab exists
         let tab = tabs.querySelector(`[data-file="${filename}"]`);
         if (!tab) {
             tab = document.createElement('button');
             tab.className = 'vortex-file-tab active';
             tab.dataset.file = filename;
-            tab.innerHTML = `<span class="dot"></span>${filename}`;
+            tab.innerHTML = `<span class="dot"></span><span class="tab-icon">${getFileIcon(filename)}</span>${filename}<span class="tab-close" onclick="event.stopPropagation(); vortexStudio.closeTab('${filename}')">&times;</span>`;
             tab.onclick = () => openFile(filename);
             
-            // Deactivate other tabs
             tabs.querySelectorAll('.vortex-file-tab').forEach(t => t.classList.remove('active'));
             tabs.appendChild(tab);
         } else {
@@ -802,19 +902,140 @@ window.vortexStudio = (() => {
         if (modified) tab.classList.add('modified');
     }
 
+    function closeTab(filename) {
+        const tabs = document.getElementById('vortex-file-tabs');
+        if (!tabs) return;
+        const tab = tabs.querySelector(`[data-file="${filename}"]`);
+        if (tab) {
+            const wasActive = tab.classList.contains('active');
+            tab.remove();
+            if (wasActive) {
+                const remaining = tabs.querySelector('.vortex-file-tab');
+                if (remaining) {
+                    remaining.classList.add('active');
+                    openFile(remaining.dataset.file);
+                }
+            }
+        }
+    }
+
     async function openFile(filename) {
-        // Find matching paths for this filename (e.g. /src/app/page.tsx)
         const allFiles = await vfsList();
         const fileMatch = allFiles.find(f => f.name === filename || f.path.endsWith(filename));
         
         const filePath = fileMatch ? fileMatch.path : `/src/app/${filename}`;
         const content = await vfsRead(filePath);
-        if (content) {
-            setEditorContent(content);
+        if (content !== null) {
+            const language = getLanguageFromExt(filename);
+            setEditorContent(content, language);
             state.currentFile = filePath;
             updateFileTab(filename, false);
-            addMessage('system', `📂 Arquivo aberto: ${filename}`);
+            renderFileTree();
         }
+    }
+
+    // =========================================================================
+    // MULTI-FILE PARSER (Etapa 1.5)
+    // =========================================================================
+    function parseMultiFileResponse(text) {
+        const files = [];
+        const fileRegex = /<file\s+path="([^"]+)"\s*(?:language="([^"]+)")?\s*>([\s\S]*?)<\/file>/g;
+        let match;
+
+        while ((match = fileRegex.exec(text)) !== null) {
+            files.push({
+                path: match[1].trim(),
+                language: match[2] || getLanguageFromExt(match[1].trim().split('/').pop()),
+                content: match[3].trim()
+            });
+        }
+
+        const previewMatch = text.match(/<preview>([\s\S]*?)<\/preview>/);
+        const explanationMatch = text.match(/<explanation>([\s\S]*?)<\/explanation>/);
+
+        return {
+            files,
+            preview: previewMatch ? previewMatch[1].trim() : '',
+            explanation: explanationMatch ? explanationMatch[1].trim() : 'Código gerado.'
+        };
+    }
+
+    async function processMultiFileResponse(parsed) {
+        if (parsed.files.length === 0) return;
+
+        for (const file of parsed.files) {
+            const fullPath = file.path.startsWith('/') ? file.path : `/src/app/${file.path}`;
+            await vfsWrite(fullPath, file.content);
+        }
+
+        // Open the first file in the editor
+        const first = parsed.files[0];
+        const firstPath = first.path.startsWith('/') ? first.path : `/src/app/${first.path}`;
+        const firstName = firstPath.split('/').pop();
+        setEditorContent(first.content, first.language);
+        state.currentFile = firstPath;
+        updateFileTab(firstName, true);
+
+        // Create tabs for all generated files
+        for (let i = 1; i < parsed.files.length; i++) {
+            const fp = parsed.files[i].path;
+            const fn = fp.split('/').pop();
+            updateFileTab(fn, true);
+            // Re-activate the first tab
+            const tabs = document.getElementById('vortex-file-tabs');
+            if (tabs) {
+                tabs.querySelectorAll('.vortex-file-tab').forEach(t => t.classList.remove('active'));
+                const firstTab = tabs.querySelector(`[data-file="${firstName}"]`);
+                if (firstTab) firstTab.classList.add('active');
+            }
+        }
+
+        if (parsed.preview) updatePreview(parsed.preview);
+        await renderFileTree();
+
+        addMessage('ai', `${parsed.explanation}\n\n📦 **${parsed.files.length} arquivo(s) gerado(s):** ${parsed.files.map(f => '`' + f.path.split('/').pop() + '`').join(', ')}`);
+    }
+
+    // =========================================================================
+    // SPLITTER / RESIZE (Etapa 1.8)
+    // =========================================================================
+    function initSplitters() {
+        document.querySelectorAll('.vortex-splitter').forEach(splitter => {
+            let isResizing = false;
+            let startX, startWidthLeft, startWidthRight;
+            const leftPanel = splitter.previousElementSibling;
+            const rightPanel = splitter.nextElementSibling;
+
+            splitter.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startWidthLeft = leftPanel.getBoundingClientRect().width;
+                startWidthRight = rightPanel.getBoundingClientRect().width;
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const dx = e.clientX - startX;
+                const newLeftWidth = Math.max(200, startWidthLeft + dx);
+                const newRightWidth = Math.max(200, startWidthRight - dx);
+                leftPanel.style.width = newLeftWidth + 'px';
+                leftPanel.style.flex = 'none';
+                rightPanel.style.width = newRightWidth + 'px';
+                rightPanel.style.flex = 'none';
+                if (state.editor) state.editor.layout();
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            });
+        });
     }
 
     // =========================================================================
@@ -973,8 +1194,20 @@ window.vortexStudio = (() => {
 
             <!-- 3-COLUMN WORKSPACE -->
             <div class="vortex-workspace">
-                <!-- LEFT: CHAT PANEL -->
+                <!-- LEFT: CHAT + EXPLORER PANEL -->
                 <div class="vortex-panel vortex-chat-panel">
+                    <!-- File Explorer Collapsible -->
+                    <div class="vortex-explorer-section">
+                        <div class="vortex-panel-header vortex-explorer-header" onclick="document.getElementById('vortex-file-tree').classList.toggle('collapsed')">
+                            <div class="vortex-panel-title">
+                                <i data-lucide="folder-tree"></i>
+                                EXPLORER
+                            </div>
+                            <span class="vortex-explorer-toggle">▼</span>
+                        </div>
+                        <div id="vortex-file-tree" class="vortex-file-tree"></div>
+                    </div>
+                    <!-- Chat -->
                     <div class="vortex-panel-header">
                         <div class="vortex-panel-title">
                             <i data-lucide="message-square"></i>
@@ -1034,12 +1267,15 @@ window.vortexStudio = (() => {
                     </div>
                 </div>
 
+                <!-- SPLITTER LEFT -->
+                <div class="vortex-splitter" title="Arrastar para redimensionar"></div>
+
                 <!-- CENTER: EDITOR PANEL -->
                 <div class="vortex-panel vortex-editor-panel">
                     <div class="vortex-panel-header" style="background: #252526; border-color: #3c3c3c;">
                         <div id="vortex-file-tabs" class="vortex-file-tabs">
                             <button class="vortex-file-tab active" data-file="page.tsx">
-                                <span class="dot"></span>page.tsx
+                                <span class="dot"></span><span class="tab-icon">⚛️</span>page.tsx
                             </button>
                         </div>
                         <div class="vortex-panel-title" style="color: #6a737d;">
@@ -1049,6 +1285,9 @@ window.vortexStudio = (() => {
                     </div>
                     <div id="vortex-monaco-container" class="vortex-panel-body" style="background: #1e1e1e;"></div>
                 </div>
+
+                <!-- SPLITTER RIGHT -->
+                <div class="vortex-splitter" title="Arrastar para redimensionar"></div>
 
                 <!-- RIGHT: PREVIEW PANEL -->
                 <div class="vortex-panel vortex-preview-panel">
@@ -1194,12 +1433,18 @@ window.vortexStudio = (() => {
         // 3. Init text area resize
         initTextareaResize();
 
-        // 4. Init Monaco Editor (deferred for performance)
+        // 4. Init Splitters (drag resize)
+        initSplitters();
+
+        // 5. Init Monaco Editor (deferred for performance)
         setTimeout(async () => {
             await initMonaco();
         }, 300);
 
-        // 5. Set initial preview
+        // 6. Render File Tree
+        await renderFileTree();
+
+        // 7. Set initial preview
         updatePreview(`
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: #f8fafc; color: #64748b; text-align: center; padding: 40px;">
                 <div style="font-size: 48px; margin-bottom: 20px;">🌀</div>
@@ -1226,6 +1471,9 @@ window.vortexStudio = (() => {
         saveToVFS,
         commitAndPush,
         repairCode,
+        openFilePath,
+        closeTab,
+        processMultiFileResponse,
         getState: () => state
     };
 })();

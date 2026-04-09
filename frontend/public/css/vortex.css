@@ -177,13 +177,46 @@
     box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
 }
 
-/* === 3-COLUMN WORKSPACE === */
+/* === 3-COLUMN WORKSPACE (com splitters) === */
 .vortex-workspace {
     display: grid;
-    grid-template-columns: 340px 1fr 1fr;
+    grid-template-columns: 340px 4px 1fr 4px 1fr;
     flex: 1;
     overflow: hidden;
     min-height: 0;
+}
+
+/* Splitter Handle */
+.vortex-splitter {
+    width: 4px;
+    cursor: col-resize;
+    background: rgba(255, 255, 255, 0.03);
+    transition: background 0.2s;
+    position: relative;
+    z-index: 5;
+}
+
+.vortex-splitter:hover,
+.vortex-splitter:active {
+    background: rgba(99, 102, 241, 0.4);
+}
+
+.vortex-splitter::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 1px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.vortex-splitter:hover::after {
+    opacity: 1;
 }
 
 /* Panel Generic */
@@ -482,6 +515,153 @@
 
 .vortex-file-tab.modified .dot {
     display: block;
+}
+
+.vortex-file-tab .tab-icon {
+    font-size: 12px;
+    margin-right: 2px;
+}
+
+.vortex-file-tab .tab-close {
+    margin-left: 6px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    color: #94a3b8;
+    padding: 0 2px;
+}
+
+.vortex-file-tab:hover .tab-close {
+    opacity: 0.6;
+}
+
+.vortex-file-tab .tab-close:hover {
+    opacity: 1;
+    color: #ef4444;
+}
+
+/* === FILE TREE EXPLORER === */
+.vortex-explorer-section {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.vortex-explorer-header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.vortex-explorer-header:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.vortex-explorer-toggle {
+    font-size: 10px;
+    color: #64748b;
+    transition: transform 0.2s;
+}
+
+.vortex-file-tree {
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px 0;
+    transition: max-height 0.3s ease;
+}
+
+.vortex-file-tree.collapsed {
+    max-height: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.vortex-file-tree::-webkit-scrollbar {
+    width: 3px;
+}
+
+.vortex-file-tree::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+}
+
+.vortex-tree-file {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+}
+
+.vortex-tree-file:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #e2e8f0;
+}
+
+.vortex-tree-file.active {
+    background: rgba(99, 102, 241, 0.1);
+    color: #a5b4fc;
+    border-left-color: #6366f1;
+}
+
+.vortex-tree-dir {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+}
+
+.vortex-tree-dir:hover {
+    color: #94a3b8;
+}
+
+.vortex-tree-arrow {
+    font-size: 8px;
+    transition: transform 0.15s;
+    display: inline-block;
+}
+
+.vortex-tree-dir.collapsed .vortex-tree-arrow {
+    transform: rotate(-90deg);
+}
+
+.vortex-tree-children.hidden {
+    display: none;
+}
+
+.vortex-tree-icon {
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.vortex-tree-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vortex-tree-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px;
+    color: #475569;
+    font-size: 11px;
+    text-align: center;
+}
+
+.vortex-tree-empty span {
+    font-size: 20px;
+    opacity: 0.5;
 }
 
 /* === PREVIEW PANEL (Right Column) === */
@@ -811,14 +991,17 @@
 /* === RESPONSIVE ADJUSTMENTS === */
 @media (max-width: 1200px) {
     .vortex-workspace {
-        grid-template-columns: 280px 1fr 1fr;
+        grid-template-columns: 280px 4px 1fr 4px 1fr;
     }
 }
 
 @media (max-width: 900px) {
     .vortex-workspace {
         grid-template-columns: 1fr;
-        grid-template-rows: 1fr 1fr 1fr;
+        grid-template-rows: auto auto auto;
+    }
+    .vortex-splitter {
+        display: none;
     }
 }
 
