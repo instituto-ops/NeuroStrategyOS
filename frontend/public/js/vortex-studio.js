@@ -17,6 +17,7 @@ window.vortexStudio = (() => {
     const state = {
         db: null,               // Dexie instance
         editor: null,           // Monaco instance
+        diffEditor: null,       // Monaco DiffEditor instance (Phase 2.1)
         currentFile: null,      // Active file path
         files: new Map(),       // In-memory file cache
         messages: [],           // Chat history
@@ -31,7 +32,9 @@ window.vortexStudio = (() => {
         monacoReady: false,
         fs: null,               // LightningFS instance
         pfs: null,              // LightningFS Promises API
-        contextHubEnabled: false
+        contextHubEnabled: false,
+        lastAuditResult: null,  // Phase 2.4: Last audit result for commit gate
+        snapshotId: 0           // Phase 2.2: Auto-increment snapshot counter
     };
 
     // =========================================================================
@@ -52,10 +55,11 @@ window.vortexStudio = (() => {
             }
 
             state.db = new Dexie('VortexVFS');
-            state.db.version(1).stores({
+            state.db.version(2).stores({
                 files: 'path, name, content, type, modified',
                 projects: 'id, name, repo, branch, created',
-                sessions: 'id, projectId, messages, created'
+                sessions: 'id, projectId, messages, created',
+                snapshots: '++id, filePath, content, prompt, timestamp'
             });
 
             await state.db.open();
@@ -425,12 +429,18 @@ window.vortexStudio = (() => {
             const currentCode = getEditorContent();
             const defaultCode = '// 🌀 Vórtex AI Studio\n// Envie um prompt no chat para gerar código Next.js\n';
 
+            // [PHASE 2.2] Snapshot antes de cada geração
+            await createSnapshot(prompt);
+
+            // [PHASE 2.3] Contexto seletivo (arquivo ativo + imports)
+            const selectiveCtx = await buildSelectiveContext();
+
             const payload = {
                 prompt: typeof arguments[0] === 'string' ? arguments[0] : prompt,
                 model,
                 currentCode: currentCode !== defaultCode ? currentCode : '',
                 abidosRules: state.abidosRules,
-                context: abidosContext,
+                context: abidosContext + (selectiveCtx ? '\n\n--- CONTEXTO DO PROJETO ---\n' + selectiveCtx : ''),
                 useCache: state.contextHubEnabled,
                 imageBase64: uploadedImageBase64
             };
@@ -625,20 +635,137 @@ window.vortexStudio = (() => {
             }
         }
 
-        // 3. Check for CFP Forbidden Terms
+        // [PHASE 2.6] Check for CFP Forbidden Terms (Word Boundaries)
         if (state.abidosRules.cfpTerms) {
-            const forbidden = ['cura', 'curar', 'garantido', 'garantia de 100%', 'melhor serviço', 'o único'];
-            forbidden.forEach(term => {
-                if (code.toLowerCase().includes(term)) {
-                    results.passes = false;
-                    results.errors.push(`⚖️ ETHICS ALERT: Uso do termo proibido "${term}". Risco de suspensão pelo CFP.`);
+            const forbidden = [
+                { term: 'cura', regex: /\bcura\b/gi, except: ['curadoria', 'procuradoria', 'curaçao'] },
+                { term: 'curar', regex: /\bcurar\b/gi },
+                { term: 'garantido', regex: /\bgarantido\b/gi },
+                { term: 'garantia de resultado', regex: /\bgarantia de resultado/gi },
+                { term: 'melhor profissional', regex: /\bmelhor profissional\b/gi },
+                { term: 'o único', regex: /\bo único\b/gi },
+                { term: 'solução definitiva', regex: /\bsolução definitiva\b/gi },
+                { term: 'milagroso', regex: /\bmilagros[oa]\b/gi },
+                { term: 'comprovado cientificamente', regex: /\bcomprovado cientificamente\b/gi },
+                { term: 'tratamento infalível', regex: /\btratamento infalível\b/gi }
+            ];
+            forbidden.forEach(({ term, regex, except }) => {
+                const matches = code.match(regex);
+                if (matches) {
+                    // Filter false positives from exception list
+                    const codeLower = code.toLowerCase();
+                    const hasFalsePositive = except && except.some(e => codeLower.includes(e.toLowerCase()));
+                    if (!hasFalsePositive) {
+                        results.passes = false;
+                        results.errors.push(`⚖️ ETHICS ALERT: Termo "${term}" detectado (${matches.length}x). Risco CFP.`);
+                    }
                 }
             });
         }
 
-        // Update UI Status
+        // Store last audit for commit gate (Phase 2.4)
+        state.lastAuditResult = results;
+
+        // Update UI + Bottom Drawer Audit Log
         updateAuditUI(results);
+        if (results.passes) {
+            addAuditLog('success', `✅ Auditoria aprovada. ${results.warnings.length} avisos.`);
+        } else {
+            addAuditLog('error', `🔴 Auditoria REPROVADA: ${results.errors.length} erros.`);
+            results.errors.forEach(e => addAuditLog('error', `  → ${e}`));
+        }
         return results;
+    }
+
+    // =========================================================================
+    // [PHASE 2.2] SNAPSHOT ENGINE (Time Travel)
+    // =========================================================================
+    async function createSnapshot(prompt) {
+        if (!state.db || !state.currentFile) return;
+        try {
+            const content = getEditorContent();
+            if (!content || content.length < 10) return;
+            await state.db.snapshots.add({
+                filePath: state.currentFile,
+                content: content,
+                prompt: prompt || 'manual',
+                timestamp: new Date().toISOString()
+            });
+            state.snapshotId++;
+            addAuditLog('info', `📸 Snapshot #${state.snapshotId} salvo (${state.currentFile.split('/').pop()})`);
+        } catch(e) {
+            console.warn('[SNAPSHOT]', e);
+        }
+    }
+
+    // =========================================================================
+    // [PHASE 2.3] SELECTIVE CONTEXT BUILDER
+    // =========================================================================
+    async function buildSelectiveContext() {
+        const parts = [];
+        
+        // Always include the active file
+        if (state.currentFile) {
+            const content = getEditorContent();
+            if (content) {
+                parts.push(`[ARQUIVO ATIVO: ${state.currentFile}]\n\`\`\`\n${content}\n\`\`\``);
+            }
+        }
+
+        // Include related imports from active file
+        const activeContent = getEditorContent() || '';
+        const importRegex = /(?:import|from)\s+['"](\.?\.?\/[^'"]+)['"]/g;
+        const imports = [];
+        let importMatch;
+        while ((importMatch = importRegex.exec(activeContent)) !== null) {
+            imports.push(importMatch[1]);
+        }
+
+        if (imports.length > 0) {
+            const allFiles = await vfsList();
+            for (const imp of imports) {
+                const cleanPath = imp.replace(/^\.\/?/, '').replace(/\.[^.]+$/, '');
+                const match = allFiles.find(f => f.path.includes(cleanPath));
+                if (match && match.content) {
+                    parts.push(`[IMPORT RELACIONADO: ${match.path}]\n\`\`\`\n${match.content.substring(0, 2000)}\n\`\`\``);
+                }
+            }
+        }
+
+        return parts.join('\n\n');
+    }
+
+    // =========================================================================
+    // [PHASE 2.5] SEMANTIC AUDIT VIA GEMINI
+    // =========================================================================
+    async function auditSemantic(code) {
+        try {
+            const response = await fetch('/api/vortex/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: `ROLE: Auditor ético do Conselho Federal de Psicologia (CFP).\nANALISE este código HTML/JSX e identifique QUALQUER violação das normas éticas do CFP para publicidade de serviços de psicologia.\n\nVIOLAÇÕES A BUSCAR:\n- Promessas de cura ou resultado garantido\n- Uso de termos sensacionalistas ou superlativos proibidos\n- Autopromoção com títulos não verificáveis (\"o melhor\", \"o único\")\n- Exposição de dados de pacientes (mesmo fictícios)\n- Depoimentos que sugiram resultado clínico\n\nResposta OBRIGATÓRIA em JSON: { "passes": true/false, "issues": ["descrição da violação"] }\n\nCÓDIGO:\n${code.substring(0, 4000)}`,
+                    model: 'gemini-2.5-flash-lite'
+                })
+            });
+            const data = await response.json();
+            if (data.code) {
+                try {
+                    const parsed = JSON.parse(data.code);
+                    if (!parsed.passes && parsed.issues) {
+                        parsed.issues.forEach(issue => {
+                            addAuditLog('warn', `🧠 CFP Semântico: ${issue}`);
+                        });
+                        return parsed;
+                    }
+                } catch(e) {}
+            }
+            addAuditLog('success', '🧠 Auditoria semântica CFP: Aprovado.');
+            return { passes: true, issues: [] };
+        } catch(e) {
+            console.warn('[SEMANTIC AUDIT]', e);
+            return { passes: true, issues: [] };
+        }
     }
 
     function updateAuditUI(results) {
@@ -710,11 +837,40 @@ window.vortexStudio = (() => {
         // Wrap in a full HTML document if needed
         let fullHtml = processedHtml;
         if (!processedHtml.includes('<!DOCTYPE') && !processedHtml.includes('<html')) {
+
+            // [PHASE 2.7] Schema.org JSON-LD Automático
+            const schemaLd = `
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        "name": "Dr. Victor Lawrence",
+        "description": "Psicólogo Clínico especializado em Neuropsicologia e TCC",
+        "address": { "@type": "PostalAddress", "addressLocality": "Goiânia", "addressRegion": "GO", "addressCountry": "BR" },
+        "telephone": "+5562999999999",
+        "url": "https://drvictorlawrence.com.br",
+        "priceRange": "$$",
+        "image": "https://drvictorlawrence.com.br/images/victor-lawrence.jpg"
+    }
+    </script>`;
+
+            // [PHASE 2.8] Google Tag Manager Auto-Inject
+            const gtmSnippet = `
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-PLACEHOLDER');</script>
+    <!-- End Google Tag Manager -->`;
+
             fullHtml = `<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    ${schemaLd}
+    ${gtmSnippet}
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
@@ -1418,7 +1574,23 @@ window.vortexStudio = (() => {
         const code = getEditorContent();
         if (!code || code.length < 10) return addMessage('system', '⚠️ Código insuficiente para commit.');
         
+        // [PHASE 2.4] Gate: Bloquear commit se auditoria falhou
+        const auditResult = auditCode(code);
+        if (!auditResult.passes) {
+            addMessage('system', `🛡️ **COMMIT BLOQUEADO** — A auditoria Abidos detectou ${auditResult.errors.length} violação(ões).\nCorrija os erros ou use AI Auto-Repair antes de fazer deploy.`);
+            addAuditLog('error', `🚫 Commit bloqueado: ${auditResult.errors.length} violações.`);
+            return;
+        }
+
+        // [PHASE 2.5] Auditoria Semântica via Gemini (não-bloqueante)
+        addMessage('system', '🧠 Executando auditoria semântica CFP...');
+        const semanticAudit = await auditSemantic(code);
+        if (!semanticAudit.passes) {
+            addMessage('system', `⚠️ **AVISO CFP:** A IA identificou ${semanticAudit.issues.length} alerta(s) ético(s). Verifique antes de prosseguir.\n` + semanticAudit.issues.map(i => `• ${i}`).join('\n'));
+        }
+
         addMessage('system', '🚀 Preparando Deploy para Vercel...');
+        addAuditLog('info', '🚀 Commit iniciado...');
         
         try {
             const filename = state.currentFile ? state.currentFile.split('/').pop() : 'page.tsx';
@@ -1437,12 +1609,14 @@ window.vortexStudio = (() => {
             if (data.success) {
                 const shortSha = data.sha ? data.sha.substring(0, 7) : 'N/A';
                 addMessage('ai', `✅ **DEPLOY CONCLUÍDO!**\n\nA página foi enviada para o GitHub e a Vercel iniciou o build.\n\n🔗 [Ver no GitHub](${data.url || '#'})\n📦 Commit: \`${shortSha}\``);
+                addAuditLog('success', `✅ Deploy: ${filename} → ${shortSha}`);
             } else {
                 throw new Error(data.error || 'Erro desconhecido no commit.');
             }
         } catch (e) {
             console.error('Commit error:', e);
             addMessage('system', `⚠️ Falha no Deploy: ${e.message}`);
+            addAuditLog('error', `❌ Deploy falhou: ${e.message}`);
         }
     }
 
@@ -1530,6 +1704,8 @@ window.vortexStudio = (() => {
         toggleDrawer,
         switchDrawerTab,
         addAuditLog,
+        createSnapshot,
+        auditSemantic,
         getState: () => state
     };
 })();

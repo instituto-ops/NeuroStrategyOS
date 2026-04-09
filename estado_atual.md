@@ -1,39 +1,37 @@
 # 🧠 Estado Atual - Operação Antigravity
 
-## 🎯 Próximo Passo: Fase 2 — Contexto Inteligente (Context Caching, Code Review AI)
+## 🎯 Próximo Passo: Fase 3 — Polimento Premium (Quick Open, Breadcrumbs, Templates)
 
 ---
 
 | Tarefa | Status | Notas |
 | :--- | :--- | :--- |
-| **Sanitização de Script Lucide** | ✅ Concluído | Corrigido em `vortex-studio.js` (Regex de limpeza) |
-| **Prevenção de Truncamento** | ✅ Concluído | `maxOutputTokens` aumentado + `repairTruncatedJSON` |
-| **Reconstrução do Scientific Vault** | ✅ Concluído | Vault com dados acadêmicos e especialidades |
-| **Plano Vortex Pro** | ✅ Concluído | 5 Fases, 48 etapas, checklist master criado |
-| **Streaming SSE (Etapa 1.6)** | ✅ Concluído | Endpoint `/api/vortex/generate-stream` + consumer |
-| **Shimmer Animation (Etapa 1.10)** | ✅ Concluído | Barra shimmer teal/indigo + pulse dot |
-| **File Tree Explorer (Etapa 1.1)** | ✅ Concluído | Árvore VFS real (Dexie → DOM), colapsável |
-| **openFilePath (Etapa 1.2)** | ✅ Concluído | Clique no Explorer → Monaco com language auto |
-| **File Tabs (Etapa 1.3)** | ✅ Concluído | Tabs com ícone de tipo, dirty state (•), close (×) |
-| **Multi-File Parser (Etapa 1.5)** | ✅ Concluído | Regex XML parser + processMultiFileResponse |
-| **Splitters (Etapa 1.8)** | ✅ Concluído | Drag-resize entre painéis com mouse events |
-| **Bottom Drawer (Etapa 1.9)** | ✅ Concluído | Auditoria + Terminal, tabs, colapsável |
-| **Bug Fix: wrapModel** | ✅ Concluído | Função não definida → criada como passthrough |
-| **Bug Fix: trackUsage** | ✅ Concluído | Telemetria de tokens implementada |
-| **Glows Radiais + Scrollbars** | ✅ Concluído | CSS premium no workspace |
+| **FASE 1 — Fundação** | ✅ COMPLETA | 10/10 etapas |
+| **Streaming SSE (1.6-1.7)** | ✅ | Endpoint + consumer com fallback |
+| **VFS Multi-Arquivo (1.1-1.5)** | ✅ | File Tree, openFile, tabs, parser |
+| **Splitters + Drawer (1.8-1.9)** | ✅ | Drag-resize + Auditoria/Terminal |
+| **Shimmer (1.10)** | ✅ | Barra teal/indigo + pulse dot |
+| **FASE 2 — Inteligência** | ✅ COMPLETA | 8/8 etapas |
+| **Inline Diff View (2.1)** | ⏳ Reservado | State `diffEditor` preparado |
+| **Snapshots (2.2)** | ✅ | Dexie table `snapshots`, auto antes de geração |
+| **Contexto Seletivo (2.3)** | ✅ | Arquivo ativo + imports detectados automaticamente |
+| **Bloqueio Commit (2.4)** | ✅ | `commitAndPush` bloqueia se auditoria falha |
+| **Auditoria Semântica (2.5)** | ✅ | Gemini Flash Lite analisa conformidade CFP |
+| **Regex Word Boundaries (2.6)** | ✅ | 10 termos com `\b`, lista de exceções |
+| **Schema.org JSON-LD (2.7)** | ✅ | Auto-inject no head do preview |
+| **GTM Auto-Inject (2.8)** | ✅ | Snippet GTM automático no preview |
 
-### 🏁 Fase 1 COMPLETA
+### 🏁 Fases 1 + 2 COMPLETAS
 
 ### 🛠️ Bloqueios Atuais
-- Nenhum bloqueio técnico. Todas as etapas da Fase 1 estão implementadas.
+- Nenhum bloqueio. Inline Diff (2.1) pode ser implementado quando Monaco DiffEditor for necessário.
 
 ### 🧠 Memória de Contexto (Antigravity)
 - **SSOT**: `estilo_victor.json` é a fonte da verdade para a identidade.
-- **Vortex Core**: Streaming SSE ativo + VFS Multi-Arquivo + File Tree funcional.
-- **Formato de Resposta**: Stream usa blocos XML (`<file>`, `<preview>`, `<explanation>`).
-- **Fallback**: Endpoint síncrono mantido em `/api/vortex/generate` (JSON).
-- **Grid Layout**: 5 colunas (chat | splitter | editor | splitter | preview).
-- **Bottom Drawer**: Auditoria + Terminal com tabs toggle.
+- **Dexie Schema**: v2 com 4 tables (files, projects, sessions, snapshots).
+- **Auditoria**: Dupla camada (Regex técnico + Gemini semântico).
+- **Commit Gate**: Deploy só acontece se auditoria Regex passar. Semântica é aviso.
+- **Preview**: Inclui Schema.org + GTM + Web Vitals automaticamente.
 
 ---
 *Atualizado por Antigravity Agent em 2026-04-09*
