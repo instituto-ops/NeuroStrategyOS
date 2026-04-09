@@ -270,6 +270,27 @@
   "last_update": "2026-03-23T16:00:42.123Z",
   "insights_history": [],
   "scientific_vault": {
-    "nota": "Wiped by user request."
+    "autoridade": {
+      "nome": "Dr. Victor Lawrence",
+      "crp": "09/012681",
+      "formacao": "Mestre em Ciências da Saúde pela Universidade Federal de Uberlândia (UFU)",
+      "pesquisa_atual": "Mestrando (conclusão 2028) com foco em comunicação simbólica e processos dissociativos.",
+      "especialidades": [
+        "Hipnose Clínica (Ericksoniana)",
+        "Psicoterapia Breve Estratégica",
+        "TEA (Transtorno do Espectro Autista) em Adultos",
+        "Sensibilização Auditiva e Processamento Sensorial",
+        "Tratamento de Ansiedade, Trauma e Compulsões"
+      ]
+    },
+    "pilares_clinicos": {
+      "hipnose_sem_mitos": "A hipnose é abordada como uma ferramenta científica de foco profundo, desmistificando a perda de consciência.",
+      "foco_na_solucao": "Intervenções breves voltadas para a reestruturação de sintomas e mudança duradoura.",
+      "etica_eeat": "Google E-E-A-T aplicado: autoridade baseada em sólida formação acadêmica, sem promessas de ganhos rápidos."
+    },
+    "localizacao": {
+      "presencial": ["Goiânia, GO", "Uberlândia, MG"],
+      "online": "Teleconsulta para todo o Brasil"
+    }
   }
 }

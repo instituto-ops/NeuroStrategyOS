@@ -421,65 +421,173 @@ window.vortexStudio = (() => {
 
         try {
             const model = document.getElementById('vortex-model-select')?.value || 'gemini-2.5-flash';
-            
-            // Build Abidos context
             const abidosContext = buildAbidosContext();
             const currentCode = getEditorContent();
+            const defaultCode = '// 🌀 Vórtex AI Studio\n// Envie um prompt no chat para gerar código Next.js\n';
 
-            const response = await fetch('/api/vortex/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    prompt: typeof arguments[0] === 'string' ? arguments[0] : prompt,
-                    model,
-                    currentCode: currentCode !== '// 🌀 Vórtex AI Studio\n// Envie um prompt no chat para gerar código Next.js\n' ? currentCode : '',
-                    abidosRules: state.abidosRules,
-                    context: abidosContext,
-                    useCache: state.contextHubEnabled,
-                    imageBase64: uploadedImageBase64
-                })
-            });
+            const payload = {
+                prompt: typeof arguments[0] === 'string' ? arguments[0] : prompt,
+                model,
+                currentCode: currentCode !== defaultCode ? currentCode : '',
+                abidosRules: state.abidosRules,
+                context: abidosContext,
+                useCache: state.contextHubEnabled,
+                imageBase64: uploadedImageBase64
+            };
 
             removeImage();
 
-            if (!response.ok) throw new Error(`API Error: ${response.status}`);
-
-            const data = await response.json();
-
-            if (data.code) {
-                // [PHASE 4] Run Audit before showing
-                const audit = auditCode(data.code);
-                
-                setEditorContent(data.code, data.language || 'typescriptreact');
-                updateFileTab(data.filename || 'page.tsx', true);
-                
-                // Save to VFS
-                const filePath = `/src/app/${data.filename || 'page.tsx'}`;
-                await vfsWrite(filePath, data.code);
-                state.currentFile = filePath;
-
-                // Update preview
-                if (data.preview) {
-                    updatePreview(data.preview);
-                }
-
-                if (!audit.passes) {
-                   addMessage('system', '⚠️ Aviso: O código foi gerado mas possui falhas de conformidade. Veja o alerta acima.');
-                }
-            }
-
-            if (data.explanation) {
-                addMessage('ai', data.explanation);
-            } else {
-                addMessage('ai', '✅ Código gerado com sucesso. Verifique o editor.');
+            // [PHASE 5.3] Tentar Streaming SSE primeiro
+            try {
+                await sendPromptStream(payload);
+            } catch (streamErr) {
+                console.warn('⚠️ [VORTEX] Stream falhou, usando fallback síncrono:', streamErr.message);
+                await sendPromptSync(payload);
             }
 
         } catch (err) {
-
             console.error('❌ [VORTEX] Generation error:', err);
             addMessage('system', `⚠️ Erro na geração: ${err.message}`);
         } finally {
             setGenerating(false);
+        }
+    }
+
+    // [PHASE 5.3] Streaming SSE Consumer — Vibecoding Real
+    async function sendPromptStream(payload) {
+        const response = await fetch('/api/vortex/generate-stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error(`Stream Error: ${response.status}`);
+        if (!response.body) throw new Error('ReadableStream não suportado');
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullStreamText = '';
+        let codeStarted = false;
+
+        // Limpar o editor para receber o stream
+        setEditorContent('// 🌀 Streaming...\n', 'typescriptreact');
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // Manter a última linha incompleta
+
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                
+                try {
+                    const event = JSON.parse(line.slice(6));
+
+                    switch (event.type) {
+                        case 'start':
+                            addMessage('system', `🌀 Streaming via **${event.model}**...`);
+                            break;
+
+                        case 'delta':
+                            fullStreamText += event.text;
+                            // Atualizar Monaco com o texto acumulado em tempo real
+                            if (!codeStarted && fullStreamText.includes('<file')) {
+                                codeStarted = true;
+                            }
+                            if (codeStarted) {
+                                // Extrair o conteúdo parcial do bloco <file>
+                                const partialMatch = fullStreamText.match(/<file[^>]*>([\s\S]*?)(?:<\/file>|$)/);
+                                if (partialMatch) {
+                                    setEditorContent(partialMatch[1].trimStart(), 'typescriptreact');
+                                }
+                            } else {
+                                // Ainda não chegou no bloco <file>, mostrar texto bruto
+                                setEditorContent(fullStreamText, 'typescriptreact');
+                            }
+                            break;
+
+                        case 'complete':
+                            // Metadados finais com código limpo
+                            if (event.code) {
+                                const audit = auditCode(event.code);
+                                setEditorContent(event.code, event.language || 'typescriptreact');
+                                updateFileTab(event.filename || 'page.tsx', true);
+
+                                const filePath = `/src/app/${event.filename || 'page.tsx'}`;
+                                await vfsWrite(filePath, event.code);
+                                state.currentFile = filePath;
+
+                                if (event.preview) {
+                                    updatePreview(event.preview);
+                                }
+
+                                if (!audit.passes) {
+                                    addMessage('system', '⚠️ Código gerado mas possui falhas de conformidade.');
+                                }
+                            }
+                            if (event.explanation) {
+                                addMessage('ai', event.explanation);
+                            }
+                            break;
+
+                        case 'error':
+                            throw new Error(event.error || 'Erro no stream');
+
+                        case 'done':
+                            break;
+                    }
+                } catch (parseErr) {
+                    // Ignorar linhas malformadas durante o stream
+                    if (parseErr.message.includes('Erro no stream')) throw parseErr;
+                }
+            }
+        }
+
+        // Se não recebemos um evento 'complete', tentar parsear do texto bruto
+        if (!fullStreamText.includes('</file>')) {
+            setEditorContent(fullStreamText, 'typescriptreact');
+            addMessage('ai', '✅ Código gerado via streaming.');
+        }
+    }
+
+    // Fallback síncrono (método original)
+    async function sendPromptSync(payload) {
+        const response = await fetch('/api/vortex/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+        const data = await response.json();
+
+        if (data.code) {
+            const audit = auditCode(data.code);
+            setEditorContent(data.code, data.language || 'typescriptreact');
+            updateFileTab(data.filename || 'page.tsx', true);
+
+            const filePath = `/src/app/${data.filename || 'page.tsx'}`;
+            await vfsWrite(filePath, data.code);
+            state.currentFile = filePath;
+
+            if (data.preview) {
+                updatePreview(data.preview);
+            }
+
+            if (!audit.passes) {
+                addMessage('system', '⚠️ Código gerado mas possui falhas de conformidade.');
+            }
+        }
+
+        if (data.explanation) {
+            addMessage('ai', data.explanation);
+        } else {
+            addMessage('ai', '✅ Código gerado com sucesso.');
         }
     }
 
@@ -563,8 +671,10 @@ window.vortexStudio = (() => {
         state.isGenerating = isGen;
         const indicator = document.getElementById('vortex-generating');
         const sendBtn = document.getElementById('vortex-send-btn');
+        const inputWrapper = document.querySelector('.vortex-chat-input-wrapper');
         if (indicator) indicator.style.display = isGen ? 'flex' : 'none';
         if (sendBtn) sendBtn.disabled = isGen;
+        if (inputWrapper) inputWrapper.classList.toggle('streaming', isGen);
     }
 
     // =========================================================================
@@ -574,8 +684,11 @@ window.vortexStudio = (() => {
         const frame = document.getElementById('vortex-preview-frame');
         if (!frame) return;
 
-        // [PHASE 3.2] Zero-Wait Build Logic
+        // [PHASE 5.2] Sanitização Anti-Hallucination
         let processedHtml = htmlContent;
+        // Fix for double-quoted/escaped CDN URLs common in AI JSON outputs
+        processedHtml = processedHtml.replace(/src=["'](?:%22|\\")+(https:\/\/unpkg\.com\/lucide[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
+        processedHtml = processedHtml.replace(/src=["'](?:%22|\\")+(https:\/\/cdn\.tailwindcss\.com[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
 
         // [PHASE 4.2] Injetar Web Vitals Telemetry
         const telemetryScript = `
@@ -585,6 +698,12 @@ window.vortexStudio = (() => {
                 onLCP(m => send('LCP', m.value));
                 onCLS(m => send('CLS', m.value));
                 onINP(m => send('INP', m.value));
+            </script>
+            <script>
+                // Garantir que ícones lucide sejam criados após o carregamento
+                window.addEventListener('load', () => {
+                    if (window.lucide) window.lucide.createIcons();
+                });
             </script>
         `;
 
@@ -597,18 +716,23 @@ window.vortexStudio = (() => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: #050810; color: #e2e8f0; margin: 0; }
+        body { font-family: 'Inter', sans-serif; background: #050810; color: #e2e8f0; margin: 0; min-height: 100vh; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #2dd4bf20; border-radius: 10px; }
+        .font-outfit { font-family: 'Outfit', sans-serif; }
     </style>
     ${telemetryScript}
 </head>
 <body>${processedHtml}</body>
 </html>`;
         } else {
-            // Case where it is already a full HTML, inject before </body>
+            // Case where it is already a full HTML, inject before </body> or </head>
+            if (!fullHtml.includes('unpkg.com/lucide')) {
+                fullHtml = fullHtml.replace('</head>', '<script src="https://unpkg.com/lucide@latest"></script></head>');
+            }
             fullHtml = fullHtml.replace('</body>', `${telemetryScript}</body>`);
         }
 
@@ -863,10 +987,11 @@ window.vortexStudio = (() => {
                         </div>
                     </div>
                     <div id="vortex-generating" class="vortex-generating" style="display: none;">
-                        <div class="vortex-generating-dots">
-                            <span></span><span></span><span></span>
+                        <div class="vortex-shimmer-bar"></div>
+                        <div class="vortex-generating-text">
+                            <span class="vortex-pulse-dot"></span>
+                            Gemini processando...
                         </div>
-                        <div class="vortex-generating-text">Gemini gerando código...</div>
                     </div>
                     <div class="vortex-abidos-toggles">
                         <div class="vortex-toggle-row">

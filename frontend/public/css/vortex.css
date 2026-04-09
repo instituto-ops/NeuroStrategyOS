@@ -637,45 +637,55 @@
 /* === LOADING / GENERATING STATE === */
 .vortex-generating {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: rgba(99, 102, 241, 0.08);
-    border: 1px solid rgba(99, 102, 241, 0.12);
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 16px;
+    margin: 8px 16px;
+    overflow: hidden;
     border-radius: 12px;
-    margin: 12px 16px;
+    background: rgba(99, 102, 241, 0.04);
+    border: 1px solid rgba(99, 102, 241, 0.1);
 }
 
-.vortex-generating-dots {
-    display: flex;
-    gap: 4px;
+.vortex-shimmer-bar {
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(
+        90deg, 
+        rgba(99, 102, 241, 0.1) 0%,
+        rgba(45, 212, 191, 0.6) 30%,
+        rgba(99, 102, 241, 0.8) 50%,
+        rgba(45, 212, 191, 0.6) 70%,
+        rgba(99, 102, 241, 0.1) 100%
+    );
+    background-size: 200% 100%;
+    animation: vortex-shimmer-sweep 1.8s ease-in-out infinite;
 }
 
-.vortex-generating-dots span {
+@keyframes vortex-shimmer-sweep {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.vortex-pulse-dot {
+    display: inline-block;
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #6366f1;
-    animation: vortex-dot-bounce 1.4s ease-in-out infinite;
-}
-
-.vortex-generating-dots span:nth-child(2) {
-    animation-delay: 0.16s;
-}
-
-.vortex-generating-dots span:nth-child(3) {
-    animation-delay: 0.32s;
-}
-
-@keyframes vortex-dot-bounce {
-    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-    40% { transform: scale(1); opacity: 1; }
+    background: #2dd4bf;
+    margin-right: 6px;
+    animation: vortex-pulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 8px rgba(45, 212, 191, 0.5);
 }
 
 .vortex-generating-text {
     font-size: 11px;
     font-weight: 700;
     color: #a5b4fc;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
 }
 
 /* === MODEL SELECTOR (Toolbar) === */
@@ -696,6 +706,108 @@
     color: #e2e8f0;
 }
 
+/* === REPAIR BUTTON === */
+.vortex-btn-repair {
+    margin-top: 8px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    border: none;
+    transition: all 0.2s;
+}
+
+.vortex-btn-repair:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+
+/* === PREMIUM ENHANCEMENTS === */
+
+/* Glow radial sutil no background do workspace */
+.vortex-workspace::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: -100px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.vortex-workspace::after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    right: -50px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(45, 212, 191, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.vortex-workspace {
+    position: relative;
+}
+
+.vortex-panel {
+    z-index: 1;
+}
+
+/* Scrollbars globais premium */
+.vortex-panel-body::-webkit-scrollbar {
+    width: 5px;
+}
+
+.vortex-panel-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.vortex-panel-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    transition: background 0.3s;
+}
+
+.vortex-panel-body:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* Editor panel glassmorphism */
+.vortex-editor-panel .vortex-panel-header {
+    backdrop-filter: blur(12px);
+}
+
+/* Chat input shimmer border durante geração */
+.vortex-chat-input-wrapper.streaming {
+    border-color: rgba(45, 212, 191, 0.4);
+    box-shadow: 0 0 30px rgba(45, 212, 191, 0.08);
+    animation: vortex-border-pulse 2s ease-in-out infinite;
+}
+
+@keyframes vortex-border-pulse {
+    0%, 100% { border-color: rgba(45, 212, 191, 0.2); }
+    50% { border-color: rgba(99, 102, 241, 0.4); }
+}
+
+/* Spin animation para loading icons */
+.spin {
+    animation: vortex-spin 1s linear infinite;
+}
+
+@keyframes vortex-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* === RESPONSIVE ADJUSTMENTS === */
 @media (max-width: 1200px) {
     .vortex-workspace {
@@ -709,3 +821,4 @@
         grid-template-rows: 1fr 1fr 1fr;
     }
 }
+

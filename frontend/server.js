@@ -177,6 +177,11 @@ const LITE_MODEL = "gemini-2.5-flash-lite";
 const MAIN_MODEL = "gemini-2.5-flash"; // PADRÃO SELECIONADO
 const PRO_MODEL  = "gemini-2.5-pro";
 
+// Helper: Wrapper de modelo (extensível para rate limiting, retry, logging)
+function wrapModel(model) {
+    return model; // Passthrough — pode ser expandido para retry/rate-limiting futuramente
+}
+
 // Helper para obter o motor de IA configurado dinamicamente
 function getAIModel(modelType, mimeType = "application/json") {
     let target = MAIN_MODEL;
@@ -185,7 +190,10 @@ function getAIModel(modelType, mimeType = "application/json") {
     else if (modelType === 'flash' || modelType === 'gemini-2.5-flash') target = MAIN_MODEL;
     else if (modelType && modelType.includes("gemini")) target = modelType;
 
-    const config = { temperature: 0.8 };
+    const config = { 
+        temperature: 0.8,
+        maxOutputTokens: 8192 // [PHASE 5.1] Aumentado para evitar truncamento em payloads longos
+    };
     if (mimeType === "application/json") config.responseMimeType = "application/json";
 
     const rawModel = genAI.getGenerativeModel({ model: target, generationConfig: config });
@@ -200,26 +208,98 @@ const VISION_MODEL = MAIN_MODEL;
 const HEAVY_MODEL = PRO_MODEL;
 const draftsDb = []; // In-memory store for newly generated drafts before WP sync
 
-// Helper robust JSON parser
+// Helper: Rastreamento de uso de tokens (Telemetria Silenciosa)
+function trackUsage(metadata) {
+    if (!metadata) return;
+    const { promptTokenCount, candidatesTokenCount, totalTokenCount } = metadata;
+    console.log(`📊 [TOKEN USAGE] Prompt: ${promptTokenCount || '?'} | Output: ${candidatesTokenCount || '?'} | Total: ${totalTokenCount || '?'}`);
+}
+
+
+// Helper robust JSON parser com Autorepair para Truncamento (Antigravity v5)
 function extractJSON(text) {
     if (!text) return null;
+    
+    // 1. Localizar o bloco JSON
+    let jsonPart = text.trim();
+    const firstBrace = jsonPart.indexOf('{');
+    if (firstBrace !== -1) {
+        jsonPart = jsonPart.substring(firstBrace);
+    }
+
+    // 2. Tentativa de Parse Direto
     try {
-        // Tenta encontrar o maior bloco {...} possível
-        const match = text.match(/\{[\s\S]*\}/);
-        if (!match) return null;
-        let parsed = JSON.parse(match[0]);
-        
-        // CORREÇÃO DE SEGURANÇA: Se a IA encapsulou as regras dentro do 'reply' como string
-        if (parsed.reply && typeof parsed.reply === 'string' && parsed.reply.includes('"regras_extraidas"')) {
-            const subMatch = parsed.reply.match(/\{[\s\S]*\}/);
-            if (subMatch) {
-                const subParsed = JSON.parse(subMatch[0]);
-                parsed.regras_extraidas = subParsed.regras_extraidas || parsed.regras_extraidas;
-                parsed.reply = subParsed.reply || parsed.reply;
-            }
+        // Remove markdown triple backticks se existirem no rastro final
+        const cleanText = jsonPart.replace(/```json/g, '').replace(/```/g, '').trim();
+        const lastBrace = cleanText.lastIndexOf('}');
+        if (lastBrace !== -1) {
+            return JSON.parse(cleanText.substring(0, lastBrace + 1));
         }
-        return parsed;
-    } catch { return null; }
+        return JSON.parse(cleanText);
+    } catch (e) {
+        // 3. Fallback: Reparo de JSON Truncado (Token Limit Hit)
+        console.warn("⚠️ [VORTEX] JSON Truncado Detectado. Iniciando Reparo de Emergência...");
+        try {
+            return repairTruncatedJSON(jsonPart);
+        } catch (repairErr) {
+            console.error("❌ [VORTEX] Falha crítica no parser JSON:", repairErr.message);
+            return null;
+        }
+    }
+}
+
+function repairTruncatedJSON(json) {
+    let stack = [];
+    let inString = false;
+    let escaped = false;
+    let repaired = "";
+
+    // Limpeza inicial de Markdown se o Gemini parou no meio dele
+    let code = json.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    for (let i = 0; i < code.length; i++) {
+        let char = code[i];
+        if (escaped) {
+            escaped = false;
+            repaired += char;
+            continue;
+        }
+        if (char === '\\') {
+            escaped = true;
+            repaired += char;
+            continue;
+        }
+        if (char === '"') {
+            inString = !inString;
+            repaired += char;
+            continue;
+        }
+        if (!inString) {
+            if (char === '{' || char === '[') stack.push(char === '{' ? '}' : ']');
+            else if (char === '}' || char === ']') stack.pop();
+        }
+        repaired += char;
+    }
+
+    // Fechar pendências
+    if (inString) repaired += '"';
+    while (stack.length) {
+        repaired += stack.pop();
+    }
+
+    try {
+        return JSON.parse(repaired);
+    } catch (e) {
+        // Se ainda falhar, tenta extrair via Regex os campos principais (code e preview)
+        const codeMatch = repaired.match(/"code":\s*"([\s\S]*?)(?:"\s*,|"\s*\})/);
+        const previewMatch = repaired.match(/"preview":\s*"([\s\S]*?)(?:"\s*,|"\s*\})/);
+        
+        return {
+            code: codeMatch ? codeMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "// Falha na recuperação de código",
+            preview: previewMatch ? previewMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "<div>Erro no preview truncado</div>",
+            explanation: "⚠️ Payload reparado via Heurística de Emergência após truncamento."
+        };
+    }
 }
 
 // [FASE 2: TELEMETRIA E SAÚDE DO SISTEMA]
@@ -4094,6 +4174,172 @@ app.post('/api/vortex/cache', async (req, res) => {
 });
 
 // [VORTEX] Endpoint: Geração de Código via Gemini 2.5
+// [VORTEX PHASE 5.3] Endpoint: Streaming SSE — Vibecoding Real
+app.post('/api/vortex/generate-stream', async (req, res) => {
+    try {
+        const { prompt, model, currentCode, abidosRules, context, useCache } = req.body;
+        if (!prompt) return res.status(400).json({ error: 'Prompt vazio.' });
+
+        const modelId = model || 'gemini-2.5-flash';
+
+        // Configurar modelo SEM responseMimeType para permitir streaming de texto livre
+        let target = modelId.includes('pro') ? PRO_MODEL : 
+                     modelId.includes('lite') ? LITE_MODEL : MAIN_MODEL;
+        
+        let aiModel;
+        if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
+            aiModel = genAI.getGenerativeModelFromCachedContent(vortexActiveCache.obj);
+            console.log(`🌀 [VORTEX STREAM] Hub Ativado. Cache: ${vortexActiveCache.name}`);
+        } else {
+            aiModel = genAI.getGenerativeModel({ 
+                model: target, 
+                generationConfig: { temperature: 0.8, maxOutputTokens: 8192 }
+            });
+        }
+
+        // Build Specialized System Prompt
+        const isPro = modelId.includes('pro');
+        const roleSpecialization = isPro 
+            ? `[ROLE: BRAIN/ARCHITECT]
+               Foco: Arquitetura, Domain-Driven Design, Lógica Complexa e Pacing & Leading Clínico.`
+            : `[ROLE: FLASH/VIBE]
+               Foco: Estética OLED Black, Performance Lighthouse 100, Tailwind CSS e Animações.`;
+
+        const visionPrompt = req.body.imageBase64 
+            ? `\n[MODO VISION ATIVO — ANALISE A IMAGEM ANEXADA]
+               1. DECODIFIQUE a hierarquia visual.
+               2. TRADUZA para o Design System OLED Black.
+               3. MAPIE textos para Micro-copy de conversão.
+               4. SEJA FIEL ao layout original.`
+            : "";
+
+        const antigravityDirectives = await getAntigravityContext();
+
+        const systemPrompt = `[VÓRTEX AI STUDIO — GERADOR DE CÓDIGO NEXT.JS]
+${roleSpecialization}${visionPrompt}
+
+[DIRETRIZES ANTIGRAVITY — SSOT]
+${antigravityDirectives}
+
+[REGRAS ABIDOS — INVIOLÁVEIS]
+${context || 'Sem regras especiais em execução.'}
+
+[DESIGN SYSTEM OLED BLACK]
+- Background: #050810 (Pure Black)
+- Accents: Teal (#14b8a6), Indigo (#6366f1), Cyan (#06b6d4)
+- Text: Gray-300 (body), White (headings)
+- Typography: Inter / Outfit
+- Icons: Use Lucide Icons (via data-lucide attribute)
+
+[FORMATO DE RESPOSTA — STREAMING MULTI-BLOCO]
+Retorne o código usando blocos XML delimitados. NÃO retorne JSON.
+
+<file path="page.tsx" language="typescriptreact">
+// Código completo aqui
+</file>
+
+<preview>
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<!-- HTML de preview aqui -->
+</body>
+</html>
+</preview>
+
+<explanation>
+Resumo conciso das decisões técnicas.
+</explanation>
+
+IMPORTANTE:
+- Use EXATAMENTE o formato de blocos XML acima.
+- O preview deve ser HTML autocontido com Tailwind CDN e Lucide CDN.
+- Mobile-first, Performance máxima.`;
+
+        const fullPrompt = currentCode 
+            ? `${systemPrompt}\n\n[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
+            : `${systemPrompt}\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`;
+
+        const requestParts = [ fullPrompt ];
+
+        if (req.body.imageBase64) {
+            try {
+                const base64Content = req.body.imageBase64.split(',')[1];
+                const mimeType = req.body.imageBase64.split(';')[0].split(':')[1];
+                requestParts.push({
+                    inlineData: { data: base64Content, mimeType }
+                });
+            } catch(e) { console.error('Erro no parser da imagem Multimodal', e); }
+        }
+
+        // Configurar SSE
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        });
+
+        const sendEvent = (type, data) => {
+            res.write(`data: ${JSON.stringify({ type, ...data })}\n\n`);
+        };
+
+        sendEvent('start', { model: modelId });
+
+        // Streaming da IA
+        const result = await aiModel.generateContentStream(requestParts);
+        let fullText = '';
+
+        for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            if (chunkText) {
+                fullText += chunkText;
+                sendEvent('delta', { text: chunkText });
+            }
+        }
+
+        // Track usage
+        const response = await result.response;
+        trackUsage(response.usageMetadata);
+
+        // Parse do texto completo para extrair blocos
+        const fileMatch = fullText.match(/<file\s+path="([^"]+)"\s*(?:language="([^"]+)")?\s*>([\s\S]*?)<\/file>/);
+        const previewMatch = fullText.match(/<preview>([\s\S]*?)<\/preview>/);
+        const explanationMatch = fullText.match(/<explanation>([\s\S]*?)<\/explanation>/);
+
+        const parsed = {
+            code: fileMatch ? fileMatch[3].trim() : fullText,
+            language: fileMatch ? (fileMatch[2] || 'typescriptreact') : 'typescriptreact',
+            filename: fileMatch ? fileMatch[1].trim() : 'page.tsx',
+            preview: previewMatch ? previewMatch[1].trim() : '',
+            explanation: explanationMatch ? explanationMatch[1].trim() : 'Código gerado via streaming.'
+        };
+
+        // Enviar metadados finais
+        sendEvent('complete', parsed);
+
+        // Atualizações silenciosas Antigravity
+        await updateVortexState(`[Stream] Geração para [${parsed.filename}] via ${modelId}`);
+
+        sendEvent('done', {});
+        res.end();
+
+    } catch (e) {
+        console.error('❌ [VORTEX STREAM ERROR]', e.message);
+        try {
+            res.write(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`);
+            res.end();
+        } catch(writeErr) {
+            // Connection already closed
+        }
+    }
+});
+
+// [VORTEX] Endpoint: Generate (Fallback síncrono — mantido por compatibilidade)
 app.post('/api/vortex/generate', async (req, res) => {
     try {
         const { prompt, model, currentCode, abidosRules, context, useCache } = req.body;
@@ -4145,23 +4391,24 @@ ${context || 'Sem regras especiais em execução.'}
 - Accents: Teal (#14b8a6), Indigo (#6366f1), Cyan (#06b6d4)
 - Text: Gray-300 (body), White (headings)
 - Typography: Inter / Outfit
-- Mobile-first, Core Web Vitals nota 100
+- Icons: Use Lucide Icons (via data-lucide attribute)
 
 [FORMATO DE RESPOSTA - JSON ESTRITO]
-Retorne APENAS um bloco JSON (sem markdown):
+Retorne APENAS um bloco JSON (sem markdown fora dele):
 {
-  "code": "// código React/JSX completo",
+  "code": "Código React/JSX completo e funcional",
   "language": "typescriptreact",
   "filename": "page.tsx",
-  "explanation": "Decisões técnicas tomadas",
-  "preview": "<html com CDN Tailwind>",
-  "subconscious_suggestions": ["ideia de refatoração 1", "ideia de nova feature"]
+  "explanation": "Resumo conciso das decisões técnica",
+  "preview": "HTML estático MÍNIMO para visualização rápida. OBRIGATÓRIO incluir as CDNs abaixo sem aspas extras:
+              <script src=\\"https://cdn.tailwindcss.com\\"></script>
+              <script src=\\"https://unpkg.com/lucide@latest\\"></script>",
+  "subconscious_suggestions": ["lista curta de melhorias"]
 }
 
-IMPORTANTE:
-- "subconscious_suggestions": Use este campo para registrar silenciosamente melhorias que você identificou enquanto codificava.
-- NÃO use markdown triplo (\`\`\`) fora do campo "code".
-- NÃO faça escape exagerado de caracteres.`;
+IMPORTANTE: 
+- NUNCA escape URLs de CDN com aspas extras (use apenas \\" dentro da string JSON).
+- Foque em Performance Lighthouse 100 e Mobile-first.`;
 
         const fullPrompt = currentCode 
             ? `${systemPrompt}\n\n[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
@@ -4217,6 +4464,7 @@ IMPORTANTE:
         res.status(500).json({ error: e.message });
     }
 });
+
 
 // [VORTEX] Endpoint: Commit & Push via Servidor (Zero-Credential Exposure)
 app.post('/api/vortex/commit', async (req, res) => {
