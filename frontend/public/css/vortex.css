@@ -1330,3 +1330,109 @@
     font-size: 10px;
     line-height: 1.4;
 }
+
+/* ============================================================================
+   PHASE 4 — ECOSSISTEMA
+   ============================================================================ */
+
+/* === 4.1 DIFF REVIEW MODAL === */
+.vortex-diff-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(5, 8, 16, 0.85);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.vortex-diff-modal {
+    width: 90vw;
+    height: 80vh;
+    background: #0f172a;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.vortex-diff-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #1e293b;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    color: #e2e8f0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.vortex-diff-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* === 4.2 DEPLOY PROGRESS BAR === */
+.vortex-deploy-progress {
+    position: relative;
+    width: 100%;
+    height: 28px;
+    background: #0a0e1a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.deploy-progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #6366f1, #2dd4bf, #6366f1);
+    background-size: 200% 100%;
+    animation: deploy-gradient-shift 2s ease infinite;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.3;
+}
+
+.deploy-progress-text {
+    position: relative;
+    z-index: 1;
+    padding: 0 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+@keyframes deploy-gradient-shift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+/* === Tab close button refinement === */
+.tab-close {
+    margin-left: 6px;
+    font-size: 14px;
+    color: #64748b;
+    opacity: 0;
+    transition: all 0.15s;
+    cursor: pointer;
+}
+
+.vortex-file-tab:hover .tab-close {
+    opacity: 1;
+}
+
+.tab-close:hover {
+    color: #f87171;
+}

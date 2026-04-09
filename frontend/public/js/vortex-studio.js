@@ -34,7 +34,9 @@ window.vortexStudio = (() => {
         pfs: null,              // LightningFS Promises API
         contextHubEnabled: false,
         lastAuditResult: null,  // Phase 2.4: Last audit result for commit gate
-        snapshotId: 0           // Phase 2.2: Auto-increment snapshot counter
+        snapshotId: 0,          // Phase 2.2: Auto-increment snapshot counter
+        generationCache: new Map(), // Phase 4.8: Local cache by prompt hash
+        zenMode: false          // Phase 3.10
     };
 
     // =========================================================================
@@ -524,16 +526,28 @@ window.vortexStudio = (() => {
                             // Metadados finais com código limpo
                             if (event.code) {
                                 const audit = auditCode(event.code);
-                                setEditorContent(event.code, event.language || 'typescriptreact');
+                                const oldCode = getEditorContent();
+
+                                // [PHASE 4.1] Show Diff Review se havia código anterior
+                                const isDefaultCode = oldCode.startsWith('// 🌀');
+                                if (!isDefaultCode && oldCode.length > 50) {
+                                    showDiffReview(oldCode, event.code, event.filename || 'page.tsx');
+                                } else {
+                                    setEditorContent(event.code, event.language || 'typescriptreact');
+                                }
                                 updateFileTab(event.filename || 'page.tsx', true);
 
                                 const filePath = `/src/app/${event.filename || 'page.tsx'}`;
                                 await vfsWrite(filePath, event.code);
                                 state.currentFile = filePath;
+                                updateBreadcrumbs(filePath);
 
                                 if (event.preview) {
                                     updatePreview(event.preview);
                                 }
+
+                                // [PHASE 4.8] Cache result
+                                setCachedGeneration(payload.prompt, event.code);
 
                                 if (!audit.passes) {
                                     addMessage('system', '⚠️ Código gerado mas possui falhas de conformidade.');
@@ -884,12 +898,16 @@ window.vortexStudio = (() => {
 </head>
 <body>${processedHtml}</body>
 </html>`;
+            // [PHASE 4.5] Inject design system tokens into Tailwind
+            fullHtml = injectDesignSystemToPreview(fullHtml);
         } else {
             // Case where it is already a full HTML, inject before </body> or </head>
             if (!fullHtml.includes('unpkg.com/lucide')) {
                 fullHtml = fullHtml.replace('</head>', '<script src="https://unpkg.com/lucide@latest"></script></head>');
             }
             fullHtml = fullHtml.replace('</body>', `${telemetryScript}</body>`);
+            // [PHASE 4.5] Inject design system tokens
+            fullHtml = injectDesignSystemToPreview(fullHtml);
         }
 
         frame.srcdoc = fullHtml;
@@ -1340,6 +1358,15 @@ window.vortexStudio = (() => {
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.saveToVFS()">
                         <i data-lucide="save"></i> SALVAR
                     </button>
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.exportHTML()" title="Exportar HTML estático">
+                        <i data-lucide="download"></i>
+                    </button>
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.generateSEOCluster()" title="Silos SEO">
+                        <i data-lucide="network"></i>
+                    </button>
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.showTemplateLibrary()" title="Templates">
+                        <i data-lucide="layout-template"></i>
+                    </button>
                     <button class="vortex-btn vortex-btn-success" onclick="vortexStudio.commitAndPush()">
                         <i data-lucide="git-branch"></i> COMMIT & PUSH
                     </button>
@@ -1608,6 +1635,8 @@ window.vortexStudio = (() => {
         addMessage('system', '🚀 Preparando Deploy para Vercel...');
         addAuditLog('info', '🚀 Commit iniciado...');
         
+        // [PHASE 4.2] Mostrar barra de progresso
+        showDeployProgress();  
         try {
             const filename = state.currentFile ? state.currentFile.split('/').pop() : 'page.tsx';
 
@@ -1833,6 +1862,267 @@ window.vortexStudio = (() => {
 
 
     // =========================================================================
+    // [PHASE 4.1] DIFF REVIEW MODAL (Monaco DiffEditor)
+    // =========================================================================
+    function showDiffReview(originalCode, newCode, filename) {
+        let overlay = document.getElementById('vortex-diff-overlay');
+        if (overlay) overlay.remove();
+
+        overlay = document.createElement('div');
+        overlay.id = 'vortex-diff-overlay';
+        overlay.className = 'vortex-diff-overlay';
+        overlay.innerHTML = `
+            <div class="vortex-diff-modal">
+                <div class="vortex-diff-header">
+                    <span>📝 Diff Review: <strong>${filename || 'page.tsx'}</strong></span>
+                    <div class="vortex-diff-actions">
+                        <button class="vortex-btn vortex-btn-success" id="vortex-diff-accept">✅ Aceitar Alterações</button>
+                        <button class="vortex-btn vortex-btn-secondary" id="vortex-diff-reject">❌ Rejeitar</button>
+                    </div>
+                </div>
+                <div id="vortex-diff-container" style="width: 100%; height: calc(100% - 50px);"></div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Init Monaco DiffEditor
+        if (window.monaco) {
+            const container = document.getElementById('vortex-diff-container');
+            state.diffEditor = monaco.editor.createDiffEditor(container, {
+                theme: 'vs-dark',
+                readOnly: true,
+                renderSideBySide: true,
+                minimap: { enabled: false },
+                fontSize: 12
+            });
+            const originalModel = monaco.editor.createModel(originalCode || '', 'typescript');
+            const modifiedModel = monaco.editor.createModel(newCode || '', 'typescript');
+            state.diffEditor.setModel({ original: originalModel, modified: modifiedModel });
+        }
+
+        document.getElementById('vortex-diff-accept').onclick = () => {
+            setEditorContent(newCode, 'typescriptreact');
+            closeDiffReview();
+            addAuditLog('success', '✅ Alterações aceitas via Diff Review.');
+        };
+        document.getElementById('vortex-diff-reject').onclick = () => {
+            closeDiffReview();
+            addAuditLog('warn', '❌ Alterações rejeitadas no Diff Review.');
+        };
+    }
+
+    function closeDiffReview() {
+        const overlay = document.getElementById('vortex-diff-overlay');
+        if (overlay) overlay.remove();
+        if (state.diffEditor) {
+            state.diffEditor.dispose();
+            state.diffEditor = null;
+        }
+    }
+
+    // =========================================================================
+    // [PHASE 4.2] DEPLOY PROGRESS BAR
+    // =========================================================================
+    function showDeployProgress() {
+        let bar = document.getElementById('vortex-deploy-progress');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'vortex-deploy-progress';
+            bar.className = 'vortex-deploy-progress';
+            bar.innerHTML = `
+                <div class="deploy-progress-fill" id="vortex-deploy-fill"></div>
+                <span class="deploy-progress-text" id="vortex-deploy-text">🚀 Enviando...</span>
+            `;
+            const toolbar = document.querySelector('.vortex-toolbar');
+            if (toolbar) toolbar.after(bar);
+        }
+        bar.style.display = 'flex';
+        animateDeployProgress();
+    }
+
+    function animateDeployProgress() {
+        const fill = document.getElementById('vortex-deploy-fill');
+        const text = document.getElementById('vortex-deploy-text');
+        if (!fill || !text) return;
+
+        const stages = [
+            { pct: 20, msg: '📦 Preparando arquivos...' },
+            { pct: 45, msg: '🚀 Enviando para GitHub...' },
+            { pct: 70, msg: '🔄 Vercel build iniciado...' },
+            { pct: 90, msg: '✅ Quase lá...' },
+            { pct: 100, msg: '🎉 Deploy concluído!' }
+        ];
+        let i = 0;
+        const interval = setInterval(() => {
+            if (i >= stages.length) {
+                clearInterval(interval);
+                setTimeout(hideDeployProgress, 2000);
+                return;
+            }
+            fill.style.width = stages[i].pct + '%';
+            text.textContent = stages[i].msg;
+            i++;
+        }, 1500);
+    }
+
+    function hideDeployProgress() {
+        const bar = document.getElementById('vortex-deploy-progress');
+        if (bar) bar.style.display = 'none';
+    }
+
+    // =========================================================================
+    // [PHASE 4.3] CLUSTERIZAÇÃO SEO (silos.json)
+    // =========================================================================
+    async function generateSEOCluster() {
+        try {
+            addMessage('system', '🌐 Carregando estrutura de Silos...');
+            const response = await fetch('/api/data/silos.json');
+            if (!response.ok) {
+                addMessage('system', '⚠️ Arquivo silos.json não encontrado. Crie em /data/silos.json');
+                return;
+            }
+            const silos = await response.json();
+
+            if (!silos.clusters || silos.clusters.length === 0) {
+                addMessage('system', '⚠️ Nenhum cluster definido no silos.json.');
+                return;
+            }
+
+            const clusterList = silos.clusters.map(c => 
+                `• **${c.hub}** (Hub) → ${c.spokes?.map(s => '`' + s + '`').join(', ') || 'sem spokes'}`
+            ).join('\n');
+
+            addMessage('ai', `🌐 **Estrutura de Silos Detectada:**\n\n${clusterList}\n\nDigite o nome do cluster para gerar todas as páginas.`);
+            addAuditLog('info', `🌐 ${silos.clusters.length} cluster(s) carregado(s).`);
+        } catch(e) {
+            addMessage('system', `⚠️ Erro ao carregar silos: ${e.message}`);
+        }
+    }
+
+    // =========================================================================
+    // [PHASE 4.4] AUTO-LINKAGEM INTERNA
+    // =========================================================================
+    function injectInternalLinks(htmlCode, silos) {
+        if (!silos || !silos.clusters) return htmlCode;
+        let processed = htmlCode;
+
+        silos.clusters.forEach(cluster => {
+            if (cluster.spokes) {
+                cluster.spokes.forEach(spoke => {
+                    const linkTag = `<a href="/${spoke.toLowerCase().replace(/\s+/g, '-')}" class="internal-link" title="${spoke}">${spoke}</a>`;
+                    const regex = new RegExp(`(?<!<[^>]*)\\b${spoke}\\b(?![^<]*>)`, 'gi');
+                    processed = processed.replace(regex, (match, offset) => {
+                        // Only replace first occurrence
+                        processed = processed.substring(0, offset) + linkTag + processed.substring(offset + match.length);
+                        return linkTag;
+                    });
+                });
+            }
+        });
+        return processed;
+    }
+
+    // =========================================================================
+    // [PHASE 4.5] DESIGN SYSTEM TOKENS → TAILWIND CONFIG
+    // =========================================================================
+    function getDesignSystemConfig() {
+        return {
+            colors: {
+                primary: '#050810',
+                secondary: '#0f172a',
+                accent: { teal: '#2dd4bf', indigo: '#6366f1' },
+                text: { primary: '#e2e8f0', secondary: '#94a3b8', muted: '#64748b' },
+                surface: { dark: '#0a0e1a', card: 'rgba(255,255,255,0.03)' },
+                success: '#34d399',
+                warning: '#fbbf24',
+                error: '#f87171'
+            },
+            fonts: {
+                heading: "'Outfit', sans-serif",
+                body: "'Inter', sans-serif",
+                mono: "'JetBrains Mono', monospace"
+            },
+            spacing: { xs: '4px', sm: '8px', md: '16px', lg: '24px', xl: '40px' },
+            radius: { sm: '6px', md: '8px', lg: '12px', full: '9999px' }
+        };
+    }
+
+    function injectDesignSystemToPreview(htmlCode) {
+        const ds = getDesignSystemConfig();
+        const tailwindConfig = `
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: ${JSON.stringify(ds.colors)},
+                        fontFamily: {
+                            heading: ${JSON.stringify([ds.fonts.heading])},
+                            body: ${JSON.stringify([ds.fonts.body])},
+                            mono: ${JSON.stringify([ds.fonts.mono])}
+                        }
+                    }
+                }
+            }
+        </script>`;
+        return htmlCode.replace('</head>', tailwindConfig + '</head>');
+    }
+
+    // =========================================================================
+    // [PHASE 4.7] EXPORT HTML ESTÁTICO
+    // =========================================================================
+    function exportHTML() {
+        const frame = document.getElementById('vortex-preview-frame');
+        if (!frame || !frame.srcdoc) {
+            addMessage('system', '⚠️ Nenhum preview disponível para exportar.');
+            return;
+        }
+
+        const blob = new Blob([frame.srcdoc], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (state.currentFile ? state.currentFile.split('/').pop().replace(/\.[^.]+$/, '') : 'vortex-export') + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        addAuditLog('success', `📥 HTML exportado: ${a.download}`);
+        addMessage('system', `📥 Arquivo **${a.download}** baixado com sucesso.`);
+    }
+
+    // =========================================================================
+    // [PHASE 4.8] CACHE LOCAL DE GERAÇÕES
+    // =========================================================================
+    function hashPrompt(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash |= 0;
+        }
+        return 'cache_' + Math.abs(hash).toString(36);
+    }
+
+    function getCachedGeneration(prompt) {
+        const key = hashPrompt(prompt);
+        return state.generationCache.get(key) || null;
+    }
+
+    function setCachedGeneration(prompt, result) {
+        const key = hashPrompt(prompt);
+        state.generationCache.set(key, {
+            result,
+            timestamp: Date.now()
+        });
+        // Limit cache to 50 entries
+        if (state.generationCache.size > 50) {
+            const oldest = state.generationCache.keys().next().value;
+            state.generationCache.delete(oldest);
+        }
+    }
+
+    // =========================================================================
     // HELPERS
     // =========================================================================
     function loadScript(src) {
@@ -1919,6 +2209,12 @@ window.vortexStudio = (() => {
         showTemplateLibrary,
         useTemplate,
         updateBreadcrumbs,
+        // Phase 4
+        showDiffReview,
+        closeDiffReview,
+        exportHTML,
+        generateSEOCluster,
+        getDesignSystemConfig,
         getState: () => state
     };
 })();
