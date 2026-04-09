@@ -40,6 +40,29 @@ window.vortexStudio = (() => {
     };
 
     // =========================================================================
+    // UTILS: SANITIZAÇÃO E LIMPEZA (ANTI-HALLUCINATION)
+    // =========================================================================
+    function sanitizeAIContent(content) {
+        if (!content) return '';
+        let clean = content;
+        
+        // 1. Remover Markdown Code Blocks (ex: ```tsx ... ```)
+        clean = clean.replace(/```[a-z]*\n?/gi, '');
+        clean = clean.replace(/```/g, '');
+
+        // 2. Remover tags estruturais do Vórtex (se vazarem para o editor)
+        clean = clean.replace(/<file[^>]*>/gi, '');
+        clean = clean.replace(/<\/file>/gi, '');
+        clean = clean.replace(/<preview[^>]*>/gi, '');
+        clean = clean.replace(/<\/preview>/gi, '');
+        clean = clean.replace(/<explanation[^>]*>/gi, '');
+        clean = clean.replace(/<\/explanation>/gi, '');
+        
+        return clean.trim();
+    }
+
+
+    // =========================================================================
     // VFS (Virtual File System via Dexie.js)
     // =========================================================================
     async function initVFS() {
@@ -514,11 +537,11 @@ window.vortexStudio = (() => {
                                 // Extrair o conteúdo parcial do bloco <file>
                                 const partialMatch = fullStreamText.match(/<file[^>]*>([\s\S]*?)(?:<\/file>|$)/);
                                 if (partialMatch) {
-                                    setEditorContent(partialMatch[1].trimStart(), 'typescriptreact');
+                                    setEditorContent(sanitizeAIContent(partialMatch[1].trimStart()), 'typescriptreact');
                                 }
                             } else {
-                                // Ainda não chegou no bloco <file>, mostrar texto bruto
-                                setEditorContent(fullStreamText, 'typescriptreact');
+                                // Ainda não chegou no bloco <file>, mostrar texto bruto (limpo)
+                                setEditorContent(sanitizeAIContent(fullStreamText), 'typescriptreact');
                             }
                             break;
 
@@ -530,10 +553,13 @@ window.vortexStudio = (() => {
 
                                 // [PHASE 4.1] Show Diff Review se havia código anterior
                                 const isDefaultCode = oldCode.startsWith('// 🌀');
+                                const cleanNewCode = sanitizeAIContent(event.code);
+
                                 if (!isDefaultCode && oldCode.length > 50) {
-                                    showDiffReview(oldCode, event.code, event.filename || 'page.tsx');
+                                    showDiffReview(oldCode, cleanNewCode, event.filename || 'page.tsx');
                                 } else {
-                                    setEditorContent(event.code, event.language || 'typescriptreact');
+                                    setEditorContent(cleanNewCode, event.language || 'typescriptreact');
+                                    if (event.preview) updatePreview(event.preview);
                                 }
                                 updateFileTab(event.filename || 'page.tsx', true);
 
@@ -1610,6 +1636,11 @@ window.vortexStudio = (() => {
         const tab = document.querySelector(`[data-file="${filename}"]`);
         if (tab) tab.classList.remove('modified');
         
+        // [PHASE 5.1] Atualizar Preview e Explorer no Save
+        updatePreview(content);
+        updateBreadcrumbs(state.currentFile);
+        renderFileTree();
+        
         addMessage('system', `💾 Arquivo salvo e espelhado: ${state.currentFile}`);
     }
 
@@ -1901,8 +1932,10 @@ window.vortexStudio = (() => {
         }
 
         document.getElementById('vortex-diff-accept').onclick = () => {
-            setEditorContent(newCode, 'typescriptreact');
+            const cleanCode = sanitizeAIContent(newCode);
+            setEditorContent(cleanCode, 'typescriptreact');
             closeDiffReview();
+            updatePreview(cleanCode); // Atualizar preview imediatamente ao aceitar
             addAuditLog('success', '✅ Alterações aceitas via Diff Review.');
         };
         document.getElementById('vortex-diff-reject').onclick = () => {

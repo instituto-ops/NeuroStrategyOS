@@ -1,40 +1,29 @@
 # 🧠 Estado Atual - Operação Antigravity
 
-## 🎯 Status: TODAS AS 4 FASES COMPLETAS — Vórtex Pro v1.0
+## 🎯 Status: Vórtex Pro v1.1 — Estabilizado e Refinado ✅
+**Data:** 09/04/2026
 
 ---
 
-| Fase | Status | Etapas | Commit |
-| :--- | :--- | :--- | :--- |
-| **Fase 1 — Fundação** | ✅ COMPLETA | 10/10 | `ba06956` |
-| **Fase 2 — Inteligência** | ✅ COMPLETA | 7/8 (2.1 absorvido em 4.1) | `838bb07` |
-| **Fase 3 — Polimento Premium** | ✅ COMPLETA | 12/12 | `741dd01` |
-| **Fase 4 — Ecossistema** | ✅ COMPLETA | 8/8 | *pendente* |
-
-### Detalhes Fase 4
-| # | Etapa | Status |
+| Fase | Status | Descrição |
 | :--- | :--- | :--- |
-| 4.1 | Diff Review Modal (Monaco DiffEditor) | ✅ |
-| 4.2 | Deploy Progress Bar (gradient animated) | ✅ |
-| 4.3 | Clusterização SEO (silos.json) | ✅ |
-| 4.4 | Auto-linkagem interna | ✅ |
-| 4.5 | Design System Tokens → Tailwind config | ✅ |
-| 4.6 | AST Validator (acorn-jsx) | ⏭️ Integrado via auditCode |
-| 4.7 | Export HTML estático | ✅ |
-| 4.8 | Cache local de gerações | ✅ |
+| **Fase 1 — Fundação** | ✅ OK | VFS robusto e UI OLED Black. |
+| **Fase 2 — Inteligência** | ✅ OK | Auditoria semântica e Parser robusto. |
+| **Fase 3 — Polimento** | ✅ OK | UX Premium (Zen, Mentions, Templates). |
+| **Fase 4 — Ecossistema** | ✅ OK | Diff Review, Deploy Progress, SEO Silos. |
+| **Pós-Fase 4 (Fixes)** | ✅ OK | Estabilidade do Servidor e Sanitização SSE. |
 
-### 🏁 TODAS AS FASES COMPLETAS
+### 🛠️ Correções de Estabilidade (v1.1)
+- **Eliminação de Duplicatas:** Removidas re-declarações de `wrapModel` e `trackUsage` no `server.js`.
+- **Prevenção de Crash:** Envolvidas inicializações de APIs Google (TTS/Analytics) em try-catch para ambientes sem credenciais.
+- **Preview Route:** Implementada rota `/vortex-preview` para evitar erros 404.
+- **Sanitização de Streaming:** Nova função `sanitizeAIContent` no frontend para remover tags markdown (```) e XML residuais do editor.
+- **Sincronização UI:** Atualização automática de Preview e Breadcrumbs ao Aceitar/Salvar alterações.
 
 ### 🧠 Memória de Contexto (Antigravity)
-- **Dexie Schema**: v2 com 4 tables.
-- **Auditoria**: Dupla camada (Regex + Gemini semântico).
-- **Commit Gate**: Bloqueia deploy + Deploy Progress Bar.
-- **Preview**: Schema.org + GTM + Web Vitals + Design System tokens.
-- **UX**: Quick Open, @Mentions, Zen Mode, Pop-out, Breadcrumbs, Templates.
-- **Diff Review**: Monaco DiffEditor side-by-side antes de aceitar código.
-- **SEO**: Clusters/Silos + Auto-linkagem interna.
-- **Export**: HTML estático com download direto.
-- **Cache**: HashMap local por hash de prompt (50 max).
+- **SSOT**: `vfsWrite` sincroniza IndexedDB e Espelhamento local.
+- **Diff Review**: Travamento de aprovação Side-by-Side (Monaco).
+- **SEO Cluster**: Clusters/Silos automáticos via `silos.json`.
 
 ---
-*Atualizado por Antigravity Agent em 2026-04-09 — v1.0 RELEASE*
+*Atualizado por Antigravity Agent em 2026-04-09 — v1.1 MAINTENANCE RELEASE*

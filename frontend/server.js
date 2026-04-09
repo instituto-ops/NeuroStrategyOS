@@ -6,7 +6,12 @@ const path = require('path');
 const WebSocket = require('ws');
 const cloudinary = require('cloudinary').v2;
 const textToSpeech = require('@google-cloud/text-to-speech');
-const ttsClient = new textToSpeech.TextToSpeechClient();
+let ttsClient;
+try {
+    ttsClient = new textToSpeech.TextToSpeechClient();
+} catch (err) {
+    console.warn("⚠️ [TTS] Falha ao inicializar TTS Client (sem credenciais):", err.message);
+}
 const { BetaAnalyticsDataClient } = require('@google-analytics/data');
 require('dotenv').config({ path: '../.env' }); 
 
@@ -177,11 +182,6 @@ const LITE_MODEL = "gemini-2.5-flash-lite";
 const MAIN_MODEL = "gemini-2.5-flash"; // PADRÃO SELECIONADO
 const PRO_MODEL  = "gemini-2.5-pro";
 
-// Helper: Wrapper de modelo (extensível para rate limiting, retry, logging)
-function wrapModel(model) {
-    return model; // Passthrough — pode ser expandido para retry/rate-limiting futuramente
-}
-
 // Helper para obter o motor de IA configurado dinamicamente
 function getAIModel(modelType, mimeType = "application/json") {
     let target = MAIN_MODEL;
@@ -207,14 +207,6 @@ const modelPro = getAIModel('pro', 'text/plain');
 const VISION_MODEL = MAIN_MODEL;
 const HEAVY_MODEL = PRO_MODEL;
 const draftsDb = []; // In-memory store for newly generated drafts before WP sync
-
-// Helper: Rastreamento de uso de tokens (Telemetria Silenciosa)
-function trackUsage(metadata) {
-    if (!metadata) return;
-    const { promptTokenCount, candidatesTokenCount, totalTokenCount } = metadata;
-    console.log(`📊 [TOKEN USAGE] Prompt: ${promptTokenCount || '?'} | Output: ${candidatesTokenCount || '?'} | Total: ${totalTokenCount || '?'}`);
-}
-
 
 // Helper robust JSON parser com Autorepair para Truncamento (Antigravity v5)
 function extractJSON(text) {
@@ -4086,6 +4078,28 @@ app.get('/api/seo/analyze-silos', async (req, res) => {
         console.error("❌ [ABIDOS-SILO ERROR]", e);
         res.status(500).json({ success: false, error: e.message || "Falha na geração neural de silos." });
     }
+});
+
+// Servir Preview (VFS Simulator)
+app.get('/vortex-preview', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="pt-br">
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { background: #050810; color: #1e293b; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; color: #94a3b8; }
+                .msg { text-align: center; border: 1px dashed #334155; padding: 2rem; border-radius: 8px; }
+            </style>
+        </head>
+        <body>
+            <div class="msg">
+                <h3>🌀 Vórtex Preview</h3>
+                <p>Aguardando renderização via Mission Control...</p>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
 // 🌀 VÓRTEX AI STUDIO — API ROUTES
