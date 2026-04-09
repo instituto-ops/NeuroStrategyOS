@@ -906,6 +906,137 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
 }
+/* === BOTTOM DRAWER === */
+.vortex-drawer {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: #0a0e1a;
+    max-height: 250px;
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+}
+
+.vortex-drawer.collapsed {
+    max-height: 32px;
+}
+
+.vortex-drawer-handle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 12px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    min-height: 32px;
+    user-select: none;
+}
+
+.vortex-drawer-handle:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.vortex-drawer-tabs {
+    display: flex;
+    gap: 2px;
+}
+
+.vortex-drawer-tab {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+
+.vortex-drawer-tab:hover {
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.vortex-drawer-tab.active {
+    color: #a5b4fc;
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.vortex-drawer-tab i,
+.vortex-drawer-tab svg {
+    width: 12px;
+    height: 12px;
+}
+
+.vortex-drawer-chevron {
+    font-size: 10px;
+    color: #475569;
+    transition: transform 0.3s;
+}
+
+.vortex-drawer.collapsed .vortex-drawer-chevron {
+    transform: rotate(180deg);
+}
+
+.vortex-drawer-content {
+    flex: 1;
+    overflow: hidden;
+}
+
+.vortex-drawer-pane {
+    display: none;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.vortex-drawer-pane.active {
+    display: block;
+}
+
+.vortex-audit-log {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.vortex-audit-entry {
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+.vortex-audit-entry.info { color: #94a3b8; }
+.vortex-audit-entry.success { color: #34d399; }
+.vortex-audit-entry.warn { color: #fbbf24; }
+.vortex-audit-entry.error { color: #f87171; }
+
+.audit-time {
+    color: #475569;
+    margin-right: 8px;
+    font-size: 10px;
+}
+
+.vortex-terminal-output {
+    padding: 8px 12px;
+    margin: 0;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: #34d399;
+    background: transparent;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+}
 
 /* === PREMIUM ENHANCEMENTS === */
 

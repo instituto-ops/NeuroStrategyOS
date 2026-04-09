@@ -1325,10 +1325,63 @@ window.vortexStudio = (() => {
                     </div>
                 </div>
             </div>
+
+            <!-- BOTTOM DRAWER -->
+            <div id="vortex-drawer" class="vortex-drawer collapsed">
+                <div class="vortex-drawer-handle" onclick="vortexStudio.toggleDrawer()">
+                    <div class="vortex-drawer-tabs">
+                        <button class="vortex-drawer-tab active" data-drawer="audit" onclick="event.stopPropagation(); vortexStudio.switchDrawerTab('audit')">
+                            <i data-lucide="shield-check"></i> AUDITORIA
+                        </button>
+                        <button class="vortex-drawer-tab" data-drawer="terminal" onclick="event.stopPropagation(); vortexStudio.switchDrawerTab('terminal')">
+                            <i data-lucide="terminal"></i> TERMINAL
+                        </button>
+                    </div>
+                    <span class="vortex-drawer-chevron">▲</span>
+                </div>
+                <div class="vortex-drawer-content">
+                    <div id="vortex-drawer-audit" class="vortex-drawer-pane active">
+                        <div class="vortex-audit-log" id="vortex-audit-log">
+                            <div class="vortex-audit-entry info">🌀 Vórtex Auditoria inicializada. Logs do Abidos aparecerão aqui.</div>
+                        </div>
+                    </div>
+                    <div id="vortex-drawer-terminal" class="vortex-drawer-pane">
+                        <pre class="vortex-terminal-output" id="vortex-terminal-output">$ vortex ready\n⚡ Waiting for commands...</pre>
+                    </div>
+                </div>
+            </div>
         `;
 
         // Initialize Lucide icons
         if (window.lucide) window.lucide.createIcons();
+    }
+
+    function toggleDrawer() {
+        const drawer = document.getElementById('vortex-drawer');
+        if (drawer) drawer.classList.toggle('collapsed');
+    }
+
+    function switchDrawerTab(tabName) {
+        const drawer = document.getElementById('vortex-drawer');
+        if (drawer && drawer.classList.contains('collapsed')) {
+            drawer.classList.remove('collapsed');
+        }
+        document.querySelectorAll('.vortex-drawer-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.vortex-drawer-pane').forEach(p => p.classList.remove('active'));
+        const targetTab = document.querySelector(`.vortex-drawer-tab[data-drawer="${tabName}"]`);
+        const targetPane = document.getElementById(`vortex-drawer-${tabName}`);
+        if (targetTab) targetTab.classList.add('active');
+        if (targetPane) targetPane.classList.add('active');
+    }
+
+    function addAuditLog(type, message) {
+        const log = document.getElementById('vortex-audit-log');
+        if (!log) return;
+        const entry = document.createElement('div');
+        entry.className = `vortex-audit-entry ${type}`;
+        entry.innerHTML = `<span class="audit-time">${new Date().toLocaleTimeString()}</span> ${message}`;
+        log.appendChild(entry);
+        log.scrollTop = log.scrollHeight;
     }
 
     // =========================================================================
@@ -1474,6 +1527,9 @@ window.vortexStudio = (() => {
         openFilePath,
         closeTab,
         processMultiFileResponse,
+        toggleDrawer,
+        switchDrawerTab,
+        addAuditLog,
         getState: () => state
     };
 })();
