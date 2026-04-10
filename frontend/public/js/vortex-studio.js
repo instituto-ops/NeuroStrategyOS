@@ -559,7 +559,6 @@ window.vortexStudio = (() => {
                                     showDiffReview(oldCode, cleanNewCode, event.filename || 'page.tsx');
                                 } else {
                                     setEditorContent(cleanNewCode, event.language || 'typescriptreact');
-                                    if (event.preview) updatePreview(event.preview);
                                 }
                                 updateFileTab(event.filename || 'page.tsx', true);
 
@@ -570,6 +569,17 @@ window.vortexStudio = (() => {
 
                                 if (event.preview) {
                                     updatePreview(event.preview);
+                                } else {
+                                    updatePreview(`
+                                        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding: 20px;">
+                                            <i data-lucide="monitor-off" style="width:48px; height:48px; color:#ef4444; margin-bottom:16px;"></i>
+                                            <h3 style="color:#f8fafc; font-size:18px; margin-bottom:8px;">Preview Não Disponível</h3>
+                                            <p style="color:#94a3b8; font-size:14px; max-width:400px; line-height:1.6;">
+                                                O motor cognitivo gerou o código React (à esquerda), mas pulou a renderização do bloco de Preview visual por limite de tokens ou otimização.
+                                                <br><br>Código salvo e pronto para ser enviado via Commit & Push.
+                                            </p>
+                                        </div>
+                                    `);
                                 }
 
                                 // [PHASE 4.8] Cache result
@@ -1631,13 +1641,12 @@ window.vortexStudio = (() => {
             });
         } catch(e) { console.error('Mirror error:', e); }
 
-        // Update tab to show saved
+        // Updata Tab & Explorer
         const filename = state.currentFile.split('/').pop();
         const tab = document.querySelector(`[data-file="${filename}"]`);
         if (tab) tab.classList.remove('modified');
         
-        // [PHASE 5.1] Atualizar Preview e Explorer no Save
-        updatePreview(content);
+        // [PHASE 5.1] Atualizar Explorer no Save
         updateBreadcrumbs(state.currentFile);
         renderFileTree();
         
@@ -1935,7 +1944,6 @@ window.vortexStudio = (() => {
             const cleanCode = sanitizeAIContent(newCode);
             setEditorContent(cleanCode, 'typescriptreact');
             closeDiffReview();
-            updatePreview(cleanCode); // Atualizar preview imediatamente ao aceitar
             addAuditLog('success', '✅ Alterações aceitas via Diff Review.');
         };
         document.getElementById('vortex-diff-reject').onclick = () => {

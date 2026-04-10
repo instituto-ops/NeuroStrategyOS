@@ -4249,7 +4249,7 @@ ${context || 'Sem regras especiais em execução.'}
 Retorne o código usando blocos XML delimitados. NÃO retorne JSON.
 
 <file path="page.tsx" language="typescriptreact">
-// Código completo aqui
+// Código React completo aqui
 </file>
 
 <preview>
@@ -4260,7 +4260,7 @@ Retorne o código usando blocos XML delimitados. NÃO retorne JSON.
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-<!-- HTML de preview aqui -->
+<!-- HTML de preview visual estático (Vibecoding) para o componente gerado acima -->
 </body>
 </html>
 </preview>
@@ -4271,7 +4271,8 @@ Resumo conciso das decisões técnicas.
 
 IMPORTANTE:
 - Use EXATAMENTE o formato de blocos XML acima.
-- O preview deve ser HTML autocontido com Tailwind CDN e Lucide CDN.
+- O bloco <preview> É OBRIGATÓRIO! Como rodamos num ambiente Serverless (VFS), a interface só será renderizada se o bloco HTML for fornecido. Nunca o omita.
+- O preview deve ser HTML autocontido com Tailwind CDN e Lucide CDN, simulando a estética exata do React.
 - Mobile-first, Performance máxima.`;
 
         const fullPrompt = currentCode 
