@@ -567,20 +567,7 @@ window.vortexStudio = (() => {
                                 state.currentFile = filePath;
                                 updateBreadcrumbs(filePath);
 
-                                if (event.preview) {
-                                    updatePreview(event.preview);
-                                } else {
-                                    updatePreview(`
-                                        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding: 20px;">
-                                            <i data-lucide="monitor-off" style="width:48px; height:48px; color:#ef4444; margin-bottom:16px;"></i>
-                                            <h3 style="color:#f8fafc; font-size:18px; margin-bottom:8px;">Preview Não Disponível</h3>
-                                            <p style="color:#94a3b8; font-size:14px; max-width:400px; line-height:1.6;">
-                                                O motor cognitivo gerou o código React (à esquerda), mas pulou a renderização do bloco de Preview visual por limite de tokens ou otimização.
-                                                <br><br>Código salvo e pronto para ser enviado via Commit & Push.
-                                            </p>
-                                        </div>
-                                    `);
-                                }
+                                updatePreview(event.preview || cleanNewCode);
 
                                 // [PHASE 4.8] Cache result
                                 setCachedGeneration(payload.prompt, event.code);
@@ -855,6 +842,90 @@ window.vortexStudio = (() => {
     }
 
     // =========================================================================
+    // VÓRTEX REACT COMPILER (Zero-Token Preview Strategy)
+    // =========================================================================
+    function isReactCode(code) {
+        return code.includes('import ') && (code.includes('react') || code.includes('lucide'));
+    }
+
+    function buildReactSandbox(reactCode) {
+        // Find default export name
+        let componentName = 'App';
+        const match = reactCode.match(/export\s+default\s+function\s+([A-Za-z0-9_]+)/);
+        if (match) componentName = match[1];
+
+        return `<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Import Maps para ESM -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "framer-motion": "https://esm.sh/framer-motion@10.16.4",
+        "lucide-react": "https://esm.sh/lucide-react@0.292.0",
+        "next/link": "https://esm.sh/react",
+        "next/image": "https://esm.sh/react",
+        "next/font/google": "https://esm.sh/react"
+      }
+    }
+    </script>
+    
+    <!-- Babel JSX Compiler -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #050810; color: #e2e8f0; margin: 0; min-height: 100vh; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #2dd4bf20; border-radius: 10px; }
+        .font-outfit { font-family: 'Outfit', sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; color:#94a3b8; font-family:'Inter',sans-serif;">
+            <i data-lucide="loader-2" class="vortex-spin" style="width:32px;height:32px;color:#2dd4bf;margin-bottom:16px;"></i>
+            <span>Vórtex Compiler: Montando Componente...</span>
+        </div>
+    </div>
+    <script>lucide.createIcons();</script>
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect } from 'react';
+        import { createRoot } from 'react-dom/client';
+        
+        // --- React Hooks Mocks (Fallback safe) ---
+        window.React = React;
+
+        // --- Next.js Mocks ---
+        const Link = ({href, children, className}) => <a href={href} className={className}>{children}</a>;
+        const Image = ({src, alt, className, width, height}) => <img src={src} alt={alt} className={className} width={width} height={height} style={{maxWidth:'100%', height:'auto'}} />;
+        const Inter = () => ({ className: 'font-inter' });
+        const Outfit = () => ({ className: 'font-outfit' });
+
+        // --- Código Original (Vibecoded) ---
+        ${reactCode.replace(/import\s+Link.*?['"];?/g, '').replace(/import\s+Image.*?['"];?/g, '').replace(/import\s+\{.*?(Inter|Outfit).*?['"];?/g, '')}
+
+        // Renderização Dinâmica
+        setTimeout(() => {
+            try {
+                const root = createRoot(document.getElementById('root'));
+                root.render(<${componentName} />);
+            } catch (e) {
+                document.getElementById('root').innerHTML = '<div style="color:#ef4444;padding:20px;font-family:monospace;">Erro de Compilação React:<br><br>' + e.message + '</div>';
+            }
+        }, 100);
+    </script>
+</body>
+</html>`;
+    }
+
+    // =========================================================================
     // PREVIEW
     // =========================================================================
     function updatePreview(htmlContent) {
@@ -886,7 +957,14 @@ window.vortexStudio = (() => {
 
         // Wrap in a full HTML document if needed
         let fullHtml = processedHtml;
-        if (!processedHtml.includes('<!DOCTYPE') && !processedHtml.includes('<html')) {
+
+        if (isReactCode(processedHtml)) {
+            // [VÓRTEX COMPILER STRATEGY] Se for React, constrói on-the-fly sem precisar de blocos de HTML
+            fullHtml = buildReactSandbox(processedHtml);
+            fullHtml = injectDesignSystemToPreview(fullHtml);
+            // Injeta CSS para rotação do loader
+            fullHtml = fullHtml.replace('<style>', '<style>\n        @keyframes spinner { to { transform: rotate(360deg); } }\n        .vortex-spin { animation: spinner 1s linear infinite; }\n');
+        } else if (!processedHtml.includes('<!DOCTYPE') && !processedHtml.includes('<html')) {
 
             // [PHASE 2.7] Schema.org JSON-LD Automático
             const schemaLd = `
@@ -2017,7 +2095,7 @@ window.vortexStudio = (() => {
     async function generateSEOCluster() {
         try {
             addMessage('system', '🌐 Carregando estrutura de Silos...');
-            const response = await fetch('/api/data/silos.json');
+            const response = await fetch('/api/seo/silos');
             if (!response.ok) {
                 addMessage('system', '⚠️ Arquivo silos.json não encontrado. Crie em /data/silos.json');
                 return;

@@ -4252,27 +4252,13 @@ Retorne o código usando blocos XML delimitados. NÃO retorne JSON.
 // Código React completo aqui
 </file>
 
-<preview>
-<!DOCTYPE html>
-<html>
-<head>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-</head>
-<body>
-<!-- HTML de preview visual estático (Vibecoding) para o componente gerado acima -->
-</body>
-</html>
-</preview>
-
 <explanation>
 Resumo conciso das decisões técnicas.
 </explanation>
 
 IMPORTANTE:
 - Use EXATAMENTE o formato de blocos XML acima.
-- O bloco <preview> É OBRIGATÓRIO! Como rodamos num ambiente Serverless (VFS), a interface só será renderizada se o bloco HTML for fornecido. Nunca o omita.
-- O preview deve ser HTML autocontido com Tailwind CDN e Lucide CDN, simulando a estética exata do React.
+- NUNCA crie blocos HTML de preview. Concentre todo seu limite de output APENAS na arquitetura React/Next.js no bloco <file>.
 - Mobile-first, Performance máxima.`;
 
         const fullPrompt = currentCode 
