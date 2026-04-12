@@ -48,3 +48,13 @@ Antigravity/*
 # Ignorar Documentos Originais da Metodologia
 docs/Metodologia Antigravity/
 
+# Poda Sináptica — Dados de Runtime e Estado (NÃO rastrear no Git)
+frontend/drafts.json
+frontend/manual_pages.json
+frontend/sessions.txt
+frontend/analytics_cache.json
+frontend/analytics_history.json
+frontend/telemetry.json
+frontend/acervo_links.json
+frontend/google_tag_config.json
+Backup/
