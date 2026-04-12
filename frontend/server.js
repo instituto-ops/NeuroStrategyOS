@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
 const axios = require('axios');
@@ -10,7 +10,7 @@ let ttsClient;
 try {
     ttsClient = new textToSpeech.TextToSpeechClient();
 } catch (err) {
-    console.warn("⚠️ [TTS] Falha ao inicializar TTS Client (sem credenciais):", err.message);
+    console.warn("âš ï¸ [TTS] Falha ao inicializar TTS Client (sem credenciais):", err.message);
 }
 const { BetaAnalyticsDataClient } = require('@google-analytics/data');
 require('dotenv').config({ path: '../.env' }); 
@@ -31,7 +31,7 @@ async function processQueue() {
                     return res;
                 } catch (e) {
                     if (e.message.includes('429') && r > 0) {
-                        console.warn(`⚠️ [AI QUEUE] 429 Hit. Waiting ${d}ms... (${r} retries left)`);
+                        console.warn(`âš ï¸ [AI QUEUE] 429 Hit. Waiting ${d}ms... (${r} retries left)`);
                         await new Promise(res => setTimeout(res, d));
                         return await executeCall(r - 1, d * 2);
                     }
@@ -75,17 +75,17 @@ let analyticsClient;
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     try {
         analyticsClient = new BetaAnalyticsDataClient();
-        console.log("📊 [ANALYTICS] Motor GA4 Inicializado com Sucesso.");
+        console.log("ðŸ“Š [ANALYTICS] Motor GA4 Inicializado com Sucesso.");
     } catch (err) {
-        console.warn("⚠️ [ANALYTICS] Falha ao inicializar motor GA4:", err.message);
+        console.warn("âš ï¸ [ANALYTICS] Falha ao inicializar motor GA4:", err.message);
     }
 }
 
 if (!process.env.GOOGLE_CLOUD_PROJECT && !process.env.GEMINI_API_KEY) {
     console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    console.error("!!! ERRO CRÍTICO: Variáveis de ambiente GOOGLE_CLOUD_PROJECT e GEMINI_API_KEY não foram definidas.");
+    console.error("!!! ERRO CRÃTICO: VariÃ¡veis de ambiente GOOGLE_CLOUD_PROJECT e GEMINI_API_KEY nÃ£o foram definidas.");
     console.error("!!! Por favor, adicione-as ao seu arquivo .env");
-    console.error("!!! O Antigravity Agent não funcionará corretamente sem isso.");
+    console.error("!!! O Antigravity Agent nÃ£o funcionarÃ¡ corretamente sem isso.");
     console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 }
 
@@ -98,7 +98,7 @@ const mammoth = require('mammoth');
 const app = express();
 const port = 3000; 
 
-// Memória temporária para Previews
+// MemÃ³ria temporÃ¡ria para Previews
 const tempPreviews = {};
 
 app.use(cors());
@@ -125,11 +125,11 @@ app.get('/api/previews/get/:id', (req, res) => {
     if (preview) {
         res.json(preview);
     } else {
-        res.status(404).json({ error: "Preview expirado ou não encontrado no servidor." });
+        res.status(404).json({ error: "Preview expirado ou nÃ£o encontrado no servidor." });
     }
 });
 
-// 1. SERVIR ARQUIVOS ESTÁTICOS
+// 1. SERVIR ARQUIVOS ESTÃTICOS
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/templates', express.static(path.join(__dirname, '../templates')));
 
@@ -147,15 +147,15 @@ if (isCloudinaryActive) {
         api_key: process.env.CLOUDINARY_API_KEY,
         api_secret: process.env.CLOUDINARY_API_SECRET
     });
-    console.log("☁️ [SMART MEDIA] Cloudinary Engine: ON");
+    console.log("â˜ï¸ [SMART MEDIA] Cloudinary Engine: ON");
 } else {
-    console.log("📍 [SMART MEDIA] Cloudinary Engine: OFF");
+    console.log("ðŸ“ [SMART MEDIA] Cloudinary Engine: OFF");
 }
 
 let wss;
 
 /**
- * Função global para reportar status dos agentes via WebSocket
+ * FunÃ§Ã£o global para reportar status dos agentes via WebSocket
  */
 function reportAgentStatus(agent, status, reason = "", isDone = false) {
     if (wss && wss.clients) {
@@ -174,12 +174,12 @@ function reportAgentStatus(agent, status, reason = "", isDone = false) {
     }
 }
 
-// [HEMISFÉRIOS CEREBRAIS DA IA - GERAÇÃO 2026: PROTOCOLO ABIDOS V5.5]
+// [HEMISFÃ‰RIOS CEREBRAIS DA IA - GERAÃ‡ÃƒO 2026: PROTOCOLO ABIDOS V5.5]
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "DUMMY");
 
-// Modelos Primários (Soberania do Usuário Abidos v5)
+// Modelos PrimÃ¡rios (Soberania do UsuÃ¡rio Abidos v5)
 const LITE_MODEL = "gemini-2.5-flash-lite"; 
-const MAIN_MODEL = "gemini-2.5-flash"; // PADRÃO SELECIONADO
+const MAIN_MODEL = "gemini-2.5-flash"; // PADRÃƒO SELECIONADO
 const PRO_MODEL  = "gemini-2.5-pro";
 
 // Helper para obter o motor de IA configurado dinamicamente
@@ -200,8 +200,8 @@ function getAIModel(modelType, mimeType = "application/json") {
     return wrapModel(rawModel);
 }
 
-// Hemisfério Esquerdo (FLASH): Rápido, Multimodal e Estruturado
-// Perfeito para ouvir seu áudio em tempo real e cuspir o JSON das regras.
+// HemisfÃ©rio Esquerdo (FLASH): RÃ¡pido, Multimodal e Estruturado
+// Perfeito para ouvir seu Ã¡udio em tempo real e cuspir o JSON das regras.
 const modelFlash = getAIModel('flash');
 const modelPro = getAIModel('pro', 'text/plain');
 const VISION_MODEL = MAIN_MODEL;
@@ -230,11 +230,11 @@ function extractJSON(text) {
         return JSON.parse(cleanText);
     } catch (e) {
         // 3. Fallback: Reparo de JSON Truncado (Token Limit Hit)
-        console.warn("⚠️ [VORTEX] JSON Truncado Detectado. Iniciando Reparo de Emergência...");
+        console.warn("âš ï¸ [VORTEX] JSON Truncado Detectado. Iniciando Reparo de EmergÃªncia...");
         try {
             return repairTruncatedJSON(jsonPart);
         } catch (repairErr) {
-            console.error("❌ [VORTEX] Falha crítica no parser JSON:", repairErr.message);
+            console.error("âŒ [VORTEX] Falha crÃ­tica no parser JSON:", repairErr.message);
             return null;
         }
     }
@@ -273,7 +273,7 @@ function repairTruncatedJSON(json) {
         repaired += char;
     }
 
-    // Fechar pendências
+    // Fechar pendÃªncias
     if (inString) repaired += '"';
     while (stack.length) {
         repaired += stack.pop();
@@ -287,14 +287,14 @@ function repairTruncatedJSON(json) {
         const previewMatch = repaired.match(/"preview":\s*"([\s\S]*?)(?:"\s*,|"\s*\})/);
         
         return {
-            code: codeMatch ? codeMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "// Falha na recuperação de código",
+            code: codeMatch ? codeMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "// Falha na recuperaÃ§Ã£o de cÃ³digo",
             preview: previewMatch ? previewMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "<div>Erro no preview truncado</div>",
-            explanation: "⚠️ Payload reparado via Heurística de Emergência após truncamento."
+            explanation: "âš ï¸ Payload reparado via HeurÃ­stica de EmergÃªncia apÃ³s truncamento."
         };
     }
 }
 
-// [FASE 2: TELEMETRIA E SAÚDE DO SISTEMA]
+// [FASE 2: TELEMETRIA E SAÃšDE DO SISTEMA]
 const TELEMETRY_FILE = path.join(__dirname, 'telemetry.json');
 
 const getTelemetry = () => {
@@ -303,7 +303,7 @@ const getTelemetry = () => {
             return JSON.parse(fs.readFileSync(TELEMETRY_FILE, 'utf8'));
         }
     } catch (e) {
-        console.error("❌ Erro ao ler telemetry.json:", e);
+        console.error("âŒ Erro ao ler telemetry.json:", e);
     }
     return {
         tokens: { prompt: 0, candidates: 0, total: 0 },
@@ -324,20 +324,20 @@ const trackUsage = (usage) => {
         stats.last_sync = new Date().toISOString();
         fs.writeFileSync(TELEMETRY_FILE, JSON.stringify(stats, null, 2));
     } catch (e) {
-        console.error("❌ Falha na telemetria:", e.message);
+        console.error("âŒ Falha na telemetria:", e.message);
     }
 };
 
-// [FASE 3: SISTEMA DE RELATÓRIOS E AUTODIAGNÓSTICO]
+// [FASE 3: SISTEMA DE RELATÃ“RIOS E AUTODIAGNÃ“STICO]
 const REPORTS_DIR = path.join(__dirname, 'relatorios');
 
-// Rota de Salvamento de Relatório Longitudinal
+// Rota de Salvamento de RelatÃ³rio Longitudinal
 app.post('/api/system/report/save', (req, res) => {
     try {
         const report = req.body;
         const now = new Date();
         const year = now.getFullYear().toString();
-        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const monthNames = ["Janeiro", "Fevereiro", "MarÃ§o", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const month = monthNames[now.getMonth()];
         
         // Criar estrutura de pastas: relatorios/ANO/MES
@@ -348,15 +348,15 @@ app.post('/api/system/report/save', (req, res) => {
         if (!fs.existsSync(yearDir)) fs.mkdirSync(yearDir, { recursive: true });
         if (!fs.existsSync(monthDir)) fs.mkdirSync(monthDir, { recursive: true });
 
-        // Nome: Relatório_HH-mm_DD-MM-AA.json
-        const filename = `Relatório_${now.getHours().toString().padStart(2,'0')}-${now.getMinutes().toString().padStart(2,'0')}_${now.getDate().toString().padStart(2,'0')}-${(now.getMonth()+1).toString().padStart(2,'0')}-${year.slice(-2)}.json`;
+        // Nome: RelatÃ³rio_HH-mm_DD-MM-AA.json
+        const filename = `RelatÃ³rio_${now.getHours().toString().padStart(2,'0')}-${now.getMinutes().toString().padStart(2,'0')}_${now.getDate().toString().padStart(2,'0')}-${(now.getMonth()+1).toString().padStart(2,'0')}-${year.slice(-2)}.json`;
         const filePath = path.join(monthDir, filename);
 
         fs.writeFileSync(filePath, JSON.stringify(report, null, 2));
         
-        // Atualizar o ponteiro de "Último Alerta" para o Dashboard
-        const criticalModules = report.modules.filter(m => m.status.includes('❌'));
-        const criticalApis = report.apis.filter(a => a.status.includes('❌'));
+        // Atualizar o ponteiro de "Ãšltimo Alerta" para o Dashboard
+        const criticalModules = report.modules.filter(m => m.status.includes('âŒ'));
+        const criticalApis = report.apis.filter(a => a.status.includes('âŒ'));
         
         const latestInfo = {
             filename: filename,
@@ -368,15 +368,15 @@ app.post('/api/system/report/save', (req, res) => {
 
         res.json({ success: true, path: filePath });
     } catch (e) {
-        console.error("❌ Erro ao salvar relatório:", e);
+        console.error("âŒ Erro ao salvar relatÃ³rio:", e);
         res.status(500).json({ error: e.message });
     }
 });
 
-// [ABIDOS] Persistência do Último Relatório Estratégico
+// [ABIDOS] PersistÃªncia do Ãšltimo RelatÃ³rio EstratÃ©gico
 const ABIDOS_REPORT_FILE = path.join(REPORTS_DIR, 'abidos_report_latest.md');
 
-// Rota para recuperar o último relatório Abidos + Base Universal
+// Rota para recuperar o Ãºltimo relatÃ³rio Abidos + Base Universal
 app.get('/api/seo/abidos-report', (req, res) => {
     try {
         let response = { success: true };
@@ -395,14 +395,14 @@ app.get('/api/seo/abidos-report', (req, res) => {
         if (response.report || response.universalAudit) {
             res.json(response);
         } else {
-            res.status(404).json({ error: "Nenhum relatório Abidos encontrado." });
+            res.status(404).json({ error: "Nenhum relatÃ³rio Abidos encontrado." });
         }
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-// Rota para salvar relatório Abidos (Markdown + Universal JSON)
+// Rota para salvar relatÃ³rio Abidos (Markdown + Universal JSON)
 app.post('/api/seo/abidos-report', (req, res) => {
     try {
         const { report, universalAudit } = req.body;
@@ -410,7 +410,7 @@ app.post('/api/seo/abidos-report', (req, res) => {
         
         fs.writeFileSync(ABIDOS_REPORT_FILE, report);
         
-        // Também salvar a base universal em JSON para persistência servidor se necessário
+        // TambÃ©m salvar a base universal em JSON para persistÃªncia servidor se necessÃ¡rio
         const universalJsonPath = path.join(REPORTS_DIR, 'abidos_universal_latest.json');
         fs.writeFileSync(universalJsonPath, JSON.stringify(universalAudit || {}, null, 2));
 
@@ -420,7 +420,7 @@ app.post('/api/seo/abidos-report', (req, res) => {
     }
 });
 
-// Rota para pegar o último status para o Dashboard
+// Rota para pegar o Ãºltimo status para o Dashboard
 app.get('/api/system/report/latest', (req, res) => {
     try {
         const latestFile = path.join(REPORTS_DIR, 'latest_status.json');
@@ -428,14 +428,14 @@ app.get('/api/system/report/latest', (req, res) => {
             const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
             res.json(data);
         } else {
-            res.json({ critical_alerts: 0, summary: "Nenhum relatório pendente." });
+            res.json({ critical_alerts: 0, summary: "Nenhum relatÃ³rio pendente." });
         }
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-// Rota para pegar o histórico completo para a análise longitudinal
+// Rota para pegar o histÃ³rico completo para a anÃ¡lise longitudinal
 app.get('/api/system/report/history', (req, res) => {
     try {
         const year = new Date().getFullYear().toString();
@@ -451,8 +451,8 @@ app.get('/api/system/report/history', (req, res) => {
                     const content = JSON.parse(fs.readFileSync(path.join(monthDir, file), 'utf8'));
                     history.push({
                         date: content.timestamp,
-                        alerts: (content.modules.filter(m => m.status.includes('❌')).length + content.apis.filter(a => a.status.includes('❌')).length),
-                        summary: content.modules.filter(m => m.status.includes('❌')).map(m => m.name).concat(content.apis.filter(a => a.status.includes('❌')).map(a => a.name)).join(', ') || "Integridade Confirmada"
+                        alerts: (content.modules.filter(m => m.status.includes('âŒ')).length + content.apis.filter(a => a.status.includes('âŒ')).length),
+                        summary: content.modules.filter(m => m.status.includes('âŒ')).map(m => m.name).concat(content.apis.filter(a => a.status.includes('âŒ')).map(a => a.name)).join(', ') || "Integridade Confirmada"
                     });
                 }
             }
@@ -463,7 +463,7 @@ app.get('/api/system/report/history', (req, res) => {
     }
 });
 
-// [FASE 6: DIAGNÓSTICO E BACKUP VISUAL]
+// [FASE 6: DIAGNÃ“STICO E BACKUP VISUAL]
 const PRINTS_DIR = path.join(__dirname, '../docs/prints');
 
 app.post('/api/dev/screenshot', (req, res) => {
@@ -484,7 +484,7 @@ app.post('/api/dev/screenshot', (req, res) => {
         fs.writeFileSync(filePath, base64Data, 'base64');
         res.json({ success: true, path: filePath });
     } catch (e) {
-        console.error("❌ Erro ao salvar screenshot:", e);
+        console.error("âŒ Erro ao salvar screenshot:", e);
         res.status(500).json({ error: e.message });
     }
 });
@@ -509,35 +509,35 @@ app.get('/api/media/health', (req, res) => {
     }
 });
 
-// [FASE 5] Módulo Neuro-Training: Memória de Estilo do Dr. Victor
+// [FASE 5] MÃ³dulo Neuro-Training: MemÃ³ria de Estilo do Dr. Victor
 const MEMORY_FILE_PATH = path.join(__dirname, 'estilo_victor.json');
 
 
 const PROMPT_TREINAMENTO_ISOLADO = `[SISTEMA DE CLONAGEM DE SINTAXE - MODO DIGITAL TWIN]
-Missão: Extrair as REGRAS ESTRUTURAIS da fala do Dr. Victor Lawrence (P2).
-Proibição Absoluta: Não comente, não resuma e não extraia regras sobre CONTEÚDO (sentimentos, grávidas, prazos, trabalho, psiquiatria).
+MissÃ£o: Extrair as REGRAS ESTRUTURAIS da fala do Dr. Victor Lawrence (P2).
+ProibiÃ§Ã£o Absoluta: NÃ£o comente, nÃ£o resuma e nÃ£o extraia regras sobre CONTEÃšDO (sentimentos, grÃ¡vidas, prazos, trabalho, psiquiatria).
 
 [DIRETRIZES DE RECONHECIMENTO]
 1. Identifique o Falante Alvo: P2 (Profissional). Ignore P1 (Paciente).
-2. Proibição Semântica: Se a regra contiver palavras do texto original que não sejam termos linguísticos, ela está ERRADA.
-3. Foco Estrutural: Analise como as frases são unidas. (Ex: "Usa o 'Pacing' repetindo a última palavra do interlocutor antes de uma pergunta socrática").
+2. ProibiÃ§Ã£o SemÃ¢ntica: Se a regra contiver palavras do texto original que nÃ£o sejam termos linguÃ­sticos, ela estÃ¡ ERRADA.
+3. Foco Estrutural: Analise como as frases sÃ£o unidas. (Ex: "Usa o 'Pacing' repetindo a Ãºltima palavra do interlocutor antes de uma pergunta socrÃ¡tica").
 
-[CATEGORIAS OBRIGATÓRIAS]
-- Cadência (Ritmo e Pontuação)
+[CATEGORIAS OBRIGATÃ“RIAS]
+- CadÃªncia (Ritmo e PontuaÃ§Ã£o)
 - Sintaxe (Estrutura de Frases e Conectivos)
-- Vocabulário de Identidade (Palavras-âncora estruturais)
-- Tonabilidade Estrutural (Acolhimento via forma, não via palavras)
+- VocabulÃ¡rio de Identidade (Palavras-Ã¢ncora estruturais)
+- Tonabilidade Estrutural (Acolhimento via forma, nÃ£o via palavras)
 
-FORMATO OBRIGATÓRIO (JSON):
+FORMATO OBRIGATÃ“RIO (JSON):
 {
   "regras_extraidas": [
     {
       "categoria": "[Categorias Acima]",
-      "titulo": "Nome LINGUÍSTICO (ex: Ancoragem de Sintaxe)",
-      "regra": "Descrição técnica para o Gêmeo Digital clonar."
+      "titulo": "Nome LINGUÃSTICO (ex: Ancoragem de Sintaxe)",
+      "regra": "DescriÃ§Ã£o tÃ©cnica para o GÃªmeo Digital clonar."
     }
   ],
-  "reply": "REPORTE TÉCNICO: Mapeei o padrão [TÍTULO] do Dr. Victor. Ele agora faz parte do núcleo de identidade verbal."
+  "reply": "REPORTE TÃ‰CNICO: Mapeei o padrÃ£o [TÃTULO] do Dr. Victor. Ele agora faz parte do nÃºcleo de identidade verbal."
 }`;
 
 const getVictorStyle = () => {
@@ -547,65 +547,65 @@ const getVictorStyle = () => {
             return JSON.parse(data);
         }
     } catch (e) {
-        console.error("❌ Erro ao ler estilo_victor.json:", e);
+        console.error("âŒ Erro ao ler estilo_victor.json:", e);
     }
     return { style_rules: [] };
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// [AI STUDIO NEXT-GEN] Catálogo de Templates Estratégicas
+// [AI STUDIO NEXT-GEN] CatÃ¡logo de Templates EstratÃ©gicas
 const TEMPLATE_CATALOG = [
-    { id: "01", filename: "master_template_01_dark_glass.html", name: "01 — Dark Glass: Autoridade Clínica e Serviços", type: "landing", designSummary: "Dark Glass, Teal-Glow, Luxo Clínico", fonts: "Inter", palette: "Black + Teal + Cream" },
-    { id: "02", filename: "master_template_02_artigo_editorial.html", name: "02 — Artigo Editorial: Post de Blog Padrão", type: "artigo", designSummary: "Editorial Clean, Tipografia Serif, Foco em Leitura", fonts: "Inter + Lora", palette: "Slate + Teal Brand" },
-    { id: "03", filename: "master_template_03_editorial_premium.html", name: "03 — Editorial Premium: Artigo de Capa / Editorial", type: "artigo", designSummary: "Premium, Warm Cream, Drop Cap Lora", fonts: "Inter + Lora", palette: "Warm Cream + Teal Brand" },
-    { id: "04", filename: "master_template_04_artigo_imersivo.html", name: "04 — Artigo Imersivo: Relatos e Reflexões Imersivas", type: "artigo", designSummary: "Hero Parallax, Forest Theme, Narrativa Visual", fonts: "DM Sans + Playfair", palette: "Forest + Cream + Sage" },
-    { id: "05", filename: "master_template_05_techeditorial.html", name: "05 — Tech Editorial: Lançamentos e Tecnologia", type: "artigo", designSummary: "Tech-Modern, Fundo Escuro, Estilo Documentação", fonts: "Mono + Sans", palette: "Dark Tech" },
-    { id: "06", filename: "master_template_06_artigo_organico.html", name: "06 — Artigo Orgânico: Bem-estar e Saúde Mental", type: "artigo", designSummary: "Tons Terrosos, Design Natural, Legibilidade", fonts: "Editorial Serif", palette: "Orgânico / Earth" },
-    { id: "07", filename: "master_template_07_ensaio_vintage.html", name: "07 — Ensaio Vintage: Ensaio Acadêmico / Denso", type: "artigo", designSummary: "Vintage Editorial, Grain, Estética Jornalística", fonts: "Fraunces + Manrope", palette: "Ink + Paper + Rust" },
-    { id: "08", filename: "master_template_08_ethereal_glass.html", name: "08 — Ethereal Glass: Criatividade e Potencial", type: "artigo", designSummary: "Glassmorphism Etéreo, Cristalino, Futurista", fonts: "Plus Jakarta", palette: "Ethereal / White" },
-    { id: "09", filename: "master_template_09_luxury_dark.html", name: "09 — Luxury Dark: Mentoria e Consultoria Premium", type: "artigo", designSummary: "Luxuoso Escuro, Dourado/Champagne, Tipografia Elite", fonts: "Premium Serif", palette: "Black + Gold" },
-    { id: "10", filename: "master_template_10_tech_focus.html", name: "10 — Tech Focus: Documentação e Whitepapers", type: "artigo", designSummary: "Minimalismo Tech, Foco em Dados, Blue/Slate", fonts: "Geometric Sans", palette: "Blue Tech" },
-    { id: "11", filename: "master_template_11_landing_abidos.html", name: "11 — Landing Abidos: Landing Page de Conversão (Ads)", type: "landing", designSummary: "SaaS Moderno, Clean White, Botões 3D", fonts: "Plus Jakarta", palette: "White + Indigo" }
+    { id: "01", filename: "master_template_01_dark_glass.html", name: "01 â€” Dark Glass: Autoridade ClÃ­nica e ServiÃ§os", type: "landing", designSummary: "Dark Glass, Teal-Glow, Luxo ClÃ­nico", fonts: "Inter", palette: "Black + Teal + Cream" },
+    { id: "02", filename: "master_template_02_artigo_editorial.html", name: "02 â€” Artigo Editorial: Post de Blog PadrÃ£o", type: "artigo", designSummary: "Editorial Clean, Tipografia Serif, Foco em Leitura", fonts: "Inter + Lora", palette: "Slate + Teal Brand" },
+    { id: "03", filename: "master_template_03_editorial_premium.html", name: "03 â€” Editorial Premium: Artigo de Capa / Editorial", type: "artigo", designSummary: "Premium, Warm Cream, Drop Cap Lora", fonts: "Inter + Lora", palette: "Warm Cream + Teal Brand" },
+    { id: "04", filename: "master_template_04_artigo_imersivo.html", name: "04 â€” Artigo Imersivo: Relatos e ReflexÃµes Imersivas", type: "artigo", designSummary: "Hero Parallax, Forest Theme, Narrativa Visual", fonts: "DM Sans + Playfair", palette: "Forest + Cream + Sage" },
+    { id: "05", filename: "master_template_05_techeditorial.html", name: "05 â€” Tech Editorial: LanÃ§amentos e Tecnologia", type: "artigo", designSummary: "Tech-Modern, Fundo Escuro, Estilo DocumentaÃ§Ã£o", fonts: "Mono + Sans", palette: "Dark Tech" },
+    { id: "06", filename: "master_template_06_artigo_organico.html", name: "06 â€” Artigo OrgÃ¢nico: Bem-estar e SaÃºde Mental", type: "artigo", designSummary: "Tons Terrosos, Design Natural, Legibilidade", fonts: "Editorial Serif", palette: "OrgÃ¢nico / Earth" },
+    { id: "07", filename: "master_template_07_ensaio_vintage.html", name: "07 â€” Ensaio Vintage: Ensaio AcadÃªmico / Denso", type: "artigo", designSummary: "Vintage Editorial, Grain, EstÃ©tica JornalÃ­stica", fonts: "Fraunces + Manrope", palette: "Ink + Paper + Rust" },
+    { id: "08", filename: "master_template_08_ethereal_glass.html", name: "08 â€” Ethereal Glass: Criatividade e Potencial", type: "artigo", designSummary: "Glassmorphism EtÃ©reo, Cristalino, Futurista", fonts: "Plus Jakarta", palette: "Ethereal / White" },
+    { id: "09", filename: "master_template_09_luxury_dark.html", name: "09 â€” Luxury Dark: Mentoria e Consultoria Premium", type: "artigo", designSummary: "Luxuoso Escuro, Dourado/Champagne, Tipografia Elite", fonts: "Premium Serif", palette: "Black + Gold" },
+    { id: "10", filename: "master_template_10_tech_focus.html", name: "10 â€” Tech Focus: DocumentaÃ§Ã£o e Whitepapers", type: "artigo", designSummary: "Minimalismo Tech, Foco em Dados, Blue/Slate", fonts: "Geometric Sans", palette: "Blue Tech" },
+    { id: "11", filename: "master_template_11_landing_abidos.html", name: "11 â€” Landing Abidos: Landing Page de ConversÃ£o (Ads)", type: "landing", designSummary: "SaaS Moderno, Clean White, BotÃµes 3D", fonts: "Plus Jakarta", palette: "White + Indigo" }
 ];
 
-// Helper: Tenta agrupar variáveis em módulos semânticos (Lógica do Studio Next)
+// Helper: Tenta agrupar variÃ¡veis em mÃ³dulos semÃ¢nticos (LÃ³gica do Studio Next)
 function getModuleForVar(varName) {
     const modules = {
-        seo: { order: 0, title: "Fundação SEO & Meta" },
-        ui_titulo: { order: 1, title: "Hero / Título Visual" },
-        hero: { order: 1, title: "Hero / Título Visual" },
-        nav: { order: 1, title: "Navegação" },
-        link: { order: 1, title: "Hero / Título Visual" }, // Links de agendamento agora no Hero
-        dor: { order: 2, title: "Identificação da Dor" },
-        beneficios: { order: 3, title: "Benefícios & Método" },
+        seo: { order: 0, title: "FundaÃ§Ã£o SEO & Meta" },
+        ui_titulo: { order: 1, title: "Hero / TÃ­tulo Visual" },
+        hero: { order: 1, title: "Hero / TÃ­tulo Visual" },
+        nav: { order: 1, title: "NavegaÃ§Ã£o" },
+        link: { order: 1, title: "Hero / TÃ­tulo Visual" }, // Links de agendamento agora no Hero
+        dor: { order: 2, title: "IdentificaÃ§Ã£o da Dor" },
+        beneficios: { order: 3, title: "BenefÃ­cios & MÃ©todo" },
         autoridade: { order: 4, title: "Autoridade (E-E-A-T)" },
         faq: { order: 5, title: "FAQ" },
         silo: { order: 5, title: "Silos & Links" },
-        cta: { order: 6, title: "CTA & Conversão" },
-        whatsapp: { order: 6, title: "WhatsApp & Contato" }, // WhatsApp agora é um módulo claro
+        cta: { order: 6, title: "CTA & ConversÃ£o" },
+        whatsapp: { order: 6, title: "WhatsApp & Contato" }, // WhatsApp agora Ã© um mÃ³dulo claro
         ambiente: { order: 4, title: "Autoridade (E-E-A-T)" },
         autor: { order: 7, title: "Autor & Dados" },
         artigo: { order: 2, title: "Corpo do Artigo" },
-        secao: { order: 3, title: "Seções do Artigo" }
+        secao: { order: 3, title: "SeÃ§Ãµes do Artigo" }
     };
     const parts = varName.split("_");
     for (let i = parts.length; i >= 1; i--) {
         const prefix = parts.slice(0, i).join("_");
         if (modules[prefix]) return modules[prefix];
     }
-    return { order: 99, title: "Outras Variáveis" };
+    return { order: 99, title: "Outras VariÃ¡veis" };
 }
 
-// [API] Listar Catálogo
+// [API] Listar CatÃ¡logo
 app.get('/api/templates', (req, res) => {
     res.json({ templates: TEMPLATE_CATALOG });
 });
 
-// [API] Detalhes e Variáveis da Template
+// [API] Detalhes e VariÃ¡veis da Template
 app.get('/api/templates/:id', async (req, res) => {
     const entry = TEMPLATE_CATALOG.find(t => t.id === req.params.id);
-    if (!entry) return res.status(404).json({ error: "Template não encontrada" });
+    if (!entry) return res.status(404).json({ error: "Template nÃ£o encontrada" });
 
     try {
         const filePath = path.join(__dirname, '../templates', entry.filename);
@@ -631,17 +631,17 @@ app.get('/api/templates/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Gerar Preview Final (Processador de Variáveis)
+// [API] Gerar Preview Final (Processador de VariÃ¡veis)
 app.post('/api/templates/preview', async (req, res) => {
     const { templateId, values, menuId } = req.body;
     const entry = TEMPLATE_CATALOG.find(t => t.id === templateId);
-    if (!entry) return res.status(404).json({ error: "Template não encontrada" });
+    if (!entry) return res.status(404).json({ error: "Template nÃ£o encontrada" });
 
     try {
         const filePath = path.join(__dirname, '../templates', entry.filename);
         let html = fs.readFileSync(filePath, "utf-8");
         
-        // 1. Injetar Variáveis (exceto o menu dinâmico que tem lógica própria)
+        // 1. Injetar VariÃ¡veis (exceto o menu dinÃ¢mico que tem lÃ³gica prÃ³pria)
         for (const [key, value] of Object.entries(values || {})) {
             if (key === 'nav_menu_dinamico') continue; 
             const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
@@ -652,7 +652,7 @@ app.post('/api/templates/preview', async (req, res) => {
         const { modifiedHtml, tocItems } = generateTOC(html);
         html = modifiedHtml;
 
-        // 3. Injetar Menu Dinâmico
+        // 3. Injetar Menu DinÃ¢mico
         let menuHtml = '';
         if (menuId) {
             menuHtml = generateMenuHtmlForTemplate(menuId, templateId, { slug: "preview", title: values.SEO_TITLE || '' });
@@ -661,7 +661,7 @@ app.post('/api/templates/preview', async (req, res) => {
             if (tocItems.length > 0 && (templateId === '02' || templateId === '03' || templateId === '04' || templateId === '05' || templateId === '06' || templateId === '07' || templateId === '10')) {
                  const tocMenuHtml = `
                     <div class="fixed bottom-4 left-4 z-50 glass-panel lg:hidden p-3 rounded-2xl max-w-[200px]">
-                        <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ Tópicos Neste Artigo</div>
+                        <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ TÃ³picos Neste Artigo</div>
                         <ul class="flex flex-col gap-1">
                             ${tocItems.map(i => `<li><a href="${i.url}" class="text-xs text-slate-500 hover:text-[#14b8a6] line-clamp-1">${i.label}</a></li>`).join('')}
                         </ul>
@@ -687,7 +687,7 @@ app.post('/api/templates/preview', async (req, res) => {
 });
 
 // ==============================================================================
-// GESTÃO DE ACERVO (LOCAL CMS)
+// GESTÃƒO DE ACERVO (LOCAL CMS)
 // ==============================================================================
 const SITE_REPO_PATH = path.join(__dirname, '../../HipnoLawrence-Site/src/app');
 
@@ -703,8 +703,8 @@ app.get('/api/menus', (req, res) => {
         const content = fs.readFileSync(MENUS_FILE, 'utf8');
         res.json(JSON.parse(content || '[]'));
     } catch (e) {
-        console.error("❌ Erro Crítico GET /api/menus:", e);
-        res.status(500).json({ error: "Falha na persistência de menus", details: e.message });
+        console.error("âŒ Erro CrÃ­tico GET /api/menus:", e);
+        res.status(500).json({ error: "Falha na persistÃªncia de menus", details: e.message });
     }
 });
 
@@ -713,24 +713,24 @@ app.post('/api/menus', (req, res) => {
     try {
         const menusData = req.body;
         if (!Array.isArray(menusData)) {
-            throw new Error("Payload inválido: esperado um array de menus.");
+            throw new Error("Payload invÃ¡lido: esperado um array de menus.");
         }
         fs.writeFileSync(MENUS_FILE, JSON.stringify(menusData, null, 2));
         res.status(200).json({ success: true, message: "Menus persistidos com sucesso!" });
     } catch (e) {
-        console.error("❌ Erro Crítico POST /api/menus:", e);
+        console.error("âŒ Erro CrÃ­tico POST /api/menus:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
 
 // ==============================================================================
-// GESTÃO DE RASCUNHOS (DRAFTS PERSISTENCE)
+// GESTÃƒO DE RASCUNHOS (DRAFTS PERSISTENCE)
 // ==============================================================================
 const DRAFTS_FILE = path.join(__dirname, 'drafts.json');
 
 app.get('/api/drafts', async (req, res) => {
     try {
-        console.log("📂 [DRAFTS] Consolidando rascunhos (File JSON + Physical Folder)...");
+        console.log("ðŸ“‚ [DRAFTS] Consolidando rascunhos (File JSON + Physical Folder)...");
         let allDrafts = [];
         
         // 1. Carrega do drafts.json (AI Studio)
@@ -739,7 +739,7 @@ app.get('/api/drafts', async (req, res) => {
             if (Array.isArray(dataJSON)) allDrafts = [...dataJSON];
         }
 
-        // 2. Carrega da pasta física (Auditores/LangGraph)
+        // 2. Carrega da pasta fÃ­sica (Auditores/LangGraph)
         const draftsFolder = path.join(__dirname, '../drafts');
         if (fs.existsSync(draftsFolder)) {
             const files = fs.readdirSync(draftsFolder).filter(f => f.endsWith('.json') || f.endsWith('.html'));
@@ -750,7 +750,7 @@ app.get('/api/drafts', async (req, res) => {
                     draft_id: `PHYS-${file}`,
                     name: file,
                     tema_foco: file.replace('.json', '').replace('.html', ''),
-                    values: {}, // Vazio para rascunhos físicos
+                    values: {}, // Vazio para rascunhos fÃ­sicos
                     validacoes_automatizadas: {
                         pesquisa_clinica: true,
                         metodo_abidos: true,
@@ -765,7 +765,7 @@ app.get('/api/drafts', async (req, res) => {
 
         res.json(allDrafts);
     } catch (e) { 
-        console.error("❌ [DRAFTS ERROR]", e.message);
+        console.error("âŒ [DRAFTS ERROR]", e.message);
         res.status(500).json({ error: e.message }); 
     }
 });
@@ -801,7 +801,7 @@ app.delete('/api/drafts/:id', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 🏭 RENDERIZADOR DE MENUS DEDICADO POR TEMPLATE
+// ðŸ­ RENDERIZADOR DE MENUS DEDICADO POR TEMPLATE
 function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
     if (!menuId || !fs.existsSync(MENUS_FILE)) return '';
     const menus = JSON.parse(fs.readFileSync(MENUS_FILE, 'utf8'));
@@ -835,10 +835,10 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
 
     let html = '';
     const waNumber = "5562991545295";
-    const waText = encodeURIComponent("Olá Dr. Victor, vi seu site e gostaria de saber mais sobre a Hipnose Clínica e como marcar uma primeira sessão.");
+    const waText = encodeURIComponent("OlÃ¡ Dr. Victor, vi seu site e gostaria de saber mais sobre a Hipnose ClÃ­nica e como marcar uma primeira sessÃ£o.");
     const waLink = `https://wa.me/${waNumber}?text=${waText}`;
 
-    // --- RENDERIZAÇÃO POR DESIGN SYSTEM ---
+    // --- RENDERIZAÃ‡ÃƒO POR DESIGN SYSTEM ---
 
     if (templateId === '01' || templateId === '08') { // GLASS SYSTEMS
         const isEthereal = templateId === '08';
@@ -851,7 +851,7 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
         if (isEthereal) {
             html += `<div class="w-10 h-10 bg-white/50 rounded-full flex items-center justify-center shrink-0"><i data-lucide="${brand}" class="w-4 h-4 text-slate-700"></i></div>`;
         } else {
-            // Removido ícone redundante para evitar "blobs" no topo
+            // Removido Ã­cone redundante para evitar "blobs" no topo
             html += `<div class="font-bold text-white tracking-widest uppercase text-[10px] ml-2">Dr. Victor</div>`;
         }
 
@@ -915,7 +915,7 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
     } else if (templateId === '10' || templateId === '04' || templateId === '05') { // TECH / MINIMALIST
         html += `<nav class="fixed top-0 w-full z-50 p-6 flex flex-col gap-4 transition-opacity duration-500">`;
         html += `<div class="max-w-7xl mx-auto w-full glass-card rounded-2xl px-6 py-4 flex items-center justify-between shadow-2xl backdrop-blur-xl border border-white/5">`;
-        html += `<div class="flex items-center gap-3"><div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white"><i data-lucide="zap" class="w-5 h-5"></i></div><span class="font-bold text-white tracking-tighter uppercase text-xs">Acesso Rápido</span></div>`;
+        html += `<div class="flex items-center gap-3"><div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white"><i data-lucide="zap" class="w-5 h-5"></i></div><span class="font-bold text-white tracking-tighter uppercase text-xs">Acesso RÃ¡pido</span></div>`;
         html += `<ul class="hidden md:flex items-center gap-8">`;
         validItems.forEach(item => {
             const activeClass = item.active ? 'text-orange-500 font-bold' : 'text-mist/40 hover:text-white';
@@ -938,7 +938,7 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
         html += `</header>`;
     }
 
-    // Geração do Schema.org para SEO Técnico
+    // GeraÃ§Ã£o do Schema.org para SEO TÃ©cnico
     const schemaOrg = {
         "@context": "https://schema.org",
         "@type": "SiteNavigationElement",
@@ -951,7 +951,7 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
     return html;
 }
 
-// 📖 AUTO-TOC GENERATOR (Sumário Automático das tags H2)
+// ðŸ“– AUTO-TOC GENERATOR (SumÃ¡rio AutomÃ¡tico das tags H2)
 function generateTOC(htmlContent) {
     const regex = /<h2[^>]*>(.*?)<\/h2>/gi;
     let match;
@@ -959,15 +959,15 @@ function generateTOC(htmlContent) {
     let modifiedHtml = htmlContent;
     let index = 1;
 
-    // Acha os H2, cria o link âncora e modifica o HTML original para colocar o id
+    // Acha os H2, cria o link Ã¢ncora e modifica o HTML original para colocar o id
     while ((match = regex.exec(htmlContent)) !== null) {
-        // match[1] contém o innerHTML do h2. Vamos limpar tags e quebras.
+        // match[1] contÃ©m o innerHTML do h2. Vamos limpar tags e quebras.
         const cleanTitle = match[1].replace(/<[^>]+>/g, '').trim();
         if (cleanTitle && cleanTitle.length > 5 && !cleanTitle.includes('{{')) {
             const anchorId = `secao-${index}-${cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
             tocItems.push({ label: cleanTitle, url: `#${anchorId}` });
             
-            // Substitui o <h2> exacto pela versão com ID
+            // Substitui o <h2> exacto pela versÃ£o com ID
             const originalH2 = match[0];
             const newH2 = originalH2.replace('<h2', `<h2 id="${anchorId}"`);
             modifiedHtml = modifiedHtml.replace(originalH2, newH2);
@@ -979,7 +979,7 @@ function generateTOC(htmlContent) {
 }
 
 // ==============================================================================
-// 🚀 [API] SALVAR E LANÇAR PÁGINA (ORQUESTRAÇÃO FINAL)
+// ðŸš€ [API] SALVAR E LANÃ‡AR PÃGINA (ORQUESTRAÃ‡ÃƒO FINAL)
 // ==============================================================================
 app.post('/api/acervo/salvar-pagina', async (req, res) => {
     const { caminhoFisico, values, templateId, menuId, menuHtml: incomingMenuHtml, menuSchema: incomingMenuSchema } = req.body;
@@ -993,16 +993,16 @@ app.post('/api/acervo/salvar-pagina', async (req, res) => {
                 .replace(/-+/g, '-');
             
             targetPath = path.join(SITE_REPO_PATH, slug, 'page.tsx');
-            console.log(`✨ [AUTO-PATH] Gerando novo destino: ${targetPath}`);
+            console.log(`âœ¨ [AUTO-PATH] Gerando novo destino: ${targetPath}`);
             
             const dir = path.dirname(targetPath);
             if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
         }
 
-        if (!fs.existsSync(path.dirname(targetPath))) throw new Error("Diretório de destino inválido.");
+        if (!fs.existsSync(path.dirname(targetPath))) throw new Error("DiretÃ³rio de destino invÃ¡lido.");
 
         const entry = TEMPLATE_CATALOG.find(t => t.id === templateId);
-        if (!templateId || !entry) throw new Error("Template selecionada não existe no catálogo.");
+        if (!templateId || !entry) throw new Error("Template selecionada nÃ£o existe no catÃ¡logo.");
 
         const templatePath = path.join(__dirname, '../templates', entry.filename);
         let htmlSource = fs.readFileSync(templatePath, 'utf8');
@@ -1029,18 +1029,18 @@ app.post('/api/acervo/salvar-pagina', async (req, res) => {
             htmlSource = menuSchema + htmlSource;
         }
 
-        // --- INJEÇÃO GOOGLE TAG MANAGER (GTM) - DINÂMICA ---
+        // --- INJEÃ‡ÃƒO GOOGLE TAG MANAGER (GTM) - DINÃ‚MICA ---
         const googleTag = getGoogleTagSnippet();
         const googleTagNoscript = getGoogleTagNoscript();
         
-        // 1. Script no <head> (O mais alto possível)
+        // 1. Script no <head> (O mais alto possÃ­vel)
         if (htmlSource.match(/<head[^>]*>/i)) {
             htmlSource = htmlSource.replace(/<head[^>]*>/i, `$&\n${googleTag}`);
         } else {
             htmlSource = googleTag + htmlSource;
         }
 
-        // 2. Noscript após <body>
+        // 2. Noscript apÃ³s <body>
         if (htmlSource.includes('<body>')) {
             htmlSource = htmlSource.replace('<body>', `<body>\n${googleTagNoscript}`);
         } else if (htmlSource.match(/<body[^>]*>/)) {
@@ -1050,7 +1050,7 @@ app.post('/api/acervo/salvar-pagina', async (req, res) => {
         if (tocItems.length > 0 && ['02', '03', '04', '05', '06', '07', '10'].includes(templateId)) {
             const tocMenuHtml = `
                     <div class="fixed bottom-4 left-4 z-50 glass-panel lg:hidden p-3 rounded-2xl max-w-[200px]">
-                        <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ Tópicos Neste Artigo</div>
+                        <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ TÃ³picos Neste Artigo</div>
                         <ul class="flex flex-col gap-1">
                             ${tocItems.map(i => `<li><a href="${i.url}" class="text-xs text-slate-500 hover:text-[#14b8a6] line-clamp-1">${i.label}</a></li>`).join('')}
                         </ul>
@@ -1078,7 +1078,7 @@ export default function Page() {
     );
 }
 
-// 🧬 NEUROENGINE DATA BLOCK
+// ðŸ§¬ NEUROENGINE DATA BLOCK
 export const neuroEngineData = ${JSON.stringify({ ...values, template: templateId, menuId: menuId } || {}, null, 2)};
 `;
 
@@ -1092,22 +1092,22 @@ export const neuroEngineData = ${JSON.stringify({ ...values, template: templateI
             console.warn("Git push ignorado ou falhou:", gitErr.message); 
         }
 
-        res.json({ success: true, message: "Página orquestrada e lançada com sucesso no repositório Next.js!" });
+        res.json({ success: true, message: "PÃ¡gina orquestrada e lanÃ§ada com sucesso no repositÃ³rio Next.js!" });
     } catch (e) {
-        console.error("Erro ao salvar página:", e);
+        console.error("Erro ao salvar pÃ¡gina:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
 
 /**
- * 🔍 ROTA 1: Listar todo o Acervo
+ * ðŸ” ROTA 1: Listar todo o Acervo
  * Varre a pasta src/app do site e encontra todos os arquivos page.tsx
  */
 app.get('/api/acervo/listar', (req, res) => {
     try {
         const pages = [];
 
-        // Função recursiva para ler subpastas (ex: /blog/ansiedade)
+        // FunÃ§Ã£o recursiva para ler subpastas (ex: /blog/ansiedade)
         function scanDirectory(directory) {
             if (!fs.existsSync(directory)) return;
             const files = fs.readdirSync(directory);
@@ -1117,7 +1117,7 @@ app.get('/api/acervo/listar', (req, res) => {
                 const stat = fs.statSync(fullPath);
 
                 if (stat.isDirectory()) {
-                    // Ignora pastas de sistema do Next.js ou rascunhos se necessário
+                    // Ignora pastas de sistema do Next.js ou rascunhos se necessÃ¡rio
                     if (file.startsWith('.') || file === 'api' || file === 'components') continue;
                     scanDirectory(fullPath); 
                 } else if (file === 'page.tsx') {
@@ -1125,15 +1125,15 @@ app.get('/api/acervo/listar', (req, res) => {
                     if (!slug) slug = '/';
                     slug = slug.replace(/\\/g, '/');
 
-                    // Tenta extrair o título do neuroEngineData
-                    let title = "Sem Título";
+                    // Tenta extrair o tÃ­tulo do neuroEngineData
+                    let title = "Sem TÃ­tulo";
                     let status = "PUBLICADO"; // Default
                     try {
                         const content = fs.readFileSync(fullPath, 'utf8');
                         const dnaMatch = content.match(/export const neuroEngineData = (\{[\s\S]*?\});/);
                         if (dnaMatch) {
                             const dna = JSON.parse(dnaMatch[1]);
-                            title = dna.SEO_TITLE || dna.H1 || dna.THEME || "Página Abidos";
+                            title = dna.SEO_TITLE || dna.H1 || dna.THEME || "PÃ¡gina Abidos";
                             status = dna.STATUS || "PUBLICADO";
                         }
                     } catch (e) {
@@ -1175,26 +1175,26 @@ app.get('/api/media/acervo', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Criar Novo Álbum/Pasta no Acervo
+// [API] Criar Novo Ãlbum/Pasta no Acervo
 app.post('/api/media/create-folder', (req, res) => {
     try {
         const { id, name, icon } = req.body;
         const data = JSON.parse(fs.readFileSync(ACERVO_MEDIA_FILE, 'utf8'));
-        if (data.folders.find(f => f.id === id)) return res.json({ success: false, error: 'ID já existe.' });
+        if (data.folders.find(f => f.id === id)) return res.json({ success: false, error: 'ID jÃ¡ existe.' });
         
-        data.folders.push({ id, name, description: `Álbum criado pelo usuário: ${name}`, icon: icon || '📂' });
+        data.folders.push({ id, name, description: `Ãlbum criado pelo usuÃ¡rio: ${name}`, icon: icon || 'ðŸ“‚' });
         fs.writeFileSync(ACERVO_MEDIA_FILE, JSON.stringify(data, null, 2));
         res.json({ success: true, folders: data.folders });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Atualizar Item de Mídia (Mudar pasta, título, etc)
+// [API] Atualizar Item de MÃ­dia (Mudar pasta, tÃ­tulo, etc)
 app.post('/api/media/update-item', (req, res) => {
     try {
         const { itemId, folder, title, alt } = req.body;
         const data = JSON.parse(fs.readFileSync(ACERVO_MEDIA_FILE, 'utf8'));
         const item = data.items.find(i => i.id === itemId);
-        if (!item) return res.status(404).json({ success: false, error: 'Item não encontrado.' });
+        if (!item) return res.status(404).json({ success: false, error: 'Item nÃ£o encontrado.' });
         
         if (folder) item.folder = folder;
         if (title) item.title = title;
@@ -1205,7 +1205,7 @@ app.post('/api/media/update-item', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Alterar Slug (URL) de uma Página Existente
+// [API] Alterar Slug (URL) de uma PÃ¡gina Existente
 app.post('/api/acervo/alterar-slug', async (req, res) => {
     try {
         const { caminhoFisico, novoSlug } = req.body;
@@ -1215,7 +1215,7 @@ app.post('/api/acervo/alterar-slug', async (req, res) => {
         const oldPath = path.dirname(caminhoFisico);
         const newPath = path.join(SITE_REPO_PATH, cleanSlug);
 
-        if (fs.existsSync(newPath)) throw new Error("Essa URL (Slug) já existe.");
+        if (fs.existsSync(newPath)) throw new Error("Essa URL (Slug) jÃ¡ existe.");
 
         fs.renameSync(oldPath, newPath);
         res.json({ success: true, novoCaminho: path.join(newPath, 'page.tsx'), novoSlug: '/' + cleanSlug });
@@ -1226,7 +1226,7 @@ app.post('/api/acervo/alterar-slug', async (req, res) => {
     }
 });
 
-// [API] Alterar Título Amigável de uma Página Existente (E-E-A-T)
+// [API] Alterar TÃ­tulo AmigÃ¡vel de uma PÃ¡gina Existente (E-E-A-T)
 app.post('/api/acervo/alterar-titulo', async (req, res) => {
     try {
         const { caminhoFisico, novoTitulo } = req.body;
@@ -1238,7 +1238,7 @@ app.post('/api/acervo/alterar-titulo', async (req, res) => {
         if (dnaMatch) {
             let dna = JSON.parse(dnaMatch[1]);
             dna.THEME = novoTitulo;
-            dna.H1 = novoTitulo; // Sincroniza H1 por padrão para SEO
+            dna.H1 = novoTitulo; // Sincroniza H1 por padrÃ£o para SEO
             const newDNAString = `export const neuroEngineData = ${JSON.stringify(dna, null, 2)};`;
             const newContent = content.replace(/export const neuroEngineData = \{[\s\S]*?\};/, newDNAString);
             fs.writeFileSync(caminhoFisico, newContent);
@@ -1247,7 +1247,7 @@ app.post('/api/acervo/alterar-titulo', async (req, res) => {
         res.json({ success: true, novoTitulo });
 
     } catch (e) {
-        console.error("Erro ao alterar título:", e);
+        console.error("Erro ao alterar tÃ­tulo:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -1256,31 +1256,31 @@ app.post('/api/acervo/alterar-titulo', async (req, res) => {
 app.post('/api/acervo/definir-home', async (req, res) => {
     try {
         const { caminhoFisico } = req.body;
-        if(!caminhoFisico) throw new Error("Caminho físico não informado.");
+        if(!caminhoFisico) throw new Error("Caminho fÃ­sico nÃ£o informado.");
 
         // Usa SITE_REPO_PATH unificado em vez de fallback para site-nextjs
         const targetPath = path.join(SITE_REPO_PATH, 'page.tsx');
         
-        console.log(`🏠 [HOME] Definindo nova homepage: ${caminhoFisico} -> ${targetPath}`);
+        console.log(`ðŸ  [HOME] Definindo nova homepage: ${caminhoFisico} -> ${targetPath}`);
 
-        if (!fs.existsSync(caminhoFisico)) throw new Error("Arquivo de origem não encontrado.");
+        if (!fs.existsSync(caminhoFisico)) throw new Error("Arquivo de origem nÃ£o encontrado.");
         
-        // Simplesmente copia o conteúdo da página selecionada para a raiz
+        // Simplesmente copia o conteÃºdo da pÃ¡gina selecionada para a raiz
         fs.copyFileSync(caminhoFisico, targetPath);
 
-        res.json({ success: true, message: "Página inicial atualizada com sucesso no repositório Next.js." });
+        res.json({ success: true, message: "PÃ¡gina inicial atualizada com sucesso no repositÃ³rio Next.js." });
 
     } catch (e) {
-        console.error("❌ Erro ao definir home:", e);
+        console.error("âŒ Erro ao definir home:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
 
-// [API] Alterar Status (DRAFT/PUBLICADO) de uma Página
+// [API] Alterar Status (DRAFT/PUBLICADO) de uma PÃ¡gina
 app.post('/api/acervo/alterar-status', async (req, res) => {
     try {
         const { caminhoFisico, novoStatus } = req.body;
-        if(!caminhoFisico) throw new Error("Caminho físico não informado.");
+        if(!caminhoFisico) throw new Error("Caminho fÃ­sico nÃ£o informado.");
 
         const content = fs.readFileSync(caminhoFisico, 'utf8');
         const dnaMatch = content.match(/export const neuroEngineData = (\{[\s\S]*?\});/);
@@ -1302,7 +1302,7 @@ app.post('/api/acervo/alterar-status', async (req, res) => {
 });
 
 // ==============================================================================
-// 🏷️ GOOGLE TAG MANAGER - CONFIGURAÇÃO GLOBAL
+// ðŸ·ï¸ GOOGLE TAG MANAGER - CONFIGURAÃ‡ÃƒO GLOBAL
 // ==============================================================================
 const GOOGLE_TAG_FILE = path.join(__dirname, 'google_tag_config.json');
 
@@ -1312,7 +1312,7 @@ const getGoogleTagConfig = () => {
             return JSON.parse(fs.readFileSync(GOOGLE_TAG_FILE, 'utf8'));
         }
     } catch (e) {
-        console.error("❌ Erro ao ler google_tag_config.json:", e);
+        console.error("âŒ Erro ao ler google_tag_config.json:", e);
     }
     return { tagId: 'GTM-5H4RLHC3', active: true };
 };
@@ -1353,13 +1353,13 @@ app.post('/api/config/google-tag', (req, res) => {
         const { tagId, active } = req.body;
         const config = { tagId: tagId || '', active: active !== false, lastUpdate: new Date().toISOString() };
         fs.writeFileSync(GOOGLE_TAG_FILE, JSON.stringify(config, null, 2));
-        console.log(`🏷️ [GOOGLE TAG] Configuração atualizada: ${config.tagId} (${config.active ? 'ATIVO' : 'INATIVO'})`);
+        console.log(`ðŸ·ï¸ [GOOGLE TAG] ConfiguraÃ§Ã£o atualizada: ${config.tagId} (${config.active ? 'ATIVO' : 'INATIVO'})`);
         res.json({ success: true, config });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ==============================================================================
-// 📥 IMPORTAÇÃO MANUAL DE HTML (PÁGINAS CUSTOMIZADAS)
+// ðŸ“¥ IMPORTAÃ‡ÃƒO MANUAL DE HTML (PÃGINAS CUSTOMIZADAS)
 // ==============================================================================
 const MANUAL_PAGES_FILE = path.join(__dirname, 'manual_pages.json');
 
@@ -1368,7 +1368,7 @@ const getManualPages = () => {
         if (fs.existsSync(MANUAL_PAGES_FILE)) {
             return JSON.parse(fs.readFileSync(MANUAL_PAGES_FILE, 'utf8'));
         }
-    } catch (e) { console.error("❌ Erro ao ler manual_pages.json:", e); }
+    } catch (e) { console.error("âŒ Erro ao ler manual_pages.json:", e); }
     return [];
 };
 
@@ -1376,14 +1376,14 @@ const saveManualPages = (pages) => {
     fs.writeFileSync(MANUAL_PAGES_FILE, JSON.stringify(pages, null, 2));
 };
 
-// [API] Listar páginas manuais
+// [API] Listar pÃ¡ginas manuais
 app.get('/api/acervo/manual', (req, res) => {
     try {
         res.json({ success: true, pages: getManualPages() });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Criar/Atualizar página manual (metadados)
+// [API] Criar/Atualizar pÃ¡gina manual (metadados)
 app.post('/api/acervo/manual', (req, res) => {
     try {
         const { id, title, slug, silo, menuId, status } = req.body;
@@ -1400,7 +1400,7 @@ app.post('/api/acervo/manual', (req, res) => {
                 pages[idx].status = status || pages[idx].status;
                 pages[idx].lastUpdate = new Date().toISOString();
 
-                // Se houver arquivo físico e status foi alterado, atualiza o arquivo também
+                // Se houver arquivo fÃ­sico e status foi alterado, atualiza o arquivo tambÃ©m
                 if (pages[idx].caminhoFisico && status && fs.existsSync(pages[idx].caminhoFisico)) {
                     try {
                         let content = fs.readFileSync(pages[idx].caminhoFisico, 'utf8');
@@ -1410,16 +1410,16 @@ app.post('/api/acervo/manual', (req, res) => {
                             dna.STATUS = status;
                             content = content.replace(/export const neuroEngineData = \{[\s\S]*?\};/, `export const neuroEngineData = ${JSON.stringify(dna, null, 2)};`);
                             fs.writeFileSync(pages[idx].caminhoFisico, content);
-                            console.log(`✅ [STATUS] Arquivo físico atualizado: ${pages[idx].caminhoFisico}`);
+                            console.log(`âœ… [STATUS] Arquivo fÃ­sico atualizado: ${pages[idx].caminhoFisico}`);
                         }
-                    } catch (e) { console.warn("Falha ao atualizar arquivo físico no status manual:", e); }
+                    } catch (e) { console.warn("Falha ao atualizar arquivo fÃ­sico no status manual:", e); }
                 }
             }
         } else {
             // Criar nova
             const newPage = {
                 id: 'MANUAL-' + Date.now(),
-                title: title || 'Página Manual',
+                title: title || 'PÃ¡gina Manual',
                 slug: slug || '/nova-pagina-' + Date.now(),
                 silo: silo || '',
                 menuId: menuId || '',
@@ -1440,32 +1440,32 @@ app.post('/api/acervo/manual', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Importar/Salvar HTML customizado para uma página manual
+// [API] Importar/Salvar HTML customizado para uma pÃ¡gina manual
 app.post('/api/acervo/manual/import-html', (req, res) => {
     try {
         const { pageId, htmlContent, useShell, seoFields } = req.body;
-        if (!pageId) throw new Error("pageId é obrigatório.");
+        if (!pageId) throw new Error("pageId Ã© obrigatÃ³rio.");
 
         let pages = getManualPages();
         const idx = pages.findIndex(p => p.id === pageId);
-        if (idx < 0) throw new Error("Página manual não encontrada.");
+        if (idx < 0) throw new Error("PÃ¡gina manual nÃ£o encontrada.");
 
         // Parse inteligente: Extrai apenas o <body> se HTML completo for colado
         let cleanHtml = htmlContent || '';
         const bodyMatch = cleanHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
         if (bodyMatch) {
             cleanHtml = bodyMatch[1].trim();
-            console.log(`📥 [MANUAL] Parse inteligente: Extraído conteúdo do <body> (${cleanHtml.length} chars)`);
+            console.log(`ðŸ“¥ [MANUAL] Parse inteligente: ExtraÃ­do conteÃºdo do <body> (${cleanHtml.length} chars)`);
         }
 
-        // Salvar versão anterior
+        // Salvar versÃ£o anterior
         if (pages[idx].htmlContent && pages[idx].htmlContent.length > 0) {
             if (!pages[idx].versions) pages[idx].versions = [];
             pages[idx].versions.push({
                 html: pages[idx].htmlContent,
                 timestamp: pages[idx].lastUpdate || new Date().toISOString()
             });
-            // Manter apenas as últimas 5 versões
+            // Manter apenas as Ãºltimas 5 versÃµes
             if (pages[idx].versions.length > 5) pages[idx].versions.shift();
         }
 
@@ -1480,35 +1480,35 @@ app.post('/api/acervo/manual/import-html', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Ler HTML de uma página manual
+// [API] Ler HTML de uma pÃ¡gina manual
 app.post('/api/acervo/manual/read-html', (req, res) => {
     try {
         const { pageId } = req.body;
         const pages = getManualPages();
         const page = pages.find(p => p.id === pageId);
-        if (!page) throw new Error("Página não encontrada.");
+        if (!page) throw new Error("PÃ¡gina nÃ£o encontrada.");
         res.json({ success: true, page });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Gerar Preview de uma página manual (renderiza com Template 00)
+// [API] Gerar Preview de uma pÃ¡gina manual (renderiza com Template 00)
 app.post('/api/acervo/manual/preview', (req, res) => {
     try {
         const { pageId } = req.body;
         const pages = getManualPages();
         const page = pages.find(p => p.id === pageId);
-        if (!page) throw new Error("Página não encontrada.");
+        if (!page) throw new Error("PÃ¡gina nÃ£o encontrada.");
 
-        let finalHtml = page.htmlContent || '<p>Nenhum conteúdo HTML importado ainda.</p>';
+        let finalHtml = page.htmlContent || '<p>Nenhum conteÃºdo HTML importado ainda.</p>';
 
         if (page.useShell) {
             // Carrega Template 00
             const shellPath = path.join(__dirname, '../templates/master_template_00_blank.html');
             let shell = fs.readFileSync(shellPath, 'utf8');
 
-            // Injeta variáveis
+            // Injeta variÃ¡veis
             shell = shell.replace(/\{\{corpo_customizado\}\}/g, finalHtml);
-            shell = shell.replace(/\{\{seo_title\}\}/g, page.title || 'Página');
+            shell = shell.replace(/\{\{seo_title\}\}/g, page.title || 'PÃ¡gina');
             shell = shell.replace(/\{\{seo_h1_tecnico\}\}/g, page.seoFields?.h1 || page.title || '');
             shell = shell.replace(/\{\{seo_resumo_indexacao\}\}/g, page.seoFields?.resumo || '');
             
@@ -1519,7 +1519,7 @@ app.post('/api/acervo/manual/preview', (req, res) => {
             }
 
             // Injeta Google Tag Manager (head + body)
-            // Injeta Google Tag Manager (head + body) conforme solicitação do usuário
+            // Injeta Google Tag Manager (head + body) conforme solicitaÃ§Ã£o do usuÃ¡rio
             const googleTag = getGoogleTagSnippet();
             const googleTagNoscript = getGoogleTagNoscript();
 
@@ -1530,7 +1530,7 @@ app.post('/api/acervo/manual/preview', (req, res) => {
                 shell = googleTag + shell;
             }
 
-            // 2. Imediatamente após o <body>
+            // 2. Imediatamente apÃ³s o <body>
             if (shell.match(/<body[^>]*>/i)) {
                 shell = shell.replace(/<body[^>]*>/i, `$&\n${googleTagNoscript}`);
             } else {
@@ -1556,13 +1556,13 @@ app.post('/api/acervo/manual/preview', (req, res) => {
     }
 });
 
-// [API] Publicar página manual no repositório Next.js
+// [API] Publicar pÃ¡gina manual no repositÃ³rio Next.js
 app.post('/api/acervo/manual/publicar', async (req, res) => {
     try {
         const { pageId } = req.body;
         const pages = getManualPages();
         const page = pages.find(p => p.id === pageId);
-        if (!page) throw new Error("Página não encontrada.");
+        if (!page) throw new Error("PÃ¡gina nÃ£o encontrada.");
         if (!page.htmlContent) throw new Error("Nenhum HTML importado para publicar.");
 
         let finalHtml = page.htmlContent;
@@ -1572,7 +1572,7 @@ app.post('/api/acervo/manual/publicar', async (req, res) => {
             let shell = fs.readFileSync(shellPath, 'utf8');
 
             shell = shell.replace(/\{\{corpo_customizado\}\}/g, finalHtml);
-            shell = shell.replace(/\{\{seo_title\}\}/g, page.title || 'Página');
+            shell = shell.replace(/\{\{seo_title\}\}/g, page.title || 'PÃ¡gina');
             shell = shell.replace(/\{\{seo_h1_tecnico\}\}/g, page.seoFields?.h1 || page.title || '');
             shell = shell.replace(/\{\{seo_resumo_indexacao\}\}/g, page.seoFields?.resumo || '');
             
@@ -1591,7 +1591,7 @@ app.post('/api/acervo/manual/publicar', async (req, res) => {
                 shell = googleTag + shell;
             }
 
-            // 2. Imediatamente após o <body>
+            // 2. Imediatamente apÃ³s o <body>
             if (shell.match(/<body[^>]*>/i)) {
                 shell = shell.replace(/<body[^>]*>/i, `$&\n${googleTagNoscript}`);
             } else {
@@ -1630,7 +1630,7 @@ export default function Page() {
     );
 }
 
-// 🧬 NEUROENGINE DATA BLOCK
+// ðŸ§¬ NEUROENGINE DATA BLOCK
 export const neuroEngineData = ${JSON.stringify({
     SEO_TITLE: page.title,
     H1: page.seoFields?.h1 || page.title,
@@ -1644,7 +1644,7 @@ export const neuroEngineData = ${JSON.stringify({
 
         fs.writeFileSync(targetPath, finalPageCode);
 
-        // Atualiza status da página manual
+        // Atualiza status da pÃ¡gina manual
         const idx = pages.findIndex(p => p.id === pageId);
         pages[idx].status = 'DRAFT';
         pages[idx].caminhoFisico = targetPath;
@@ -1660,14 +1660,14 @@ export const neuroEngineData = ${JSON.stringify({
             console.warn("Git push ignorado ou falhou:", gitErr.message);
         }
 
-        res.json({ success: true, message: `Página manual salva como rascunho em /${cleanSlug}`, targetPath });
+        res.json({ success: true, message: `PÃ¡gina manual salva como rascunho em /${cleanSlug}`, targetPath });
     } catch (e) {
-        console.error("Erro ao publicar página manual:", e);
+        console.error("Erro ao publicar pÃ¡gina manual:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
 
-// [API] Deletar página manual
+// [API] Deletar pÃ¡gina manual
 app.delete('/api/acervo/manual/:id', (req, res) => {
     try {
         let pages = getManualPages();
@@ -1677,7 +1677,7 @@ app.delete('/api/acervo/manual/:id', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Pick Intelligent: O Agente solicita uma imagem estratégica para um bloco
+// [API] Pick Intelligent: O Agente solicita uma imagem estratÃ©gica para um bloco
 app.get('/api/media/pick-intelligent', (req, res) => {
     const { category } = req.query; // ex: ambiente, psicologo
     try {
@@ -1685,7 +1685,7 @@ app.get('/api/media/pick-intelligent', (req, res) => {
         const filtered = data.items.filter(i => i.folder === category || category === 'any');
         
         if (filtered.length === 0) {
-            // Fallback para ícones se não houver fotos reais
+            // Fallback para Ã­cones se nÃ£o houver fotos reais
             const icons = data.items.filter(i => i.folder === 'icones');
             return res.json(icons.length > 0 ? icons[Math.floor(Math.random() * icons.length)] : null);
         }
@@ -1696,13 +1696,13 @@ app.get('/api/media/pick-intelligent', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// O motor "Watchdog" de sincronização passiva (Simulado para não estourar recursos em loop)
+// O motor "Watchdog" de sincronizaÃ§Ã£o passiva (Simulado para nÃ£o estourar recursos em loop)
 const runWatchdog = async () => {
     try {
         const files = fs.readdirSync(LOCAL_WATCH_FOLDER).filter(f => f.match(/\.(jpg|jpeg|png|webp|svg)$/i));
         if (files.length === 0) return;
 
-        console.log(`📡 [WATCHDOG] Detectadas ${files.length} novas mídias em midia_local...`);
+        console.log(`ðŸ“¡ [WATCHDOG] Detectadas ${files.length} novas mÃ­dias em midia_local...`);
         const db = JSON.parse(fs.readFileSync(ACERVO_MEDIA_FILE, 'utf8'));
 
         for (const file of files) {
@@ -1719,7 +1719,7 @@ const runWatchdog = async () => {
             // [NUVEM] Se Cloudinary estiver ativo, enviamos para o CDN
             if (isCloudinaryActive) {
                 try {
-                    console.log(`☁️ [CLOUDINARY] Enviando ${file} para a nuvem...`);
+                    console.log(`â˜ï¸ [CLOUDINARY] Enviando ${file} para a nuvem...`);
                     const result = await cloudinary.uploader.upload(oldPath, {
                         public_id: baseName,
                         folder: "neuroengine-v5",
@@ -1727,9 +1727,9 @@ const runWatchdog = async () => {
                         resource_type: "auto"
                     });
                     finalUrl = result.secure_url;
-                    console.log(`✅ [CLOUDINARY] Sucesso: ${finalUrl}`);
+                    console.log(`âœ… [CLOUDINARY] Sucesso: ${finalUrl}`);
                 } catch (cloudErr) {
-                    console.error("❌ [CLOUDINARY ERROR]:", cloudErr.message);
+                    console.error("âŒ [CLOUDINARY ERROR]:", cloudErr.message);
                     // Fallback para local se o upload falhar
                     fs.renameSync(oldPath, newPath);
                 }
@@ -1740,67 +1740,67 @@ const runWatchdog = async () => {
 
             db.items.push({
                 id: `media_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-                folder: "ambiente", // Categoria padrão (pode ser mudada no painel)
+                folder: "ambiente", // Categoria padrÃ£o (pode ser mudada no painel)
                 url: finalUrl,
-                title: "Asset Estratégico Abidos",
-                alt: "Consultório Dr. Victor Lawrence - Hipnose Clínica e Psicologia em Goiânia"
+                title: "Asset EstratÃ©gico Abidos",
+                alt: "ConsultÃ³rio Dr. Victor Lawrence - Hipnose ClÃ­nica e Psicologia em GoiÃ¢nia"
             });
-            console.log(`✅ [WATCHDOG] Item registrado no acervo.`);
+            console.log(`âœ… [WATCHDOG] Item registrado no acervo.`);
         }
 
         db.last_sync = new Date().toISOString();
         fs.writeFileSync(ACERVO_MEDIA_FILE, JSON.stringify(db, null, 2));
-    } catch (e) { console.error("❌ [WATCHDOG ERROR]:", e.message); }
+    } catch (e) { console.error("âŒ [WATCHDOG ERROR]:", e.message); }
 };
 
-// Ativa o Watchdog a cada 60 segundos (Mínima intervenção)
+// Ativa o Watchdog a cada 60 segundos (MÃ­nima intervenÃ§Ã£o)
 setInterval(runWatchdog, 60000);
 
-// [API] Listar Mídia (Alias para Acervo na Transição Headless)
+// [API] Listar MÃ­dia (Alias para Acervo na TransiÃ§Ã£o Headless)
 app.get('/api/acervo/list-media', (req, res) => {
-    // Redireciona para o listar padrão que já mapeia as páginas
+    // Redireciona para o listar padrÃ£o que jÃ¡ mapeia as pÃ¡ginas
     // No futuro, isso varreria a pasta de assets/public
     res.json([]); 
 });
 
 /**
- * 📖 ROTA 2: Carregar os Dados de uma Página para o Studio
- * Lê o arquivo .tsx e extrai o JSON do neuroEngineData
+ * ðŸ“– ROTA 2: Carregar os Dados de uma PÃ¡gina para o Studio
+ * LÃª o arquivo .tsx e extrai o JSON do neuroEngineData
  */
 app.post('/api/acervo/ler-pagina', (req, res) => {
     const { caminhoFisico } = req.body;
 
     try {
         if (!fs.existsSync(caminhoFisico)) {
-            return res.status(404).json({ success: false, error: 'Arquivo não encontrado' });
+            return res.status(404).json({ success: false, error: 'Arquivo nÃ£o encontrado' });
         }
 
         const conteudoTsx = fs.readFileSync(caminhoFisico, 'utf-8');
 
-        // Regex cirúrgico para extrair apenas o bloco JSON do neuroEngineData
+        // Regex cirÃºrgico para extrair apenas o bloco JSON do neuroEngineData
         const regexData = /export const neuroEngineData = ({[\s\S]*?});/;
         const match = conteudoTsx.match(regexData);
 
         if (match && match[1]) {
-            // Converte o texto extraído de volta para um Objeto JavaScript
+            // Converte o texto extraÃ­do de volta para um Objeto JavaScript
             const dadosRecuperados = JSON.parse(match[1]);
             
             res.json({ success: true, data: dadosRecuperados });
         } else {
-            // Fallback para Páginas Legadas (Sem DNA)
+            // Fallback para PÃ¡ginas Legadas (Sem DNA)
             const h1Match = conteudoTsx.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
             const titleMatch = conteudoTsx.match(/title:\s*["']([^"']+)["']/i);
             
             const legacyData = {
-                template: "", // Permite ao usuário escolher o novo template
+                template: "", // Permite ao usuÃ¡rio escolher o novo template
                 SEO_TITLE: titleMatch ? titleMatch[1] : "",
-                SEO_H1_TECNICO: h1Match ? h1Match[1].replace(/<[^>]+>/g, '').trim() : "Título da Página"
+                SEO_H1_TECNICO: h1Match ? h1Match[1].replace(/<[^>]+>/g, '').trim() : "TÃ­tulo da PÃ¡gina"
             };
 
             res.json({ 
                 success: true, 
                 data: legacyData,
-                warning: 'Esta página não possuía o DNA do NeuroEngine. Os dados foram inferidos. Por favor, selecione um template para atualizá-la.' 
+                warning: 'Esta pÃ¡gina nÃ£o possuÃ­a o DNA do NeuroEngine. Os dados foram inferidos. Por favor, selecione um template para atualizÃ¡-la.' 
             });
         }
 
@@ -1810,7 +1810,7 @@ app.post('/api/acervo/ler-pagina', (req, res) => {
 });
 
 // ============================================================================
-// 🧬 COMPILADOR DE DNA — Converte style_rules em diretivas autoritárias para IA
+// ðŸ§¬ COMPILADOR DE DNA â€” Converte style_rules em diretivas autoritÃ¡rias para IA
 // ============================================================================
 function getDnaContext() {
     try {
@@ -1819,25 +1819,25 @@ function getDnaContext() {
         if (!regras.length) return "";
 
         let ctx = `\n==================================================================\n`;
-        ctx += `[DIRETRIZES ABSOLUTAS DE IDENTIDADE VERBAL E COPYWRITING — DR. VICTOR LAWRENCE]\n`;
-        ctx += `Você DEVE aplicar RIGOROSAMENTE a cadência, o vocabulário e a sintaxe abaixo.\n`;
-        ctx += `Estas regras definem a 'voz' do Dr. Victor. OBEDEÇA A TODAS, SEM EXCEÇÃO.\n\n`;
+        ctx += `[DIRETRIZES ABSOLUTAS DE IDENTIDADE VERBAL E COPYWRITING â€” DR. VICTOR LAWRENCE]\n`;
+        ctx += `VocÃª DEVE aplicar RIGOROSAMENTE a cadÃªncia, o vocabulÃ¡rio e a sintaxe abaixo.\n`;
+        ctx += `Estas regras definem a 'voz' do Dr. Victor. OBEDEÃ‡A A TODAS, SEM EXCEÃ‡ÃƒO.\n\n`;
 
         regras.forEach((r, i) => {
             const cat = (r.categoria || 'ESTILO').toUpperCase();
-            ctx += `Regra ${i + 1} — [${cat}] ${r.titulo}\n`;
-            ctx += `AÇÃO OBRIGATÓRIA: ${r.regra}\n\n`;
+            ctx += `Regra ${i + 1} â€” [${cat}] ${r.titulo}\n`;
+            ctx += `AÃ‡ÃƒO OBRIGATÃ“RIA: ${r.regra}\n\n`;
         });
 
         ctx += `==================================================================\n`;
         return ctx;
     } catch (e) {
-        console.warn("[DNA] Memória vazia ou corrompida, usando tom neutro.");
+        console.warn("[DNA] MemÃ³ria vazia ou corrompida, usando tom neutro.");
         return "";
     }
 }
 
-// FUNÇÃO DE CONSOLIDAÇÃO DE DNA (Hipocampo Digital)
+// FUNÃ‡ÃƒO DE CONSOLIDAÃ‡ÃƒO DE DNA (Hipocampo Digital)
 async function salvarRegrasDeEstilo(novasRegras) {
     if (!novasRegras || novasRegras.length === 0) return;
     try {
@@ -1846,7 +1846,7 @@ async function salvarRegrasDeEstilo(novasRegras) {
 
         const regrasComMetadados = novasRegras.map(regra => ({
             categoria: regra.categoria || "DNA",
-            titulo: regra.titulo || regra.sintese || "Padrão Detectado",
+            titulo: regra.titulo || regra.sintese || "PadrÃ£o Detectado",
             regra: cleanClinicalData(regra.regra),
             id: `rule_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             data_extracao: new Date().toISOString()
@@ -1856,20 +1856,20 @@ async function salvarRegrasDeEstilo(novasRegras) {
         current.last_update = new Date().toISOString();
         
         fs.writeFileSync(MEMORY_FILE_PATH, JSON.stringify(current, null, 2));
-        console.log(`🧠 Memória atualizada: +${novasRegras.length} novos insights salvos.`);
+        console.log(`ðŸ§  MemÃ³ria atualizada: +${novasRegras.length} novos insights salvos.`);
     } catch (e) {
-        console.error("🚨 Falha crítica ao salvar no hipocampo:", e);
+        console.error("ðŸš¨ Falha crÃ­tica ao salvar no hipocampo:", e);
     }
 }
 
 // ==============================================================================
-// 📋 UTILITÁRIO DE ANONIMIZAÇÃO CLÍNICA (BLINDAGEM ÉTICA)
+// ðŸ“‹ UTILITÃRIO DE ANONIMIZAÃ‡ÃƒO CLÃNICA (BLINDAGEM Ã‰TICA)
 // ==============================================================================
 function cleanClinicalData(text) {
     if (!text) return "";
     let cleaned = text;
 
-    // 1. Padrões de Identidade (CPF/CNPJ, Telefones, Emails)
+    // 1. PadrÃµes de Identidade (CPF/CNPJ, Telefones, Emails)
     const patterns = {
         identificadores: /\b(\d{3}\.\d{3}\.\d{3}-\d{2}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})\b/g,
         telefones: /\b(\(?\d{2}\)?\s?\d{4,5}-?\d{4})\b/g,
@@ -1880,8 +1880,8 @@ function cleanClinicalData(text) {
     cleaned = cleaned.replace(patterns.telefones, "[CONTATO_REMOVIDO]");
     cleaned = cleaned.replace(patterns.emails, "[EMAIL_REMOVIDO]");
 
-    // 2. Substituição Contextual de Nomes (Pacing -> [PACIENTE])
-    const frasesChave = ["paciente", "cliente", "atendi o", "atendi a", "nome dele é", "nome dela é"];
+    // 2. SubstituiÃ§Ã£o Contextual de Nomes (Pacing -> [PACIENTE])
+    const frasesChave = ["paciente", "cliente", "atendi o", "atendi a", "nome dele Ã©", "nome dela Ã©"];
     frasesChave.forEach(frase => {
         const regex = new RegExp(`(${frase})\\s+([A-Z][a-z]+)`, "gi");
         cleaned = cleaned.replace(regex, "$1 [PACIENTE_ANONIMIZADO]");
@@ -1891,14 +1891,14 @@ function cleanClinicalData(text) {
 }
 
 
-// Configurações WordPress do .env
-// [DESATIVADO] Protocolo WordPress (Transição Headless)
+// ConfiguraÃ§Ãµes WordPress do .env
+// [DESATIVADO] Protocolo WordPress (TransiÃ§Ã£o Headless)
 // const WP_URL = (process.env.WP_URL || 'https://hipnolawrence.com/').replace(/\/$/, '');
 // const WP_API_BASE = `${WP_URL}/wp-json/wp/v2`;
 const WP_AUTH = Buffer.from(`${process.env.WP_USERNAME}:${process.env.WP_APP_PASSWORD}`).toString('base64');
 
 // ==============================================================================
-// 1. PROXY WORDPRESS (Segurança: Credenciais nunca saem do servidor)
+// 1. PROXY WORDPRESS (SeguranÃ§a: Credenciais nunca saem do servidor)
 // ==============================================================================
 
 // Helper para chamadas WP
@@ -1914,7 +1914,7 @@ const callWP = async (method, endpoint, data = null, params = {}) => {
         headers['Content-Type'] = 'application/json';
     }
 
-    console.log(`📡 [WP PROXY] ${method} ${url} ${params ? JSON.stringify(params) : ''}`);
+    console.log(`ðŸ“¡ [WP PROXY] ${method} ${url} ${params ? JSON.stringify(params) : ''}`);
 
     try {
         return await axios({
@@ -1926,13 +1926,13 @@ const callWP = async (method, endpoint, data = null, params = {}) => {
         });
     } catch (e) {
         if (e.response?.status === 403) {
-            console.warn("⚠️ [WP PROXY] Acesso negado pelo WordPress (403).");
+            console.warn("âš ï¸ [WP PROXY] Acesso negado pelo WordPress (403).");
         }
         return { error_silent: true, data: [] }; 
     }
 };
 
-// Endpoints Genéricos (GET, POST, PUT, DELETE)
+// Endpoints GenÃ©ricos (GET, POST, PUT, DELETE)
 app.get('/api/wp/:type', async (req, res) => {
     try {
         const response = await callWP('GET', `/${req.params.type}`, null, req.query);
@@ -1955,14 +1955,14 @@ app.all('/api/wp/:type/:id', async (req, res) => {
     } catch (e) { res.status(e.response?.status || 500).json(e.response?.data || {error: e.message}); }
 });
 
-// ──────────────────────────────────────────────────────────────────────────────
-// ENDPOINT DEDICADO: Busca conteúdo completo contornando WAF/ModSecurity 403
-// Estratégia: duas chamadas menores em vez de uma grande com content=HTML
-// ──────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ENDPOINT DEDICADO: Busca conteÃºdo completo contornando WAF/ModSecurity 403
+// EstratÃ©gia: duas chamadas menores em vez de uma grande com content=HTML
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 app.get('/api/api-content/:type/:id', async (req, res) => {
     try {
         const { type, id } = req.params;
-        console.log(`📄 [CONTENT] Buscando ${type}/${id} com estratégia anti-WAF...`);
+        console.log(`ðŸ“„ [CONTENT] Buscando ${type}/${id} com estratÃ©gia anti-WAF...`);
 
         // Chamada 1: Metadados leves (nunca 403)
         const metaResp = await callWP('GET', `/${type}/${id}`, null, {
@@ -1970,20 +1970,20 @@ app.get('/api/api-content/:type/:id', async (req, res) => {
         });
         const meta = metaResp.data;
 
-        // Chamada 2: Apenas o campo content (sem context=edit — evita 403 extra do mod_security)
+        // Chamada 2: Apenas o campo content (sem context=edit â€” evita 403 extra do mod_security)
         let contentRendered = '';
         let rawContent = '';
         try {
             const contentResp = await callWP('GET', `/${type}/${id}`, null, {
                 _fields: 'content'
-                // NÃO usar context=edit — isso dispara 403 no Hostinger/ModSecurity
+                // NÃƒO usar context=edit â€” isso dispara 403 no Hostinger/ModSecurity
             });
             contentRendered = contentResp.data?.content?.rendered || '';
             rawContent      = contentResp.data?.content?.raw      || contentRendered;
         } catch (contentErr) {
             const status = contentErr.response?.status;
-            console.warn(`⚠️ [CONTENT] Falha ao buscar content (HTTP ${status}). Retornando vazio.`);
-            // Não re-lança — retorna apenas os metadados
+            console.warn(`âš ï¸ [CONTENT] Falha ao buscar content (HTTP ${status}). Retornando vazio.`);
+            // NÃ£o re-lanÃ§a â€” retorna apenas os metadados
         }
 
         // Retorna no formato esperado pelo frontend
@@ -1997,12 +1997,12 @@ app.get('/api/api-content/:type/:id', async (req, res) => {
         });
 
     } catch (e) {
-        console.error('❌ [CONTENT ERROR]', e.message);
+        console.error('âŒ [CONTENT ERROR]', e.message);
         res.status(e.response?.status || 500).json({ error: e.message });
     }
 });
 
-// Endpoints de Configuração AntiGravity
+// Endpoints de ConfiguraÃ§Ã£o AntiGravity
 app.get('/api/wp-settings', async (req, res) => {
     try {
         const response = await axios.get(`${WP_URL}/wp-json/antigravity/v1/settings`, {
@@ -2020,7 +2020,7 @@ app.post('/api/wp-settings', async (req, res) => {
         res.json(response.data);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
-// Endpoint especial para Upload de Mídia (Multipart/Form-Data)
+// Endpoint especial para Upload de MÃ­dia (Multipart/Form-Data)
 app.post('/api/wp-upload-media', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) throw new Error("Nenhum arquivo enviado.");
@@ -2054,19 +2054,19 @@ app.post('/api/ai/generate', async (req, res) => {
     try {
         const { prompt, modelType } = req.body;
         
-        // Mapeamento dinâmico de modelos Abidos Next (v5)
+        // Mapeamento dinÃ¢mico de modelos Abidos Next (v5)
         const model = getAIModel(modelType, "text/plain");
 
-        console.log(`🧠 [AI PROXY] Gerando conteúdo via Protocolo 2.5...`);
+        console.log(`ðŸ§  [AI PROXY] Gerando conteÃºdo via Protocolo 2.5...`);
         
         const result = await model.generateContent(prompt);
         trackUsage(result.response.usageMetadata);
         const text = result.response.text();
-        console.log(`🤖 [AI RESULT] JSON Gerado com Sucesso via motor ${targetModel}.`);
+        console.log(`ðŸ¤– [AI RESULT] JSON Gerado com Sucesso via motor ${targetModel}.`);
         
         res.json({ text });
     } catch (e) { 
-        console.error("❌ [AI PROXY ERROR]", e.message);
+        console.error("âŒ [AI PROXY ERROR]", e.message);
         res.status(500).json({ error: e.message }); 
     }
 });
@@ -2074,24 +2074,24 @@ app.post('/api/ai/generate', async (req, res) => {
 app.post('/api/ai/describe-image', async (req, res) => {
     try {
         const { image, context } = req.body;
-        if (!image) return res.status(400).json({ error: "Imagem obrigatória." });
+        if (!image) return res.status(400).json({ error: "Imagem obrigatÃ³ria." });
 
-        console.log("📸 [DESCRIBE-IMAGE] Analisando imagem para gerar ALT text automático...");
+        console.log("ðŸ“¸ [DESCRIBE-IMAGE] Analisando imagem para gerar ALT text automÃ¡tico...");
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         
         const base64Data = image.split(',')[1] || image;
         const prompt = `
         Analise esta imagem e gere um ALT TEXT (texto alternativo) para SEO.
-        CONTEXTO DO SITE: Psicologia Clínica, Hipnose Ericksoniana e TEA Adulto (Dr. Victor Lawrence, Goiânia).
+        CONTEXTO DO SITE: Psicologia ClÃ­nica, Hipnose Ericksoniana e TEA Adulto (Dr. Victor Lawrence, GoiÃ¢nia).
         
         DIRETRIZES:
         - Seja descritivo e direto.
-        - Combine o que está na foto com a autoridade clínica do Dr. Victor Lawrence.
-        - Inclua termos como 'Consultório de Psicologia em Goiânia' ou 'Atendimento Clínico Especializado' se a imagem sugerir um ambiente profissional.
-        - Se for uma pessoa, descreva a expressão (ex: acolhedora, focada).
-        - Retorne APENAS o texto do ALT, sem aspas, máximo 120 caracteres.
+        - Combine o que estÃ¡ na foto com a autoridade clÃ­nica do Dr. Victor Lawrence.
+        - Inclua termos como 'ConsultÃ³rio de Psicologia em GoiÃ¢nia' ou 'Atendimento ClÃ­nico Especializado' se a imagem sugerir um ambiente profissional.
+        - Se for uma pessoa, descreva a expressÃ£o (ex: acolhedora, focada).
+        - Retorne APENAS o texto do ALT, sem aspas, mÃ¡ximo 120 caracteres.
         
-        CONTEXTO ADICIONAL DA VARIÁVEL: ${context || 'Geral'}
+        CONTEXTO ADICIONAL DA VARIÃVEL: ${context || 'Geral'}
         `;
 
         const result = await model.generateContent([
@@ -2102,39 +2102,39 @@ app.post('/api/ai/describe-image', async (req, res) => {
 
         res.json({ alt: result.response.text().trim() });
     } catch (e) {
-        console.error("❌ [DESCRIBE-IMAGE ERROR]", e);
+        console.error("âŒ [DESCRIBE-IMAGE ERROR]", e);
         res.status(500).json({ error: e.message });
     }
 });
 
 const DOCTORALIA_REVIEWS = `
-- Carla (TEA): "Diagnóstico tardio possível pela técnica adequada... melhora significativa na qualidade de vida."
-- Y. (Autista): "Acompanhamento fez enorme diferença... hipnose e PNL com empatia e respeito."
-- A. M. (Sábio): "Estrutura da minha vida, alguém sábio que me fez enxergar eu mesma."
-- R. A. (Ansiedade): "Problema de ansiedade resolvido em algumas sessões. Muito profissional."
+- Carla (TEA): "DiagnÃ³stico tardio possÃ­vel pela tÃ©cnica adequada... melhora significativa na qualidade de vida."
+- Y. (Autista): "Acompanhamento fez enorme diferenÃ§a... hipnose e PNL com empatia e respeito."
+- A. M. (SÃ¡bio): "Estrutura da minha vida, alguÃ©m sÃ¡bio que me fez enxergar eu mesma."
+- R. A. (Ansiedade): "Problema de ansiedade resolvido em algumas sessÃµes. Muito profissional."
 `;
 
 const VICTOR_IDENTIDADE = `
-[IDENTIDADE OFICIAL — DR. VICTOR LAWRENCE]
+[IDENTIDADE OFICIAL â€” DR. VICTOR LAWRENCE]
 - Nome: Victor Lawrence Bernardes Santana
-- Registro Profissional: Psicólogo | CRP 09/012681
-- Formação: MESTRANDO em Psicologia pela Universidade Federal de Uberlândia (UFU) — Conclusão prevista em 2028.
-- Especialidades: Hipnoterapia Clínica Ericksoniana, TEA Adulto (Asperger), Neuropsicologia.
-- Localização: Goiânia (GO) e Uberlândia (MG).
-- [ALERTA CRÍTICO]: JAMAIS refira-se ao Dr. Victor como Psicanalista. Ele é Psicólogo Clínico e Mestrando na UFU. É um erro grave de identidade chamá-lo de psicanalista.
-- TÍTULO ACADÊMICO: Mestrando em Psicologia (UFU).
+- Registro Profissional: PsicÃ³logo | CRP 09/012681
+- FormaÃ§Ã£o: MESTRANDO em Psicologia pela Universidade Federal de UberlÃ¢ndia (UFU) â€” ConclusÃ£o prevista em 2028.
+- Especialidades: Hipnoterapia ClÃ­nica Ericksoniana, TEA Adulto (Asperger), Neuropsicologia.
+- LocalizaÃ§Ã£o: GoiÃ¢nia (GO) e UberlÃ¢ndia (MG).
+- [ALERTA CRÃTICO]: JAMAIS refira-se ao Dr. Victor como Psicanalista. Ele Ã© PsicÃ³logo ClÃ­nico e Mestrando na UFU. Ã‰ um erro grave de identidade chamÃ¡-lo de psicanalista.
+- TÃTULO ACADÃŠMICO: Mestrando em Psicologia (UFU).
 `;
 
 const REAL_ASSETS = `
 VERDADE ABSOLUTA: PROIBIDO INVENTAR LINKS OU DADOS FALSOS. USE APENAS OS SEGUINTES LINKS REAIS:
 
-LINKS DE SERVIÇOS E PÁGINAS (SILOS E HUB):
+LINKS DE SERVIÃ‡OS E PÃGINAS (SILOS E HUB):
 - Agendamento: https://hipnolawrence.com/agendamento/
 - Ansiedade/Estresse: https://hipnolawrence.com/terapia-para-ansiedade-e-estresse-em-goiania/
-- Contato/Currículo: https://hipnolawrence.com/contato/
-- Depressão: https://hipnolawrence.com/tratamento-para-depressao-em-goiania/
-- Desempenho Psicológico: https://hipnolawrence.com/terapia-para-desempenho-psicologico-em-goiania/
-- Hipnose Clínica: https://hipnolawrence.com/hipnose-clinica-em-goiania/
+- Contato/CurrÃ­culo: https://hipnolawrence.com/contato/
+- DepressÃ£o: https://hipnolawrence.com/tratamento-para-depressao-em-goiania/
+- Desempenho PsicolÃ³gico: https://hipnolawrence.com/terapia-para-desempenho-psicologico-em-goiania/
+- Hipnose ClÃ­nica: https://hipnolawrence.com/hipnose-clinica-em-goiania/
 - Relacionamento: https://hipnolawrence.com/terapia-de-relacionamento-em-goiania/
 - Terapia Geral: https://hipnolawrence.com/terapia-em-goiania/
 - Sobre: https://hipnolawrence.com/sobre/
@@ -2149,7 +2149,7 @@ IMAGENS DO DR. VICTOR LAWRENCE:
 - https://hipnolawrence.com/wp-content/uploads/2026/03/IMG_4875.jpg
 - https://hipnolawrence.com/wp-content/uploads/2026/03/IMG_2046.jpg
 
-DEMONSTRAÇÃO DE HIPNOSE / EVENTOS:
+DEMONSTRAÃ‡ÃƒO DE HIPNOSE / EVENTOS:
 - https://hipnolawrence.com/wp-content/uploads/2026/03/5b6b7fbf-d665-4d68-96b0-aa8d2889a0bc.jpg
 - Palestra IFG: https://hipnolawrence.com/wp-content/uploads/2026/03/palestra-IFG2.jpeg
 - Congresso Autismo (2015): https://hipnolawrence.com/wp-content/uploads/2026/03/11148819_865048126899579_5754455918839697297_o.jpg
@@ -2158,7 +2158,7 @@ DEMONSTRAÇÃO DE HIPNOSE / EVENTOS:
 LOGOMARCA:
 - https://hipnolawrence.com/wp-content/uploads/2025/12/Victor-Lawrence-Logo-Sem-Fundo-1.png
 
-AMBIENTE CONSULTÓRIO:
+AMBIENTE CONSULTÃ“RIO:
 - https://hipnolawrence.com/wp-content/uploads/2026/02/IMG_0298-scaled.jpeg
 - https://hipnolawrence.com/wp-content/uploads/2026/02/IMG_0312-scaled.jpeg
 - https://hipnolawrence.com/wp-content/uploads/2026/02/IMG_0359-scaled.jpeg
@@ -2166,21 +2166,21 @@ AMBIENTE CONSULTÓRIO:
 `;
 
 // ============================================================================
-// ÉTICA ABIDOS — Proibições absolutas injetadas em TODOS os prompts de geração
+// Ã‰TICA ABIDOS â€” ProibiÃ§Ãµes absolutas injetadas em TODOS os prompts de geraÃ§Ã£o
 // ============================================================================
 const ETICA_ABIDOS = `
-[DIRETRIZES ÉTICAS ABSOLUTAS — PROIBIÇÕES SEM EXCEÇÃO]
-- PROIBIDO oferecer, mencionar ou sugerir SESSÃO GRATUITA ou AVALIAÇÃO GRATUITA.
+[DIRETRIZES Ã‰TICAS ABSOLUTAS â€” PROIBIÃ‡Ã•ES SEM EXCEÃ‡ÃƒO]
+- PROIBIDO oferecer, mencionar ou sugerir SESSÃƒO GRATUITA ou AVALIAÃ‡ÃƒO GRATUITA.
 - PROIBIDO prometer cura ou garantia de resultado.
-- PROIBIDO jargão de marketing agressivo (Copywriting Sóbrio e Acadêmico).
-- PROIBIDO criar variáveis como {{area_dinamica_extra}} — Redundante.
-- O WhatsApp e Contatos devem ser preenchidos EXCLUSIVAMENTE nas variáveis globais, não gere novos campos para isso se já existirem.
+- PROIBIDO jargÃ£o de marketing agressivo (Copywriting SÃ³brio e AcadÃªmico).
+- PROIBIDO criar variÃ¡veis como {{area_dinamica_extra}} â€” Redundante.
+- O WhatsApp e Contatos devem ser preenchidos EXCLUSIVAMENTE nas variÃ¡veis globais, nÃ£o gere novos campos para isso se jÃ¡ existirem.
 - O CTA de agendamento DEVE levar ao link: https://hipnolawrence.com/agendamento/
 `;
 
 const CLIMAS_CLINICOS = {
   "1_introspeccao_profunda": {
-    "nome_amigavel": "Introspecção Profunda (Ultra-Dark)",
+    "nome_amigavel": "IntrospecÃ§Ã£o Profunda (Ultra-Dark)",
     "fundo_principal": "!bg-[#05080f]",
     "texto_principal": "!text-slate-300",
     "texto_destaque": "!text-white",
@@ -2201,20 +2201,20 @@ const CLIMAS_CLINICOS = {
     "texto_principal": "!text-slate-400",
     "texto_destaque": "!text-slate-200",
     "cor_acao": "!bg-[#14b8a6]",
-    "efeitos_obrigatorios": "Cores apaziguadoras. ZERO contrastes extremos (nunca usar branco puro ou preto puro). Glassmorphism com desfoque subtil para não causar distrações."
+    "efeitos_obrigatorios": "Cores apaziguadoras. ZERO contrastes extremos (nunca usar branco puro ou preto puro). Glassmorphism com desfoque subtil para nÃ£o causar distraÃ§Ãµes."
   },
   "4_autoridade_academica": {
-    "nome_amigavel": "Autoridade Académica (Minimalista)",
+    "nome_amigavel": "Autoridade AcadÃ©mica (Minimalista)",
     "fundo_principal": "!bg-white",
     "texto_principal": "!text-gray-600",
     "texto_destaque": "!text-gray-900",
     "cor_acao": "!bg-[#0f172a]",
-    "efeitos_obrigatorios": "Design limpo, académico e sem distracções. Uso de linhas finas divisorias (!border-gray-200). ZERO efeitos de luz ou desfoque extremo."
+    "efeitos_obrigatorios": "Design limpo, acadÃ©mico e sem distracÃ§Ãµes. Uso de linhas finas divisorias (!border-gray-200). ZERO efeitos de luz ou desfoque extremo."
   }
 };
 
 const ABIDOS_TEMPLATE_MINIMO = `
-<!-- CONFIGURAÇÃO TAILWIND -->
+<!-- CONFIGURAÃ‡ÃƒO TAILWIND -->
 <script>
     tailwind = {
         config: {
@@ -2223,7 +2223,7 @@ const ABIDOS_TEMPLATE_MINIMO = `
     }
 </script>
 
-<!-- DEPENDÊNCIAS -->
+<!-- DEPENDÃŠNCIAS -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -2261,7 +2261,7 @@ const ABIDOS_TEMPLATE_MINIMO = `
         text-decoration: none !important;
     }
 
-    /* Vidros Sóbrios (Glassmorphism de Alto Padrão) */
+    /* Vidros SÃ³brios (Glassmorphism de Alto PadrÃ£o) */
     .abidos-glass-dark {
         background: rgba(250, 249, 246, 0.02) !important;
         backdrop-filter: blur(24px) !important;
@@ -2277,14 +2277,14 @@ const ABIDOS_TEMPLATE_MINIMO = `
         box-shadow: 0 30px 60px rgba(11, 18, 33, 0.03) !important;
     }
 
-    /* Efeito Visual (Luz Hipnótica) */
+    /* Efeito Visual (Luz HipnÃ³tica) */
     .orb-glow { animation: slowPulse 8s infinite alternate ease-in-out; }
     @keyframes slowPulse {
         0% { transform: scale(0.8) translate(-5%, -5%); opacity: 0.15; }
         100% { transform: scale(1.1) translate(5%, 5%); opacity: 0.4; }
     }
 
-    /* Animações Fluídas de Scroll */
+    /* AnimaÃ§Ãµes FluÃ­das de Scroll */
     .reveal {
         opacity: 0;
         transform: translateY(30px);
@@ -2295,7 +2295,7 @@ const ABIDOS_TEMPLATE_MINIMO = `
     .delay-200 { transition-delay: 200ms; }
     .delay-300 { transition-delay: 300ms; }
 
-    /* FORÇA VISIBILIDADE NO EDITOR ELEMENTOR */
+    /* FORÃ‡A VISIBILIDADE NO EDITOR ELEMENTOR */
     body.elementor-editor-active .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
 
     .chart-container { position: relative; width: 100%; height: 220px; }
@@ -2340,7 +2340,7 @@ const ABIDOS_TEMPLATE_MINIMO = `
 
 <!-- ABIDOS WRAPPER -->
 <div class="abidos-wrapper">
-    <!-- ESTRUTURA SEÇÕES AQUI -->
+    <!-- ESTRUTURA SEÃ‡Ã•ES AQUI -->
 </div>
 
 <script>
@@ -2367,46 +2367,46 @@ const ABIDOS_TEMPLATE_MINIMO = `
 `;
 
 // ==============================================================================
-// 3. TABELA DE REVISÃO E PIPELINE DE AGENTES (HUMAN-IN-THE-LOOP & LANGGRAPH)
+// 3. TABELA DE REVISÃƒO E PIPELINE DE AGENTES (HUMAN-IN-THE-LOOP & LANGGRAPH)
 // ==============================================================================
 
 // Estado do Perfil de Voz (Clone de Voz / Reverse Prompting)
 let voiceProfile = {
-    learned_style: "Direto, clínico, porém empático. Foco em autoridade técnica e resultados práticos (Goiânia).",
-    vocabulary: ["Goiânia", "Neuropsicologia", "TEA", "Clínica", "Avaliação"],
+    learned_style: "Direto, clÃ­nico, porÃ©m empÃ¡tico. Foco em autoridade tÃ©cnica e resultados prÃ¡ticos (GoiÃ¢nia).",
+    vocabulary: ["GoiÃ¢nia", "Neuropsicologia", "TEA", "ClÃ­nica", "AvaliaÃ§Ã£o"],
     prohibited_terms: ["cura milagrosa", "garantido", "mudar sua vida para sempre"],
-    rhythm: "Sentenças curtas e estruturadas por bullet points.",
+    rhythm: "SentenÃ§as curtas e estruturadas por bullet points.",
     last_updated: new Date().toISOString()
 };
 
 // Eliminado duplicata de /api/drafts (Consolidado acima)
 
-// Orquestrador LangGraph (Simulação de Multi-Agent Node Pipeline)
+// Orquestrador LangGraph (SimulaÃ§Ã£o de Multi-Agent Node Pipeline)
 app.post('/api/agents/generate-pipeline', async (req, res) => {
     try {
         const { topic } = req.body;
-        if (!topic) throw new Error("Tópico (STAG) não fornecido.");
+        if (!topic) throw new Error("TÃ³pico (STAG) nÃ£o fornecido.");
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
 
-        console.log(`🤖 [LANGGRAPH PIPELINE] Iniciando fluxo para: ${topic}`);
+        console.log(`ðŸ¤– [LANGGRAPH PIPELINE] Iniciando fluxo para: ${topic}`);
 
-        // NÓ 1: Agente Gerador (RAG & Pesquisa + Personalidade Aprendida)
-        console.log(`📡 [NÓ 1] Agente de Pesquisa (Voz Dr. Victor)...`);
+        // NÃ“ 1: Agente Gerador (RAG & Pesquisa + Personalidade Aprendida)
+        console.log(`ðŸ“¡ [NÃ“ 1] Agente de Pesquisa (Voz Dr. Victor)...`);
         const dnaInjetadoPipeline = getDnaContext();
         const moodPipeline = CLIMAS_CLINICOS['1_introspeccao_profunda'];
         const pGerador = `
-Você é o Arquiteto Visual Sênior do Protocolo Abidos. Gere uma Landing Page HTML PREMIUM sobre "${topic}".
+VocÃª Ã© o Arquiteto Visual SÃªnior do Protocolo Abidos. Gere uma Landing Page HTML PREMIUM sobre "${topic}".
 
-[ESTRUTURA DE DESIGN ABIDOS (OBRIGATÓRIO)]
+[ESTRUTURA DE DESIGN ABIDOS (OBRIGATÃ“RIO)]
 Use EXATAMENTE este Wrapper e estas classes:
 1. WRAPPER GERAL: <div class="abidos-wrapper antialiased px-4 py-8 md:px-12 lg:px-24 bg-[#05080f] min-h-screen font-inter text-slate-300">
-2. SEÇÕES: <section class="py-16 md:py-32 relative overflow-hidden" data-bloco="nome_do_bloco">
+2. SEÃ‡Ã•ES: <section class="py-16 md:py-32 relative overflow-hidden" data-bloco="nome_do_bloco">
 3. CARDS: "bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 md:p-10 shadow-2xl hover:border-teal-500/50 transition-all"
-4. H2 (TÍTULO DE SEÇÃO): "font-outfit font-bold text-3xl md:text-5xl leading-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500 mb-6"
+4. H2 (TÃTULO DE SEÃ‡ÃƒO): "font-outfit font-bold text-3xl md:text-5xl leading-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500 mb-6"
 5. TEXTO: "text-lg text-slate-400 leading-relaxed mb-8"
 6. CTA WHATSAPP: "inline-flex items-center gap-3 px-8 py-4 bg-teal-500 hover:bg-teal-400 text-[#05080f] font-bold rounded-full transition-all hover:scale-105 shadow-[0_0_25px_rgba(45,212,191,0.35)]"
 
-[DNA LITERÁRIO]
+[DNA LITERÃRIO]
 ${dnaInjetadoPipeline || 'Use linguagem ericksoniana permissiva.'}
 
 [LINKS E IMAGENS REAIS]
@@ -2420,16 +2420,16 @@ Gere o HTML modular. Feche o wrapper </div> ao final. Sem markdown.
         trackUsage(resGerador.response.usageMetadata);
         const rascunhoPrimario = resGerador.response.text();
 
-        // NÓ 2, 3 e 4: Loop de Validação (Abidos, Crítico e Compliance)
-        console.log(`⚖️ [NÓS DE VALIDAÇÃO] Auditoria de Compliance, Abidos e Factual...`);
+        // NÃ“ 2, 3 e 4: Loop de ValidaÃ§Ã£o (Abidos, CrÃ­tico e Compliance)
+        console.log(`âš–ï¸ [NÃ“S DE VALIDAÃ‡ÃƒO] Auditoria de Compliance, Abidos e Factual...`);
         const pAuditoria = `
         Analise rigorosamente o Rascunho HTML abaixo.
-        Sua missão é corrigir erros de compliance e garantir o Design Abidos.
+        Sua missÃ£o Ã© corrigir erros de compliance e garantir o Design Abidos.
         
         REGRAS DE OURO:
         1. MANTENHA O WRAPPER GERAL <div class="abidos-wrapper...">.
-        2. Certifique-se de que não há tags <h1>.
-        3. Se o texto for puramente clínico, transforme em copywriting persuasivo usando o Método Abidos.
+        2. Certifique-se de que nÃ£o hÃ¡ tags <h1>.
+        3. Se o texto for puramente clÃ­nico, transforme em copywriting persuasivo usando o MÃ©todo Abidos.
         
         Retorne APENAS um JSON: {"aprovado": boolean, "abidos_score": number, "compliance_pass": boolean, "med_f1": number, "correcoes": "MANTENHA O HTML COMPLETO COM WRAPPER AQUI"}
         Rascunho: """${rascunhoPrimario}"""
@@ -2439,10 +2439,10 @@ Gere o HTML modular. Feche o wrapper </div> ao final. Sem markdown.
         const jsonStr = resAuditoria.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
         const auditoria = JSON.parse(jsonStr);
 
-        // Se falhar no compliance, faria um loop de re-geração no LangGraph real. Aqui simulamos a correção automática:
+        // Se falhar no compliance, faria um loop de re-geraÃ§Ã£o no LangGraph real. Aqui simulamos a correÃ§Ã£o automÃ¡tica:
         const conteudoFinal = auditoria.correcoes || rascunhoPrimario;
 
-        // Persistência de Estado
+        // PersistÃªncia de Estado
         const newDraft = {
             draft_id: `RASC-2026-${Math.floor(Math.random() * 900) + 100}`,
             tema_foco: topic,
@@ -2462,11 +2462,11 @@ Gere o HTML modular. Feche o wrapper </div> ao final. Sem markdown.
         };
 
         draftsDb.unshift(newDraft); // Adiciona ao topo da lista
-        console.log(`✅ [PIPELINE CONCLUÍDA] Human-in-the-loop aguardando.`);
+        console.log(`âœ… [PIPELINE CONCLUÃDA] Human-in-the-loop aguardando.`);
         
         res.json({ success: true, draft: newDraft });
     } catch (e) {
-        console.error("❌ [PIPELINE ERROR]", e.message);
+        console.error("âŒ [PIPELINE ERROR]", e.message);
         res.status(500).json({ error: e.message });
     }
 });
@@ -2475,28 +2475,28 @@ Gere o HTML modular. Feche o wrapper </div> ao final. Sem markdown.
 app.post('/api/agents/audit', async (req, res) => {
     try {
         const { content } = req.body;
-        console.log(`🔍 [AGENTE ABIDOS] Auditing draft...`);
+        console.log(`ðŸ” [AGENTE ABIDOS] Auditing draft...`);
         
         const prompt = `
-        Você é o "Agente Abidos", um Arquiteto de Sistemas e Auditor Sênior Implacável.
+        VocÃª Ã© o "Agente Abidos", um Arquiteto de Sistemas e Auditor SÃªnior ImplacÃ¡vel.
         
-        SUA MISSÃO: Realizar uma auditoria de nível clínico no rascunho abaixo.
+        SUA MISSÃƒO: Realizar uma auditoria de nÃ­vel clÃ­nico no rascunho abaixo.
         
-        MÉTODO DE AUDITORIA (FACTSCORE):
-        1. Decomposição Atômica: Quebre o texto em afirmações individuais.
-        2. Validação Factual: Verifique se há "alucinações" ou promessas de cura (Proibido pelo CFP).
-        3. MED-F1 (Extração de Entidades): Liste termos técnicos (ex: TEA, TDAH, ISRS) e verifique se o contexto está correto.
-        4. Hierarquia Abidos: Cheque se NÃO há H1 (proibido) e se há H2 estratégico com palavra-chave e localização (Goiânia).
-        5. GOOGLE TAG: Verifique se a etiqueta Google (G-B0DM24E5FS) está presente no código. Se não estiver, gere um alerta crítico.
+        MÃ‰TODO DE AUDITORIA (FACTSCORE):
+        1. DecomposiÃ§Ã£o AtÃ´mica: Quebre o texto em afirmaÃ§Ãµes individuais.
+        2. ValidaÃ§Ã£o Factual: Verifique se hÃ¡ "alucinaÃ§Ãµes" ou promessas de cura (Proibido pelo CFP).
+        3. MED-F1 (ExtraÃ§Ã£o de Entidades): Liste termos tÃ©cnicos (ex: TEA, TDAH, ISRS) e verifique se o contexto estÃ¡ correto.
+        4. Hierarquia Abidos: Cheque se NÃƒO hÃ¡ H1 (proibido) e se hÃ¡ H2 estratÃ©gico com palavra-chave e localizaÃ§Ã£o (GoiÃ¢nia).
+        5. GOOGLE TAG: Verifique se a etiqueta Google (G-B0DM24E5FS) estÃ¡ presente no cÃ³digo. Se nÃ£o estiver, gere um alerta crÃ­tico.
         
         Rascunho a auditar:
         """${content}"""
         
-        RETORNE UM RELATÓRIO FORMATADO EM HTML (usando tags span, strong, br) COM:
-        - ✅ PONTOS POSITIVOS
-        - ⚠️ ALERTAS DE RISCO (CFP/LGPD/GOOGLE TAG)
-        - 📊 PONTUAÇÃO FACTSCORE (0-100%)
-        - 📝 SUGESTÕES DE REESCRITA
+        RETORNE UM RELATÃ“RIO FORMATADO EM HTML (usando tags span, strong, br) COM:
+        - âœ… PONTOS POSITIVOS
+        - âš ï¸ ALERTAS DE RISCO (CFP/LGPD/GOOGLE TAG)
+        - ðŸ“Š PONTUAÃ‡ÃƒO FACTSCORE (0-100%)
+        - ðŸ“ SUGESTÃ•ES DE REESCRITA
         `;
 
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
@@ -2506,31 +2506,31 @@ app.post('/api/agents/audit', async (req, res) => {
         
         res.json({ success: true, report: resp.text() });
     } catch (e) {
-        console.error("❌ [AGENTE ABIDOS ERROR]", e.message);
+        console.error("âŒ [AGENTE ABIDOS ERROR]", e.message);
         res.status(500).json({ error: e.message });
     }
 });
 
-// NÓ DE APRENDIZADO DE ESTILO: Reverse Prompting
+// NÃ“ DE APRENDIZADO DE ESTILO: Reverse Prompting
 app.post('/api/agents/learn-style', async (req, res) => {
     try {
         const { texts } = req.body;
-        if (!texts || !Array.isArray(texts)) throw new Error("Textos para análise não fornecidos.");
+        if (!texts || !Array.isArray(texts)) throw new Error("Textos para anÃ¡lise nÃ£o fornecidos.");
 
-        console.log(`🧠 [ESTILO] Iniciando Reverse Prompting de ${texts.length} textos...`);
+        console.log(`ðŸ§  [ESTILO] Iniciando Reverse Prompting de ${texts.length} textos...`);
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
 
         const prompt = `
-        Aja como um Linguista Forense e Especialista em Copywriting de Conversão.
-        Analise os textos abaixo (autênticos do autor Victor Lawrence) e extraia o DNA da escrita.
+        Aja como um Linguista Forense e Especialista em Copywriting de ConversÃ£o.
+        Analise os textos abaixo (autÃªnticos do autor Victor Lawrence) e extraia o DNA da escrita.
         
         Textos:
         """${texts.join('\n\n')}"""
         
-        Sua tarefa é codificar esse estilo em um JSON com os campos:
-        - rhythm: (Descrição da cadência das frases)
-        - vocabulary: (Lista de palavras recorrentes e jargões favoritos)
-        - learned_style: (Resumo técnico da "voz" do autor)
+        Sua tarefa Ã© codificar esse estilo em um JSON com os campos:
+        - rhythm: (DescriÃ§Ã£o da cadÃªncia das frases)
+        - vocabulary: (Lista de palavras recorrentes e jargÃµes favoritos)
+        - learned_style: (Resumo tÃ©cnico da "voz" do autor)
         - prohibited_terms: (Palavras que ele parece evitar ou que seriam artificiais para ele)
         
         Retorne APENAS o JSON.
@@ -2548,23 +2548,23 @@ app.post('/api/agents/learn-style', async (req, res) => {
 
         res.json({ success: true, profile: voiceProfile });
     } catch (e) {
-        console.error("❌ [LEARN STYLE ERROR]", e.message);
+        console.error("âŒ [LEARN STYLE ERROR]", e.message);
         res.status(500).json({ error: e.message });
     }
 });
 
-// NÓ DE AFINAMENTO: Text Diffs (Learn from user edits)
+// NÃ“ DE AFINAMENTO: Text Diffs (Learn from user edits)
 app.post('/api/agents/analyze-diff', async (req, res) => {
     try {
         const { original, edited } = req.body;
 
-        console.log(`📝 [DIFF] Analisando edições do usuário para ajuste fino de tom...`);
+        console.log(`ðŸ“ [DIFF] Analisando ediÃ§Ãµes do usuÃ¡rio para ajuste fino de tom...`);
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
 
         const prompt = `
-        Analise a diferença entre o rascunho da IA e a versão editada pelo Dr. Victor.
+        Analise a diferenÃ§a entre o rascunho da IA e a versÃ£o editada pelo Dr. Victor.
         Rascunho IA: """${original}"""
-        Versão Final: """${edited}"""
+        VersÃ£o Final: """${edited}"""
         
         O que mudou no tom? O que ele removeu? O que ele adicionou?
         Atualize o perfil de voz atual: ${JSON.stringify(voiceProfile)}
@@ -2580,21 +2580,21 @@ app.post('/api/agents/analyze-diff', async (req, res) => {
 
         res.json({ success: true, profile: voiceProfile });
     } catch (e) {
-        console.error("❌ [DIFF ANALYZE ERROR]", e.message);
+        console.error("âŒ [DIFF ANALYZE ERROR]", e.message);
         res.status(500).json({ error: e.message });
     }
 });
 
 // ==============================================================================
-// 4. MOTOR SEMÂNTICO (SEO PROGRAMÁTICO & SILOS)
+// 4. MOTOR SEMÃ‚NTICO (SEO PROGRAMÃTICO & SILOS)
 // ==============================================================================
 
 // [OBSOLETO] Removido para evitar conflito com motor V5 em /api/seo/analyze-silos no final do arquivo.
 
-// [PULSO DO SISTEMA] Monitoramento de Latência Real-time
+// [PULSO DO SISTEMA] Monitoramento de LatÃªncia Real-time
 app.get('/api/health/ping', (req, res) => res.status(200).send('pong'));
 
-// [FASE 2] HEALTH CHECK: Monitoramento Multicritério
+// [FASE 2] HEALTH CHECK: Monitoramento MulticritÃ©rio
 app.get('/api/health/check', async (req, res) => {
     const health = {
         status: 'online',
@@ -2619,14 +2619,14 @@ app.get('/api/health/check', async (req, res) => {
 });
 
 // ==============================================================================
-// 5. MONITORAMENTO PROFILÁTICO (LIGHTHOUSE) E REPUTACIONAL
+// 5. MONITORAMENTO PROFILÃTICO (LIGHTHOUSE) E REPUTACIONAL
 // ==============================================================================
 
 app.get('/api/health/lighthouse', async (req, res) => {
     try {
-        console.log(`🔦 [LIGHTHOUSE] Iniciando Auditoria de Performance Profilática...`);
+        console.log(`ðŸ”¦ [LIGHTHOUSE] Iniciando Auditoria de Performance ProfilÃ¡tica...`);
         
-        // Simulação de Auditoria (Em um sistema real, chamaria a Lighthouse CLI)
+        // SimulaÃ§Ã£o de Auditoria (Em um sistema real, chamaria a Lighthouse CLI)
         const metrics = {
             performance: Math.floor(Math.random() * (100 - 85) + 85),
             accessibility: 98,
@@ -2649,7 +2649,7 @@ app.get('/api/health/lighthouse', async (req, res) => {
 app.post('/api/health/design-audit', async (req, res) => {
     try {
         const { image, context } = req.body;
-        console.log(`🖌️ [SERVER] Auditoria de Design Recebida. Processando Vision...`);
+        console.log(`ðŸ–Œï¸ [SERVER] Auditoria de Design Recebida. Processando Vision...`);
 
         const model = genAI.getGenerativeModel({ model: VISION_MODEL }); // Use Flash ou Pro vision
         
@@ -2657,20 +2657,20 @@ app.post('/api/health/design-audit', async (req, res) => {
         const base64Data = image.split(',')[1] || image;
 
         const prompt = `
-        VOCÊ É O AUDITOR DE DESIGN E UX DO NEUROENGINE OS (SISTEMA DE GESTÃO CLÍNICA).
+        VOCÃŠ Ã‰ O AUDITOR DE DESIGN E UX DO NEUROENGINE OS (SISTEMA DE GESTÃƒO CLÃNICA).
         CONTEXTO: ${context}.
 
         Analise a captura de tela anexada da interface administrativa do sistema (rodando em Desktop).
-        Sua missão:
-        1. Avaliar a Legibilidade (Tamanho da fonte, contraste, espaçamento dos selos e cards).
-        2. Avaliar a Estética da Interface (O sistema parece premium e limpo ou está com excesso de informação?).
-        3. Identificar Heurísticas de Usabilidade violadas.
-        4. Identificar inconsistências visuais (Cores fora do paleta, desalinhamentos).
+        Sua missÃ£o:
+        1. Avaliar a Legibilidade (Tamanho da fonte, contraste, espaÃ§amento dos selos e cards).
+        2. Avaliar a EstÃ©tica da Interface (O sistema parece premium e limpo ou estÃ¡ com excesso de informaÃ§Ã£o?).
+        3. Identificar HeurÃ­sticas de Usabilidade violadas.
+        4. Identificar inconsistÃªncias visuais (Cores fora do paleta, desalinhamentos).
 
-        [DIRETRIZES DE RELATÓRIO]:
-        - Seja direto, técnico e use termos como "Hierarquia Visual", "Afixação", "Contraste WCAG".
-        - Liste 3 pontos positivos e 3 pontos de melhoria prioritária.
-        - Se o design estiver nota 10, elogie de forma sóbria.
+        [DIRETRIZES DE RELATÃ“RIO]:
+        - Seja direto, tÃ©cnico e use termos como "Hierarquia Visual", "AfixaÃ§Ã£o", "Contraste WCAG".
+        - Liste 3 pontos positivos e 3 pontos de melhoria prioritÃ¡ria.
+        - Se o design estiver nota 10, elogie de forma sÃ³bria.
 
         Retorne a resposta diretamente em texto (Markdown).
         `;
@@ -2684,7 +2684,7 @@ app.post('/api/health/design-audit', async (req, res) => {
         res.json({ text: result.response.text() });
 
     } catch (e) {
-        console.error("❌ [DESIGN AUDIT ERROR]", e.message);
+        console.error("âŒ [DESIGN AUDIT ERROR]", e.message);
         res.status(500).json({ error: e.message });
     }
 });
@@ -2692,7 +2692,7 @@ app.post('/api/health/design-audit', async (req, res) => {
 app.post('/api/reputation/analyze', async (req, res) => {
     try {
         const { platform, content } = req.body;
-        console.log(`🛡️ [REPUTAÇÃO] Analisando impacto de feedback em ${platform}...`);
+        console.log(`ðŸ›¡ï¸ [REPUTAÃ‡ÃƒO] Analisando impacto de feedback em ${platform}...`);
 
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         const prompt = `
@@ -2700,10 +2700,10 @@ app.post('/api/reputation/analyze', async (req, res) => {
         """${content}"""
         
         Sua tarefa:
-        1. Classificar Sentimento (Positivo / Neutro / Alerta Crítico).
-        2. Identificar Riscos Éticos (Baseado nas normas do CFP).
-        3. Gerar "Resposta Sugerida" (Empática, respeitando sigilo, sem promessas).
-        4. Sugerir Melhoria Interna na Clínica.
+        1. Classificar Sentimento (Positivo / Neutro / Alerta CrÃ­tico).
+        2. Identificar Riscos Ã‰ticos (Baseado nas normas do CFP).
+        3. Gerar "Resposta Sugerida" (EmpÃ¡tica, respeitando sigilo, sem promessas).
+        4. Sugerir Melhoria Interna na ClÃ­nica.
         
         Retorne em JSON.
         `;
@@ -2717,11 +2717,11 @@ app.post('/api/reputation/analyze', async (req, res) => {
 });
 
 // ==============================================================================
-// 7. AGENTES DA ESTEIRA DE PRODUÇÃO (FASE 2: MÁQUINA DE ESTADOS)
+// 7. AGENTES DA ESTEIRA DE PRODUÃ‡ÃƒO (FASE 2: MÃQUINA DE ESTADOS)
 // ==============================================================================
 
 async function runConstructor(userInput, feedback = null, waNumber, moodId = "1_introspeccao_profunda", contentType = "pages", modelType = 'flash') {
-    console.log(`🏗️ [Studio] Gerando rascunho direto: "${userInput.substring(0, 30)}..."`);
+    console.log(`ðŸ—ï¸ [Studio] Gerando rascunho direto: "${userInput.substring(0, 30)}..."`);
     const modelId = (modelType && modelType.includes('gemini')) ? modelType : (modelType === 'pro' ? HEAVY_MODEL : VISION_MODEL);
     const model = genAI.getGenerativeModel({ model: modelId });
     
@@ -2729,24 +2729,24 @@ async function runConstructor(userInput, feedback = null, waNumber, moodId = "1_
     const personalStyle = getVictorStyle();
     const styleRules = personalStyle.style_rules?.map(r => `- ${r.regra}`).join('\n') || '';
 
-    const prompt = `VOCÊ É O ARQUITETO ABIDOS V5 (Digital Twin). 
-                    Crie uma ${contentType === 'pages' ? 'Landing Page de Alta Conversão' : 'Postagem de Autoridade'} para: "${userInput}".
+    const prompt = `VOCÃŠ Ã‰ O ARQUITETO ABIDOS V5 (Digital Twin). 
+                    Crie uma ${contentType === 'pages' ? 'Landing Page de Alta ConversÃ£o' : 'Postagem de Autoridade'} para: "${userInput}".
                     
                     ${VICTOR_IDENTIDADE}
                     
                     REGRAS DE CONSTRUTOR:
-                    1. Use HTML5 Semântico e Tailwind v4.
-                    2. NÃO gere variáveis redundantes como {{area_dinamica_extra}}.
-                    3. Use os blocos de conteúdo estratégico Abidos (Dor, Método, Autoridade).
-                    4. No bloco de Autoridade, cite: MESTRANDO pela UFU (conclusão 2028), CRP 09/012681 e Especialista em Hipnose Ericksoniana.
+                    1. Use HTML5 SemÃ¢ntico e Tailwind v4.
+                    2. NÃƒO gere variÃ¡veis redundantes como {{area_dinamica_extra}}.
+                    3. Use os blocos de conteÃºdo estratÃ©gico Abidos (Dor, MÃ©todo, Autoridade).
+                    4. No bloco de Autoridade, cite: MESTRANDO pela UFU (conclusÃ£o 2028), CRP 09/012681 e Especialista em Hipnose Ericksoniana.
                     
                     MOOD/VIBE: ${clima.nome_amigavel}
                     WHATSAPP GLOBAL: ${waNumber}
-                    LOCALIZAÇÃO: Goiânia.
+                    LOCALIZAÃ‡ÃƒO: GoiÃ¢nia.
                     
                     [ESTRUTURA FUNIL]
-                    - HERO: Título Magnífico + CTA WhatsApp Direto (${waNumber}).
-                    - MÉTODO ERICKSONIANO: Foco em Hipnose Clínica e Ciência.
+                    - HERO: TÃ­tulo MagnÃ­fico + CTA WhatsApp Direto (${waNumber}).
+                    - MÃ‰TODO ERICKSONIANO: Foco em Hipnose ClÃ­nica e CiÃªncia.
                     - FAQ: 3 perguntas fundamentais.
                     
                     Retorne APENAS o HTML INTERNO (Snippet) para o abidos-wrapper.`;
@@ -2756,22 +2756,22 @@ async function runConstructor(userInput, feedback = null, waNumber, moodId = "1_
 }
 
 async function runAbidosInspector(html) {
-    console.log(`🔍 [AGENTE 2] Auditando Estrutura e SEO (Abidos Gate)...`);
+    console.log(`ðŸ” [AGENTE 2] Auditando Estrutura e SEO (Abidos Gate)...`);
     const model = genAI.getGenerativeModel({ model: VISION_MODEL });
     let prompt = `
-        🔍 AGENTE 2: Inspetor Abidos (Auditor de Estrutura e SEO V4)
-        Papel: Você é um Auditor de SEO Técnico implacável e Revisor Semântico.
+        ðŸ” AGENTE 2: Inspetor Abidos (Auditor de Estrutura e SEO V4)
+        Papel: VocÃª Ã© um Auditor de SEO TÃ©cnico implacÃ¡vel e Revisor SemÃ¢ntico.
         Comportamento: Leia o HTML gerado e procure falhas contra a Hierarquia Abidos.
         
-        REGRAS DE VALIDAÇÃO (REPROVE SE FALTAR):
-        1. **HIGIENE DO CADEADO H1**: Não deve haver tag <h1> no código. Se houver, mande remover (o tema cuida do H1).
-        2. **FRAGMENTAÇÃO H2**: O conteúdo está dividido em subtópicos <h2> usando as palavras-chave? (Ex: Dor, Especialista, Serviços, FAQ).
-        3. **GRANULARIDADE H3**: Existem tópicos <h3> para quebrar objeções ou detalhar tratamentos?
-        4. **GOOGLE TAG OBRIGATÓRIA**: O código deve conter a etiqueta Google (G-B0DM24E5FS).
-        5. **ABIDOS-WRAPPER**: O código está encapsulado na div class="abidos-wrapper"?
-        6. **ALT TAGS**: As imagens possuem alt text estratégico e geo-localizado?
+        REGRAS DE VALIDAÃ‡ÃƒO (REPROVE SE FALTAR):
+        1. **HIGIENE DO CADEADO H1**: NÃ£o deve haver tag <h1> no cÃ³digo. Se houver, mande remover (o tema cuida do H1).
+        2. **FRAGMENTAÃ‡ÃƒO H2**: O conteÃºdo estÃ¡ dividido em subtÃ³picos <h2> usando as palavras-chave? (Ex: Dor, Especialista, ServiÃ§os, FAQ).
+        3. **GRANULARIDADE H3**: Existem tÃ³picos <h3> para quebrar objeÃ§Ãµes ou detalhar tratamentos?
+        4. **GOOGLE TAG OBRIGATÃ“RIA**: O cÃ³digo deve conter a etiqueta Google (G-B0DM24E5FS).
+        5. **ABIDOS-WRAPPER**: O cÃ³digo estÃ¡ encapsulado na div class="abidos-wrapper"?
+        6. **ALT TAGS**: As imagens possuem alt text estratÃ©gico e geo-localizado?
 
-        Output Exigido (JSON APENAS): {"status": "PASSOU"} OU {"status": "REPROVOU", "motivo": "Coloque a seção de dor em um <h2> e verifique a falta de alt tags geo-localizadas"}.
+        Output Exigido (JSON APENAS): {"status": "PASSOU"} OU {"status": "REPROVOU", "motivo": "Coloque a seÃ§Ã£o de dor em um <h2> e verifique a falta de alt tags geo-localizadas"}.
         
         HTML PARA AUDITORIA:
         ${html}
@@ -2785,17 +2785,17 @@ async function runAbidosInspector(html) {
 }
 
 async function runClinicalInspector(html) {
-    console.log(`🧠 [AGENTE 3] Auditando E-E-A-T e Ética (Clinical Gate)...`);
+    console.log(`ðŸ§  [AGENTE 3] Auditando E-E-A-T e Ã‰tica (Clinical Gate)...`);
     const model = genAI.getGenerativeModel({ model: VISION_MODEL });
     let prompt = `
-        🧠 AGENTE 3: Inspetor Clínico (Auditor de E-E-A-T e Ética YMYL)
-        Papel: Você é um Revisor do Conselho Federal de Psicologia (CFP) e especialista nas diretrizes YMYL do Google. Você não escreve código, apenas audita o texto gerado.
-        Comportamento: Leia toda a copy (texto) embutida no HTML. O nicho é saúde mental sensível.
-        Regras de Validação:
-        1. Existe alguma promessa de "cura rápida", "garantia de resultado" ou jargão de marketing agressivo como "Compre agora"? (Se sim, REPROVOU).
-        2. A autoridade E-E-A-T do Dr. Victor Lawrence (CRP 09/012681, Mestrando em Psicologia pela UFU) está explicitamente citada? (Se não, REPROVOU).
-        3. A linguagem é empática e gera baixa fricção cognitiva? (Se não, REPROVOU).
-        Output Exigido: Responda APENAS no formato JSON: {"status": "PASSOU"} OU {"status": "REPROVOU", "motivo": "Substitua a frase X por um tom mais clínico e acolhedor"}.
+        ðŸ§  AGENTE 3: Inspetor ClÃ­nico (Auditor de E-E-A-T e Ã‰tica YMYL)
+        Papel: VocÃª Ã© um Revisor do Conselho Federal de Psicologia (CFP) e especialista nas diretrizes YMYL do Google. VocÃª nÃ£o escreve cÃ³digo, apenas audita o texto gerado.
+        Comportamento: Leia toda a copy (texto) embutida no HTML. O nicho Ã© saÃºde mental sensÃ­vel.
+        Regras de ValidaÃ§Ã£o:
+        1. Existe alguma promessa de "cura rÃ¡pida", "garantia de resultado" ou jargÃ£o de marketing agressivo como "Compre agora"? (Se sim, REPROVOU).
+        2. A autoridade E-E-A-T do Dr. Victor Lawrence (CRP 09/012681, Mestrando em Psicologia pela UFU) estÃ¡ explicitamente citada? (Se nÃ£o, REPROVOU).
+        3. A linguagem Ã© empÃ¡tica e gera baixa fricÃ§Ã£o cognitiva? (Se nÃ£o, REPROVOU).
+        Output Exigido: Responda APENAS no formato JSON: {"status": "PASSOU"} OU {"status": "REPROVOU", "motivo": "Substitua a frase X por um tom mais clÃ­nico e acolhedor"}.
         
         HTML PARA AUDITORIA:
         ${html}
@@ -2809,17 +2809,17 @@ async function runClinicalInspector(html) {
 }
 
 async function runDesignInspector(html) {
-    console.log(`🎨 [AGENTE 4] Auditando UI/UX Tailwind (Design Gate)...`);
+    console.log(`ðŸŽ¨ [AGENTE 4] Auditando UI/UX Tailwind (Design Gate)...`);
     const model = genAI.getGenerativeModel({ model: VISION_MODEL });
     let prompt = `
-        🎨 AGENTE 4: Inspetor de Design (Auditor de UI/UX Tailwind)
-        Papel: Você é um Engenheiro de Neuromarketing Visual especializado em Tailwind v4. Você não cria design, apenas revisa.
-        Comportamento: Leia as classes Tailwind no código para garantir que o Design System do Método Abidos foi respeitado.
-        Regras de Validação:
-        1. O Glassmorphism está aplicado corretamente com a fórmula de backdrop-filter? (Se não, REPROVOU).
-        2. Os textos em parágrafos usam font-normal (peso 400) para evitar cansaço visual? (Se não, REPROVOU).
-        3. Existe risco de colisão mobile (ex: botões com textos gigantes que quebram a linha)? (Se sim, REPROVOU).
-        Output Exigido: Responda APENAS no formato JSON: {"status": "PASSOU"} OU {"status": "REPROVOU", "motivo": "Adicione a classe '!whitespace-nowrap' no botão Y"}.
+        ðŸŽ¨ AGENTE 4: Inspetor de Design (Auditor de UI/UX Tailwind)
+        Papel: VocÃª Ã© um Engenheiro de Neuromarketing Visual especializado em Tailwind v4. VocÃª nÃ£o cria design, apenas revisa.
+        Comportamento: Leia as classes Tailwind no cÃ³digo para garantir que o Design System do MÃ©todo Abidos foi respeitado.
+        Regras de ValidaÃ§Ã£o:
+        1. O Glassmorphism estÃ¡ aplicado corretamente com a fÃ³rmula de backdrop-filter? (Se nÃ£o, REPROVOU).
+        2. Os textos em parÃ¡grafos usam font-normal (peso 400) para evitar cansaÃ§o visual? (Se nÃ£o, REPROVOU).
+        3. Existe risco de colisÃ£o mobile (ex: botÃµes com textos gigantes que quebram a linha)? (Se sim, REPROVOU).
+        Output Exigido: Responda APENAS no formato JSON: {"status": "PASSOU"} OU {"status": "REPROVOU", "motivo": "Adicione a classe '!whitespace-nowrap' no botÃ£o Y"}.
 
         HTML PARA AUDITORIA:
         ${html}
@@ -2833,7 +2833,7 @@ async function runDesignInspector(html) {
 }
 
 /**
- * ESTEIRA DE PRODUÇÃO UNIFICADA (MÁQUINA DE ESTADOS)
+ * ESTEIRA DE PRODUÃ‡ÃƒO UNIFICADA (MÃQUINA DE ESTADOS)
  * Orquestra o Construtor e os 3 Inspetores com loop de retentativa.
  */
 async function runProductionLine(userInput, feedback, waNumber, moodId, contentType, siloContext = "") {
@@ -2842,14 +2842,14 @@ async function runProductionLine(userInput, feedback, waNumber, moodId, contentT
     const maxRetries = 3;
     let attempts = 0;
 
-    reportAgentStatus("NeuroEngine", "Iniciando orquestração da esteira...", "", false);
+    reportAgentStatus("NeuroEngine", "Iniciando orquestraÃ§Ã£o da esteira...", "", false);
 
     while (attempts < maxRetries) {
         attempts++;
         console.log("RETRY [ESTEIRA]: Tentativa " + attempts + "/" + maxRetries + " (" + contentType + ")");
         
         // 1. Construtor
-        reportAgentStatus("Gerador", `Construindo versão ${attempts}...`, "", false);
+        reportAgentStatus("Gerador", `Construindo versÃ£o ${attempts}...`, "", false);
         let extendedPrompt = userInput;
         if (siloContext) extendedPrompt += `\n\n[CONTEXTO DE SILO ABIDOS]: Este item faz parte de um cluster. Vincule-o semanticamente e crie links contextuais para: ${siloContext}`;
 
@@ -2865,29 +2865,29 @@ async function runProductionLine(userInput, feedback, waNumber, moodId, contentT
         reportAgentStatus("Abidos", "Validando SEO e links...", "", false);
         const abidosResult = await runAbidosInspector(currentHtml);
         if (abidosResult.status === "REPROVOU") {
-            console.warn(`❌ [ABIDOS REPROVOU] ${abidosResult.motivo}`);
+            console.warn(`âŒ [ABIDOS REPROVOU] ${abidosResult.motivo}`);
             reportAgentStatus("Abidos", "SEO Reprovado: " + abidosResult.motivo, "", false);
             finalFeedback = `AGENTE ABIDOS REPROVOU: ${abidosResult.motivo}`;
             continue;
         }
         reportAgentStatus("Abidos", "SEO Validado.", "", true);
 
-        // 3. Inspetor Clínico (Compliance/Ética)
-        reportAgentStatus("Clínico", "Auditando Ética e Tom de Voz...", "", false);
+        // 3. Inspetor ClÃ­nico (Compliance/Ã‰tica)
+        reportAgentStatus("ClÃ­nico", "Auditando Ã‰tica e Tom de Voz...", "", false);
         const clinicalResult = await runClinicalInspector(currentHtml);
         if (clinicalResult.status === "REPROVOU") {
-            console.warn(`❌ [CLÍNICO REPROVOU] ${clinicalResult.motivo}`);
-            reportAgentStatus("Clínico", "Ética Reprovada: " + clinicalResult.motivo, "", false);
-            finalFeedback = `AGENTE CLÍNICO REPROVOU: ${clinicalResult.motivo}`;
+            console.warn(`âŒ [CLÃNICO REPROVOU] ${clinicalResult.motivo}`);
+            reportAgentStatus("ClÃ­nico", "Ã‰tica Reprovada: " + clinicalResult.motivo, "", false);
+            finalFeedback = `AGENTE CLÃNICO REPROVOU: ${clinicalResult.motivo}`;
             continue;
         }
-        reportAgentStatus("Clínico", "Conformidade Aprovada.", "", true);
+        reportAgentStatus("ClÃ­nico", "Conformidade Aprovada.", "", true);
 
         // 4. Inspetor Design (Visual)
-        reportAgentStatus("Design", "Refinando estética mobile-first...", "", false);
+        reportAgentStatus("Design", "Refinando estÃ©tica mobile-first...", "", false);
         const designResult = await runDesignInspector(currentHtml);
         if (designResult.status === "REPROVOU") {
-            console.warn(`❌ [DESIGN REPROVOU] ${designResult.motivo}`);
+            console.warn(`âŒ [DESIGN REPROVOU] ${designResult.motivo}`);
             reportAgentStatus("Design", "Layout Reprovado: " + designResult.motivo, "", false);
             finalFeedback = `AGENTE DESIGN REPROVOU: ${designResult.motivo}`;
             continue;
@@ -2896,23 +2896,23 @@ async function runProductionLine(userInput, feedback, waNumber, moodId, contentT
 
         // 5. Sucesso
         const diff = `Aprovado na tentativa ${attempts}. Auditores: OK.`;
-        reportAgentStatus("NeuroEngine", "Decisão Final Tomada. Entregando para o Canvas.", "", true);
+        reportAgentStatus("NeuroEngine", "DecisÃ£o Final Tomada. Entregando para o Canvas.", "", true);
         return { html: currentHtml, diff: diff };
     }
 
-    reportAgentStatus("NeuroEngine", "Falha após 3 tentativas.", "A esteira não conseguiu satisfazer todos os auditores.", true);
-    throw new Error("A esteira de produção falhou em validar o conteúdo após 3 tentativas.");
+    reportAgentStatus("NeuroEngine", "Falha apÃ³s 3 tentativas.", "A esteira nÃ£o conseguiu satisfazer todos os auditores.", true);
+    throw new Error("A esteira de produÃ§Ã£o falhou em validar o conteÃºdo apÃ³s 3 tentativas.");
 }
 
 // ==============================================================================
-// 7. MARKETING LAB & ORQUESTRAÇÃO
+// 7. MARKETING LAB & ORQUESTRAÃ‡ÃƒO
 // ==============================================================================
 
 const ANALYTICS_CACHE_FILE = path.join(__dirname, 'analytics_cache.json');
 const ANALYTICS_HISTORY_FILE = path.join(__dirname, 'analytics_history.json');
 
 /**
- * 📜 REGISTRO DE HISTÓRICO: Salva métricas principais dia a dia para análise de tendência.
+ * ðŸ“œ REGISTRO DE HISTÃ“RICO: Salva mÃ©tricas principais dia a dia para anÃ¡lise de tendÃªncia.
  */
 function saveToHistory(newData) {
     try {
@@ -2922,12 +2922,12 @@ function saveToHistory(newData) {
         }
         const today = new Date().toISOString().split('T')[0];
         if (!history[today]) history[today] = {};
-        // Merge de métricas (mantém o que já tinha no dia, como PSI, e adiciona GA4)
+        // Merge de mÃ©tricas (mantÃ©m o que jÃ¡ tinha no dia, como PSI, e adiciona GA4)
         history[today] = { ...history[today], ...newData, last_update: new Date().toISOString() };
         fs.writeFileSync(ANALYTICS_HISTORY_FILE, JSON.stringify(history, null, 2));
-        console.log(`📜 [HISTORY] Inteligência de Dados: Registro consolidado para ${today}.`);
+        console.log(`ðŸ“œ [HISTORY] InteligÃªncia de Dados: Registro consolidado para ${today}.`);
     } catch (e) {
-        console.error("❌ [HISTORY] Erro ao persistir histórico:", e.message);
+        console.error("âŒ [HISTORY] Erro ao persistir histÃ³rico:", e.message);
     }
 }
 
@@ -2946,31 +2946,31 @@ app.get('/api/marketing/audit', async (req, res) => {
         // 0. Verifica Cache (Persistence Mode)
         if (!force && fs.existsSync(ANALYTICS_CACHE_FILE)) {
             const cached = JSON.parse(fs.readFileSync(ANALYTICS_CACHE_FILE, 'utf8'));
-            console.log("💾 [MARKETING] Carregando dados persistentes do Disco (Estado Anterior).");
+            console.log("ðŸ’¾ [MARKETING] Carregando dados persistentes do Disco (Estado Anterior).");
             return res.json(cached);
         }
 
         let data;
 
         if (!analyticsClient || !process.env.GA4_PROPERTY_ID) {
-            console.log(`📈 [MARKETING] Usando dados Mock (Analytics não configurado no .env)`);
+            console.log(`ðŸ“ˆ [MARKETING] Usando dados Mock (Analytics nÃ£o configurado no .env)`);
             data = {
                 visitors: 842, 
                 leads: 31,
                 active_users: 3,
                 abidos_score: "92/100",
                 budget_utilization: "N/A",
-                top_performing_stag: "Hipnose Clínica Goiânia",
+                top_performing_stag: "Hipnose ClÃ­nica GoiÃ¢nia",
                 critica_loss: "0% (Silos Protegidos)",
                 recommendations: [
                     { type: "SEO", theme: "Configurar Credenciais GA4", reason: "Falta de arquivo JSON no .env" }
                 ],
-                insights: `O ecossistema está saudável, mas a ativação do GA4 real permitiria ao Dr. Victor visualizar o impacto direto de sua autoridade clínica nas conversões de Goiânia.`
+                insights: `O ecossistema estÃ¡ saudÃ¡vel, mas a ativaÃ§Ã£o do GA4 real permitiria ao Dr. Victor visualizar o impacto direto de sua autoridade clÃ­nica nas conversÃµes de GoiÃ¢nia.`
             };
         } else {
-            console.log(`📡 [MARKETING] Buscando dados reais do GA4 (Property: ${process.env.GA4_PROPERTY_ID})...`);
+            console.log(`ðŸ“¡ [MARKETING] Buscando dados reais do GA4 (Property: ${process.env.GA4_PROPERTY_ID})...`);
 
-            // 1. Busca Visão Geral e Estratégica (últimos 30 dias)
+            // 1. Busca VisÃ£o Geral e EstratÃ©gica (Ãºltimos 30 dias)
             const [response] = await analyticsClient.runReport({
                 property: `properties/${process.env.GA4_PROPERTY_ID}`,
                 dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
@@ -2985,7 +2985,7 @@ app.get('/api/marketing/audit', async (req, res) => {
                 ],
             });
 
-            // 2. Busca usuários ativos agora (Real-time)
+            // 2. Busca usuÃ¡rios ativos agora (Real-time)
             const [realtimeResponse] = await analyticsClient.runRealtimeReport({
                 property: `properties/${process.env.GA4_PROPERTY_ID}`,
                 dimensions: [{ name: 'city' }],
@@ -2998,7 +2998,7 @@ app.get('/api/marketing/audit', async (req, res) => {
             let totalOrganicClicks = 0;
             let avgEngagement = 0;
             let totalEvents = 0;
-            let topChannel = "Direto / Orgânico";
+            let topChannel = "Direto / OrgÃ¢nico";
 
             if (response && response.rows) {
                 let maxSessions = 0;
@@ -3036,7 +3036,7 @@ app.get('/api/marketing/audit', async (req, res) => {
                 top_performing_stag: topChannel,
                 critica_loss: "0% (Silos Protegidos)",
                 recommendations: [], 
-                insights: `Cruzamento de ${totalEvents} eventos e ${totalOrganicClicks} cliques orgânicos capturados nas últimas 4 semanas.`,
+                insights: `Cruzamento de ${totalEvents} eventos e ${totalOrganicClicks} cliques orgÃ¢nicos capturados nas Ãºltimas 4 semanas.`,
                 last_sync: new Date().toISOString()
             };
         }
@@ -3051,7 +3051,7 @@ app.get('/api/marketing/audit', async (req, res) => {
         });
         res.json(data);
     } catch (e) {
-        console.error("❌ [MARKETING] Erro Crítico GA4:", e.message);
+        console.error("âŒ [MARKETING] Erro CrÃ­tico GA4:", e.message);
         res.json({
             visitors: 0, 
             sessions: 0,
@@ -3059,18 +3059,18 @@ app.get('/api/marketing/audit', async (req, res) => {
             active_now: 0,
             abidos_score: "0/100",
             budget_utilization: "N/A",
-            top_performing_stag: "INDISPONÍVEL",
+            top_performing_stag: "INDISPONÃVEL",
             critica_loss: "ALERTA: FONTE DE DADOS OFFLINE",
             recommendations: [
-                { type: "CRÍTICO", theme: "Falha de Conexão", reason: "O sistema não conseguiu se comunicar com o Google Analytics: " + e.message }
+                { type: "CRÃTICO", theme: "Falha de ConexÃ£o", reason: "O sistema nÃ£o conseguiu se comunicar com o Google Analytics: " + e.message }
             ],
-            insights: "Sincronizando: O motor de telemetria está processando as métricas do ecossistema. Re-sincronize em 15 segundos."
+            insights: "Sincronizando: O motor de telemetria estÃ¡ processando as mÃ©tricas do ecossistema. Re-sincronize em 15 segundos."
         });
     }
 });
 
 /**
- * ⚡ PAGESPEED INSIGHTS (PSI) - Auditoria de Performance Core Web Vitals
+ * âš¡ PAGESPEED INSIGHTS (PSI) - Auditoria de Performance Core Web Vitals
  */
 app.get('/api/marketing/psi', async (req, res) => {
     try {
@@ -3083,23 +3083,23 @@ app.get('/api/marketing/psi', async (req, res) => {
              const lastAudit = cache.psi ? new Date(cache.psi.last_audit).getTime() : 0;
              const isExpired = (Date.now() - lastAudit) > cacheMaxAge;
 
-             // Se a última tentativa deu "Quota Exceeded" nos últimos 60 min, não tenta de novo
+             // Se a Ãºltima tentativa deu "Quota Exceeded" nos Ãºltimos 60 min, nÃ£o tenta de novo
              if (cache.psi_quota_exceeded_at) {
                  const quotaErrTime = new Date(cache.psi_quota_exceeded_at).getTime();
                  if (Date.now() - quotaErrTime < 60 * 60 * 1000) {
-                     console.log("🚫 [PSI] Pulando auditoria real devido a bloqueio de cota recente (Caching Ativo).");
+                     console.log("ðŸš« [PSI] Pulando auditoria real devido a bloqueio de cota recente (Caching Ativo).");
                      return res.json(cache.psi || { error: "Cota Google Excedida. Tente em 60 min." });
                  }
              }
 
              if (!force && cache.psi && !isExpired) {
-                 console.log("💾 [PSI] Carregando auditoria de Safe-Cache (V5.1).");
+                 console.log("ðŸ’¾ [PSI] Carregando auditoria de Safe-Cache (V5.1).");
                  return res.json(cache.psi);
              }
         }
 
         const targetUrl = process.env.PSI_TARGET_URL || "https://instituto-ops.com.br"; 
-        console.log(`⚡ [PSI] Auditoria Profunda (CrUX + Lighthouse) para ${targetUrl}...`);
+        console.log(`âš¡ [PSI] Auditoria Profunda (CrUX + Lighthouse) para ${targetUrl}...`);
 
         const categories = ['PERFORMANCE', 'ACCESSIBILITY', 'BEST_PRACTICES', 'SEO'];
         const psiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&${categories.map(c => `category=${c}`).join('&')}`;
@@ -3128,7 +3128,7 @@ app.get('/api/marketing/psi', async (req, res) => {
             tbt: lh?.audits?.['total-blocking-time']?.displayValue || "N/A",
             cls: lh?.audits?.['cumulative-layout-shift']?.displayValue || "N/A",
             
-            // Sugestões de Impacto (Oportunidades com maior ganho de MS)
+            // SugestÃµes de Impacto (Oportunidades com maior ganho de MS)
             opportunities: Object.values(lh?.audits || {})
                 .filter(audit => audit.details?.type === 'opportunity' && (audit.score || 0) < 0.9)
                 .sort((a, b) => (b.details?.overallSavingsMs || 0) - (a.details?.overallSavingsMs || 0))
@@ -3156,7 +3156,7 @@ app.get('/api/marketing/psi', async (req, res) => {
         res.json(result);
 
     } catch (e) {
-        console.error("❌ [PSI] Erro na Auditoria:", e.message);
+        console.error("âŒ [PSI] Erro na Auditoria:", e.message);
         
         // Se for erro de cota, persiste para evitar spam
         if (e.message.includes('Quota exceeded') && fs.existsSync(ANALYTICS_CACHE_FILE)) {
@@ -3170,28 +3170,28 @@ app.get('/api/marketing/psi', async (req, res) => {
 });
 
 /**
- * 🤖 AGENTE ANALYTICS: Gera sugestões baseadas nos dados reais do GA4
+ * ðŸ¤– AGENTE ANALYTICS: Gera sugestÃµes baseadas nos dados reais do GA4
  */
 app.post('/api/analytics/suggestions', async (req, res) => {
     try {
         const { analyticsData } = req.body;
-        console.log(`🧠 [AGENTE ANALYTICS] Gerando sugestões estratégicas...`);
+        console.log(`ðŸ§  [AGENTE ANALYTICS] Gerando sugestÃµes estratÃ©gicas...`);
 
         const pSuggestions = `
-        Você é o "Agente Analytics", especialista em Growth Hacking e Funil Abidos.
+        VocÃª Ã© o "Agente Analytics", especialista em Growth Hacking e Funil Abidos.
         Analise os dados reais do Google Analytics 4 abaixo:
         
         DADOS:
         - Visitantes (30d): ${analyticsData.visitors}
-        - Conversões (30d): ${analyticsData.leads}
-        - Usuários Ativos Agora: ${analyticsData.active_now}
+        - ConversÃµes (30d): ${analyticsData.leads}
+        - UsuÃ¡rios Ativos Agora: ${analyticsData.active_now}
         
         SUA TAREFA:
-        Gere 3 sugestões acionáveis para o Dr. Victor Lawrence melhorar o desempenho do site.
-        Use uma linguagem voltada para negócios e autoridade clínica.
+        Gere 3 sugestÃµes acionÃ¡veis para o Dr. Victor Lawrence melhorar o desempenho do site.
+        Use uma linguagem voltada para negÃ³cios e autoridade clÃ­nica.
         
         RETORNE EM JSON:
-        {"suggestions": [{"title": "Nome da Sugestão", "description": "Explicação técnica", "impact": "Alto/Médio/Baixo"}]}
+        {"suggestions": [{"title": "Nome da SugestÃ£o", "description": "ExplicaÃ§Ã£o tÃ©cnica", "impact": "Alto/MÃ©dio/Baixo"}]}
         `;
 
         const model = getAIModel(req.body.modelType);
@@ -3201,14 +3201,14 @@ app.post('/api/analytics/suggestions', async (req, res) => {
         
         let jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
         
-        // Extração Robusta de JSON
+        // ExtraÃ§Ã£o Robusta de JSON
         const match = jsonStr.match(/\{[\s\S]*\}/);
         if (match) jsonStr = match[0];
 
         try {
             const parsed = JSON.parse(jsonStr);
             
-            // Persistência: Unifica sugestões no cache global
+            // PersistÃªncia: Unifica sugestÃµes no cache global
             if (fs.existsSync(ANALYTICS_CACHE_FILE)) {
                 let cache = JSON.parse(fs.readFileSync(ANALYTICS_CACHE_FILE, 'utf8'));
                 cache.suggestions = parsed.suggestions;
@@ -3217,19 +3217,19 @@ app.post('/api/analytics/suggestions', async (req, res) => {
 
             res.json(parsed);
         } catch (parseErr) {
-            console.error("❌ [AGENTE ANALYTICS] Falha ao parsear JSON IA:", jsonStr);
-            res.json({ suggestions: [{ title: "Falha de Processamento", description: "A IA não conseguiu estruturar as sugestões. Verifique os logs do servidor.", impact: "N/A" }] });
+            console.error("âŒ [AGENTE ANALYTICS] Falha ao parsear JSON IA:", jsonStr);
+            res.json({ suggestions: [{ title: "Falha de Processamento", description: "A IA nÃ£o conseguiu estruturar as sugestÃµes. Verifique os logs do servidor.", impact: "N/A" }] });
         }
     } catch (e) {
-        console.warn("⚠️ [AGENTE ANALYTICS] Falha na IA:", e.message);
+        console.warn("âš ï¸ [AGENTE ANALYTICS] Falha na IA:", e.message);
         
-        // Tenta retornar sugestões cacheadas se a IA falhar
+        // Tenta retornar sugestÃµes cacheadas se a IA falhar
         if (fs.existsSync(ANALYTICS_CACHE_FILE)) {
              const cache = JSON.parse(fs.readFileSync(ANALYTICS_CACHE_FILE, 'utf8'));
              if (cache.suggestions) return res.json({ suggestions: cache.suggestions });
         }
 
-        res.json({ suggestions: [{ title: "Sugestões Indisponíveis", description: "O motor de análise estratégica está offline.", impact: "N/A" }] });
+        res.json({ suggestions: [{ title: "SugestÃµes IndisponÃ­veis", description: "O motor de anÃ¡lise estratÃ©gica estÃ¡ offline.", impact: "N/A" }] });
     }
 });
 
@@ -3241,8 +3241,8 @@ app.post('/api/chat', upload.single('screenshot'), async (req, res) => {
         const selectedMood = moodId || '1_introspeccao_profunda';
         const contentType = type || 'pages';
 
-        console.log(`\n🏗️ [STUDIO-CONSTRUCTION] Novo Comando: "${userInput.substring(0, 30)}..." (Model: ${modelType || 'default'})`);
-        reportAgentStatus("Agente Construtor", "Sintetizando DNA clínico e estruturando rascunho...", "", false);
+        console.log(`\nðŸ—ï¸ [STUDIO-CONSTRUCTION] Novo Comando: "${userInput.substring(0, 30)}..." (Model: ${modelType || 'default'})`);
+        reportAgentStatus("Agente Construtor", "Sintetizando DNA clÃ­nico e estruturando rascunho...", "", false);
 
         // REGRA DE OURO: No AI Studio, apenas o Construtor trabalha.
         const html = await runConstructor(userInput, null, waNumber, selectedMood, contentType, modelType);
@@ -3250,7 +3250,7 @@ app.post('/api/chat', upload.single('screenshot'), async (req, res) => {
         reportAgentStatus("Agente Construtor", "Rascunho finalizado com sucesso.", "", true);
         res.json({ reply: html });
     } catch (e) { 
-        console.error("❌ [CHAT-ESTEIRA ERROR]", e.message);
+        console.error("âŒ [CHAT-ESTEIRA ERROR]", e.message);
         res.status(500).json({ error: e.message }); 
     }
 });
@@ -3262,7 +3262,7 @@ app.post('/api/blueprint', upload.none(), async (req, res) => {
         const selectedMood = moodId || '1_introspeccao_profunda';
         const contentType = type || 'pages';
         
-        console.log(`\n📐 [BLUEPRINT] Construindo rascunho acelerado: "${theme}"`);
+        console.log(`\nðŸ“ [BLUEPRINT] Construindo rascunho acelerado: "${theme}"`);
         reportAgentStatus("Agente Construtor", "Orquestrando blueprint estrutural...", "", false);
 
         const html = await runConstructor(`Criar blueprint completo para o tema: ${theme}`, null, waNumber, selectedMood, contentType, req.body.modelType || 'flash');
@@ -3270,7 +3270,7 @@ app.post('/api/blueprint', upload.none(), async (req, res) => {
         reportAgentStatus("Agente Construtor", "Blueprint entregue.", "", true);
         res.json({ reply: html });
     } catch (e) { 
-        console.error("❌ [BLUEPRINT ERROR]", e.message);
+        console.error("âŒ [BLUEPRINT ERROR]", e.message);
         res.status(500).json({ error: e.message }); 
     }
 });
@@ -3287,7 +3287,7 @@ app.post('/api/audit', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 🚀 [FASE 5] ENDPOINTS NEURO-TRAINING (DNA CLONE & STYLE MEMORY)
+// ðŸš€ [FASE 5] ENDPOINTS NEURO-TRAINING (DNA CLONE & STYLE MEMORY)
 app.get('/api/neuro-training/memory', (req, res) => {
     try {
         res.json(getVictorStyle());
@@ -3320,11 +3320,11 @@ app.post('/api/neuro-training/memory/clear', (req, res) => {
             insights_history: [],
             scientific_vault: { 
                 nota: "Sistema resetado em " + new Date().toLocaleString('pt-BR'),
-                status: "Linguística Pura Ativada"
+                status: "LinguÃ­stica Pura Ativada"
             }
         };
         fs.writeFileSync(MEMORY_FILE_PATH, JSON.stringify(memory, null, 2));
-        console.log("🧹 [NEURO-MEMORY] Memória de Estilo limpa com sucesso.");
+        console.log("ðŸ§¹ [NEURO-MEMORY] MemÃ³ria de Estilo limpa com sucesso.");
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -3333,8 +3333,8 @@ app.post('/api/neuro-training/memory/clear', (req, res) => {
 
 app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, res) => {
     try {
-        if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY não configurada no servidor.");
-        if (!req.file) throw new Error("Aúdio não recebido.");
+        if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY nÃ£o configurada no servidor.");
+        if (!req.file) throw new Error("AÃºdio nÃ£o recebido.");
         const modelId = (req.body.modelType && req.body.modelType.includes('gemini')) ? req.body.modelType : VISION_MODEL;
         const model = genAI.getGenerativeModel({ model: modelId });
         
@@ -3344,7 +3344,7 @@ app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, 
         ]);
 
         const extracted = extractJSON(result.response.text());
-        if (!extracted) throw new Error("IA falhou na síntese de DNA via Áudio.");
+        if (!extracted) throw new Error("IA falhou na sÃ­ntese de DNA via Ãudio.");
 
         if (extracted.regras_extraidas) {
             await salvarRegrasDeEstilo(extracted.regras_extraidas);
@@ -3352,14 +3352,14 @@ app.post('/api/neuro-training/analyze-dna', upload.single('audio'), async (req, 
 
         res.json({ success: true, insights: extracted.regras_extraidas, summary: cleanClinicalData(extracted.insight) });
     } catch (e) {
-        console.error("❌ [DNA ERROR]", e);
+        console.error("âŒ [DNA ERROR]", e);
         res.status(500).json({ error: e.message });
     }
 });
 
 app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) => {
     try {
-        if (!req.file) throw new Error("Arquivo não recebido.");
+        if (!req.file) throw new Error("Arquivo nÃ£o recebido.");
         let text = "";
         if (req.file.mimetype === 'application/pdf') {
             const data = await pdf(req.file.buffer);
@@ -3377,22 +3377,22 @@ app.post('/api/neuro-training/upload', upload.single('file'), async (req, res) =
 
         const completePrompt = `${PROMPT_TREINAMENTO_ISOLADO}
 
-CONTEXTO: O PROFISSIONAL (Dr. Victor Lawrence) é o PARTICIPANTE 2 (P2). 
-O PARTICIPANTE 1 (P1) é o CLIENTE/PACIENTE.
+CONTEXTO: O PROFISSIONAL (Dr. Victor Lawrence) Ã© o PARTICIPANTE 2 (P2). 
+O PARTICIPANTE 1 (P1) Ã© o CLIENTE/PACIENTE.
 IGNORE P1 e extraia a sintaxe exclusivamente de P2.
 
 TEXTO: "${text.substring(0, 8000).replace(/"/g, "'")}"`;
 
         const result = await targetModel.generateContent(completePrompt);
         const extracted = extractJSON(result.response.text());
-        if (!extracted) throw new Error("IA falhou na análise de lastro.");
+        if (!extracted) throw new Error("IA falhou na anÃ¡lise de lastro.");
 
         if (extracted.regras_extraidas) {
             await salvarRegrasDeEstilo(extracted.regras_extraidas);
         }
         res.json({ success: true, insights: extracted.regras_extraidas, summary: cleanClinicalData(extracted.feedback_analysis) });
     } catch (e) {
-        console.error("❌ [UPLOAD ERROR]", e);
+        console.error("âŒ [UPLOAD ERROR]", e);
         res.status(500).json({ error: e.message });
     }
 });
@@ -3405,10 +3405,10 @@ const { execSync } = require('child_process');
 app.post('/api/content/publish-direct', async (req, res) => {
     try {
         const { type, title, content, status, slug, metaTitle, metaDesc } = req.body;
-        console.log(`🚀 [PUBLISH PROXY] Iniciando deploy do tipo ${type}: "${title}"`);
+        console.log(`ðŸš€ [PUBLISH PROXY] Iniciando deploy do tipo ${type}: "${title}"`);
 
         const payload = {
-            title: title || "Sem Título",
+            title: title || "Sem TÃ­tulo",
             content: content || "",
             status: status || "draft",
             slug: slug || "",
@@ -3441,7 +3441,7 @@ app.post('/api/content/publish-direct', async (req, res) => {
             // Auditoria em background
             (async () => {
                 try {
-                    const auditResult = await runProductionLine(`Auditar conteúdo salvo: ${title}`, payload.content, "62991545295", "1_introspeccao_profunda", type);
+                    const auditResult = await runProductionLine(`Auditar conteÃºdo salvo: ${title}`, payload.content, "62991545295", "1_introspeccao_profunda", type);
                     if (auditResult) {
                         await callWP('POST', `/${endpoint}/${postId}`, {
                             meta: {
@@ -3451,11 +3451,11 @@ app.post('/api/content/publish-direct', async (req, res) => {
                             }
                         });
                     }
-                } catch (auditErr) { console.error(`🚨 [AUDIT-ERROR]:`, auditErr.message); }
+                } catch (auditErr) { console.error(`ðŸš¨ [AUDIT-ERROR]:`, auditErr.message); }
             })();
 
         } else {
-            res.status(500).json({ error: "Resposta inválida do WordPress." });
+            res.status(500).json({ error: "Resposta invÃ¡lida do WordPress." });
         }
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -3463,7 +3463,7 @@ app.post('/api/content/publish-direct', async (req, res) => {
 });
 
 // ==============================================================================
-// 🆕 2. PUBLICAR NO VERCEL + NEXT.JS (PROTOCOLO v2.0 - MODERNO)
+// ðŸ†• 2. PUBLICAR NO VERCEL + NEXT.JS (PROTOCOLO v2.0 - MODERNO)
 // ==============================================================================
 
 app.post('/api/content/publish-vercel', async (req, res) => {
@@ -3472,7 +3472,7 @@ app.post('/api/content/publish-vercel', async (req, res) => {
         const sitePath = process.env.NEXTJS_SITE_PATH;
 
         if (!sitePath || !fs.existsSync(sitePath)) {
-            throw new Error("Caminho do repositório Next.js não configurado.");
+            throw new Error("Caminho do repositÃ³rio Next.js nÃ£o configurado.");
         }
 
         const blogPath = path.join(sitePath, 'src/app/blog', slug);
@@ -3508,18 +3508,18 @@ export default function BlogPage() {
 }
 
 // ==========================================
-// 🧬 NEUROENGINE DATA BLOCK
+// ðŸ§¬ NEUROENGINE DATA BLOCK
 // ==========================================
 export const neuroEngineData = ${JSON.stringify(neuroEngineData || {}, null, 2)};
 `;
 
         fs.writeFileSync(path.join(blogPath, 'page.tsx'), pageTemplate);
 
-        // Deploy Automático via Git Push
+        // Deploy AutomÃ¡tico via Git Push
         try {
             execSync(`git add . && git commit -m "feat: publish post ${slug}" && git push`, { cwd: sitePath });
-            console.log(`✅ Deploy Vercel disparado para: ${slug}`);
-        } catch (gitErr) { console.warn("Git Push ignorado (provavelmente sem mudanças)."); }
+            console.log(`âœ… Deploy Vercel disparado para: ${slug}`);
+        } catch (gitErr) { console.warn("Git Push ignorado (provavelmente sem mudanÃ§as)."); }
 
         res.json({ 
             success: true, 
@@ -3532,51 +3532,51 @@ export const neuroEngineData = ${JSON.stringify(neuroEngineData || {}, null, 2)}
 });
 
 // =========================================================
-// ROTA: ORQUESTRAÇÃO DE CLUSTER / SILO NEURAL (Usa o PRO)
+// ROTA: ORQUESTRAÃ‡ÃƒO DE CLUSTER / SILO NEURAL (Usa o PRO)
 // =========================================================
 app.post('/api/blueprint/cluster', async (req, res) => {
     try {
         const { theme, moodId, whatsapp } = req.body;
-        console.log(`💠 [CLUSTER] Orquestrando Silo Neural para: ${theme}`);
+        console.log(`ðŸ’  [CLUSTER] Orquestrando Silo Neural para: ${theme}`);
 
         if (!modelPro) {
-            console.error("❌ modelPro não inicializado!");
-            return res.status(500).json({ error: "Hemisfério Pro não carregado no servidor." });
+            console.error("âŒ modelPro nÃ£o inicializado!");
+            return res.status(500).json({ error: "HemisfÃ©rio Pro nÃ£o carregado no servidor." });
         }
 
         const dnaInjetadoCluster = getDnaContext();
         const moodCluster = tema && tema.toLowerCase().includes('tea') ? CLIMAS_CLINICOS['3_conforto_neurodivergente'] : CLIMAS_CLINICOS['1_introspeccao_profunda'];
 
         const systemPrompt = `
-Você é o Arquiteto Abidos (Gemini 2.5 Pro). Crie um Cluster SEO de alta conversão para o Dr. Victor Lawrence (tema: "${theme}").
+VocÃª Ã© o Arquiteto Abidos (Gemini 2.5 Pro). Crie um Cluster SEO de alta conversÃ£o para o Dr. Victor Lawrence (tema: "${theme}").
 
-Gere EXATAMENTE 4 conteúdos:
-- 1 Página Pilar (Hub) de vendas (type: "pages")
+Gere EXATAMENTE 4 conteÃºdos:
+- 1 PÃ¡gina Pilar (Hub) de vendas (type: "pages")
 - 3 Artigos de Blog (Spokes) em cauda longa (type: "posts")
 
-[DESIGN OBRIGATÓRIO PARA CADA ITEM HTML]
+[DESIGN OBRIGATÃ“RIO PARA CADA ITEM HTML]
 - WRAPPER: <div class="abidos-wrapper antialiased px-4 py-8 md:px-12 lg:px-24 ${moodCluster.fundo_principal} min-h-screen font-inter ${moodCluster.texto_principal}">
 - CARDS: bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 md:p-10 shadow-2xl hover:border-teal-500/50 transition-all
 - H2 GRADIENTE: font-outfit font-bold text-3xl md:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500
 - GRIDS: grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6
-- BOTOÕES CTA: inline-flex px-8 py-4 bg-teal-500 hover:bg-teal-400 text-[#05080f] font-bold rounded-full hover:scale-105 shadow-[0_0_25px_rgba(45,212,191,0.35)]
+- BOTOÃ•ES CTA: inline-flex px-8 py-4 bg-teal-500 hover:bg-teal-400 text-[#05080f] font-bold rounded-full hover:scale-105 shadow-[0_0_25px_rgba(45,212,191,0.35)]
 - GLOW ORB: <div class="absolute -z-10 w-96 h-96 bg-teal-500/10 blur-[150px] rounded-full"></div>
 - EFEITO DO MOOD: ${moodCluster.efeitos_obrigatorios}
 - PROIBIDO H1 manual, PROIBIDO URLs inventadas, PROIBIDO tags puras.
 
-[DNA LITERÁRIO]
+[DNA LITERÃRIO]
 ${dnaInjetadoCluster || 'Use linguagem ericksoniana permissiva.'}
 
-[LINKS E IMAGENS REAIS — USE OBRIGATORIAMENTE]
+[LINKS E IMAGENS REAIS â€” USE OBRIGATORIAMENTE]
 ${REAL_ASSETS}
 
 ${ETICA_ABIDOS}
 
-RETORNE EXCLUSIVAMENTE UM JSON VÁLIDO:
+RETORNE EXCLUSIVAMENTE UM JSON VÃLIDO:
 {
   "mainTopic": "${theme}",
   "items": [
-    { "title": "Título do Hub", "type": "pages", "html": "<div class=\\"abidos-wrapper...\\">...</div>" },
+    { "title": "TÃ­tulo do Hub", "type": "pages", "html": "<div class=\\"abidos-wrapper...\\">...</div>" },
     { "title": "Artigo 1", "type": "posts", "html": "<div class=\\"abidos-wrapper...\\">...</div>" },
     { "title": "Artigo 2", "type": "posts", "html": "<div class=\\"abidos-wrapper...\\">...</div>" },
     { "title": "Artigo 3", "type": "posts", "html": "<div class=\\"abidos-wrapper...\\">...</div>" }
@@ -3589,18 +3589,18 @@ RETORNE EXCLUSIVAMENTE UM JSON VÁLIDO:
         const clusterData = extractJSON(responseText);
         
         if (!clusterData || !clusterData.items) {
-            console.error("❌ Falha ao extrair JSON do Cluster. Resposta bruta:", responseText);
-            throw new Error("A IA não retornou um JSON válido de Cluster.");
+            console.error("âŒ Falha ao extrair JSON do Cluster. Resposta bruta:", responseText);
+            throw new Error("A IA nÃ£o retornou um JSON vÃ¡lido de Cluster.");
         }
 
         clusterData.success = true;
         res.status(200).json(clusterData);
 
     } catch (error) {
-        console.error("🚨 Erro na geração do Cluster:", error);
+        console.error("ðŸš¨ Erro na geraÃ§Ã£o do Cluster:", error);
         res.status(500).json({ 
             success: false, 
-            error: "Falha no Hemisfério Pro: " + error.message 
+            error: "Falha no HemisfÃ©rio Pro: " + error.message 
         });
     }
 });
@@ -3611,9 +3611,9 @@ RETORNE EXCLUSIVAMENTE UM JSON VÁLIDO:
 app.post('/api/manager/chat', async (req, res) => {
     try {
         const { message, history, modelType } = req.body;
-        console.log(`👑 [MANAGER] Processando solicitação estratégica via ${modelType || 'PRO'}: "${message.substring(0, 50)}..."`);
+        console.log(`ðŸ‘‘ [MANAGER] Processando solicitaÃ§Ã£o estratÃ©gica via ${modelType || 'PRO'}: "${message.substring(0, 50)}..."`);
         
-        // 1. Coleta de Contexto Global (Visão de "Tudo")
+        // 1. Coleta de Contexto Global (VisÃ£o de "Tudo")
         const silosRaw = fs.existsSync(path.join(__dirname, 'silos.json')) ? fs.readFileSync(path.join(__dirname, 'silos.json'), 'utf8') : '[]';
         const draftsRaw = fs.existsSync(path.join(__dirname, 'drafts.json')) ? fs.readFileSync(path.join(__dirname, 'drafts.json'), 'utf8') : '[]';
         const style = getVictorStyle();
@@ -3621,9 +3621,9 @@ app.post('/api/manager/chat', async (req, res) => {
         
         // 2. Montagem do Super-Prompt (Prompt System Contextual)
         const systemPrompt = `
-[PROTOCOLO DE GERÊNCIA CENTRAL - ABIDOS MANAGER V4]
-Você é o AGENTE GERENTE (CEO) do ecossistema NeuroEngine do Dr. Victor Lawrence.
-Sua missão é atuar como um Assessor Estratégico de alto nível, conectando todos os pontos do sistema.
+[PROTOCOLO DE GERÃŠNCIA CENTRAL - ABIDOS MANAGER V4]
+VocÃª Ã© o AGENTE GERENTE (CEO) do ecossistema NeuroEngine do Dr. Victor Lawrence.
+Sua missÃ£o Ã© atuar como um Assessor EstratÃ©gico de alto nÃ­vel, conectando todos os pontos do sistema.
 
 [CONTEXTO ATUAL DO ECOSSISTEMA]
 - SILOS/ARQUITETURA ATUAL: ${silosRaw}
@@ -3632,30 +3632,30 @@ Sua missão é atuar como um Assessor Estratégico de alto nível, conectando to
 - ESTRUTURA DE MENUS: ${menusRaw}
 
 [SUAS DIRETRIZES DE OURO]
-1. SOBERANIA ESTRATÉGICA: Você vê o que os outros agentes não vêem. Se o marketing sugere algo que o SEO não suporta, você deve mediar.
-2. ABIDOS METHODOLOGY: Suas respostas devem refletir o rigor do método Abidos (Autoridade, Conversão e Ética Clínica).
+1. SOBERANIA ESTRATÃ‰GICA: VocÃª vÃª o que os outros agentes nÃ£o vÃªem. Se o marketing sugere algo que o SEO nÃ£o suporta, vocÃª deve mediar.
+2. ABIDOS METHODOLOGY: Suas respostas devem refletir o rigor do mÃ©todo Abidos (Autoridade, ConversÃ£o e Ã‰tica ClÃ­nica).
 3. TOM DE VOZ: Profissional, ultra-inteligente, conciso e propositivo.
 4. COMPLIANCE EEAT (REGRAS DE OURO):
-   - ✅ USE SEMPRE: Manejo, Regulação Emocional, Protocolo Validado, Avaliação Clínica, Estratégias de Coping.
-   - 🚫 PROIBIDO: Cura, Milagre, Definitivo, Rápido, Garantido.
-5. ARQUITETURA DE COPY FATIADO: Sempre que sugerir blocos Hero, use a estrutura: Kicker (máx 6 pal.), H1 (8 pal.) e Subtitle (20 pal.).
-6. CAPACIDADES DE RESPOSTA: Você pode sugerir mudanças estruturais, validar rascunhos ou propor novas campanhas baseadas nos dados.
+   - âœ… USE SEMPRE: Manejo, RegulaÃ§Ã£o Emocional, Protocolo Validado, AvaliaÃ§Ã£o ClÃ­nica, EstratÃ©gias de Coping.
+   - ðŸš« PROIBIDO: Cura, Milagre, Definitivo, RÃ¡pido, Garantido.
+5. ARQUITETURA DE COPY FATIADO: Sempre que sugerir blocos Hero, use a estrutura: Kicker (mÃ¡x 6 pal.), H1 (8 pal.) e Subtitle (20 pal.).
+6. CAPACIDADES DE RESPOSTA: VocÃª pode sugerir mudanÃ§as estruturais, validar rascunhos ou propor novas campanhas baseadas nos dados.
 
-[HISTÓRICO DA SESSÃO ATUAL]
+[HISTÃ“RICO DA SESSÃƒO ATUAL]
 ${(history || []).map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
 
-REQUISIÇÃO DO DR. VICTOR: "${message}"
+REQUISIÃ‡ÃƒO DO DR. VICTOR: "${message}"
 
 [MANUAL DE ESTILO DE RESPOSTA]
-1. FALA HUMANA: Você é um ASSESSOR, não um banco de dados. Transforme o JSON do contexto em insights narrativos.
-2. ESTRUTURA VISUAL: Use Markdwon com cabeçalhos (#, ##), listas (-) e negrito (**).
-3. PROIBIÇÃO: É expressamente proibido responder com chaves {}, colchetes [] ou sintaxe de programação.
-4. AÇÃO TÉCNICA: Se quiser disparar uma ação, mencione "AÇÃO IMPLEMENTADA: [NOME]" em uma linha isolada ao final.
+1. FALA HUMANA: VocÃª Ã© um ASSESSOR, nÃ£o um banco de dados. Transforme o JSON do contexto em insights narrativos.
+2. ESTRUTURA VISUAL: Use Markdwon com cabeÃ§alhos (#, ##), listas (-) e negrito (**).
+3. PROIBIÃ‡ÃƒO: Ã‰ expressamente proibido responder com chaves {}, colchetes [] ou sintaxe de programaÃ§Ã£o.
+4. AÃ‡ÃƒO TÃ‰CNICA: Se quiser disparar uma aÃ§Ã£o, mencione "AÃ‡ÃƒO IMPLEMENTADA: [NOME]" em uma linha isolada ao final.
 
-REQUISIÇÃO: "${message}"
+REQUISIÃ‡ÃƒO: "${message}"
 `;
 
-        // Usamos o motor dinâmico (Default: PRO para melhor análise estratégica)
+        // Usamos o motor dinÃ¢mico (Default: PRO para melhor anÃ¡lise estratÃ©gica)
         const activeModel = getAIModel(modelType || 'pro', 'text/plain');
 
         const result = await activeModel.generateContent(systemPrompt);
@@ -3664,13 +3664,13 @@ REQUISIÇÃO: "${message}"
         res.json({ reply: responseText });
 
     } catch (e) {
-        console.error("❌ ERRO CRÍTICO NO GERENTE:", e.message);
-        res.status(500).json({ error: "O Gerente Abidos encontrou uma falha de sincronização: " + e.message });
+        console.error("âŒ ERRO CRÃTICO NO GERENTE:", e.message);
+        res.status(500).json({ error: "O Gerente Abidos encontrou uma falha de sincronizaÃ§Ã£o: " + e.message });
     }
 });
 
 // =========================================================
-// ROTA: NEURO-TRAINING CHAT (CONVERSA CONTÍNUA DE VOZ)
+// ROTA: NEURO-TRAINING CHAT (CONVERSA CONTÃNUA DE VOZ)
 // =========================================================
 app.post('/api/neuro-training/chat', async (req, res) => {
     try {
@@ -3697,13 +3697,13 @@ app.post('/api/neuro-training/chat', async (req, res) => {
                 currentMemory.style_rules.push(regra);
             });
             fs.writeFileSync(MEMORY_FILE_PATH, JSON.stringify(currentMemory, null, 2));
-            console.log(`✨ [NEURO-CHAT] ${parsed.regras_extraidas.length} nova(s) regra(s) de DNA salva(s).`);
+            console.log(`âœ¨ [NEURO-CHAT] ${parsed.regras_extraidas.length} nova(s) regra(s) de DNA salva(s).`);
         }
 
         res.json(parsed);
 
     } catch (error) {
-        console.error('❌ [NEURO-TRAINING/CHAT ERROR]', error);
+        console.error('âŒ [NEURO-TRAINING/CHAT ERROR]', error);
         res.status(500).json({ error: 'Falha no Aprendiz de Abidos: ' + error.message });
     }
 });
@@ -3712,23 +3712,23 @@ app.post('/api/doctoralia/generate-reply', async (req, res) => {
     try {
         const { question, modelType } = req.body;
         const targetModel = getAIModel(modelType, 'text/plain');
-        console.log(`🧠 [DOCTORALIA] Gerando resposta via motor ${modelType}...`);
+        console.log(`ðŸ§  [DOCTORALIA] Gerando resposta via motor ${modelType}...`);
 
         const dnaInjetado = getDnaContext();
         const systemPrompt = `
-Você é o Gêmeo Digital Literário do Dr. Victor Lawrence (Psicólogo Clínico CRP 09/012681, Especialista em TEA em Adultos e Hipnose Ericksoniana, Mestrando UFU (conclusão 2028), Goiânia-GO).
-Sua missão é responder à dúvida de um paciente na plataforma Doctoralia.
+VocÃª Ã© o GÃªmeo Digital LiterÃ¡rio do Dr. Victor Lawrence (PsicÃ³logo ClÃ­nico CRP 09/012681, Especialista em TEA em Adultos e Hipnose Ericksoniana, Mestrando UFU (conclusÃ£o 2028), GoiÃ¢nia-GO).
+Sua missÃ£o Ã© responder Ã  dÃºvida de um paciente na plataforma Doctoralia.
 
 ${dnaInjetado}
 
-ESTRUTURA OBRIGATÓRIA DA RESPOSTA (MÉTODO ABIDOS):
-1. Acolhimento (Pacing): Valide a dor ou dúvida aplicando sua empatia e cadência características.
-2. Utilidade Prática: Explique de forma psicoeducativa, breve e fenomenológica.
-3. Reforço de Autoridade (E-E-A-T): Se o tema for TEA, Burnout ou Hipnose, mencione sutilmente sua experiência.
-4. Fechamento: Convide para avaliação de forma permissiva, típica da sua linguagem ericksoniana.
+ESTRUTURA OBRIGATÃ“RIA DA RESPOSTA (MÃ‰TODO ABIDOS):
+1. Acolhimento (Pacing): Valide a dor ou dÃºvida aplicando sua empatia e cadÃªncia caracterÃ­sticas.
+2. Utilidade PrÃ¡tica: Explique de forma psicoeducativa, breve e fenomenolÃ³gica.
+3. ReforÃ§o de Autoridade (E-E-A-T): Se o tema for TEA, Burnout ou Hipnose, mencione sutilmente sua experiÃªncia.
+4. Fechamento: Convide para avaliaÃ§Ã£o de forma permissiva, tÃ­pica da sua linguagem ericksoniana.
 
-DIRETRIZES ÉTICAS:
-- NUNCA faça diagnósticos fechados ou prometa cura.
+DIRETRIZES Ã‰TICAS:
+- NUNCA faÃ§a diagnÃ³sticos fechados ou prometa cura.
 - Retorne APENAS o texto da resposta, sem markdown.
 
 PERGUNTA DO PACIENTE: "${question}"`;
@@ -3740,7 +3740,7 @@ PERGUNTA DO PACIENTE: "${question}"`;
 
         res.json({ success: true, reply });
     } catch (e) {
-        console.error('❌ [DOCTORALIA ERROR]', e);
+        console.error('âŒ [DOCTORALIA ERROR]', e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -3750,18 +3750,18 @@ app.post('/api/doctoralia/audit', async (req, res) => {
         const { original_message, generated_reply, modelType } = req.body;
         const targetModel = getAIModel(modelType, 'text/plain');
         
-        const systemPrompt = `Você é um Auditor de Compliance Médico e Ético do Conselho Federal de Psicologia (CFP).
-Sua ÚNICA missão é ler a resposta que uma IA gerou para um paciente e procurar por ALUCINAÇÕES ou INFRAÇÕES ÉTICAS.
+        const systemPrompt = `VocÃª Ã© um Auditor de Compliance MÃ©dico e Ã‰tico do Conselho Federal de Psicologia (CFP).
+Sua ÃšNICA missÃ£o Ã© ler a resposta que uma IA gerou para um paciente e procurar por ALUCINAÃ‡Ã•ES ou INFRAÃ‡Ã•ES Ã‰TICAS.
 
-DADOS IMUTÁVEIS DO PROFISSIONAL:
+DADOS IMUTÃVEIS DO PROFISSIONAL:
 - Nome: Victor Lawrence | Registro: CRP 09/012681
-- Titulação: Mestrando em Ciências da Saúde (UFU), TEA, Hipnose Clínica.
+- TitulaÃ§Ã£o: Mestrando em CiÃªncias da SaÃºde (UFU), TEA, Hipnose ClÃ­nica.
 
-REGRAS DE REPROVAÇÃO:
+REGRAS DE REPROVAÃ‡ÃƒO:
 1. Promessa de cura ou prazos.
-2. Invenção de titulação.
-3. Diagnóstico online ou prescrição.
-4. Tom robótico.
+2. InvenÃ§Ã£o de titulaÃ§Ã£o.
+3. DiagnÃ³stico online ou prescriÃ§Ã£o.
+4. Tom robÃ³tico.
 
 RETORNE JSON: { "status": "APROVADO|REPROVADO", "feedback_auditoria": "...", "sugestao_correcao": "..." }`;
 
@@ -3769,9 +3769,9 @@ RETORNE JSON: { "status": "APROVADO|REPROVADO", "feedback_auditoria": "...", "su
         const result = await targetModel.generateContent(`${systemPrompt}\n\n${promptInput}`);
 
         const parsed = extractJSON(result.response.text());
-        res.json(parsed || { status: "REPROVADO", feedback_auditoria: "Falha técnica no processamento da auditoria.", sugestao_correcao: "" });
+        res.json(parsed || { status: "REPROVADO", feedback_auditoria: "Falha tÃ©cnica no processamento da auditoria.", sugestao_correcao: "" });
     } catch (error) {
-        console.error('❌ [ERRO AUDITORIA DOCTORALIA]', error);
+        console.error('âŒ [ERRO AUDITORIA DOCTORALIA]', error);
         res.status(500).json({ error: 'Falha ao auditar: ' + error.message });
     }
 });
@@ -3781,8 +3781,8 @@ app.post('/api/doctoralia/refine-reply', async (req, res) => {
         const { original_reply, auditor_feedback } = req.body;
         
         const refinePrompt = `
-Você é o Revisor de Compliance do Dr. Victor Lawrence.
-Sua tarefa é REESCREVER a resposta abaixo aplicando as correções solicitadas pelo Auditor Ético.
+VocÃª Ã© o Revisor de Compliance do Dr. Victor Lawrence.
+Sua tarefa Ã© REESCREVER a resposta abaixo aplicando as correÃ§Ãµes solicitadas pelo Auditor Ã‰tico.
 
 [TEXTO ORIGINAL COM ERRO]:
 "${original_reply}"
@@ -3791,9 +3791,9 @@ Sua tarefa é REESCREVER a resposta abaixo aplicando as correções solicitadas 
 "${auditor_feedback}"
 
 [DIRETRIZES DE REESCRITA]:
-- Mantenha o DNA de voz do Dr. Victor (acolhedor, técnico, fenomenológico).
+- Mantenha o DNA de voz do Dr. Victor (acolhedor, tÃ©cnico, fenomenolÃ³gico).
 - Remova EXATAMENTE o que o auditor apontou como perigoso ou falso.
-- Retorne APENAS o texto corrigido, em parágrafos limpos, sem markdown.
+- Retorne APENAS o texto corrigido, em parÃ¡grafos limpos, sem markdown.
         `;
 
         const targetModel = getAIModel(req.body.modelType, 'text/plain');
@@ -3821,39 +3821,39 @@ app.post('/api/studio/gerar-rascunho', async (req, res) => {
         const mood = CLIMAS_CLINICOS[moodKey];
 
         const systemPrompt = `
-Você é o Arquiteto Visual Sênior do Protocolo Abidos. Sua missão: gerar código HTML/Tailwind IMPECÁVEL, TOTALMENTE RESPONSIVO e com DESIGN PREMIUM para o conteúdo "${tema}" (formato: ${formato}, público: ${publico}).
+VocÃª Ã© o Arquiteto Visual SÃªnior do Protocolo Abidos. Sua missÃ£o: gerar cÃ³digo HTML/Tailwind IMPECÃVEL, TOTALMENTE RESPONSIVO e com DESIGN PREMIUM para o conteÃºdo "${tema}" (formato: ${formato}, pÃºblico: ${publico}).
 
-[REGRAS DE LAYOUT DINÂMICO — OBRIGATÓRIO]
-1. WRAPPER MESTRE: Todo o conteúdo DEVE começar com: <div class="abidos-wrapper antialiased px-4 py-8 md:px-12 lg:px-24 ${mood.fundo_principal} min-h-screen font-inter ${mood.texto_principal}">
+[REGRAS DE LAYOUT DINÃ‚MICO â€” OBRIGATÃ“RIO]
+1. WRAPPER MESTRE: Todo o conteÃºdo DEVE comeÃ§ar com: <div class="abidos-wrapper antialiased px-4 py-8 md:px-12 lg:px-24 ${mood.fundo_principal} min-h-screen font-inter ${mood.texto_principal}">
 2. MOBILE-FIRST: 1 coluna no mobile, expandindo com 'md:' e 'lg:' breakpoints.
-3. GRIDS: Benefícios/dores: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6". Autoridade: "flex flex-col lg:flex-row items-center gap-12".
-4. PROIBIDO TAGS PURAS: Nenhum <h1>, <p> ou <a> sem classes Tailwind obrigatórias.
+3. GRIDS: BenefÃ­cios/dores: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6". Autoridade: "flex flex-col lg:flex-row items-center gap-12".
+4. PROIBIDO TAGS PURAS: Nenhum <h1>, <p> ou <a> sem classes Tailwind obrigatÃ³rias.
 
-[ESTÉTICA PREMIUM]
+[ESTÃ‰TICA PREMIUM]
 - CARDS: "bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 md:p-10 shadow-2xl transition-all hover:border-teal-500/50"
 - H1/H2 (GRADIENTE): "font-outfit font-bold text-4xl md:text-6xl lg:text-7xl leading-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500 mb-6"
 - H3: "font-outfit font-bold text-2xl md:text-3xl ${mood.texto_destaque} mb-4"
-- ÓRBITAS DE LUZ (GLOW ORBS — opcional, para profundidade): <div class="absolute -z-10 w-96 h-96 ${mood.cor_acao.replace('!bg-', 'bg-')}/10 blur-[150px] rounded-full"></div>
-- BOTOÕES MAGNÉTICOS (CTA WhatsApp): "inline-flex items-center justify-center px-8 py-4 ${mood.cor_acao.replace('!bg-', 'bg-')} hover:opacity-90 text-[#05080f] font-bold rounded-full transition-all hover:scale-105 shadow-[0_0_25px_rgba(45,212,191,0.35)] text-lg"
-- EFEITO OBRIGATÓRIO DO MOOD: ${mood.efeitos_obrigatorios}
+- Ã“RBITAS DE LUZ (GLOW ORBS â€” opcional, para profundidade): <div class="absolute -z-10 w-96 h-96 ${mood.cor_acao.replace('!bg-', 'bg-')}/10 blur-[150px] rounded-full"></div>
+- BOTOÃ•ES MAGNÃ‰TICOS (CTA WhatsApp): "inline-flex items-center justify-center px-8 py-4 ${mood.cor_acao.replace('!bg-', 'bg-')} hover:opacity-90 text-[#05080f] font-bold rounded-full transition-all hover:scale-105 shadow-[0_0_25px_rgba(45,212,191,0.35)] text-lg"
+- EFEITO OBRIGATÃ“RIO DO MOOD: ${mood.efeitos_obrigatorios}
 
-[DNA LITERÁRIO DO DR. VICTOR — APLIQUE NO TEXTO VISÍVEL]
-${dnaInjetado || '(Sem regras de DNA ainda. Use linguagem ericksoniana perm issiva e empática.)'}
+[DNA LITERÃRIO DO DR. VICTOR â€” APLIQUE NO TEXTO VISÃVEL]
+${dnaInjetado || '(Sem regras de DNA ainda. Use linguagem ericksoniana perm issiva e empÃ¡tica.)'}
 
-[ASSETS REAIS — USE OBRIGATORIAMENTE]
+[ASSETS REAIS â€” USE OBRIGATORIAMENTE]
 ${REAL_ASSETS}
 
 ${ETICA_ABIDOS}
 
 [OBJETIVO FINAL]
-Gere as <section> modulares com padding vertical generoso (py-16 md:py-32). No mobile texto centralizado. No desktop alinhamento estratégico lateral. Feche o wrapper com </div> ao final.
-NÃO inclua <!DOCTYPE>, <html>, <head>, <body> ou markdown. Apenas as seções HTML.
+Gere as <section> modulares com padding vertical generoso (py-16 md:py-32). No mobile texto centralizado. No desktop alinhamento estratÃ©gico lateral. Feche o wrapper com </div> ao final.
+NÃƒO inclua <!DOCTYPE>, <html>, <head>, <body> ou markdown. Apenas as seÃ§Ãµes HTML.
         `;
 
         const result = await modelPro.generateContent(systemPrompt);
         res.json({ rascunho: result.response.text() });
     } catch (e) {
-        console.error("❌ [PRO ERROR]", e);
+        console.error("âŒ [PRO ERROR]", e);
         res.status(500).json({ error: e.message });
     }
 });
@@ -3865,20 +3865,20 @@ app.post('/api/dna/auto-refine', async (req, res) => {
             return res.json({ success: true, newRules: [] });
         }
 
-        console.log(`🧠 [AUTO-DNA] Analisando intervenção manual do Dr. Victor...`);
+        console.log(`ðŸ§  [AUTO-DNA] Analisando intervenÃ§Ã£o manual do Dr. Victor...`);
 
         const refinePrompt = `
-        VOCÊ É O ANALISTA DE DNA CLÍNICO DO DR. VICTOR LAWRENCE.
+        VOCÃŠ Ã‰ O ANALISTA DE DNA CLÃNICO DO DR. VICTOR LAWRENCE.
         
-        Sua tarefa: Comparar o HTML que a IA gerou (ORIGINAL) com o HTML após as edições do Dr. Victor (EDITADO).
-        Identifique PREFERÊNCIAS ESTILÍSTICAS, CORREÇÕES DE TOM ou ADIÇÕES DE CONTEÚDO RECORRENTES.
+        Sua tarefa: Comparar o HTML que a IA gerou (ORIGINAL) com o HTML apÃ³s as ediÃ§Ãµes do Dr. Victor (EDITADO).
+        Identifique PREFERÃŠNCIAS ESTILÃSTICAS, CORREÃ‡Ã•ES DE TOM ou ADIÃ‡Ã•ES DE CONTEÃšDO RECORRENTES.
 
         [PROTOCOLO DE RECONHECIMENTO]:
-        - Se o Dr. Victor mudou o tom (ex: ficou mais técnico ou mais empático), crie uma regra de TOM.
-        - Se ele mudou o design (ex: bordas, sombras, cores específicas), crie uma regra de DESIGN.
+        - Se o Dr. Victor mudou o tom (ex: ficou mais tÃ©cnico ou mais empÃ¡tico), crie uma regra de TOM.
+        - Se ele mudou o design (ex: bordas, sombras, cores especÃ­ficas), crie uma regra de DESIGN.
         - Se ele adicionou credenciais (ex: CRP, Mestrado, Links sociais), crie uma regra de E-E-A-T.
         
-        RETORNE EXATAMENTE UM JSON ARRAY de novas regras (ou array vazio se as mudanças forem triviais):
+        RETORNE EXATAMENTE UM JSON ARRAY de novas regras (ou array vazio se as mudanÃ§as forem triviais):
         [
           { "categoria": "...", "titulo": "...", "regra": "..." }
         ]
@@ -3897,7 +3897,7 @@ app.post('/api/dna/auto-refine', async (req, res) => {
         const newRules = extractJSON(result.response.text()) || [];
 
         if (Array.isArray(newRules) && newRules.length > 0) {
-            console.log(`✨ [AUTO-DNA] Detectadas ${newRules.length} novas preferências!`);
+            console.log(`âœ¨ [AUTO-DNA] Detectadas ${newRules.length} novas preferÃªncias!`);
             const memory = getVictorStyle();
             
             newRules.forEach(rule => {
@@ -3914,12 +3914,12 @@ app.post('/api/dna/auto-refine', async (req, res) => {
         res.json({ success: true, newRules: [] });
 
     } catch (e) {
-        console.error("❌ [AUTO-DNA ERROR]", e);
+        console.error("âŒ [AUTO-DNA ERROR]", e);
         res.status(500).json({ error: e.message });
     }
 });
 
-// [API] Auditoria de Alta Conversão (Inspetor Abidos V3.2)
+// [API] Auditoria de Alta ConversÃ£o (Inspetor Abidos V3.2)
 app.post('/api/ai/audit-abidos', async (req, res) => {
     try {
         const { values, templateId, modelType } = req.body;
@@ -3935,23 +3935,23 @@ app.post('/api/ai/audit-abidos', async (req, res) => {
             }
         });
 
-        console.log(`⚖️ Auditando Draft Abidos (${modelType || 'pro'})...`);
+        console.log(`âš–ï¸ Auditando Draft Abidos (${modelType || 'pro'})...`);
 
-        const prompt = `Você é o INSPETOR ABIDOS V3.2. 
-        Analise o conteúdo abaixo e dê uma nota de 0 a 100 baseada em Neuromarketing e SEO.
+        const prompt = `VocÃª Ã© o INSPETOR ABIDOS V3.2. 
+        Analise o conteÃºdo abaixo e dÃª uma nota de 0 a 100 baseada em Neuromarketing e SEO.
         
-        [CONTEÚDO]:
+        [CONTEÃšDO]:
         ${JSON.stringify(cleanedValues, null, 2)}
         
         RETORNE EXATAMENTE UM JSON:
-        { "score": 85, "feedback": "Explicação...", "aprovado": true }`;
+        { "score": 85, "feedback": "ExplicaÃ§Ã£o...", "aprovado": true }`;
 
         const result = await targetModel.generateContent(prompt);
         const text = result.response.text();
         const audit = extractJSON(text);
-        if (!audit) throw new Error("IA não retornou um JSON válido de auditoria.");
+        if (!audit) throw new Error("IA nÃ£o retornou um JSON vÃ¡lido de auditoria.");
         
-        console.log("📊 [AUDIT-ABIDOS RESULT]:", audit);
+        console.log("ðŸ“Š [AUDIT-ABIDOS RESULT]:", audit);
         res.json(audit);
     } catch (err) {
         console.error("Erro Audit Abidos:", err);
@@ -3959,7 +3959,7 @@ app.post('/api/ai/audit-abidos', async (req, res) => {
     }
 });
 
-// [API] Auditoria Clínica (Factualidade e Ética)
+// [API] Auditoria ClÃ­nica (Factualidade e Ã‰tica)
 app.post('/api/ai/audit-clinical', async (req, res) => {
     try {
         const { values, modelType } = req.body;
@@ -3975,12 +3975,12 @@ app.post('/api/ai/audit-clinical', async (req, res) => {
             }
         });
 
-        console.log(`🛡️ Iniciando Auditoria Clínica (${modelType || 'pro'})...`);
+        console.log(`ðŸ›¡ï¸ Iniciando Auditoria ClÃ­nica (${modelType || 'pro'})...`);
 
-        const prompt = `Você é o AUDITOR CLÍNICO V4 (CRP Compliance).
-        Verifique a Ética e Factualidade. Proibido prometer cura.
+        const prompt = `VocÃª Ã© o AUDITOR CLÃNICO V4 (CRP Compliance).
+        Verifique a Ã‰tica e Factualidade. Proibido prometer cura.
         
-        [CONTEÚDO]:
+        [CONTEÃšDO]:
         ${JSON.stringify(cleanedValues, null, 2)}
         
         RETORNE EXATAMENTE UM JSON:
@@ -3989,13 +3989,13 @@ app.post('/api/ai/audit-clinical', async (req, res) => {
         const result = await targetModel.generateContent(prompt);
         const text = result.response.text();
         const audit = extractJSON(text);
-        if (!audit) throw new Error("IA não retornou um JSON válido de auditoria clínica.");
+        if (!audit) throw new Error("IA nÃ£o retornou um JSON vÃ¡lido de auditoria clÃ­nica.");
         
-        console.log("🛡️ [AUDIT-CLINICAL RESULT]:", audit);
+        console.log("ðŸ›¡ï¸ [AUDIT-CLINICAL RESULT]:", audit);
         res.json(audit);
     } catch (err) {
-        console.error("Erro Audit Clínica:", err);
-        res.status(500).json({ error: "Falha na auditoria clínica: " + err.message });
+        console.error("Erro Audit ClÃ­nica:", err);
+        res.status(500).json({ error: "Falha na auditoria clÃ­nica: " + err.message });
     }
 });
 
@@ -4010,8 +4010,8 @@ app.get('/api/seo/silos', (req, res) => {
     // Default Mock Data
     const defaultData = {
         silos: [
-            { id: "silo_1", hub: "Autismo Adulto", slug: "autismo-adulto", spokes: ["Diagnóstico Tardio", "Sinais Sutis em Mulheres"] },
-            { id: "silo_2", hub: "Ansiedade e Burnout", slug: "ansiedade-burnout", spokes: ["Terapia Estratégica", "Sintomas Físicos"] }
+            { id: "silo_1", hub: "Autismo Adulto", slug: "autismo-adulto", spokes: ["DiagnÃ³stico Tardio", "Sinais Sutis em Mulheres"] },
+            { id: "silo_2", hub: "Ansiedade e Burnout", slug: "ansiedade-burnout", spokes: ["Terapia EstratÃ©gica", "Sintomas FÃ­sicos"] }
         ]
     };
     res.json(defaultData);
@@ -4019,27 +4019,27 @@ app.get('/api/seo/silos', (req, res) => {
 
 app.post('/api/seo/silos', (req, res) => {
     try {
-        console.log("💾 [API-SILO] Recebendo atualização de silos...");
+        console.log("ðŸ’¾ [API-SILO] Recebendo atualizaÃ§Ã£o de silos...");
         const silos = req.body;
         if (!Array.isArray(silos)) {
-            console.error("❌ [API-SILO ERROR] Payload não é um array:", silos);
-            return res.status(400).json({ error: "O corpo da requisição deve ser um array de silos." });
+            console.error("âŒ [API-SILO ERROR] Payload nÃ£o Ã© um array:", silos);
+            return res.status(400).json({ error: "O corpo da requisiÃ§Ã£o deve ser um array de silos." });
         }
 
         const siloPath = path.join(__dirname, 'silos.json');
         fs.writeFileSync(siloPath, JSON.stringify({ silos: silos }, null, 2));
-        console.log(`✅ [API-SILO] ${silos.length} silos persistidos com sucesso.`);
+        console.log(`âœ… [API-SILO] ${silos.length} silos persistidos com sucesso.`);
         res.json({ success: true });
     } catch (e) {
-        console.error("❌ [API-SILO FATAL ERROR]:", e);
+        console.error("âŒ [API-SILO FATAL ERROR]:", e);
         res.status(500).json({ error: e.message });
     }
 });
 
-// [API] Sugestão de Silos e STAGs via IA Abidos (Motor Semântico V5)
+// [API] SugestÃ£o de Silos e STAGs via IA Abidos (Motor SemÃ¢ntico V5)
 app.get('/api/seo/analyze-silos', async (req, res) => {
     try {
-        console.log("🧠 [ABIDOS-SILO] Iniciando análise de demanda estratégica...");
+        console.log("ðŸ§  [ABIDOS-SILO] Iniciando anÃ¡lise de demanda estratÃ©gica...");
         const siloPath = path.join(__dirname, 'silos.json');
         let currentSilos = [];
         try {
@@ -4049,15 +4049,15 @@ app.get('/api/seo/analyze-silos', async (req, res) => {
             }
         } catch(e) { console.error("Erro leitura silos:", e); }
         
-        const prompt = `[CONTEXTO]: Dr. Victor Lawrence, Psicólogo e Hipnoterapeuta Clínico.
+        const prompt = `[CONTEXTO]: Dr. Victor Lawrence, PsicÃ³logo e Hipnoterapeuta ClÃ­nico.
         [ARQUITETURA ATUAL]: 
         ${currentSilos.map(s => `- Hub: ${s.hub} (Spokes: ${s.spokes.join(', ')})`).join('\n')}
         
         Aja como o Agente Abidos. 
         1. ANALISE a arquitetura atual. Identifique falhas de cobertura ou silos pouco explorados.
-        2. SUGIRA 3 novos silos ou expansões críticas para os já existentes.
-        3. Para cada sugestão, defina um HUB imponente e 5 SPOKES (Postagens / Artigos) de alta intenção clínica.
-        4. O foco deve ser em conversão (venda de sessões) e autoridade técnica (E-E-A-T).
+        2. SUGIRA 3 novos silos ou expansÃµes crÃ­ticas para os jÃ¡ existentes.
+        3. Para cada sugestÃ£o, defina um HUB imponente e 5 SPOKES (Postagens / Artigos) de alta intenÃ§Ã£o clÃ­nica.
+        4. O foco deve ser em conversÃ£o (venda de sessÃµes) e autoridade tÃ©cnica (E-E-A-T).
         
         RETORNE EXATAMENTE UM JSON NO FORMATO:
         { "suggestions": [ { "hub": "...", "slug": "hub-slug", "spokes": ["...", "...", "..."] } ] }`;
@@ -4066,555 +4066,40 @@ app.get('/api/seo/analyze-silos', async (req, res) => {
         const text = result.response.text();
         
         const data = extractJSON(text);
-        if (!data || !data.suggestions) throw new Error("A IA não retornou sugestões válidas.");
+        if (!data || !data.suggestions) throw new Error("A IA nÃ£o retornou sugestÃµes vÃ¡lidas.");
         
-        // Garante que cada sugestão tenha slug
+        // Garante que cada sugestÃ£o tenha slug
         data.suggestions.forEach(s => {
             if (!s.slug) s.slug = s.hub.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
         });
 
         res.json(data);
     } catch (e) {
-        console.error("❌ [ABIDOS-SILO ERROR]", e);
-        res.status(500).json({ success: false, error: e.message || "Falha na geração neural de silos." });
+        console.error("âŒ [ABIDOS-SILO ERROR]", e);
+        res.status(500).json({ success: false, error: e.message || "Falha na geraÃ§Ã£o neural de silos." });
     }
 });
 
-// Servir Preview (VFS Simulator)
-app.get('/vortex-preview', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html lang="pt-br">
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body { background: #050810; color: #1e293b; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; color: #94a3b8; }
-                .msg { text-align: center; border: 1px dashed #334155; padding: 2rem; border-radius: 8px; }
-            </style>
-        </head>
-        <body>
-            <div class="msg">
-                <h3>🌀 Vórtex Preview</h3>
-                <p>Aguardando renderização via Mission Control...</p>
-            </div>
-        </body>
-        </html>
-    `);
-});
+// ðŸŒ€ VÃ“RTEX AI STUDIO â€” MÃ³dulo Modular (routes/vortex.js)
+require('./routes/vortex')(app, { SITE_REPO_PATH });
 
-// 🌀 VÓRTEX AI STUDIO — API ROUTES
-// [VORTEX] Global Cache State
-let vortexActiveCache = null;
-const cacheManager = process.env.GEMINI_API_KEY ? new GoogleAICacheManager(process.env.GEMINI_API_KEY) : null;
 
-// Helper: Carregar Contexto Antigravity
-async function getAntigravityContext() {
-    const basePath = path.join(__dirname, 'Antigravity', '1_Diretrizes_e_Memoria');
-    let context = '';
-    try {
-        const rules = fs.readFileSync(path.join(basePath, 'regras_base.md'), 'utf8');
-        const manual = fs.readFileSync(path.join(basePath, 'manual_do_arquiteto.md'), 'utf8');
-        const dictionary = fs.readFileSync(path.join(basePath, 'dicionario_de_traducao.md'), 'utf8');
-        context = `[ANTIGRAVITY SYSTEM CONTEXT]\n${rules}\n\n[MANUAL DO ARQUITETO]\n${manual}\n\n[DICIONÁRIO ONTOLÓGICO]\n${dictionary}`;
-    } catch (e) {
-        console.warn('⚠️ [VORTEX] Falha ao carregar diretrizes Antigravity:', e.message);
-    }
-    return context;
-}
-
-// Helper: Atualizar Estado Atual (RAM de Contexto)
-async function updateVortexState(action) {
-    const statePath = path.join(__dirname, 'Antigravity', 'estado_atual.md');
-    const timestamp = new Date().toLocaleString('pt-BR');
-    const logEntry = `\n- **[${timestamp}]**: ${action}`;
-    try {
-        fs.appendFileSync(statePath, logEntry);
-    } catch (e) {
-        console.error('❌ Erro ao atualizar estado_atual:', e.message);
-    }
-}
-
-// Helper: Registrar Sugestão do Subconsciente
-async function logSubconsciousIdea(ideas) {
-    if (!ideas || !Array.isArray(ideas)) return;
-    const ideaPath = path.join(__dirname, 'Antigravity', '2_Estrategia_e_Produto', 'sugestoes_agente.md');
-    const date = new Date().toLocaleDateString('pt-BR');
-    const entries = ideas.map(idea => `- [Pendente] - ${date} - ${idea}`).join('\n');
-    try {
-        fs.appendFileSync(ideaPath, `\n${entries}`);
-    } catch (e) {}
-}
-
-
-// [VORTEX] Endpoint: Context Caching Hub (Phase 2.1)
-app.post('/api/vortex/cache', async (req, res) => {
-    try {
-        if (!cacheManager) return res.status(400).json({ error: 'Cache Manager indisponível.'});
-        
-        const { systemPrompt, components, model } = req.body;
-        const targetModel = model || 'gemini-2.5-flash';
-        const modelPath = targetModel.startsWith('models/') ? targetModel : `models/${targetModel}`;
-
-        // Limpar cache existente para renovar
-        if (vortexActiveCache) {
-            try { await cacheManager.delete(vortexActiveCache.name); } catch(e) {}
-            vortexActiveCache = null;
-        }
-
-        // Carregar diretrizes reais da metodologia
-        const antigravityContext = await getAntigravityContext();
-        const baseSystem = systemPrompt || 'Você é o orquestrador sênior do Vórtex AI Studio.';
-        const fullSystemInstruction = `${baseSystem}\n\n${antigravityContext}`;
-
-        const cacheObj = await cacheManager.create({
-            model: modelPath,
-            displayName: 'vortex-context-hub',
-            systemInstruction: fullSystemInstruction,
-            contents: [
-                {
-                    role: 'user',
-                    parts: [{ text: components || 'Contexto inicial vazio.' }]
-                }
-            ],
-            ttlSeconds: 3600 // 1 hr de cache
-        });
-
-        vortexActiveCache = { name: cacheObj.name, model: targetModel, obj: cacheObj };
-        res.json({ success: true, cacheName: cacheObj.name, cachedTokens: cacheObj.usageMetadata?.totalTokenCount || 0 });
-    } catch (e) {
-        console.error('❌ [VORTEX CACHE]', e);
-        res.status(500).json({ error: e.message });
-    }
-});
-
-// [VORTEX] Endpoint: Geração de Código via Gemini 2.5
-// [VORTEX PHASE 5.3] Endpoint: Streaming SSE — Vibecoding Real
-app.post('/api/vortex/generate-stream', async (req, res) => {
-    try {
-        const { prompt, model, currentCode, abidosRules, context, useCache } = req.body;
-        if (!prompt) return res.status(400).json({ error: 'Prompt vazio.' });
-
-        const modelId = model || 'gemini-2.5-flash';
-
-        // Configurar modelo SEM responseMimeType para permitir streaming de texto livre
-        let target = modelId.includes('pro') ? PRO_MODEL : 
-                     modelId.includes('lite') ? LITE_MODEL : MAIN_MODEL;
-        
-        let aiModel;
-        if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
-            aiModel = genAI.getGenerativeModelFromCachedContent(vortexActiveCache.obj);
-            console.log(`🌀 [VORTEX STREAM] Hub Ativado. Cache: ${vortexActiveCache.name}`);
-        } else {
-            aiModel = genAI.getGenerativeModel({ 
-                model: target, 
-                generationConfig: { temperature: 0.8, maxOutputTokens: 16384 }
-            });
-        }
-
-        // Build Specialized System Prompt
-        const isPro = modelId.includes('pro');
-        const roleSpecialization = isPro 
-            ? `[ROLE: BRAIN/ARCHITECT]
-               Foco: Arquitetura, Domain-Driven Design, Lógica Complexa e Pacing & Leading Clínico.`
-            : `[ROLE: FLASH/VIBE]
-               Foco: Estética OLED Black, Performance Lighthouse 100, Tailwind CSS e Animações.`;
-
-        const visionPrompt = req.body.imageBase64 
-            ? `\n[MODO VISION ATIVO — ANALISE A IMAGEM ANEXADA]
-               1. DECODIFIQUE a hierarquia visual.
-               2. TRADUZA para o Design System OLED Black.
-               3. MAPIE textos para Micro-copy de conversão.
-               4. SEJA FIEL ao layout original.`
-            : "";
-
-        const antigravityDirectives = await getAntigravityContext();
-
-        const systemPrompt = `[VÓRTEX AI STUDIO — GERADOR DE CÓDIGO NEXT.JS]
-${roleSpecialization}${visionPrompt}
-
-[DIRETRIZES ANTIGRAVITY — SSOT]
-${antigravityDirectives}
-
-[REGRAS ABIDOS — INVIOLÁVEIS]
-${context || 'Sem regras especiais em execução.'}
-
-[DESIGN SYSTEM OLED BLACK]
-- Background: #050810 (Pure Black)
-- Accents: Teal (#14b8a6), Indigo (#6366f1), Cyan (#06b6d4)
-- Text: Gray-300 (body), White (headings)
-- Typography: Inter / Outfit
-- Icons: Use Lucide Icons (via data-lucide attribute)
-
-[FORMATO DE RESPOSTA — STREAMING MULTI-BLOCO]
-Retorne o código usando blocos XML delimitados. NÃO retorne JSON.
-
-<file path="page.tsx" language="typescriptreact">
-// Código React completo aqui
-</file>
-
-<explanation>
-Resumo conciso das decisões técnicas (máx 2 frases).
-</explanation>
-
-IMPORTANTE:
-- Use EXATAMENTE o formato de blocos XML acima.
-- NUNCA gere bloco <preview>. O preview é compilado automaticamente pelo React Sandbox no navegador.
-- Concentre 100% do output no código React/Next.js de alta qualidade.
-- Mobile-first, Performance máxima.`;
-
-        const fullPrompt = currentCode 
-            ? `${systemPrompt}\n\n[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
-            : `${systemPrompt}\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`;
-
-        const requestParts = [ fullPrompt ];
-
-        if (req.body.imageBase64) {
-            try {
-                const base64Content = req.body.imageBase64.split(',')[1];
-                const mimeType = req.body.imageBase64.split(';')[0].split(':')[1];
-                requestParts.push({
-                    inlineData: { data: base64Content, mimeType }
-                });
-            } catch(e) { console.error('Erro no parser da imagem Multimodal', e); }
-        }
-
-        // Configurar SSE
-        res.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'X-Accel-Buffering': 'no'
-        });
-
-        const sendEvent = (type, data) => {
-            res.write(`data: ${JSON.stringify({ type, ...data })}\n\n`);
-        };
-
-        sendEvent('start', { model: modelId });
-
-        // Streaming da IA
-        const result = await aiModel.generateContentStream(requestParts);
-        let fullText = '';
-
-        for await (const chunk of result.stream) {
-            const chunkText = chunk.text();
-            if (chunkText) {
-                fullText += chunkText;
-                sendEvent('delta', { text: chunkText });
-            }
-        }
-
-        // Track usage
-        const response = await result.response;
-        trackUsage(response.usageMetadata);
-
-        // Parse do texto completo para extrair blocos
-        const fileMatch = fullText.match(/<file\s+path="([^"]+)"\s*(?:language="([^"]+)")?\s*>([\s\S]*?)<\/file>/);
-        const explanationMatch = fullText.match(/<explanation>([\s\S]*?)<\/explanation>/);
-
-        const parsed = {
-            code: fileMatch ? fileMatch[3].trim() : fullText,
-            language: fileMatch ? (fileMatch[2] || 'typescriptreact') : 'typescriptreact',
-            filename: fileMatch ? fileMatch[1].trim() : 'page.tsx',
-            explanation: explanationMatch ? explanationMatch[1].trim() : 'Código gerado via streaming.'
-        };
-
-        // Enviar metadados finais
-        sendEvent('complete', parsed);
-
-        // Atualizações silenciosas Antigravity
-        await updateVortexState(`[Stream] Geração para [${parsed.filename}] via ${modelId}`);
-
-        sendEvent('done', {});
-        res.end();
-
-    } catch (e) {
-        console.error('❌ [VORTEX STREAM ERROR]', e.message);
-        try {
-            res.write(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`);
-            res.end();
-        } catch(writeErr) {
-            // Connection already closed
-        }
-    }
-});
-
-// [VORTEX] Endpoint: Generate (Fallback síncrono — mantido por compatibilidade)
-app.post('/api/vortex/generate', async (req, res) => {
-    try {
-        const { prompt, model, currentCode, abidosRules, context, useCache } = req.body;
-        if (!prompt) return res.status(400).json({ error: 'Prompt vazio.' });
-
-        const modelId = model || 'gemini-2.5-flash';
-        
-        let aiModel;
-        // Utilize cache se o frontend pedir e os modelos baterem
-        if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
-            aiModel = wrapModel(genAI.getGenerativeModelFromCachedContent(vortexActiveCache.obj));
-            console.log(`🌀 [VORTEX] Hub Ativado. Utilizando cache: ${vortexActiveCache.name}`);
-        } else {
-            aiModel = getAIModel(modelId, 'text/plain');
-        }
-
-        // Build Specialized System Prompt based on Model Role (Vortex Phase 2.2)
-        const isPro = modelId.includes('pro');
-        const roleSpecialization = isPro 
-            ? `[ROLE: BRAIN/ARCHITECT]
-               Foco: Arquitetura de Silos, Domain-Driven Design (NeuroEngine), Lógica Complexa e Pacing & Leading Clínico.
-               Siga rigorosamente a Ontologia do Arquiteto.`
-            : `[ROLE: FLASH/VIBE]
-               Foco: Estética OLED Black, Performance Lighthouse 100, Tailwind CSS e Animações Glassmorphism.
-               Materialize a intenção visual com máxima velocidade.`;
-
-        // Ativar modo Vision se houver imagem (Phase 2.3)
-        const visionPrompt = req.body.imageBase64 
-            ? `\n[MODO VISION ATIVO — ANALISE A IMAGEM ANEXADA]
-               1. DECODIFIQUE a hierarquia visual (Grids, Flexbox, Spacing).
-               2. TRADUZA os elementos visuais para o Design System OLED Black.
-               3. MAPIE os textos e botões para o padrão Abidos (Micro-copy de conversão).
-               4. SEJA FIEL ao layout original, mas atualize-o para estética Cinematográfica.`
-            : "";
-
-        const antigravityDirectives = await getAntigravityContext();
-
-        const systemPrompt = `[VÓRTEX AI STUDIO — GERADOR DE CÓDIGO NEXT.JS]
-${roleSpecialization}${visionPrompt}
-
-[DIRETRIZES ANTIGRAVITY — SSOT]
-${antigravityDirectives}
-
-[REGRAS ABIDOS — INVIOLÁVEIS]
-${context || 'Sem regras especiais em execução.'}
-
-[DESIGN SYSTEM OLED BLACK]
-- Background: #050810 (Pure Black)
-- Accents: Teal (#14b8a6), Indigo (#6366f1), Cyan (#06b6d4)
-- Text: Gray-300 (body), White (headings)
-- Typography: Inter / Outfit
-- Icons: Use Lucide Icons (via data-lucide attribute)
-
-[FORMATO DE RESPOSTA - JSON ESTRITO]
-Retorne APENAS um bloco JSON (sem markdown fora dele):
-{
-  "code": "Código React/JSX completo e funcional",
-  "language": "typescriptreact",
-  "filename": "page.tsx",
-  "explanation": "Resumo conciso das decisões técnicas (máx 2 frases)"
-}
-
-IMPORTANTE:
-- NÃO inclua campo "preview" — o preview é compilado automaticamente pelo React Sandbox no navegador.
-- NÃO inclua campo "subconscious_suggestions" — irrelevante para o output.
-- Concentre 100% do limite de tokens no campo "code" com código React de alta qualidade.
-- Mobile-first, Performance Lighthouse 100.`;
-
-        const fullPrompt = currentCode 
-            ? `${systemPrompt}\n\n[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
-            : `${systemPrompt}\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`;
-
-        const requestParts = [ fullPrompt ];
-        
-        if (req.body.imageBase64) {
-            try {
-                const base64Content = req.body.imageBase64.split(',')[1];
-                const mimeType = req.body.imageBase64.split(';')[0].split(':')[1];
-                requestParts.push({
-                    inlineData: {
-                        data: base64Content,
-                        mimeType: mimeType
-                    }
-                });
-            } catch(e) { console.error('Erro no parser da imagem Multimodal', e); }
-        }
-
-        const result = await aiModel.generateContent(requestParts);
-        const responseText = result.response.text();
-        
-        // Track usage
-        trackUsage(result.response.usageMetadata);
-
-        // Parse response
-        let parsed = extractJSON(responseText);
-        if (!parsed) {
-            parsed = {
-                code: responseText,
-                language: 'typescriptreact',
-                filename: 'page.tsx',
-                explanation: 'Aviso: Falha no parser JSON da IA.'
-            };
-        }
-
-        // --- ATUALIZAÇÕES SILENCIOSAS ANTIGRAVITY ---
-        // Atualizar Memória RAM do Contexto
-        await updateVortexState(`Geração de código para [${parsed.filename || 'Página'}] via ${modelId}. Decisão: ${parsed.explanation?.substring(0, 100)}...`);
-        // ---------------------------------------------
-
-        res.json(parsed);
-    } catch (e) {
-        console.error('❌ [VORTEX GENERATE]', e.message);
-        res.status(500).json({ error: e.message });
-    }
-});
-
-
-// [VORTEX] Endpoint: Commit & Push via Servidor (Zero-Credential Exposure)
-app.post('/api/vortex/commit', async (req, res) => {
-    try {
-        const { filename, content, message } = req.body;
-        if (!filename || !content) return res.status(400).json({ error: 'Filename e content são obrigatórios.' });
-
-        // Usa o GITHUB_TOKEN do .env (nunca exposto ao client)
-        const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-        const repoOwner = process.env.GITHUB_REPO_OWNER || 'instituto-ops';
-        const repoName = process.env.GITHUB_REPO_NAME || 'HipnoLawrence-Site';
-        const branch = process.env.GITHUB_BRANCH || 'main';
-
-        if (!token) {
-            return res.status(400).json({ error: 'GITHUB_TOKEN não configurado no servidor.' });
-        }
-
-        const filePath = `src/app/(pages)/${filename}`;
-        
-        // 1. Try to get existing file SHA
-        let sha = null;
-        try {
-            const getRes = await axios.get(
-                `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}?ref=${branch}`,
-                { headers: { Authorization: `token ${token}` } }
-            );
-            sha = getRes.data.sha;
-        } catch (e) {
-            // File doesn't exist yet, that's OK
-        }
-
-        // 2. Create or update file
-        const payload = {
-            message: message || `[Vórtex] Update ${filename}`,
-            content: Buffer.from(content).toString('base64'),
-            branch
-        };
-        if (sha) payload.sha = sha;
-
-        const commitRes = await axios.put(
-            `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`,
-            payload,
-            { headers: { Authorization: `token ${token}` } }
-        );
-
-        res.json({
-            success: true,
-            sha: commitRes.data.content?.sha,
-            message: payload.message,
-            url: commitRes.data.content?.html_url
-        });
-
-    } catch (e) {
-        console.error('❌ [VORTEX COMMIT]', e.message);
-        res.status(500).json({ error: e.message, success: false });
-    }
-});
-
-// [VORTEX] Endpoint: Listar Arquivos do VFS Local
-app.get('/api/vortex/files', (req, res) => {
-    // VFS lives on client (IndexedDB), this is a placeholder for server-side file listing
-    try {
-        const repoPath = SITE_REPO_PATH;
-        if (fs.existsSync(repoPath)) {
-            const readDir = (dir, prefix = '') => {
-                const items = [];
-                const entries = fs.readdirSync(dir, { withFileTypes: true });
-                for (const entry of entries) {
-                    if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
-                    const fullPath = path.join(dir, entry.name);
-                    const relPath = prefix ? `${prefix}/${entry.name}` : entry.name;
-                    if (entry.isDirectory()) {
-                        items.push({ path: relPath, type: 'dir', children: readDir(fullPath, relPath) });
-                    } else {
-                        items.push({ path: relPath, type: 'file', size: fs.statSync(fullPath).size });
-                    }
-                }
-                return items;
-            };
-            res.json({ files: readDir(repoPath), basePath: repoPath });
-        } else {
-            res.json({ files: [], basePath: repoPath, warning: 'Repository path not found locally.' });
-        }
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
-
-// [VORTEX] Endpoint: Pipeline de Ingestão (Local -> VFS)
-app.get('/api/vortex/ingest', (req, res) => {
-    try {
-        const repoPath = SITE_REPO_PATH;
-        const result = [];
-
-        if (fs.existsSync(repoPath)) {
-            const readDirContent = (dir, prefix = '') => {
-                const entries = fs.readdirSync(dir, { withFileTypes: true });
-                for (const entry of entries) {
-                    if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name.endsWith('.png') || entry.name.endsWith('.jpg') || entry.name.endsWith('.ico')) continue;
-                    const fullPath = path.join(dir, entry.name);
-                    const relPath = prefix ? `${prefix}/${entry.name}` : entry.name;
-                    if (entry.isDirectory()) {
-                        readDirContent(fullPath, relPath);
-                    } else {
-                        const content = fs.readFileSync(fullPath, 'utf8');
-                        result.push({ path: `/src/app/${relPath}`, name: entry.name, content });
-                    }
-                }
-            };
-            readDirContent(repoPath);
-            res.json({ success: true, base: '/src/app', files: result });
-        } else {
-            res.json({ success: false, error: 'Repository path not found locally.' });
-        }
-    } catch (e) {
-        console.error('❌ [VORTEX INGEST]', e.message);
-        res.status(500).json({ success: false, error: e.message });
-    }
-});
-// [VORTEX] Endpoint: Salvar no Disco Local (Phase 5.1)
-app.post('/api/vortex/save-local', (req, res) => {
-    try {
-        const { filename, content } = req.body;
-        if (!filename || !content) return res.status(400).json({ error: 'Filename e content são obrigatórios.' });
-
-        const repoPath = SITE_REPO_PATH;
-        // Remove prefixos redundantes
-        const cleanName = filename.replace(/^\/?src\/app\//, '');
-        const filePath = path.join(repoPath, cleanName);
-        
-        const dir = path.dirname(filePath);
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
-        fs.writeFileSync(filePath, content, 'utf8');
-        res.json({ success: true, path: filePath });
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
-
-
-console.log('🌀 [VORTEX] API Routes registered.');
-
-// CATCH-ALL API (Movido para o final para não quebrar rotas dinâmicas)
+// CATCH-ALL API (Movido para o final para nÃ£o quebrar rotas dinÃ¢micas)
 app.use('/api/*', (req, res) => {
     res.status(404).json({ 
         success: false, 
-        error: `Endpoint '${req.originalUrl}' não encontrado no ecossistema NeuroEngine (Protocolo V5). Verifique se o backend está atualizado e se a rota existe no server.js.` 
+        error: `Endpoint '${req.originalUrl}' nÃ£o encontrado no ecossistema NeuroEngine (Protocolo V5). Verifique se o backend estÃ¡ atualizado e se a rota existe no server.js.` 
     });
 });
 
 const server = app.listen(port, () => {
-    console.log(`\n🚀 AntiGravity CMS: Mission Control Ativo!`);
-    console.log(`📡 Frontend & API rodando em http://localhost:${port}`);
-    console.log(`🔐 Camada de Segurança Proxy: ON`);
-    console.log(`🎙️ WebSocket Voice Live: Disponível em ws://localhost:${port}`);
+    console.log(`\nðŸš€ AntiGravity CMS: Mission Control Ativo!`);
+    console.log(`ðŸ“¡ Frontend & API rodando em http://localhost:${port}`);
+    console.log(`ðŸ” Camada de SeguranÃ§a Proxy: ON`);
+    console.log(`ðŸŽ™ï¸ WebSocket Voice Live: DisponÃ­vel em ws://localhost:${port}`);
 });
 
-// [VORTEX] Endpoint: Ingestão de Texto/PDF para DNA Verbal
+// [VORTEX] Endpoint: IngestÃ£o de Texto/PDF para DNA Verbal
 app.post('/api/neuro-training/ingest-text', upload.array('files'), async (req, res) => {
     try {
         const { manualText } = req.body;
@@ -4638,17 +4123,17 @@ app.post('/api/neuro-training/ingest-text', upload.array('files'), async (req, r
 
         if (!combinedText.trim()) return res.status(400).json({ error: 'Nenhum texto para processar.' });
 
-        const prompt = `Analise o seguinte material (transcrições/textos) do Dr. Victor Lawrence.
-        Extraia padrões de: CADÊNCIA, SINTAXE, VOCABULÁRIO DE IDENTIDADE e TONALIDADE.
-        Foque em regras que permitam a um LLM mimetizar a escrita dele com precisão cirúrgica.
+        const prompt = `Analise o seguinte material (transcriÃ§Ãµes/textos) do Dr. Victor Lawrence.
+        Extraia padrÃµes de: CADÃŠNCIA, SINTAXE, VOCABULÃRIO DE IDENTIDADE e TONALIDADE.
+        Foque em regras que permitam a um LLM mimetizar a escrita dele com precisÃ£o cirÃºrgica.
         
         RETORNE EXATAMENTE UM JSON:
         {
           "new_rules": [
             {
-              "categoria": "Cadência | Sintaxe | Vocabulário de Identidade | Tonabilidade Estrutural",
+              "categoria": "CadÃªncia | Sintaxe | VocabulÃ¡rio de Identidade | Tonabilidade Estrutural",
               "titulo": "Nome curto da regra",
-              "regra": "Descrição detalhada do padrão linguístico"
+              "regra": "DescriÃ§Ã£o detalhada do padrÃ£o linguÃ­stico"
             }
           ]
         }
@@ -4675,10 +4160,10 @@ app.post('/api/neuro-training/ingest-text', upload.array('files'), async (req, r
             
             res.json({ success: true, count: responseData.new_rules.length, added: responseData.new_rules });
         } else {
-            res.status(500).json({ error: 'Falha ao extrair padrões do texto.' });
+            res.status(500).json({ error: 'Falha ao extrair padrÃµes do texto.' });
         }
     } catch (error) {
-        console.error('❌ [INGEST-TEXT ERROR]', error);
+        console.error('âŒ [INGEST-TEXT ERROR]', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -4686,11 +4171,11 @@ app.post('/api/neuro-training/ingest-text', upload.array('files'), async (req, r
 // [PRIORIDADE 2] MOTOR DE STATUS (DASHBOARD)
 wss = new WebSocket.Server({ server });
 wss.on('connection', (ws) => {
-    console.log("📡 [NEURO-CONNECT] Cliente conectado ao canal de status.");
-    ws.on('close', () => console.log("📡 [NEURO-CONNECT] Canal de status encerrado."));
+    console.log("ðŸ“¡ [NEURO-CONNECT] Cliente conectado ao canal de status.");
+    ws.on('close', () => console.log("ðŸ“¡ [NEURO-CONNECT] Canal de status encerrado."));
 });
 
 // =======================================================================
 // ROTA: GERADOR DE STATUS (FINALIZADO)
 // =======================================================================
-// TTS MÓDULO REMOVIDO EM FAVOR DO FOCO EM PERFIL VERBAL TEXTUAL
+// TTS MÃ“DULO REMOVIDO EM FAVOR DO FOCO EM PERFIL VERBAL TEXTUAL
