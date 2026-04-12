@@ -4207,7 +4207,7 @@ app.post('/api/vortex/generate-stream', async (req, res) => {
         } else {
             aiModel = genAI.getGenerativeModel({ 
                 model: target, 
-                generationConfig: { temperature: 0.8, maxOutputTokens: 8192 }
+                generationConfig: { temperature: 0.8, maxOutputTokens: 16384 }
             });
         }
 
@@ -4253,12 +4253,13 @@ Retorne o código usando blocos XML delimitados. NÃO retorne JSON.
 </file>
 
 <explanation>
-Resumo conciso das decisões técnicas.
+Resumo conciso das decisões técnicas (máx 2 frases).
 </explanation>
 
 IMPORTANTE:
 - Use EXATAMENTE o formato de blocos XML acima.
-- NUNCA crie blocos HTML de preview. Concentre todo seu limite de output APENAS na arquitetura React/Next.js no bloco <file>.
+- NUNCA gere bloco <preview>. O preview é compilado automaticamente pelo React Sandbox no navegador.
+- Concentre 100% do output no código React/Next.js de alta qualidade.
 - Mobile-first, Performance máxima.`;
 
         const fullPrompt = currentCode 
@@ -4309,14 +4310,12 @@ IMPORTANTE:
 
         // Parse do texto completo para extrair blocos
         const fileMatch = fullText.match(/<file\s+path="([^"]+)"\s*(?:language="([^"]+)")?\s*>([\s\S]*?)<\/file>/);
-        const previewMatch = fullText.match(/<preview>([\s\S]*?)<\/preview>/);
         const explanationMatch = fullText.match(/<explanation>([\s\S]*?)<\/explanation>/);
 
         const parsed = {
             code: fileMatch ? fileMatch[3].trim() : fullText,
             language: fileMatch ? (fileMatch[2] || 'typescriptreact') : 'typescriptreact',
             filename: fileMatch ? fileMatch[1].trim() : 'page.tsx',
-            preview: previewMatch ? previewMatch[1].trim() : '',
             explanation: explanationMatch ? explanationMatch[1].trim() : 'Código gerado via streaming.'
         };
 
@@ -4400,16 +4399,14 @@ Retorne APENAS um bloco JSON (sem markdown fora dele):
   "code": "Código React/JSX completo e funcional",
   "language": "typescriptreact",
   "filename": "page.tsx",
-  "explanation": "Resumo conciso das decisões técnica",
-  "preview": "HTML estático MÍNIMO para visualização rápida. OBRIGATÓRIO incluir as CDNs abaixo sem aspas extras:
-              <script src=\\"https://cdn.tailwindcss.com\\"></script>
-              <script src=\\"https://unpkg.com/lucide@latest\\"></script>",
-  "subconscious_suggestions": ["lista curta de melhorias"]
+  "explanation": "Resumo conciso das decisões técnicas (máx 2 frases)"
 }
 
-IMPORTANTE: 
-- NUNCA escape URLs de CDN com aspas extras (use apenas \\" dentro da string JSON).
-- Foque em Performance Lighthouse 100 e Mobile-first.`;
+IMPORTANTE:
+- NÃO inclua campo "preview" — o preview é compilado automaticamente pelo React Sandbox no navegador.
+- NÃO inclua campo "subconscious_suggestions" — irrelevante para o output.
+- Concentre 100% do limite de tokens no campo "code" com código React de alta qualidade.
+- Mobile-first, Performance Lighthouse 100.`;
 
         const fullPrompt = currentCode 
             ? `${systemPrompt}\n\n[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
@@ -4443,19 +4440,12 @@ IMPORTANTE:
                 code: responseText,
                 language: 'typescriptreact',
                 filename: 'page.tsx',
-                explanation: 'Aviso: Falha no parser JSON da IA.',
-                preview: responseText,
-                subconscious_suggestions: []
+                explanation: 'Aviso: Falha no parser JSON da IA.'
             };
         }
 
         // --- ATUALIZAÇÕES SILENCIOSAS ANTIGRAVITY ---
-        // 1. Log do Subconsciente (Phase 2.3)
-        if (parsed.subconscious_suggestions && parsed.subconscious_suggestions.length > 0) {
-            await logSubconsciousIdea(parsed.subconscious_suggestions);
-        }
-
-        // 2. Atualizar Memória RAM do Contexto
+        // Atualizar Memória RAM do Contexto
         await updateVortexState(`Geração de código para [${parsed.filename || 'Página'}] via ${modelId}. Decisão: ${parsed.explanation?.substring(0, 100)}...`);
         // ---------------------------------------------
 

@@ -567,7 +567,8 @@ window.vortexStudio = (() => {
                                 state.currentFile = filePath;
                                 updateBreadcrumbs(filePath);
 
-                                updatePreview(event.preview || cleanNewCode);
+                                // [CIRURGIA 3] Preview SEMPRE via React Sandbox — zero dependência da IA
+                                updatePreview(cleanNewCode);
 
                                 // [PHASE 4.8] Cache result
                                 setCachedGeneration(payload.prompt, event.code);
@@ -622,8 +623,8 @@ window.vortexStudio = (() => {
             await vfsWrite(filePath, data.code);
             state.currentFile = filePath;
 
-            if (data.preview) {
-                updatePreview(data.preview);
+            if (data.code) {
+                updatePreview(data.code);
             }
 
             if (!audit.passes) {
