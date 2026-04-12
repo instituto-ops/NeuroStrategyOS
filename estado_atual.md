@@ -1,8 +1,8 @@
 # 🧠 Estado Atual - Operação Antigravity
 
-## 🎯 Status: Sessão Ativa — Preview Vórtex Refatorado (Cirurgia Zero-Token) 🔧
+## 🎯 Status: Poda Sináptica Concluída — Repositório Leve e Limpo ✅
 **Data:** 12/04/2026
-**Session ID:** bf0d0ab0 (Preview Optimization)
+**Session ID:** bf0d0ab0 (Preview Optimization + Poda Sináptica)
 
 ---
 
@@ -13,17 +13,21 @@
 | **Fase 4 — Ecossistema** | ✅ OK | Diff Review, Deploy Progress, SEO Silos. |
 | **Fase 3 — Expansão** | ⏳ EXECUÇÃO | Integrações Externas e Autonomia de Pesquisa. |
 
-### 🛠️ Tarefa Concluída (Sessão Atual)
-- [x] **Diagnóstico do Aborto de Preview**: Identificado como estouro de output da IA (pedia React + HTML duplicado).
-- [x] **Cirurgia 1**: Removido campo `preview` do JSON de resposta sync → IA foca 100% no código React.
-- [x] **Cirurgia 2**: maxOutputTokens 8192 → 16384, system prompt enxugado.
-- [x] **Cirurgia 3**: Preview agora SEMPRE via React Sandbox client-side (Babel), zero tokens gastos.
+### ✅ Tarefas Concluídas (Sessão Atual)
+- [x] **Preview Vórtex**: 3 cirurgias aplicadas — preview agora via React Sandbox (zero tokens).
+- [x] **Poda Sináptica**: `drafts.json` (40.6MB) movido para `/Backup`.
+- [x] **8 arquivos de runtime** removidos do tracking Git e protegidos via `.gitignore`.
+- [x] **608 linhas** removidas do repositório Git.
+
+### 🛠️ Próximos Passos
+1. [ ] Decomposição modular do `server.js` (4.7K linhas → módulos por domínio).
+2. [ ] Integração Vórtex → Acervo de Páginas (save-local → indexação automática).
+3. [ ] Validação de credenciais para APIs de Pesquisa e Ads.
 
 ### 🧠 Memória de Contexto (Antigravity)
-- **Preview Pipeline**: Agora é: IA → React Code → buildReactSandbox() → iframe.srcdoc (zero backend).
-- **Silos SEO**: Estrutura mantida em `silos.json`.
-- **Fase 3**: Próximo passo é materializar a integração com APIs de Pesquisa e Ads.
-- **Poda Sináptica**: `drafts.json` e decomposição do `server.js` ainda pendentes.
+- **Preview Pipeline**: IA → React Code → buildReactSandbox() → iframe.srcdoc (zero backend).
+- **Repositório Git**: ~40MB mais leve após poda de drafts e runtime files.
+- **Silos SEO**: Estrutura mantida em `silos.json` (via VFS/runtime, não trackeado).
 
 ---
 *Atualizado por Antigravity Agent em 2026-04-12 — SESSION ACTIVE*
