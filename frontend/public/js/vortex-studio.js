@@ -846,7 +846,7 @@ window.vortexStudio = (() => {
     // VÓRTEX REACT COMPILER (Zero-Token Preview Strategy)
     // =========================================================================
     function isReactCode(code) {
-        return code.includes('import ') && (code.includes('react') || code.includes('lucide'));
+        return code.includes('import ') || code.includes('export default function') || code.includes('className=') || code.includes('React.');
     }
 
     function buildReactSandbox(reactCode) {
@@ -897,7 +897,7 @@ window.vortexStudio = (() => {
     </div>
     <script>lucide.createIcons();</script>
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect } from 'react';
+        import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
         import { createRoot } from 'react-dom/client';
         
         // --- React Hooks Mocks (Fallback safe) ---
@@ -910,7 +910,12 @@ window.vortexStudio = (() => {
         const Outfit = () => ({ className: 'font-outfit' });
 
         // --- Código Original (Vibecoded) ---
-        ${reactCode.replace(/import\s+Link.*?['"];?/g, '').replace(/import\s+Image.*?['"];?/g, '').replace(/import\s+\{.*?(Inter|Outfit).*?['"];?/g, '')}
+        ${reactCode
+            .replace(/import\s+Link.*?from\s+['"]next\/link['"];?/g, '')
+            .replace(/import\s+Image.*?from\s+['"]next\/image['"];?/g, '')
+            .replace(/import\s+\{.*?(Inter|Outfit).*?['"];?/g, '')
+            .replace(/import\s+React.*?from\s+['"]react['"];?/g, '')
+            .replace(/import\s*\{[^}]*\}\s*from\s+['"]react['"];?/g, '')}
 
         // Renderização Dinâmica
         setTimeout(() => {
@@ -1280,7 +1285,14 @@ window.vortexStudio = (() => {
             }
         }
 
-        if (parsed.preview) updatePreview(parsed.preview);
+        if (parsed.preview) {
+            updatePreview(parsed.preview);
+        } else if (parsed.files && parsed.files.length > 0) {
+            const mainFile = parsed.files.find(f => f.path.endsWith('.tsx') || f.path.endsWith('.jsx') || f.path.endsWith('.js'));
+            if (mainFile) {
+                updatePreview(mainFile.content);
+            }
+        }
         await renderFileTree();
 
         addMessage('ai', `${parsed.explanation}\n\n📦 **${parsed.files.length} arquivo(s) gerado(s):** ${parsed.files.map(f => '`' + f.path.split('/').pop() + '`').join(', ')}`);
