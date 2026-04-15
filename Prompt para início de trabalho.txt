@@ -62,6 +62,7 @@ Para evitar o "Efeito Rashomon", o repositório é ancorado por uma Fonte Única
 
 Inicie a sessão sob a metodologia Antigravity. 
 1. Leia silenciosamente o `estado_atual.md` e as `regras_base.md`.
-2. Verifique se há algum "lixo cognitivo" (obsolescência) que precisamos limpar da sessão anterior.
-3. Me apresente um briefing de 3 linhas do nosso status atual.
-4. Considerando tudo liste o que falta ser feito no desenvolvimento do sistema? O que você sugere de proxima etapa ou fase?
+2. Atualize os relatórios da sessão anterior. O que foi feito, o que falta fazer, ideias, etc.
+3. Verifique se há algum "lixo cognitivo" (obsolescência) que precisamos limpar da sessão anterior.
+4. Me apresente um briefing de 3 linhas do nosso status atual.
+5. Considerando tudo liste o que falta ser feito no desenvolvimento do sistema? O que você sugere de proxima etapa ou fase?

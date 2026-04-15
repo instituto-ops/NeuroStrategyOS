@@ -21,7 +21,7 @@ app.get('/api/health/check', async (req, res) => {
         timestamp: new Date().toISOString(),
         services: {
             database: { status: 'active', message: 'Local DB Operational' },
-            gemini: { status: 'ready', model: VISION_MODEL }
+            gemini: { status: 'ready', model: MAIN_MODEL }
         }
     };
 
@@ -71,7 +71,7 @@ app.post('/api/health/design-audit', async (req, res) => {
         const { image, context } = req.body;
         console.log(`ðŸ–Œï¸ [SERVER] Auditoria de Design Recebida. Processando Vision...`);
 
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL }); // Use Flash ou Pro vision
+        const model = genAI.getGenerativeModel({ model: MAIN_MODEL }); // Use Flash ou Pro vision
         
         // Remove prefixo base64 se houver
         const base64Data = image.split(',')[1] || image;
@@ -114,7 +114,7 @@ app.post('/api/reputation/analyze', async (req, res) => {
         const { platform, content } = req.body;
         console.log(`ðŸ›¡ï¸ [REPUTAÃ‡ÃƒO] Analisando impacto de feedback em ${platform}...`);
 
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
+        const model = genAI.getGenerativeModel({ model: MAIN_MODEL });
         const prompt = `
         Analise o seguinte feedback de paciente recebido na plataforma ${platform}:
         """${content}"""

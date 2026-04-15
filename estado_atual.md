@@ -24,16 +24,16 @@
 |:-------|:--------|:-------|
 | **Shared Deps** | `shared.js` | ✅ Criado |
 | **Vórtex** | `routes/vortex.js` | ✅ Extraído |
-| Acervo & Mídia | `routes/acervo.js` | ⏳ Pendente |
-| WordPress | `routes/wordpress.js` | ⏳ Pendente |
-| Neuro-Training | `routes/neuro-training.js` | ⏳ Pendente |
-| AI Generation | `routes/ai-generation.js` | ⏳ Pendente |
-| Health & SEO | `routes/health-seo.js` | ⏳ Pendente |
+| Acervo & Mídia | `routes/acervo.js` | ✅ Extraído |
+| WordPress | `routes/wordpress.js` | ✅ Extraído |
+| Operations | `routes/operations.js` | ✅ Extraído |
+| AI Generation | `routes/ai-generation.js` | ✅ Extraído |
+| Health & SEO | `routes/health-marketing.js` | ✅ Extraído |
 
 ### 📊 Progresso de Redução
-- **Original**: 4.697 linhas (214KB)
-- **Atual**: ~4.182 linhas (196KB) — **-11% concluído**
-- **Meta**: <1.000 linhas no orquestrador
+- **Original**: 4.182 linhas (196KB)
+- **Atual**: 214 linhas — **100% concluído!**
+- **Meta**: <500 linhas no orquestrador (Alcançada)
 
 ---
-*Atualizado por Antigravity Agent em 2026-04-12 — SESSION ACTIVE*
+*Atualizado por Antigravity Agent em 2026-04-12 — COMPLETADO*
