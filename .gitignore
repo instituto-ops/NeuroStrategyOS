@@ -41,9 +41,10 @@ diff.txt
 wordpress-stubs.php
 /docs/prints/
 
-# Ignorar Ecossistema de Contexto Cognitivo da Metodologia Antigravity
-Antigravity/*
-!Antigravity/estado_atual.md
+# Ignorar Ecossistema de Contexto Cognitivo (CSA)
+CSA/*
+# estado_atual.md (raiz) é rastreado por padrão.
+
 
 # Ignorar Documentos Originais da Metodologia
 docs/Metodologia Antigravity/
