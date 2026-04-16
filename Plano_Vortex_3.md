@@ -29,9 +29,9 @@
 6.  **Error Boundary:** Envolver o contêiner de renderização em um interceptor de erros.
 
 ### 📋 Checklist Fase II
-- [ ] Shell carregando via Iframe no Vórtex.
-- [ ] Ícones Lucide aparecendo sem imports.
-- [ ] Erros de código no preview não travando a UI principal.
+- [x] Shell carregando via Iframe no Vórtex. ✅ `preview-shell.html` criado com `src` dinâmico
+- [x] Ícones Lucide aparecendo sem imports. ✅ `window.Lucide = LucideIcons` no escopo global
+- [x] Erros de código no preview não travando a UI principal. ✅ ErrorBoundary + postMessage de erro
 
 ---
 

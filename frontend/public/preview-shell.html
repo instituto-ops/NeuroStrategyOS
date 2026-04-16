@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vórtex 3.1 — Preview Shell</title>
+
+    <!-- ================================================================= -->
+    <!-- VÓRTEX 3.1 PREVIEW SHELL                                         -->
+    <!-- Ambiente isolado de renderização com dependências pinadas.        -->
+    <!-- NÃO edite versões sem atualizar o Baseline Report (SSOT).        -->
+    <!-- ================================================================= -->
+
+    <!-- [PIN] Tailwind CSS v3.4.1 -->
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+
+    <!-- [PIN] Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+
+    <!-- [PIN] Import Map — ESM.sh com versões fixas -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "framer-motion": "https://esm.sh/framer-motion@11.0.3?external=react,react-dom",
+        "lucide-react": "https://esm.sh/lucide-react@0.344.0?external=react"
+      }
+    }
+    </script>
+
+    <style>
+        /* === Base Reset === */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #050810;
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2dd4bf20; border-radius: 10px; }
+        .font-outfit { font-family: 'Outfit', sans-serif; }
+
+        /* === Loading State === */
+        .vortex-shell-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #94a3b8;
+            font-family: 'Inter', sans-serif;
+            gap: 16px;
+        }
+        .vortex-shell-loading svg {
+            animation: vortex-spin 1s linear infinite;
+            color: #2dd4bf;
+        }
+        @keyframes vortex-spin { to { transform: rotate(360deg); } }
+
+        /* === Error Boundary UI === */
+        .vortex-error-boundary {
+            padding: 24px;
+            margin: 20px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            color: #fca5a5;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .vortex-error-boundary h3 {
+            color: #ef4444;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .vortex-error-boundary pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            background: rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="vortex-shell-loading">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            <span>Vórtex 3.1 Shell — Aguardando componente...</span>
+        </div>
+    </div>
+
+    <script type="module">
+    // =======================================================================
+    // VÓRTEX 3.1 PREVIEW SHELL — Runtime Module
+    // =======================================================================
+    import React, { useState, useEffect, useRef, useMemo, useCallback, Fragment } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { motion, AnimatePresence } from 'framer-motion';
+    import * as LucideIcons from 'lucide-react';
+
+    // -----------------------------------------------------------------------
+    // 1. GLOBAL SCOPE — Expor libs para "Naked Components"
+    // -----------------------------------------------------------------------
+    window.React = React;
+    window.useState = useState;
+    window.useEffect = useEffect;
+    window.useRef = useRef;
+    window.useMemo = useMemo;
+    window.useCallback = useCallback;
+    window.Fragment = Fragment;
+
+    // Framer Motion no escopo global
+    window.motion = motion;
+    window.AnimatePresence = AnimatePresence;
+
+    // Lucide Icons no escopo global (acesso via window.Lucide.IconName)
+    window.Lucide = LucideIcons;
+
+    // -----------------------------------------------------------------------
+    // 2. MOCKS — Next.js shims para componentes "nus"
+    // -----------------------------------------------------------------------
+    window.Link = ({ href, children, className, ...props }) => {
+        return React.createElement('a', { href, className, ...props }, children);
+    };
+
+    window.Image = ({ src, alt, className, width, height, fill, ...props }) => {
+        const style = fill
+            ? { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }
+            : { maxWidth: '100%', height: 'auto' };
+        return React.createElement('img', { src, alt, className, width, height, style, ...props });
+    };
+
+    window.useRouter = () => ({
+        push: (url) => console.log('[Mock] router.push:', url),
+        back: () => console.log('[Mock] router.back()'),
+        pathname: '/',
+        query: {},
+    });
+
+    window.usePathname = () => '/';
+    window.useSearchParams = () => new URLSearchParams();
+
+    // -----------------------------------------------------------------------
+    // 3. ERROR BOUNDARY — Interceptador de erros de renderização
+    // -----------------------------------------------------------------------
+    class ErrorBoundary extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = { hasError: false, error: null };
+        }
+        static getDerivedStateFromError(error) {
+            return { hasError: true, error };
+        }
+        componentDidCatch(error, info) {
+            console.error('[Vórtex Shell] Render Error:', error, info);
+            // Notifica o host sobre o erro
+            window.parent.postMessage({
+                type: 'vortex-render-error',
+                message: error.message,
+                stack: error.stack
+            }, '*');
+        }
+        render() {
+            if (this.state.hasError) {
+                return React.createElement('div', { className: 'vortex-error-boundary' },
+                    React.createElement('h3', null, '🛡️ Vórtex Error Boundary — Erro de Renderização'),
+                    React.createElement('pre', null, this.state.error?.message || 'Erro desconhecido'),
+                    React.createElement('button', {
+                        onClick: () => this.setState({ hasError: false, error: null }),
+                        style: {
+                            marginTop: '16px', padding: '8px 16px',
+                            background: '#2dd4bf', color: '#050810',
+                            border: 'none', borderRadius: '8px', cursor: 'pointer',
+                            fontWeight: 700, fontSize: '12px'
+                        }
+                    }, '🔄 Tentar Novamente')
+                );
+            }
+            return this.props.children;
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // 4. RENDERER — Monta componentes recebidos via postMessage
+    // -----------------------------------------------------------------------
+    let currentRoot = null;
+
+    function renderComponent(code) {
+        const rootEl = document.getElementById('root');
+
+        try {
+            // Cria a função do componente a partir do código "nu"
+            const componentFn = new Function(
+                'React', 'useState', 'useEffect', 'useRef', 'useMemo', 'useCallback', 'Fragment',
+                'motion', 'AnimatePresence',
+                'Lucide', 'Link', 'Image', 'useRouter', 'usePathname', 'useSearchParams',
+                code + '\nreturn typeof Component !== "undefined" ? Component : (typeof App !== "undefined" ? App : null);'
+            );
+
+            const Component = componentFn(
+                React, useState, useEffect, useRef, useMemo, useCallback, Fragment,
+                motion, AnimatePresence,
+                LucideIcons, window.Link, window.Image, window.useRouter, window.usePathname, window.useSearchParams
+            );
+
+            if (!Component) {
+                throw new Error('Nenhum componente encontrado. Certifique-se de que o código define "Component" ou "App".');
+            }
+
+            // Limpa root anterior
+            if (currentRoot) {
+                currentRoot.unmount();
+            }
+
+            currentRoot = createRoot(rootEl);
+            currentRoot.render(
+                React.createElement(ErrorBoundary, null,
+                    React.createElement(Component)
+                )
+            );
+
+            // Notifica sucesso ao host
+            window.parent.postMessage({ type: 'vortex-render-success' }, '*');
+
+        } catch (error) {
+            console.error('[Vórtex Shell] Compilation Error:', error);
+            rootEl.innerHTML = `
+                <div class="vortex-error-boundary">
+                    <h3>⚠️ Erro de Compilação</h3>
+                    <pre>${error.message}</pre>
+                </div>
+            `;
+            // Notifica erro ao host
+            window.parent.postMessage({
+                type: 'vortex-render-error',
+                message: error.message,
+                stack: error.stack
+            }, '*');
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. PROTOCOL — Comunicação host ↔ iframe via postMessage
+    // -----------------------------------------------------------------------
+    window.addEventListener('message', (event) => {
+        // Segurança: aceitar apenas mensagens do próprio domínio
+        if (event.data?.type === 'vortex-inject-component') {
+            const { code } = event.data;
+            if (code && typeof code === 'string') {
+                renderComponent(code);
+            }
+        }
+
+        if (event.data?.type === 'vortex-clear-preview') {
+            const rootEl = document.getElementById('root');
+            if (currentRoot) {
+                currentRoot.unmount();
+                currentRoot = null;
+            }
+            rootEl.innerHTML = `
+                <div class="vortex-shell-loading">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    <span>Vórtex 3.1 Shell — Aguardando componente...</span>
+                </div>
+            `;
+        }
+    });
+
+    // Sinaliza para o host que o Shell está pronto
+    window.parent.postMessage({ type: 'vortex-shell-ready' }, '*');
+    console.log('🌀 [VÓRTEX 3.1] Preview Shell carregado e pronto.');
+    </script>
+</body>
+</html>

@@ -822,163 +822,98 @@ window.vortexStudio = (() => {
         return code.includes('import ') || code.includes('export default function') || code.includes('className=') || code.includes('React.');
     }
 
-    function buildReactSandbox(reactCode) {
-        // Find default export name
-        let componentName = 'App';
-        const match = reactCode.match(/export\s+default\s+function\s+([A-Za-z0-9_]+)/);
-        if (match) componentName = match[1];
-
-        return `<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- Import Maps para ESM -->
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "framer-motion": "https://esm.sh/framer-motion@10.16.4",
-        "lucide-react": "https://esm.sh/lucide-react@0.292.0",
-        "next/link": "https://esm.sh/react",
-        "next/image": "https://esm.sh/react",
-        "next/font/google": "https://esm.sh/react"
-      }
+    // =========================================================================
+    // [VÓRTEX 3.1] NAKED COMPONENT STRIPPER
+    // Remove imports do código para injeção no Preview Shell isolado.
+    // O Shell já possui React, Framer Motion, Lucide e Mocks no escopo global.
+    // =========================================================================
+    function stripForPreview(code) {
+        let stripped = code;
+        // Remove todos os imports (o Shell já tem tudo no escopo global)
+        stripped = stripped.replace(/import\s+.*?from\s+['"][^'"]+['"];?\s*\n?/g, '');
+        // Remove 'use client' directive
+        stripped = stripped.replace(/['"]use client['"];?\s*\n?/g, '');
+        // Remove export default — o Shell procura por Component ou App
+        stripped = stripped.replace(/export\s+default\s+function\s+/, 'function ');
+        stripped = stripped.replace(/export\s+default\s+/, '');
+        return stripped.trim();
     }
-    </script>
-    
-    <!-- Babel JSX Compiler -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background: #050810; color: #e2e8f0; margin: 0; min-height: 100vh; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #2dd4bf20; border-radius: 10px; }
-        .font-outfit { font-family: 'Outfit', sans-serif; }
-    </style>
-</head>
-<body>
-    <div id="root">
-        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; color:#94a3b8; font-family:'Inter',sans-serif;">
-            <i data-lucide="loader-2" class="vortex-spin" style="width:32px;height:32px;color:#2dd4bf;margin-bottom:16px;"></i>
-            <span>Vórtex Compiler: Montando Componente...</span>
-        </div>
-    </div>
-    <script>lucide.createIcons();</script>
-    <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-        import { createRoot } from 'react-dom/client';
-        
-        // --- React Hooks Mocks (Fallback safe) ---
-        window.React = React;
 
-        // --- Next.js Mocks ---
-        const Link = ({href, children, className}) => <a href={href} className={className}>{children}</a>;
-        const Image = ({src, alt, className, width, height}) => <img src={src} alt={alt} className={className} width={width} height={height} style={{maxWidth:'100%', height:'auto'}} />;
-        const Inter = () => ({ className: 'font-inter' });
-        const Outfit = () => ({ className: 'font-outfit' });
-
-        // --- Código Original (Vibecoded) ---
-        ${reactCode
-            .replace(/import\s+Link.*?from\s+['"]next\/link['"];?/g, '')
-            .replace(/import\s+Image.*?from\s+['"]next\/image['"];?/g, '')
-            .replace(/import\s+\{.*?(Inter|Outfit).*?['"];?/g, '')
-            .replace(/import\s+React.*?from\s+['"]react['"];?/g, '')
-            .replace(/import\s*\{[^}]*\}\s*from\s+['"]react['"];?/g, '')}
-
-        // Renderização Dinâmica
-        setTimeout(() => {
-            try {
-                const root = createRoot(document.getElementById('root'));
-                root.render(<${componentName} />);
-            } catch (e) {
-                document.getElementById('root').innerHTML = '<div style="color:#ef4444;padding:20px;font-family:monospace;">Erro de Compilação React:<br><br>' + e.message + '</div>';
-            }
-        }, 100);
-    </script>
-</body>
-</html>`;
+    function getComponentName(code) {
+        const match = code.match(/(?:export\s+default\s+)?function\s+([A-Za-z0-9_]+)/);
+        return match ? match[1] : 'App';
     }
 
     // =========================================================================
-    // PREVIEW
+    // [VÓRTEX 3.1] PREVIEW — Shell Isolado via postMessage
+    // React: Usa preview-shell.html com injeção via postMessage
+    // HTML:  Fallback para srcdoc (conteúdo estático)
     // =========================================================================
+    let shellReady = false;
+    let pendingCode = null;
+
     function updatePreview(htmlContent) {
         const frame = document.getElementById('vortex-preview-frame');
         if (!frame) return;
 
-        // [PHASE 5.2] Sanitização Anti-Hallucination
+        // Sanitização Anti-Hallucination
         let processedHtml = htmlContent;
-        // Fix for double-quoted/escaped CDN URLs common in AI JSON outputs
-        processedHtml = processedHtml.replace(/src=["'](?:%22|\\")+(https:\/\/unpkg\.com\/lucide[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
-        processedHtml = processedHtml.replace(/src=["'](?:%22|\\")+(https:\/\/cdn\.tailwindcss\.com[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
-
-        // [PHASE 4.2] Injetar Web Vitals Telemetry
-        const telemetryScript = `
-            <script type="module">
-                import { onLCP, onCLS, onINP } from 'https://unpkg.com/web-vitals@3?module';
-                const send = (name, val) => window.parent.postMessage({ type: 'vortex-vital', name, value: val }, '*');
-                onLCP(m => send('LCP', m.value));
-                onCLS(m => send('CLS', m.value));
-                onINP(m => send('INP', m.value));
-            </script>
-            <script>
-                // Garantir que ícones lucide sejam criados após o carregamento
-                window.addEventListener('load', () => {
-                    if (window.lucide) window.lucide.createIcons();
-                });
-            </script>
-        `;
-
-        // Wrap in a full HTML document if needed
-        let fullHtml = processedHtml;
+        processedHtml = processedHtml.replace(/src=["'](?:%22|\\"")+(https:\/\/unpkg\.com\/lucide[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
+        processedHtml = processedHtml.replace(/src=["'](?:%22|\\"")+(https:\/\/cdn\.tailwindcss\.com[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
 
         if (isReactCode(processedHtml)) {
-            // [VÓRTEX COMPILER STRATEGY] Se for React, constrói on-the-fly sem precisar de blocos de HTML
-            fullHtml = buildReactSandbox(processedHtml);
-            fullHtml = injectDesignSystemToPreview(fullHtml);
-            // Injeta CSS para rotação do loader
-            fullHtml = fullHtml.replace('<style>', '<style>\n        @keyframes spinner { to { transform: rotate(360deg); } }\n        .vortex-spin { animation: spinner 1s linear infinite; }\n');
-        } else if (!processedHtml.includes('<!DOCTYPE') && !processedHtml.includes('<html')) {
+            // ============================================================
+            // [VÓRTEX 3.1] React → Preview Shell + postMessage
+            // ============================================================
+            const strippedCode = stripForPreview(processedHtml);
+            const componentName = getComponentName(processedHtml);
 
-            // [PHASE 2.7] Schema.org JSON-LD Automático
-            const schemaLd = `
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "ProfessionalService",
-        "name": "Dr. Victor Lawrence",
-        "description": "Psicólogo Clínico especializado em Neuropsicologia e TCC",
-        "address": { "@type": "PostalAddress", "addressLocality": "Goiânia", "addressRegion": "GO", "addressCountry": "BR" },
-        "telephone": "+5562999999999",
-        "url": "https://drvictorlawrence.com.br",
-        "priceRange": "$$",
-        "image": "https://drvictorlawrence.com.br/images/victor-lawrence.jpg"
-    }
-    </script>`;
+            // Adiciona a variável Component para o Shell encontrar
+            const injectableCode = strippedCode + `\nconst Component = ${componentName};`;
 
-            // [PHASE 2.8] Google Tag Manager Auto-Inject
-            const gtmSnippet = `
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-PLACEHOLDER');</script>
-    <!-- End Google Tag Manager -->`;
+            // Carrega o shell se ainda não estiver ativo
+            const currentSrc = frame.getAttribute('src');
+            if (!currentSrc || !currentSrc.includes('preview-shell.html')) {
+                shellReady = false;
+                pendingCode = injectableCode;
+                frame.src = '/preview-shell.html';
+            } else if (shellReady) {
+                // Shell já carregado — injetar diretamente
+                frame.contentWindow.postMessage({
+                    type: 'vortex-inject-component',
+                    code: injectableCode
+                }, '*');
+            } else {
+                // Shell carregando — guardar código pendente
+                pendingCode = injectableCode;
+            }
+        } else {
+            // ============================================================
+            // HTML Estático — Fallback via srcdoc (sem React)
+            // ============================================================
+            const telemetryScript = `
+                <script type="module">
+                    import { onLCP, onCLS, onINP } from 'https://unpkg.com/web-vitals@3?module';
+                    const send = (name, val) => window.parent.postMessage({ type: 'vortex-vital', name, value: val }, '*');
+                    onLCP(m => send('LCP', m.value));
+                    onCLS(m => send('CLS', m.value));
+                    onINP(m => send('INP', m.value));
+                </script>
+                <script>
+                    window.addEventListener('load', () => {
+                        if (window.lucide) window.lucide.createIcons();
+                    });
+                </script>
+            `;
 
-            fullHtml = `<!DOCTYPE html>
+            let fullHtml = processedHtml;
+            if (!processedHtml.includes('<!DOCTYPE') && !processedHtml.includes('<html')) {
+                fullHtml = `<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    ${schemaLd}
-    ${gtmSnippet}
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
     <style>
@@ -991,35 +926,66 @@ window.vortexStudio = (() => {
 </head>
 <body>${processedHtml}</body>
 </html>`;
-            // [PHASE 4.5] Inject design system tokens into Tailwind
-            fullHtml = injectDesignSystemToPreview(fullHtml);
-        } else {
-            // Case where it is already a full HTML, inject before </body> or </head>
-            if (!fullHtml.includes('unpkg.com/lucide')) {
-                fullHtml = fullHtml.replace('</head>', '<script src="https://unpkg.com/lucide@latest"></script></head>');
+                fullHtml = injectDesignSystemToPreview(fullHtml);
+            } else {
+                if (!fullHtml.includes('unpkg.com/lucide')) {
+                    fullHtml = fullHtml.replace('</head>', '<script src="https://unpkg.com/lucide@latest"></script></head>');
+                }
+                fullHtml = fullHtml.replace('</body>', `${telemetryScript}</body>`);
+                fullHtml = injectDesignSystemToPreview(fullHtml);
             }
-            fullHtml = fullHtml.replace('</body>', `${telemetryScript}</body>`);
-            // [PHASE 4.5] Inject design system tokens
-            fullHtml = injectDesignSystemToPreview(fullHtml);
-        }
 
-        frame.srcdoc = fullHtml;
+            // Reset para srcdoc mode
+            frame.removeAttribute('src');
+            frame.srcdoc = fullHtml;
+        }
     }
 
-    // [PHASE 4.2] Listener para Telemetria
+    // [VÓRTEX 3.1] Listener para comunicação host ↔ iframe
     window.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'vortex-vital') {
-            const { name, value } = event.data;
-            const el = document.getElementById(`vortex-${name.toLowerCase()}`);
-            if (el) {
-                let formatted = value;
-                if (name === 'LCP' || name === 'INP') formatted = (value / 1000).toFixed(2) + 's';
-                if (name === 'CLS') formatted = value.toFixed(3);
-                el.innerText = formatted;
+        if (!event.data || !event.data.type) return;
 
-                // Color coding
-                if (name === 'LCP') el.className = value < 2500 ? 'vortex-vital-value good' : value < 4000 ? 'vortex-vital-value neutral' : 'vortex-vital-value bad';
-                if (name === 'CLS') el.className = value < 0.1 ? 'vortex-vital-value good' : value < 0.25 ? 'vortex-vital-value neutral' : 'vortex-vital-value bad';
+        switch (event.data.type) {
+            // Shell pronto — injetar código pendente
+            case 'vortex-shell-ready':
+                shellReady = true;
+                console.log('🌀 [VÓRTEX 3.1] Preview Shell carregado com sucesso.');
+                if (pendingCode) {
+                    const frame = document.getElementById('vortex-preview-frame');
+                    if (frame && frame.contentWindow) {
+                        frame.contentWindow.postMessage({
+                            type: 'vortex-inject-component',
+                            code: pendingCode
+                        }, '*');
+                    }
+                    pendingCode = null;
+                }
+                break;
+
+            // Renderização bem-sucedida
+            case 'vortex-render-success':
+                addAuditLog('success', '✅ Preview renderizado com sucesso.');
+                break;
+
+            // Erro de renderização no shell
+            case 'vortex-render-error':
+                console.error('[VÓRTEX 3.1] Render Error:', event.data.message);
+                addAuditLog('error', `❌ Preview Error: ${event.data.message}`);
+                break;
+
+            // Telemetria Web Vitals
+            case 'vortex-vital': {
+                const { name, value } = event.data;
+                const el = document.getElementById(`vortex-${name.toLowerCase()}`);
+                if (el) {
+                    let formatted = value;
+                    if (name === 'LCP' || name === 'INP') formatted = (value / 1000).toFixed(2) + 's';
+                    if (name === 'CLS') formatted = value.toFixed(3);
+                    el.innerText = formatted;
+                    if (name === 'LCP') el.className = value < 2500 ? 'vortex-vital-value good' : value < 4000 ? 'vortex-vital-value neutral' : 'vortex-vital-value bad';
+                    if (name === 'CLS') el.className = value < 0.1 ? 'vortex-vital-value good' : value < 0.25 ? 'vortex-vital-value neutral' : 'vortex-vital-value bad';
+                }
+                break;
             }
         }
     });
