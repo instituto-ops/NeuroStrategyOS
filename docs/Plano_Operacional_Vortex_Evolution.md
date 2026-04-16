@@ -33,10 +33,10 @@
   - **Status:** CONCLUÍDO. O preview é renderizado dentro de um `<iframe>` com ID `vortex-preview-frame`.
   - **Ação:** Mapear em `vortex-studio.js` a lógica de injeção.
 
-- [ ] **Microetapa 1.1.b — Implementar o mecanismo de contenção adequado**
+- [x] **Microetapa 1.1.b — Implementar o mecanismo de contenção adequado**
   - Aplicar Estratégia B (Wrapper em PostMessage/Injeção) para iFrames.
 
-- [ ] **Microetapa 1.1.c — Implementar o FallbackPanel**
+- [x] **Microetapa 1.1.c — Implementar o FallbackPanel**
   - Interface amigável para sinalizar falhas de renderização sem quebrar a IDE.
 
 **Meta:** Nenhuma falha de componente gerado pela IA pode travar a IDE inteira. A sessão de trabalho é inviolável.
@@ -116,7 +116,7 @@
 ## Sequência de Execução Checklist
 
 ```
-[x] 1.1.a → [ ] 1.1.b → [ ] 1.1.c
+[x] 1.1.a → [x] 1.1.b → [x] 1.1.c
               ↓
 [ ] 1.2.a → [ ] 1.2.b → [ ] 1.2.c
               ↓

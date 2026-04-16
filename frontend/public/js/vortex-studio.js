@@ -114,7 +114,9 @@ window.vortexStudio = (() => {
         if (fileCount === 0) {
             console.log('🌀 [VORTEX VFS] Database empty. Ingesting physical repository starting now...');
             try {
-                const res = await fetch('/api/vortex/ingest');
+                const res = await fetch('/api/vortex/ingest', {
+                    headers: { 'Authorization': `Bearer ${VORTEX_API_KEY}` }
+                });
                 const data = await res.json();
                 if (data.success && data.files) {
                     const tx = state.db.transaction('rw', state.db.files, async () => {
@@ -360,7 +362,10 @@ window.vortexStudio = (() => {
             
             const req = await fetch('/api/vortex/cache', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${VORTEX_API_KEY}`
+                },
                 body: JSON.stringify({
                     components: componentsStr,
                     model: model,
@@ -495,7 +500,10 @@ window.vortexStudio = (() => {
     async function sendPromptStream(payload) {
         const response = await fetch('/api/vortex/generate-stream', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${VORTEX_API_KEY}`
+            },
             body: JSON.stringify(payload)
         });
 
@@ -628,7 +636,10 @@ window.vortexStudio = (() => {
     async function sendPromptSync(payload) {
         const response = await fetch('/api/vortex/generate', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${VORTEX_API_KEY}`
+            },
             body: JSON.stringify(payload)
         });
 
@@ -951,62 +962,63 @@ window.vortexStudio = (() => {
     let pendingCode = null;
 
     function updatePreview(htmlContent) {
-        const frame = document.getElementById('vortex-preview-frame');
-        if (!frame) return;
+        try {
+            const frame = document.getElementById('vortex-preview-frame');
+            if (!frame) return;
 
-        // Sanitização Anti-Hallucination
-        let processedHtml = htmlContent;
-        processedHtml = processedHtml.replace(/src=["'](?:%22|\\"")+(https:\/\/unpkg\.com\/lucide[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
-        processedHtml = processedHtml.replace(/src=["'](?:%22|\\"")+(https:\/\/cdn\.tailwindcss\.com[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
+            // Sanitização Anti-Hallucination
+            let processedHtml = htmlContent;
+            processedHtml = processedHtml.replace(/src=["'](?:%22|\\"")+(https:\/\/unpkg\.com\/lucide[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
+            processedHtml = processedHtml.replace(/src=["'](?:%22|\\"")+(https:\/\/cdn\.tailwindcss\.com[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
 
-        if (isReactCode(processedHtml)) {
-            // ============================================================
-            // [VÓRTEX 3.1] React → Preview Shell + postMessage
-            // ============================================================
-            const strippedCode = stripForPreview(processedHtml);
-            const componentName = getComponentName(processedHtml);
+            if (isReactCode(processedHtml)) {
+                // ============================================================
+                // [VÓRTEX 3.1] React → Preview Shell + postMessage
+                // ============================================================
+                const strippedCode = stripForPreview(processedHtml);
+                const componentName = getComponentName(processedHtml);
 
-            // Adiciona a variável Component para o Shell encontrar
-            const injectableCode = strippedCode + `\nconst Component = ${componentName};`;
+                // Adiciona a variável Component para o Shell encontrar
+                const injectableCode = strippedCode + `\nconst Component = ${componentName};`;
 
-            // Carrega o shell se ainda não estiver ativo
-            const currentSrc = frame.getAttribute('src');
-            if (!currentSrc || !currentSrc.includes('preview-shell.html')) {
-                shellReady = false;
-                pendingCode = injectableCode;
-                frame.src = '/preview-shell.html';
-            } else if (shellReady) {
-                // Shell já carregado — injetar diretamente
-                frame.contentWindow.postMessage({
-                    type: 'vortex-inject-component',
-                    code: injectableCode
-                }, '*');
+                // Carrega o shell se ainda não estiver ativo
+                const currentSrc = frame.getAttribute('src');
+                if (!currentSrc || !currentSrc.includes('preview-shell.html')) {
+                    shellReady = false;
+                    pendingCode = injectableCode;
+                    frame.src = '/preview-shell.html';
+                } else if (shellReady) {
+                    // Shell já carregado — injetar diretamente
+                    frame.contentWindow.postMessage({
+                        type: 'vortex-inject-component',
+                        code: injectableCode
+                    }, '*');
+                } else {
+                    // Shell carregando — guardar código pendente
+                    pendingCode = injectableCode;
+                }
             } else {
-                // Shell carregando — guardar código pendente
-                pendingCode = injectableCode;
-            }
-        } else {
-            // ============================================================
-            // HTML Estático — Fallback via srcdoc (sem React)
-            // ============================================================
-            const telemetryScript = `
-                <script type="module">
-                    import { onLCP, onCLS, onINP } from 'https://unpkg.com/web-vitals@3?module';
-                    const send = (name, val) => window.parent.postMessage({ type: 'vortex-vital', name, value: val }, '*');
-                    onLCP(m => send('LCP', m.value));
-                    onCLS(m => send('CLS', m.value));
-                    onINP(m => send('INP', m.value));
-                </script>
-                <script>
-                    window.addEventListener('load', () => {
-                        if (window.lucide) window.lucide.createIcons();
-                    });
-                </script>
-            `;
+                // ============================================================
+                // HTML Estático — Fallback via srcdoc (sem React)
+                // ============================================================
+                const telemetryScript = `
+                    <script type="module">
+                        import { onLCP, onCLS, onINP } from 'https://unpkg.com/web-vitals@3?module';
+                        const send = (name, val) => window.parent.postMessage({ type: 'vortex-vital', name, value: val }, '*');
+                        onLCP(m => send('LCP', m.value));
+                        onCLS(m => send('CLS', m.value));
+                        onINP(m => send('INP', m.value));
+                    </script>
+                    <script>
+                        window.addEventListener('load', () => {
+                            if (window.lucide) window.lucide.createIcons();
+                        });
+                    </script>
+                `;
 
-            let fullHtml = processedHtml;
-            if (!processedHtml.includes('<!DOCTYPE') && !processedHtml.includes('<html')) {
-                fullHtml = `<!DOCTYPE html>
+                let fullHtml = processedHtml;
+                if (!processedHtml.includes('<!DOCTYPE') && !processedHtml.includes('<html')) {
+                    fullHtml = `<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -1020,24 +1032,89 @@ window.vortexStudio = (() => {
         ::-webkit-scrollbar-thumb { background: #2dd4bf20; border-radius: 10px; }
         .font-outfit { font-family: 'Outfit', sans-serif; }
     </style>
-    ${telemetryScript}
+    \${telemetryScript}
 </head>
-<body>${processedHtml}</body>
+<body>\${processedHtml}</body>
 </html>`;
-                fullHtml = injectDesignSystemToPreview(fullHtml);
-            } else {
-                if (!fullHtml.includes('unpkg.com/lucide')) {
-                    fullHtml = fullHtml.replace('</head>', '<script src="https://unpkg.com/lucide@latest"></script></head>');
+                    fullHtml = injectDesignSystemToPreview(fullHtml);
+                } else {
+                    if (!fullHtml.includes('unpkg.com/lucide')) {
+                        fullHtml = fullHtml.replace('</head>', '<script src="https://unpkg.com/lucide@latest"></script></head>');
+                    }
+                    fullHtml = fullHtml.replace('</body>', `\${telemetryScript}</body>`);
+                    fullHtml = injectDesignSystemToPreview(fullHtml);
                 }
-                fullHtml = fullHtml.replace('</body>', `${telemetryScript}</body>`);
-                fullHtml = injectDesignSystemToPreview(fullHtml);
-            }
 
-            // Reset para srcdoc mode
-            frame.removeAttribute('src');
-            frame.srcdoc = fullHtml;
+                // Reset para srcdoc mode
+                frame.removeAttribute('src');
+                frame.srcdoc = fullHtml;
+            }
+        } catch (err) {
+            console.error('🌀 [VORTEX] Fallback Triggered via Catch:', err);
+            renderFallbackPanel(err.message);
         }
     }
+
+
+function renderFallbackPanel(errorMsg) {
+    const frame = document.getElementById('vortex-preview-frame');
+    if (!frame) return;
+
+    const fallbackHtml = `
+        <!DOCTYPE html>
+        <html lang="pt-br">
+        <head>
+            <meta charset="UTF-8">
+            <script src="https://cdn.tailwindcss.com"></script>
+            <style>
+                body { 
+                    background: #050810; 
+                    color: #e2e8f0; 
+                    font-family: sans-serif; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    height: 100vh; 
+                    margin: 0;
+                    overflow: hidden;
+                }
+                .glass {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    backdrop-filter: blur(10px);
+                    border-radius: 16px;
+                    padding: 2rem;
+                    max-width: 400px;
+                    text-align: center;
+                }
+                .icon {
+                    font-size: 3rem;
+                    margin-bottom: 1rem;
+                    color: #ef4444;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="glass">
+                <div class="icon">⚠️</div>
+                <h2 class="text-xl font-bold mb-2">Erro de Renderização</h2>
+                <p class="text-sm text-gray-400 mb-4">
+                    O Vórtex detectou uma falha sintática ou de execução que impediu a visualização do componente.
+                </p>
+                <div class="bg-black/50 p-3 rounded text-xs font-mono text-red-400 mb-6 break-words">
+                    ${errorMsg}
+                </div>
+                <button onclick="parent.vortexStudio.repairCode()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                    Tentar Auto-Reparo (AI)
+                </button>
+            </div>
+        </body>
+        </html>
+    `;
+
+    frame.removeAttribute('src');
+    frame.srcdoc = fallbackHtml;
+}
 
     // [VÓRTEX 3.1] Listener para comunicação host ↔ iframe
     window.addEventListener('message', (event) => {
@@ -1069,6 +1146,7 @@ window.vortexStudio = (() => {
             case 'vortex-render-error':
                 console.error('[VÓRTEX 3.1] Render Error:', event.data.message);
                 addAuditLog('error', `❌ Preview Error: ${event.data.message}`);
+                renderFallbackPanel(event.data.message);
                 break;
 
             // Telemetria Web Vitals
@@ -1781,7 +1859,10 @@ window.vortexStudio = (() => {
             const filename = state.currentFile.replace(/^\/src\/app\//, '');
             await fetch('/api/vortex/save-local', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${VORTEX_API_KEY}`
+                },
                 body: JSON.stringify({ filename, content })
             });
         } catch(e) { console.error('Mirror error:', e); }
@@ -1823,7 +1904,10 @@ window.vortexStudio = (() => {
 
             const response = await fetch('/api/vortex/commit', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${VORTEX_API_KEY}`
+                },
                 body: JSON.stringify({
                     filename,
                     content: code,
