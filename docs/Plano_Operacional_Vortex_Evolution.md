@@ -61,10 +61,24 @@
 
 - [ ] **Microetapa 1.3.a — Implementar a flag `isTruncated`**
 - [ ] **Microetapa 1.3.b — Implementar `isSyntacticallyComplete`**
+  - **Refinamento:** NÃO usar contagem simples de caracteres. Utilizar o próprio `@babel/parser` (ou um parser leve que ignore strings/comentários) para validar se o código é uma unidade mínima passível de execução.
+  - **Regra:** Ignorar chaves `{ }` e parênteses `( )` dentro de strings, templates literals e comentários.
+
 - [ ] **Microetapa 1.3.c — Implementar o Continue Motor**
+  - Se `isTruncated === true`, realizar fatiamento dos últimos 200 caracteres (anchoring text) e empurrar recursivamente sem a interface ser travada pelo usuário.
+
 - [ ] **Microetapa 1.3.d — Definir limite de tentativas**
+  - Evitar Loops infinitos da base `isTruncated`, atrelando uma variável contadora `MAX_CONTINUATIONS = 3`.
 
 **Meta:** Zero intervenção manual do usuário em falhas de geração.
+
+---
+
+## ⚠️ Alertas Críticos de Execução
+
+- **Dualidade do Babel (Fase II):** O sistema utiliza Babel em dois contextos distintos. No **Frontend (Preview Shell)** para transpilação e execução, e no **Backend (Trans-Mapper)** para extração e hidratação. Deve-se garantir paridade absoluta de versões e plugins suportados.
+- **Sonda Sintática (1.3.b):** A validação de truncamento deve ser resiliente a falsos positivos (como chaves dentro de `console.log("{")`). O parser é o único juiz confiável.
+- **Ponto de Falha Único (2.2.d):** O Trans-Mapper é o gargalo de qualidade. Erros de injeção de imports aqui inviabilizam o código de produção. Testes unitários de hidratação são mandatórios nesta etapa.
 
 ---
 
