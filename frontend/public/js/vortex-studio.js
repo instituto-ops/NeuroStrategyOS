@@ -774,37 +774,10 @@ window.vortexStudio = (() => {
     }
 
     // =========================================================================
-    // [PHASE 2.5] SEMANTIC AUDIT VIA GEMINI
+    // [PHASE 2.5] SEMANTIC AUDIT — REMOVED (Vórtex 3.1 Purge)
+    // A auditoria semântica foi removida para eliminar overhead de tokens.
+    // A compliance Abidos (auditCode) permanece ativa como gate de commit.
     // =========================================================================
-    async function auditSemantic(code) {
-        try {
-            const response = await fetch('/api/vortex/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    prompt: `ROLE: Auditor ético do Conselho Federal de Psicologia (CFP).\nANALISE este código HTML/JSX e identifique QUALQUER violação das normas éticas do CFP para publicidade de serviços de psicologia.\n\nVIOLAÇÕES A BUSCAR:\n- Promessas de cura ou resultado garantido\n- Uso de termos sensacionalistas ou superlativos proibidos\n- Autopromoção com títulos não verificáveis (\"o melhor\", \"o único\")\n- Exposição de dados de pacientes (mesmo fictícios)\n- Depoimentos que sugiram resultado clínico\n\nResposta OBRIGATÓRIA em JSON: { "passes": true/false, "issues": ["descrição da violação"] }\n\nCÓDIGO:\n${code.substring(0, 4000)}`,
-                    model: 'gemini-2.5-flash-lite'
-                })
-            });
-            const data = await response.json();
-            if (data.code) {
-                try {
-                    const parsed = JSON.parse(data.code);
-                    if (!parsed.passes && parsed.issues) {
-                        parsed.issues.forEach(issue => {
-                            addAuditLog('warn', `🧠 CFP Semântico: ${issue}`);
-                        });
-                        return parsed;
-                    }
-                } catch(e) {}
-            }
-            addAuditLog('success', '🧠 Auditoria semântica CFP: Aprovado.');
-            return { passes: true, issues: [] };
-        } catch(e) {
-            console.warn('[SEMANTIC AUDIT]', e);
-            return { passes: true, issues: [] };
-        }
-    }
 
     function updateAuditUI(results) {
         const chatMessages = document.getElementById('vortex-chat-messages');
@@ -1245,12 +1218,12 @@ window.vortexStudio = (() => {
             });
         }
 
-        const previewMatch = text.match(/<preview>([\s\S]*?)<\/preview>/);
+        // [Vórtex 3.1] Preview parser removido — preview agora é via Shell isolado.
         const explanationMatch = text.match(/<explanation>([\s\S]*?)<\/explanation>/);
 
         return {
             files,
-            preview: previewMatch ? previewMatch[1].trim() : '',
+            preview: '', // [Vórtex 3.1] Preview via Shell — não extrair do response da IA
             explanation: explanationMatch ? explanationMatch[1].trim() : 'Código gerado.'
         };
     }
@@ -1756,12 +1729,8 @@ window.vortexStudio = (() => {
             return;
         }
 
-        // [PHASE 2.5] Auditoria Semântica via Gemini (não-bloqueante)
-        addMessage('system', '🧠 Executando auditoria semântica CFP...');
-        const semanticAudit = await auditSemantic(code);
-        if (!semanticAudit.passes) {
-            addMessage('system', `⚠️ **AVISO CFP:** A IA identificou ${semanticAudit.issues.length} alerta(s) ético(s). Verifique antes de prosseguir.\n` + semanticAudit.issues.map(i => `• ${i}`).join('\n'));
-        }
+        // [Vórtex 3.1] Auditoria Semântica removida — overhead de tokens eliminado.
+        // A compliance Abidos (auditCode acima) permanece como gate.
 
         addMessage('system', '🚀 Preparando Deploy para Vercel...');
         addAuditLog('info', '🚀 Commit iniciado...');
@@ -2333,7 +2302,7 @@ window.vortexStudio = (() => {
         switchDrawerTab,
         addAuditLog,
         createSnapshot,
-        auditSemantic,
+        // auditSemantic — REMOVED (Vórtex 3.1 Purge)
         // Phase 3
         toggleZenMode,
         popOutPreview,
