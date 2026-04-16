@@ -39,7 +39,9 @@ window.vortexStudio = (() => {
         zenMode: false,          // Phase 3.10
         isTruncated: false,      // Step 3.2: Flag for token limit detection
         isContinuing: false,     // Step 3.2: Mode for emending code
-        preContinuationCode: ''  // Step 3.2: Buffer for previous code
+        preContinuationCode: '', // Step 3.2: Buffer for previous code
+        continuationCount: 0,    // Step 1.3.d: Continuation attempts
+        MAX_CONTINUATIONS: 3     // Step 1.3.d: Max automatic continuations
     };
 
     // =========================================================================
@@ -454,6 +456,7 @@ window.vortexStudio = (() => {
         }
 
         addMessage('user', prompt || '(Imagem anexada)');
+        state.continuationCount = 0; // Reset counter for new prompt
         setGenerating(true);
 
         try {
@@ -611,9 +614,19 @@ window.vortexStudio = (() => {
                             throw new Error(event.error || 'Erro no stream');
 
                         case 'done':
-                            if (event.isTruncated) {
+                            const finalCode = getEditorContent();
+                            if (event.isTruncated || !isSyntacticallyComplete(finalCode)) {
                                 state.isTruncated = true;
-                                notifyTruncated();
+                                if (state.continuationCount < state.MAX_CONTINUATIONS) {
+                                    state.continuationCount++;
+                                    addMessage('system', `🔄 **Recuperação Automática (${state.continuationCount}/${state.MAX_CONTINUATIONS})**...\nO código anterior foi truncado. Vórtex está sincronizando os fragmentos.`);
+                                    continueGeneration();
+                                } else {
+                                    addMessage('system', `⚠️ **Limite de Continuidade Atingido.**\nO código permanece instável após ${state.MAX_CONTINUATIONS} tentativas. Por favor, revise o prompt ou finalize manualmente.`);
+                                    notifyTruncated();
+                                }
+                            } else {
+                                state.continuationCount = 0; // Sucesso absoluto
                             }
                             state.isContinuing = false; // Reset ao finalizar
                             break;
@@ -838,43 +851,6 @@ window.vortexStudio = (() => {
         sendPrompt(errorSummary);
     }
 
-    // =========================================================================
-    // [VÓRTEX 3.1] RECURSIVE RECOVERY (CONTINUE GENERATION)
-    // =========================================================================
-    function notifyTruncated() {
-        const chatMessages = document.getElementById('vortex-chat-messages');
-        if (!chatMessages) return;
-
-        const warningDiv = document.createElement('div');
-        warningDiv.className = 'vortex-msg vortex-msg-system';
-        warningDiv.style.background = 'rgba(255, 153, 0, 0.1)';
-        warningDiv.style.borderColor = 'rgba(255, 153, 0, 0.3)';
-        warningDiv.innerHTML = `
-            <div style="color: #ff9900; font-weight: 800; margin-bottom: 8px;">🎞️ LIMITE DE TOKENS ATINGIDO</div>
-            <div style="font-size: 11px; line-height: 1.5; margin-bottom: 10px;">
-                O Vórtex detectou que a IA foi interrompida antes de fechar o arquivo. Deseja continuar a geração de onde parou?
-            </div>
-            <button class="vortex-btn-repair" style="background:#ff9900; color:white; border:none;" onclick="vortexStudio.continueGeneration()">CONTINUAR GERAÇÃO</button>
-        `;
-        chatMessages.appendChild(warningDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        
-        // Se houver áudio, poderíamos avisar sonoramente (vibe neuro)
-    }
-
-    async function continueGeneration() {
-        const fullContent = getEditorContent();
-        // Pegamos os últimos 200 caracteres para servir de âncora
-        const anchor = fullContent.length > 200 ? fullContent.substring(fullContent.length - 200) : fullContent;
-        
-        const continuePrompt = `Você parou em: "${anchor}". Continue exatamente a partir desse ponto, sem repetir o código anterior e mantendo o formato <file path="...">...</file>.`;
-        
-        state.isContinuing = true;
-        state.preContinuationCode = fullContent; // Salva o que já temos para emendar no buffer visual
-        
-        addMessage('user', `⏩ Continuar de onde parou...`);
-        sendPrompt(continuePrompt);
-    }
 
     function setGenerating(isGen) {
         state.isGenerating = isGen;
@@ -2416,6 +2392,151 @@ function renderFallbackPanel(errorMsg) {
     }
 
     // =========================================================================
+    // [PHASE 1.3] CONTINUE ENGINE (RESILIÊNCIA SSE)
+    // =========================================================================
+    function isSyntacticallyComplete(code) {
+        if (!code) return true;
+
+        // --- NÍVEL 1: SOBERANIA AST (Babel) ---
+        if (window.Babel && Babel.packages && Babel.packages.parser) {
+            try {
+                Babel.packages.parser.parse(code, {
+                    sourceType: "module",
+                    plugins: ["jsx", "typescript"]
+                });
+                console.log('✅ [VORTEX SYNTAX] AST Validated.');
+                return true; 
+            } catch (e) {
+                // Se o erro indicar que o arquivo terminou inesperadamente, é truncado
+                if (e.message.includes('Unexpected token') || e.message.includes('Unexpected EOF') || e.message.includes('Unterminated')) {
+                    console.warn('⚠️ [VORTEX SYNTAX] AST detected truncation:', e.message);
+                    return false;
+                }
+                // Para outros erros (sintaxe quebrada no meio), tratamos conforme o fallback ou assumimos "fechado" se não pudermos decidir
+            }
+        }
+
+        // --- NÍVEL 2: FALLBACK RESILIENTE (Stack-based) ---
+        let stack = [];
+        let inString = null;
+        let inComment = false;
+        let i = 0;
+
+        while (i < code.length) {
+            const char = code[i];
+            const nextChar = code[i + 1];
+
+            // 1. Handle Comments
+            if (!inString && !inComment && char === '/' && nextChar === '/') {
+                inComment = 'line';
+                i += 2; continue;
+            }
+            if (!inString && !inComment && char === '/' && nextChar === '*') {
+                inComment = 'block';
+                i += 2; continue;
+            }
+            if (inComment === 'line' && char === '\n') {
+                inComment = false;
+                i++; continue;
+            }
+            if (inComment === 'block' && char === '*' && nextChar === '/') {
+                inComment = false;
+                i += 2; continue;
+            }
+            if (inComment) { i++; continue; }
+
+            // 2. Handle Strings
+            if (!inString && (char === "'" || char === '"' || char === '`')) {
+                inString = char;
+                i++; continue;
+            }
+            if (inString === char && code[i - 1] !== '\\') {
+                inString = null;
+                i++; continue;
+            }
+            if (inString) { i++; continue; }
+
+            // 3. Handle Braces and Brackets
+            if (char === '{' || char === '(' || char === '[') stack.push(char);
+            if (char === '}') { if (stack.pop() !== '{') return false; }
+            if (char === ')') { if (stack.pop() !== '(') return false; }
+            if (char === ']') { if (stack.pop() !== '[') return false; }
+
+            i++;
+        }
+
+        return stack.length === 0;
+    }
+
+    function notifyTruncated() {
+        const msg = addMessage('system', `⚠️ **Geração Truncada** — O Gemini atingiu o limite de tokens ou o fluxo SSE foi interrompido.\n\nDeseja que eu continue de onde parei?`);
+        
+        // Injetar botão de ação no container de mensagens
+        setTimeout(() => {
+            const container = document.getElementById('vortex-chat-messages');
+            if (!container) return;
+            const lastMsg = container.lastElementChild;
+            if (lastMsg && lastMsg.classList.contains('vortex-msg-system')) {
+                const btnArea = document.createElement('div');
+                btnArea.style.marginTop = '12px';
+                btnArea.innerHTML = `
+                    <button onclick="vortexStudio.continueGeneration()" class="vortex-btn-primary" style="padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="play-circle" style="width:14px;"></i> Continuar Geração
+                    </button>
+                `;
+                lastMsg.appendChild(btnArea);
+                if (window.lucide) window.lucide.createIcons();
+                container.scrollTop = container.scrollHeight;
+            }
+        }, 100);
+
+        addAuditLog('warning', '⚠️ Truncamento detectado. Motor de Continuidade pronto.');
+    }
+
+    async function continueGeneration() {
+        if (state.isGenerating) return;
+
+        const currentCode = getEditorContent();
+        const anchor = currentCode.slice(-200); // Pegar os últimos 200 caracteres para contexto
+        
+        state.preContinuationCode = currentCode;
+        state.isContinuing = true;
+        state.isTruncated = false;
+
+        addMessage('user', 'Continuar geração...');
+        setGenerating(true);
+
+        try {
+            const model = document.getElementById('vortex-model-select')?.value || 'gemini-2.5-flash';
+            const payload = {
+                prompt: `CONTINUE de onde você parou.
+                
+                [ANCHOR TEXT (O ÚLTIMO TRECHO GERADO)]
+                "${anchor}"
+                
+                [REGRAS]
+                - Não repita o código que já foi gerado.
+                - Comece exatamente após o último caractere do Anchor Text.
+                - Garanta que as tags </file> sejam fechadas corretamente ao final.`,
+                model,
+                currentCode: '', // Não enviamos o código inteiro para economizar tokens, o Anchor basta
+                abidosRules: state.abidosRules,
+                context: buildAbidosContext(),
+                isContinuation: true // Flag opcional para o log
+            };
+
+            await sendPromptStream(payload);
+
+        } catch (err) {
+            console.error('❌ [VORTEX CONTINUE] Error:', err);
+            addMessage('system', `⚠️ Falha ao continuar: ${err.message}`);
+            state.isContinuing = false;
+        } finally {
+            setGenerating(false);
+        }
+    }
+
+    // =========================================================================
     // HELPERS
     // =========================================================================
     function loadScript(src) {
@@ -2437,7 +2558,11 @@ function renderFallbackPanel(errorMsg) {
         // 1. Render the UI skeleton
         renderUI();
 
-        // 2. Init VFS
+        // 2. Init VFS and External Libs
+        if (!window.Babel) {
+            console.log('🌀 [VORTEX] Loading Babel for AST Sovereignty...');
+            loadScript('https://unpkg.com/@babel/standalone/babel.min.js').catch(e => console.error('Failed to load Babel:', e));
+        }
         await initVFS();
 
         // 3. Init text area resize
@@ -2509,6 +2634,9 @@ function renderFallbackPanel(errorMsg) {
         downloadCode,
         generateSEOCluster,
         getDesignSystemConfig,
+        notifyTruncated,
+        continueGeneration,
+        isSyntacticallyComplete,
         getState: () => state
     };
 })();

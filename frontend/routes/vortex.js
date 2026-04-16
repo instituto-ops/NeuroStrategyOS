@@ -29,15 +29,24 @@ async function getAntigravityContext() {
     return context;
 }
 
-// Helper: Atualizar Estado Atual (RAM de Contexto)
+// Helper: Atualizar Estado Atual (RAM de Contexto) com Backup SAGA
 async function updateVortexState(action) {
     const statePath = path.join(__dirname, '..', '..', 'estado_atual.md');
+    const backupDir = path.join(__dirname, '..', '..', 'CSA', '4_Execucao_e_Historico', 'Backup');
     const timestamp = new Date().toLocaleString('pt-BR');
-    const logEntry = `\n- **[${timestamp}]**: ${action}`;
+    const fileTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    
     try {
+        // [SAGA-LLM] Backup preventivo antes de anexar log
+        if (fs.existsSync(statePath)) {
+            const backupPath = path.join(backupDir, `estado_${fileTimestamp}.md`);
+            fs.copyFileSync(statePath, backupPath);
+        }
+        
+        const logEntry = `\n- **[${timestamp}]**: ${action}`;
         fs.appendFileSync(statePath, logEntry);
     } catch (e) {
-        console.error('❌ Erro ao atualizar estado_atual:', e.message);
+        console.error('❌ [SAGA ERROR] Falha ao rotacionar estado:', e.message);
     }
 }
 
@@ -140,11 +149,13 @@ ${antigravityDirectives}
 [REGRAS ABIDOS — INVIOLÁVEIS]
 ${context || 'Sem regras especiais em execução.'}
 
-[REGRAS DE FORMATAÇÃO CRÍTICAS]
-1. NUNCA use statements de 'import' (React, Lucide, motion). Tudo deve ser acessado via namespaces globais (React, Lucide, motion).
-2. ENCAPSULE o código obrigatoriamente em tags <file path="app/page.tsx">...</file>.
-3. ESCREVA apenas o componente funcional. Sem conversas fora das tags de explicação.
-4. FOCO: SEO Local (Uberlândia/MG) e Ética Clínica (CFP).`;
+[REGRAS DE FORMATAÇÃO — NAKED PROTOCOL]
+1. ZERO IMPORTS: Nunca use statements de 'import'. Tudo (React, Lucide, motion) é global.
+2. ZERO EXPORTS: Não use 'export default' ou 'export'. Escreva apenas a função do componente.
+3. SEM BOILERPLATE: Não inclua interfaces TypeScript redundantes se puder usar tipos inline ou omiti-los.
+4. NAMESPACES: Use 'Lucide.IconName' para ícones e 'motion.div' para animações.
+5. TAGS: Encapsule o código obrigatoriamente dentro de <file path="app/page.tsx">...</file>.
+6. FOCO: SEO Local (Uberlândia/MG) e Ética Clínica (CFP). No final, use obrigatoriamente a tag de fechamento </file>.`;
 
             let aiModel;
             if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
@@ -198,10 +209,10 @@ ${context || 'Sem regras especiais em execução.'}
             const response = await result.response;
             trackUsage(response.usageMetadata);
 
-            // Verificação de Truncamento do Buffer do Servidor (Etapa 3.1)
-            const isTruncated = !fullText.includes("</file>");
+            // Verificação de Truncamento do Buffer do Servidor (Etapa 1.3.b)
+            const isTruncated = !fullText.trim().endsWith("</file>");
             if (isTruncated) {
-                console.warn("⚠️ [VORTEX STREAM] Truncamento de tokens detectado no backend! Faltantes tags de encerramento.");
+                console.warn("⚠️ [VORTEX STREAM] Truncamento detectado! Faltam tags de encerramento.");
             }
 
             const fileMatch = fullText.match(/<file\s+path="([^"]+)"\s*(?:language="([^"]+)")?\s*>([\s\S]*?)<\/file>/);
@@ -253,31 +264,21 @@ ${context || 'Sem regras especiais em execução.'}
 
             const antigravityDirectives = await getAntigravityContext();
 
-            const systemPrompt = `[VÓRTEX AI STUDIO 3.1 — NAKED GENERATION PROTOCOL]
+                        const systemPrompt = `[VÓRTEX AI STUDIO 3.1 — NAKED GENERATION PROTOCOL]
 ${roleSpecialization}${visionPrompt}
 
 [DIRETRIZES ANTIGRAVITY — SSOT]
 ${antigravityDirectives}
 
 [REGRAS ABIDOS — INVIOLÁVEIS]
-${context || 'Sem regras especiais em execução.'}`;
-
-            let aiModel;
-            if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
-                aiModel = wrapModel(genAI.getGenerativeModelFromCachedContent(vortexActiveCache.obj));
-                console.log(`🌀 [VORTEX] Hub Ativado. Utilizando cache: ${vortexActiveCache.name}`);
-            } else {
-                aiModel = getAIModel(modelId, 'text/plain', systemPrompt);
-            }
-
-[REGRAS ABIDOS — INVIOLÁVEIS]
 ${context || 'Sem regras especiais em execução.'}
 
 [VÓRTEX PREVIEW ENVIRONMENT — "REGRAS DE OURO"]
-1. ZERO IMPORTS: Não inclua statements de 'import'. O ambiente de preview provê os globais automaticamente.
-2. NAKED SYNTAX: Use 'Lucide.IconName' para ícones e 'motion.div' para animações.
-3. GLOBALS DISPONÍVEIS: React (useState, useEffect, etc.), motion, Lucide, Link (Next.js), Image (Next.js).
-4. AMBIENTE: Renderização via React Sandbox. Código limpo, puramente funcional.
+1. ZERO IMPORTS: Não inclua statements de 'import'.
+2. ZERO EXPORTS: Não use 'export default'. Escreva apenas 'function ComponentName(...) { ... }'.
+3. NAKED SYNTAX: Use 'Lucide.IconName' para ícones e 'motion.div' para animações.
+4. GLOBALS DISPONÍVEIS: React (useState, useEffect, etc.), motion, Lucide, Link (Next.js), Image (Next.js).
+5. AMBIENTE: Renderização via React Sandbox. Código limpo, puramente funcional.
 
 [DESIGN SYSTEM OLED BLACK — PREMIUM]
 - Background: #050810 (Pure Black)
@@ -287,15 +288,21 @@ ${context || 'Sem regras especiais em execução.'}
 [FORMATO DE RESPOSTA - JSON ESTRITO]
 Retorne APENAS um bloco JSON (sem markdown fora dele):
 {
-  "code": "Código Naked completo e funcional (SEM IMPORTS)",
+  "code": "Código Naked completo e funcional (SEM IMPORTS OU EXPORTS)",
   "language": "typescriptreact",
   "filename": "page.tsx",
   "explanation": "Resumo conciso (máx 2 frases)"
 }
 
-IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP).`;
+IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP). Use apenas a sintaxe funcional purista.`;
 
-            aiModel = getAIModel(modelId, 'text/plain', systemPrompt);
+            let aiModel;
+            if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
+                aiModel = wrapModel(genAI.getGenerativeModelFromCachedContent(vortexActiveCache.obj));
+                console.log(`🌀 [VORTEX] Hub Ativado. Utilizando cache: ${vortexActiveCache.name}`);
+            } else {
+                aiModel = getAIModel(modelId, 'application/json', systemPrompt);
+            }
 
             const fullPrompt = currentCode 
                 ? `[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
