@@ -11,21 +11,21 @@
 - **Fase III (Logic):** Em progresso. Dicionário de mapeamento e extrator de ícones implementados em `hydration-map.js`.
 
 ### 🎯 Objetivos Imediatos
-1. Implementar a função `strip(code)` para limpeza de código pré-preview.
-2. Implementar a função `hydrate(code)` para materialização de código Next.js.
-3. Integrar o Mapper no fluxo de salvamento do `vortex-studio.js`.
+1. [x] Implementar a função `strip(code)` para limpeza de código pré-preview.
+2. [x] Implementar a função `hydrate(code)` para materialização de código Next.js.
+3. [x] Integrar o Mapper no fluxo de salvamento do `vortex-studio.js`.
 
 ### ✅ Progresso Último
 1. [x] **Dicionário de Hidratação**: Mapeamento global → import finalizado.
-2. [x] **Extrator de Ícones**: Lógica de detecção de Lucide Icons (dot access & destructuring) validada.
-3. [x] **Auditoria de Fundação**: Preview Shell confirmado como SSOT de renderização.
+2. [x] **Motor de Hidratação**: Operacional e integrado ao ciclo de vida do Vórtex.
+3. [x] **UI/UX**: Adicionado botão 'Baixar Código' (Next.js Materialized) na toolbar.
 
 ### 🚧 Bloqueios Ativos
-- Nenhum bloqueio técnico imediato. O plano segue micro-granular.
+- Nenhum bloqueio técnico. Sistema estável e funcional.
 
 ### 🧬 Arquivos de Controle
 - `frontend/public/js/vortex-studio.js`: Host controlador.
 - `frontend/public/js/hydration-map.js`: Motor de transformação (Trans-Mapper).
 
 ---
-**Próximo Passo Lógico:** Executar a **Etapa 3.3** (Implementar `strip(code)` no `hydration-map.js`).
+**Próximo Passo Lógico:** Iniciar a **Fase IV** (Refinamento de UX do Explorer e Persistência de Contexto Multimodal).

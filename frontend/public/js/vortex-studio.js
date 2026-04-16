@@ -1424,7 +1424,10 @@ window.vortexStudio = (() => {
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.saveToVFS()">
                         <i data-lucide="save"></i> SALVAR
                     </button>
-                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.exportHTML()" title="Exportar HTML estático">
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.downloadCode()" title="Baixar Código Next.js (Hidratado)">
+                        <i data-lucide="code-2"></i>
+                    </button>
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.exportHTML()" title="Exportar HTML Estático (Preview)">
                         <i data-lucide="download"></i>
                     </button>
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.generateSEOCluster()" title="Silos SEO">
@@ -1656,7 +1659,21 @@ window.vortexStudio = (() => {
         if (!state.currentFile) {
             state.currentFile = '/src/app/page.tsx';
         }
-        const content = getEditorContent();
+        let content = getEditorContent();
+
+        // [VÓRTEX 3.1] Materialização via Hidratação (Next.js Ready)
+        if (typeof window.hydrate === 'function' && (state.currentFile.endsWith('.tsx') || state.currentFile.endsWith('.js'))) {
+            try {
+                const hydrated = window.hydrate(content);
+                if (hydrated && hydrated !== content) {
+                    content = hydrated;
+                    setEditorContent(content); // Sincroniza o editor com a versão hidratada
+                    addAuditLog('info', '🌀 Código hidratado para produção (Next.js Materialized).');
+                }
+            } catch (e) {
+                console.error('❌ [HYDRATION ERROR]', e);
+            }
+        }
         
         // 1. Browser Sync (IndexedDB)
         await vfsWrite(state.currentFile, content);
@@ -2158,6 +2175,33 @@ window.vortexStudio = (() => {
         addMessage('system', `📥 Arquivo **${a.download}** baixado com sucesso.`);
     }
 
+    /**
+     * downloadCode()
+     * Exporta o código-fonte atual devidamente hidratado (Next.js Component).
+     */
+    function downloadCode() {
+        let content = getEditorContent();
+        
+        // Garante a hidratação antes do download
+        if (typeof window.hydrate === 'function') {
+            content = window.hydrate(content);
+        }
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const filename = state.currentFile ? state.currentFile.split('/').pop() : 'component.tsx';
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        addAuditLog('success', `📂 Fonte exportado: ${filename}`);
+        addMessage('system', `📂 Código-fonte **${filename}** baixado com hidratação Next.js.`);
+    }
+
     // =========================================================================
     // [PHASE 4.8] CACHE LOCAL DE GERAÇÕES
     // =========================================================================
@@ -2280,6 +2324,7 @@ window.vortexStudio = (() => {
         showDiffReview,
         closeDiffReview,
         exportHTML,
+        downloadCode,
         generateSEOCluster,
         getDesignSystemConfig,
         getState: () => state

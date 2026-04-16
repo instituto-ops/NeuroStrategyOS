@@ -110,7 +110,64 @@ function extractLucideIcons(code) {
     return Array.from(icons);
 }
 
+function strip(code) {
+    if (!code) return '';
+
+    // Padrão para detectar blocos de código Markdown (insensitivo a caso)
+    const markdownRegex = /```(?:jsx|javascript|js|tsx|ts)?\s*([\s\S]*?)```/i;
+    const match = code.match(markdownRegex);
+
+    return (match ? match[1] : code).trim();
+}
+
+/**
+ * hydrate(code) → string
+ * O Coração do Vórtex: Transforma código 'naked' em Next.js de produção.
+ */
+function hydrate(code) {
+    if (!code) return '';
+
+    let cleanCode = strip(code);
+    
+    // Normalização: Remove referências a 'window.' para compatibilidade com SSR
+    cleanCode = cleanCode.replace(/window\.(React|Lucide|motion|Link|Image|useRouter|usePathname|useSearchParams)/g, '$1');
+
+    const imports = ["\"use client\";"];
+    const helperLines = [];
+
+    // Processa o mapa de hidratação
+    for (const key in HYDRATION_MAP) {
+        const item = HYDRATION_MAP[key];
+        const pattern = new RegExp('\\b' + item.globalPattern + '\\b');
+
+        if (pattern.test(cleanCode)) {
+            if (item.type === 'static') {
+                imports.push(item.importStatement);
+            } else if (key === 'lucideReact') {
+                const icons = extractLucideIcons(cleanCode);
+                if (icons.length > 0) {
+                    imports.push(`import { ${icons.join(', ')} } from 'lucide-react';`);
+                    // Bridge de compatibilidade para código que usa Lucide.IconName
+                    helperLines.push(`const Lucide = { ${icons.join(', ')} };`);
+                }
+            }
+        }
+    }
+
+    // Montagem do arquivo final
+    return [
+        ...imports,
+        "",
+        ...helperLines,
+        "",
+        cleanCode
+    ].join('\n').trim();
+}
+
 // Export
 if (typeof window !== 'undefined') {
+    window.HYDRATION_MAP = HYDRATION_MAP;
     window.extractLucideIcons = extractLucideIcons;
+    window.strip = strip;
+    window.hydrate = hydrate;
 }
