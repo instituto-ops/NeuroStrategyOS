@@ -37,14 +37,16 @@ if (!process.env.GOOGLE_CLOUD_PROJECT && !process.env.GEMINI_API_KEY) {
     console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 }
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { GoogleAICacheManager } = require('@google/generative-ai/server');
-const fs = require('fs');
+const { 
+    genAI, getAIModel, wrapModel, extractJSON, trackUsage,
+    LITE_MODEL, MAIN_MODEL, PRO_MODEL, GoogleAICacheManager,
+    modelFlash, modelPro, fs, path: sharedPath 
+} = require('./shared');
 const pdf = require('pdf-parse');
 const mammoth = require('mammoth');
 
 const app = express();
-const port = 3000; 
+const port = 3000;
 
 // MemÃ³ria temporÃ¡ria para Previews
 const tempPreviews = {};
@@ -59,13 +61,13 @@ app.post('/api/previews/save', (req, res) => {
         const { html, title } = req.body;
         const id = Date.now().toString();
         tempPreviews[id] = { html, title, timestamp: Date.now() };
-        
+
         Object.keys(tempPreviews).forEach(k => {
             if (Date.now() - tempPreviews[k].timestamp > 1800000) delete tempPreviews[k];
         });
 
         res.json({ success: true, previewId: id });
-    } catch(e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/previews/get/:id', (req, res) => {
@@ -82,9 +84,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/templates', express.static(path.join(__dirname, '../templates')));
 
 const storage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
     storage: storage,
-    limits: { fileSize: 50 * 1024 * 1024 } 
+    limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 // [SMART MEDIA] Cloudinary Config
@@ -122,36 +124,7 @@ function reportAgentStatus(agent, status, reason = "", isDone = false) {
     }
 }
 
-// [HEMISFÃ‰RIOS CEREBRAIS DA IA - GERAÃ‡ÃƒO 2026: PROTOCOLO ABIDOS V5.5]
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "DUMMY");
-
-// Modelos PrimÃ¡rios (Soberania do UsuÃ¡rio Abidos v5)
-const LITE_MODEL = "gemini-2.5-flash-lite"; 
-const MAIN_MODEL = "gemini-2.5-flash"; // PADRÃƒO SELECIONADO
-const PRO_MODEL  = "gemini-2.5-pro";
-
-// Helper para obter o motor de IA configurado dinamicamente
-function getAIModel(modelType, mimeType = "application/json") {
-    let target = MAIN_MODEL;
-    if (modelType === 'lite' || modelType === 'gemini-2.5-flash-lite') target = LITE_MODEL;
-    else if (modelType === 'pro' || modelType === 'gemini-2.5-pro') target = PRO_MODEL;
-    else if (modelType === 'flash' || modelType === 'gemini-2.5-flash') target = MAIN_MODEL;
-    else if (modelType && modelType.includes("gemini")) target = modelType;
-
-    const config = { 
-        temperature: 0.8,
-        maxOutputTokens: 8192 // [PHASE 5.1] Aumentado para evitar truncamento em payloads longos
-    };
-    if (mimeType === "application/json") config.responseMimeType = "application/json";
-
-    const rawModel = genAI.getGenerativeModel({ model: target, generationConfig: config });
-    return wrapModel(rawModel);
-}
-
-// HemisfÃ©rio Esquerdo (FLASH): RÃ¡pido, Multimodal e Estruturado
-// Perfeito para ouvir seu Ã¡udio em tempo real e cuspir o JSON das regras.
-const modelFlash = getAIModel('flash');
-const modelPro = getAIModel('pro', 'text/plain');
+// [PHASE 1.4 CONCLUÍDA] Modelos agora centralizados no shared.js
 const VISION_MODEL = MAIN_MODEL;
 const HEAVY_MODEL = PRO_MODEL;
 const draftsDb = []; // In-memory store for newly generated drafts before WP sync
@@ -159,7 +132,7 @@ const draftsDb = []; // In-memory store for newly generated drafts before WP syn
 // Helper robust JSON parser com Autorepair para Truncamento (Antigravity v5)
 function extractJSON(text) {
     if (!text) return null;
-    
+
     // 1. Localizar o bloco JSON
     let jsonPart = text.trim();
     const firstBrace = jsonPart.indexOf('{');
@@ -233,7 +206,7 @@ function repairTruncatedJSON(json) {
         // Se ainda falhar, tenta extrair via Regex os campos principais (code e preview)
         const codeMatch = repaired.match(/"code":\s*"([\s\S]*?)(?:"\s*,|"\s*\})/);
         const previewMatch = repaired.match(/"preview":\s*"([\s\S]*?)(?:"\s*,|"\s*\})/);
-        
+
         return {
             code: codeMatch ? codeMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "// Falha na recuperaÃ§Ã£o de cÃ³digo",
             preview: previewMatch ? previewMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "<div>Erro no preview truncado</div>",
@@ -287,25 +260,25 @@ app.post('/api/system/report/save', (req, res) => {
         const year = now.getFullYear().toString();
         const monthNames = ["Janeiro", "Fevereiro", "MarÃ§o", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const month = monthNames[now.getMonth()];
-        
+
         // Criar estrutura de pastas: relatorios/ANO/MES
         const yearDir = path.join(REPORTS_DIR, year);
         const monthDir = path.join(yearDir, month);
-        
+
         if (!fs.existsSync(REPORTS_DIR)) fs.mkdirSync(REPORTS_DIR, { recursive: true });
         if (!fs.existsSync(yearDir)) fs.mkdirSync(yearDir, { recursive: true });
         if (!fs.existsSync(monthDir)) fs.mkdirSync(monthDir, { recursive: true });
 
         // Nome: RelatÃ³rio_HH-mm_DD-MM-AA.json
-        const filename = `RelatÃ³rio_${now.getHours().toString().padStart(2,'0')}-${now.getMinutes().toString().padStart(2,'0')}_${now.getDate().toString().padStart(2,'0')}-${(now.getMonth()+1).toString().padStart(2,'0')}-${year.slice(-2)}.json`;
+        const filename = `RelatÃ³rio_${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}_${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${year.slice(-2)}.json`;
         const filePath = path.join(monthDir, filename);
 
         fs.writeFileSync(filePath, JSON.stringify(report, null, 2));
-        
+
         // Atualizar o ponteiro de "Ãšltimo Alerta" para o Dashboard
         const criticalModules = report.modules.filter(m => m.status.includes('âŒ'));
         const criticalApis = report.apis.filter(a => a.status.includes('âŒ'));
-        
+
         const latestInfo = {
             filename: filename,
             timestamp: report.timestamp,
@@ -328,7 +301,7 @@ const ABIDOS_REPORT_FILE = path.join(REPORTS_DIR, 'abidos_report_latest.md');
 app.get('/api/seo/abidos-report', (req, res) => {
     try {
         let response = { success: true };
-        
+
         if (fs.existsSync(ABIDOS_REPORT_FILE)) {
             response.report = fs.readFileSync(ABIDOS_REPORT_FILE, 'utf8');
             const stats = fs.statSync(ABIDOS_REPORT_FILE);
@@ -355,9 +328,9 @@ app.post('/api/seo/abidos-report', (req, res) => {
     try {
         const { report, universalAudit } = req.body;
         if (!fs.existsSync(REPORTS_DIR)) fs.mkdirSync(REPORTS_DIR, { recursive: true });
-        
+
         fs.writeFileSync(ABIDOS_REPORT_FILE, report);
-        
+
         // TambÃ©m salvar a base universal em JSON para persistÃªncia servidor se necessÃ¡rio
         const universalJsonPath = path.join(REPORTS_DIR, 'abidos_universal_latest.json');
         fs.writeFileSync(universalJsonPath, JSON.stringify(universalAudit || {}, null, 2));
@@ -405,7 +378,7 @@ app.get('/api/system/report/history', (req, res) => {
                 }
             }
         }
-        res.json(history.sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10)); // Top 10 recentes
+        res.json(history.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10)); // Top 10 recentes
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -420,15 +393,15 @@ app.post('/api/dev/screenshot', (req, res) => {
         if (!image) return res.status(400).json({ error: "Imagem ausente" });
 
         const now = new Date();
-        const dateFolder = folder || `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
-        const timeFolder = now.getHours().toString().padStart(2,'0') + '-' + now.getMinutes().toString().padStart(2,'0');
-        
+        const dateFolder = folder || `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+        const timeFolder = now.getHours().toString().padStart(2, '0') + '-' + now.getMinutes().toString().padStart(2, '0');
+
         const finalDir = path.join(PRINTS_DIR, dateFolder, timeFolder);
         if (!fs.existsSync(finalDir)) fs.mkdirSync(finalDir, { recursive: true });
 
         const base64Data = image.replace(/^data:image\/png;base64,/, "");
         const filePath = path.join(finalDir, filename || `screenshot_${Date.now()}.png`);
-        
+
         fs.writeFileSync(filePath, base64Data, 'base64');
         res.json({ success: true, path: filePath });
     } catch (e) {
@@ -574,7 +547,7 @@ app.get('/api/templates/:id', async (req, res) => {
             if (!modules[mod.title]) modules[mod.title] = { ...mod, variables: [] };
             modules[mod.title].variables.push(v);
         });
-        const sorted = Object.values(modules).sort((a,b) => a.order - b.order);
+        const sorted = Object.values(modules).sort((a, b) => a.order - b.order);
         res.json({ template: entry, totalVariables: allVars.length, modules: sorted });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -588,10 +561,10 @@ app.post('/api/templates/preview', async (req, res) => {
     try {
         const filePath = path.join(__dirname, '../templates', entry.filename);
         let html = fs.readFileSync(filePath, "utf-8");
-        
+
         // 1. Injetar VariÃ¡veis (exceto o menu dinÃ¢mico que tem lÃ³gica prÃ³pria)
         for (const [key, value] of Object.entries(values || {})) {
-            if (key === 'nav_menu_dinamico') continue; 
+            if (key === 'nav_menu_dinamico') continue;
             const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
             html = html.replace(regex, value || "");
         }
@@ -604,33 +577,33 @@ app.post('/api/templates/preview', async (req, res) => {
         let menuHtml = '';
         if (menuId) {
             menuHtml = generateMenuHtmlForTemplate(menuId, templateId, { slug: "preview", title: values.SEO_TITLE || '' });
-            
+
             // Auto-TOC append (preview mode)
             if (tocItems.length > 0 && (templateId === '02' || templateId === '03' || templateId === '04' || templateId === '05' || templateId === '06' || templateId === '07' || templateId === '10')) {
-                 const tocMenuHtml = `
+                const tocMenuHtml = `
                     <div class="fixed bottom-4 left-4 z-50 glass-panel lg:hidden p-3 rounded-2xl max-w-[200px]">
                         <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ TÃ³picos Neste Artigo</div>
                         <ul class="flex flex-col gap-1">
                             ${tocItems.map(i => `<li><a href="${i.url}" class="text-xs text-slate-500 hover:text-[#14b8a6] line-clamp-1">${i.label}</a></li>`).join('')}
                         </ul>
                     </div>`;
-                 menuHtml += tocMenuHtml;
+                menuHtml += tocMenuHtml;
             }
         }
 
         if (html.includes('{{nav_menu_dinamico}}')) {
-             html = html.replace('{{nav_menu_dinamico}}', menuHtml);
+            html = html.replace('{{nav_menu_dinamico}}', menuHtml);
         } else if (html.includes('<main')) {
-             html = html.replace('<main', menuHtml + '\n    <main');
+            html = html.replace('<main', menuHtml + '\n    <main');
         } else {
-             html = menuHtml + html;
+            html = menuHtml + html;
         }
 
         html = html.replace(/\{\{\w+\}\}/g, "");
         res.send(html);
-    } catch (e) { 
+    } catch (e) {
         console.error(e);
-        res.status(500).send("Erro ao gerar preview."); 
+        res.status(500).send("Erro ao gerar preview.");
     }
 });
 
@@ -657,8 +630,8 @@ require('./routes/vortex')(app, deps);
 
 // CATCH-ALL API (Movido para o final para nao quebrar rotas dinamicas)
 app.use('/api/*', (req, res) => {
-    res.status(404).json({ 
-        success: false, 
+    res.status(404).json({
+        success: false,
         error: `Endpoint '${req.originalUrl}' nao encontrado no ecossistema NeuroEngine (Protocolo V5). Verifique se o backend esta atualizado e se a rota existe no server.js.`
     });
 });
@@ -667,7 +640,7 @@ const server = app.listen(port, () => {
     console.log(`\n🚀 AntiGravity CMS: Mission Control Ativo!`);
     console.log(`📡 Frontend & API rodando em http://localhost:${port}`);
     console.log(`🛡️ Camada de Seguranca Proxy: ON`);
-    
+
     // Inicializar WebSocket Server
     wss = new WebSocket.Server({ server });
     console.log(`🎙️ WebSocket Voice Live: Disponivel em ws://localhost:${port}`);
