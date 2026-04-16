@@ -50,10 +50,10 @@ Todas as modificações seguirão estritamente a metodologia de **Micro-Etapas (
 - [x] **Etapa 3.1: Backend "Incomplete Marker" (Marcador)**
   - **Alvo:** `routes/vortex.js` (Streaming).
   - **Ação:** O backend precisa detectar a ausência da tag `</file>` no próprio **estágio de buffer local**, exalando para o streaming uma flag final de `isTruncated: true` antes da morte da conexão SSE. O cliente jamais deverá ser testado a adivinhar se a queda foi um reset de rede ou estio de tokens.
-- [ ] **Etapa 3.2: O Motor "Continue Generation"**
+- [x] **Etapa 3.2: O Motor "Continue Generation"**
   - **Alvo:** `js/vortex-studio.js`.
   - **Ação:** Interface passa a acomodar botão "Continuar Códigos Truncados". Esse gatilho anexa um prompt cirúrgico ao histórico do chat: *"Você parou em: ...[Últimos 200 caracteres do código bruto truncado]. Continue exatamente a partir daqui, sem repetir o código anterior."* Isso emenda os streams perfeitamente no buffer React.
-- [ ] **Etapa 3.3: Minificação Expressa (Post-Strip Data)**
+- [x] **Etapa 3.3: Minificação Expressa (Post-Strip Data)**
   - **Alvo:** `js/vortex-studio.js` (`stripForPreview()`).
   - **Ação:** Remover, por meio de expressão regular, blocos vastos de comentários do código fornecido pela Inteligência Artificial antes do despache. Essa redução drástica do *payload* viaje mais veloz pelo `postMessage` ao Transpilador. 
 

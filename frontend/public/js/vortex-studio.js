@@ -36,7 +36,10 @@ window.vortexStudio = (() => {
         lastAuditResult: null,  // Phase 2.4: Last audit result for commit gate
         snapshotId: 0,          // Phase 2.2: Auto-increment snapshot counter
         generationCache: new Map(), // Phase 4.8: Local cache by prompt hash
-        zenMode: false          // Phase 3.10
+        zenMode: false,          // Phase 3.10
+        isTruncated: false,      // Step 3.2: Flag for token limit detection
+        isContinuing: false,     // Step 3.2: Mode for emending code
+        preContinuationCode: ''  // Step 3.2: Buffer for previous code
     };
 
     // =========================================================================
@@ -537,7 +540,15 @@ window.vortexStudio = (() => {
                                 // Extrair o conteúdo parcial do bloco <file>
                                 const partialMatch = fullStreamText.match(/<file[^>]*>([\s\S]*?)(?:<\/file>|$)/);
                                 if (partialMatch) {
-                                    setEditorContent(sanitizeAIContent(partialMatch[1].trimStart()), 'typescriptreact');
+                                    let codeToStream = partialMatch[1].trimStart();
+                                    // [3.2] Se estivermos em modo de continuação, emendamos visualmente
+                                    if (state.isContinuing) {
+                                        const currentPosLocal = state.editor.getModel().getLineCount();
+                                        // Apenas mostramos no editor o que está chegando novo + o que já tínhamos
+                                        setEditorContent(state.preContinuationCode + sanitizeAIContent(codeToStream), 'typescriptreact');
+                                    } else {
+                                        setEditorContent(sanitizeAIContent(codeToStream), 'typescriptreact');
+                                    }
                                 }
                             } else {
                                 // Ainda não chegou no bloco <file>, mostrar texto bruto (limpo)
@@ -546,6 +557,8 @@ window.vortexStudio = (() => {
                             break;
 
                         case 'complete':
+                            state.isTruncated = event.isTruncated || false;
+                            
                             // Metadados finais com código limpo
                             if (event.code) {
                                 const audit = auditCode(event.code);
@@ -554,26 +567,30 @@ window.vortexStudio = (() => {
                                 // [PHASE 4.1] Show Diff Review se havia código anterior
                                 const isDefaultCode = oldCode.startsWith('// 🌀');
                                 const cleanNewCode = sanitizeAIContent(event.code);
+                                
+                                // [3.2] Cálculo do Código Final (Emendado ou Novo)
+                                const finalCleanCode = state.isContinuing ? state.preContinuationCode + cleanNewCode : cleanNewCode;
+                                const finalRawCode = state.isContinuing ? state.preContinuationCode + event.code : event.code;
 
-                                if (!isDefaultCode && oldCode.length > 50) {
-                                    showDiffReview(oldCode, cleanNewCode, event.filename || 'page.tsx');
+                                if (!isDefaultCode && oldCode.length > 50 && !state.isContinuing) {
+                                    showDiffReview(oldCode, finalCleanCode, event.filename || 'page.tsx');
                                 } else {
-                                    setEditorContent(cleanNewCode, event.language || 'typescriptreact');
+                                    setEditorContent(finalCleanCode, event.language || 'typescriptreact');
                                 }
                                 updateFileTab(event.filename || 'page.tsx', true);
 
                                 const filePath = `/src/app/${event.filename || 'page.tsx'}`;
-                                await vfsWrite(filePath, event.code);
+                                await vfsWrite(filePath, finalRawCode);
                                 state.currentFile = filePath;
                                 updateBreadcrumbs(filePath);
 
-                                // [CIRURGIA 3] Preview SEMPRE via React Sandbox — zero dependência da IA
-                                updatePreview(cleanNewCode);
+                                // [CIRURGIA 3] Preview SEMPRE via React Sandbox
+                                updatePreview(finalCleanCode);
 
                                 // [PHASE 4.8] Cache result
-                                setCachedGeneration(payload.prompt, event.code);
+                                setCachedGeneration(payload.prompt, finalRawCode);
 
-                                if (!audit.passes) {
+                                if (!audit.passes && !state.isTruncated) {
                                     addMessage('system', '⚠️ Código gerado mas possui falhas de conformidade.');
                                 }
                             }
@@ -586,6 +603,11 @@ window.vortexStudio = (() => {
                             throw new Error(event.error || 'Erro no stream');
 
                         case 'done':
+                            if (event.isTruncated) {
+                                state.isTruncated = true;
+                                notifyTruncated();
+                            }
+                            state.isContinuing = false; // Reset ao finalizar
                             break;
                     }
                 } catch (parseErr) {
@@ -805,6 +827,44 @@ window.vortexStudio = (() => {
         sendPrompt(errorSummary);
     }
 
+    // =========================================================================
+    // [VÓRTEX 3.1] RECURSIVE RECOVERY (CONTINUE GENERATION)
+    // =========================================================================
+    function notifyTruncated() {
+        const chatMessages = document.getElementById('vortex-chat-messages');
+        if (!chatMessages) return;
+
+        const warningDiv = document.createElement('div');
+        warningDiv.className = 'vortex-msg vortex-msg-system';
+        warningDiv.style.background = 'rgba(255, 153, 0, 0.1)';
+        warningDiv.style.borderColor = 'rgba(255, 153, 0, 0.3)';
+        warningDiv.innerHTML = `
+            <div style="color: #ff9900; font-weight: 800; margin-bottom: 8px;">🎞️ LIMITE DE TOKENS ATINGIDO</div>
+            <div style="font-size: 11px; line-height: 1.5; margin-bottom: 10px;">
+                O Vórtex detectou que a IA foi interrompida antes de fechar o arquivo. Deseja continuar a geração de onde parou?
+            </div>
+            <button class="vortex-btn-repair" style="background:#ff9900; color:white; border:none;" onclick="vortexStudio.continueGeneration()">CONTINUAR GERAÇÃO</button>
+        `;
+        chatMessages.appendChild(warningDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // Se houver áudio, poderíamos avisar sonoramente (vibe neuro)
+    }
+
+    async function continueGeneration() {
+        const fullContent = getEditorContent();
+        // Pegamos os últimos 200 caracteres para servir de âncora
+        const anchor = fullContent.length > 200 ? fullContent.substring(fullContent.length - 200) : fullContent;
+        
+        const continuePrompt = `Você parou em: "${anchor}". Continue exatamente a partir desse ponto, sem repetir o código anterior e mantendo o formato <file path="...">...</file>.`;
+        
+        state.isContinuing = true;
+        state.preContinuationCode = fullContent; // Salva o que já temos para emendar no buffer visual
+        
+        addMessage('user', `⏩ Continuar de onde parou...`);
+        sendPrompt(continuePrompt);
+    }
+
     function setGenerating(isGen) {
         state.isGenerating = isGen;
         const indicator = document.getElementById('vortex-generating');
@@ -859,6 +919,12 @@ window.vortexStudio = (() => {
     // =========================================================================
     function stripForPreview(code) {
         let stripped = code;
+        // [Etapa 3.3] Minificação Expressa: Remover comentários da IA (Otimização de Payload)
+        // 1. Remover comentários multilinhas /* ... */
+        stripped = stripped.replace(/\/\*[\s\S]*?\*\//g, '');
+        // 2. Remover comentários de linha única // (Exceto em URLs)
+        stripped = stripped.replace(/(^|[^\:])\/\/.*$/gm, '$1');
+
         // Remove todos os imports (o Shell já tem tudo no escopo global)
         stripped = stripped.replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"];?\s*\n?/g, '');
         stripped = stripped.replace(/import\s+['"][^'"]+['"];?\s*\n?/g, '');
@@ -867,6 +933,7 @@ window.vortexStudio = (() => {
         // Remove export default — o Shell procura por Component ou App
         stripped = stripped.replace(/export\s+default\s+function\s+/, 'function ');
         stripped = stripped.replace(/export\s+default\s+/, '');
+        
         return stripped.trim();
     }
 
