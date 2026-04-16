@@ -135,7 +135,7 @@ function hydrate(code) {
     const imports = ["\"use client\";"];
     const helperLines = [];
 
-    // Processa o mapa de hidratação
+    // 1. Detecção de Dependências (antes de limpar os imports do corpo)
     for (const key in HYDRATION_MAP) {
         const item = HYDRATION_MAP[key];
         const pattern = new RegExp('\\b' + item.globalPattern + '\\b');
@@ -154,6 +154,14 @@ function hydrate(code) {
         }
     }
 
+    // 2. Limpeza de Imports Redundantes no corpo (Deduplicação)
+    cleanCode = cleanCode.replace(/import\s+React\s+from\s+['"]react['"];?/g, '');
+    cleanCode = cleanCode.replace(/import\s+.*\s+from\s+['"]framer-motion['"];?/g, '');
+    cleanCode = cleanCode.replace(/import\s+.*\s+from\s+['"]lucide-react['"];?/g, '');
+    cleanCode = cleanCode.replace(/import\s+Link\s+from\s+['"]next\/link['"];?/g, '');
+    cleanCode = cleanCode.replace(/import\s+Image\s+from\s+['"]next\/image['"];?/g, '');
+    cleanCode = cleanCode.replace(/import\s+.*\s+from\s+['"]next\/navigation['"];?/g, '');
+
     // Montagem do arquivo final
     return [
         ...imports,
@@ -164,10 +172,14 @@ function hydrate(code) {
     ].join('\n').trim();
 }
 
-// Export
+// Export para navegador e Node.js
 if (typeof window !== 'undefined') {
     window.HYDRATION_MAP = HYDRATION_MAP;
     window.extractLucideIcons = extractLucideIcons;
     window.strip = strip;
     window.hydrate = hydrate;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { HYDRATION_MAP, extractLucideIcons, strip, hydrate };
 }

@@ -131,7 +131,7 @@ module.exports = function setupVortexRoutes(app, { SITE_REPO_PATH }) {
 
             const antigravityDirectives = await getAntigravityContext();
 
-            const systemPrompt = `[VÓRTEX AI STUDIO — GERADOR DE CÓDIGO NEXT.JS]
+            const systemPrompt = `[VÓRTEX AI STUDIO 3.1 — NAKED GENERATION PROTOCOL]
 ${roleSpecialization}${visionPrompt}
 
 [DIRETRIZES ANTIGRAVITY — SSOT]
@@ -140,29 +140,26 @@ ${antigravityDirectives}
 [REGRAS ABIDOS — INVIOLÁVEIS]
 ${context || 'Sem regras especiais em execução.'}
 
-[DESIGN SYSTEM OLED BLACK]
+[VÓRTEX PREVIEW ENVIRONMENT — "REGRAS DE OURO"]
+1. ZERO IMPORTS: Não inclua statements de 'import'. O ambiente de preview provê os globais automaticamente.
+2. NAKED SYNTAX: Use 'Lucide.IconName' para ícones e 'motion.div' para animações.
+3. GLOBALS DISPONÍVEIS: React (useState, useEffect, etc.), motion, Lucide, Link (Next.js), Image (Next.js).
+4. AMBIENTE: Renderização via React Sandbox. Código limpo, puramente funcional.
+
+[DESIGN SYSTEM OLED BLACK — PREMIUM]
 - Background: #050810 (Pure Black)
-- Accents: Teal (#14b8a6), Indigo (#6366f1), Cyan (#06b6d4)
-- Text: Gray-300 (body), White (headings)
-- Typography: Inter / Outfit
-- Icons: Use Lucide Icons (via data-lucide attribute)
+- Accents: Teal (#14b8a6), Indigo (#6366f1)
+- Typography: Outfit (Headings) / Inter (Body)
+- Estética: Glassmorphism, Bordas Finas, Gradients Sutis, Micro-interações.
 
 [FORMATO DE RESPOSTA — STREAMING MULTI-BLOCO]
-Retorne o código usando blocos XML delimitados. NÃO retorne JSON.
-
+Use EXATAMENTE este formato XML:
 <file path="page.tsx" language="typescriptreact">
-// Código React completo aqui
+// Código "Naked" aqui (SEM IMPORTS)
 </file>
+<explanation>Breve sumário (max 2 frases).</explanation>
 
-<explanation>
-Resumo conciso das decisões técnicas (máx 2 frases).
-</explanation>
-
-IMPORTANTE:
-- Use EXATAMENTE o formato de blocos XML acima.
-- NUNCA gere bloco <preview>. O preview é compilado automaticamente pelo React Sandbox no navegador.
-- Concentre 100% do output no código React/Next.js de alta qualidade.
-- Mobile-first, Performance máxima.`;
+IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP).`;
 
             const fullPrompt = currentCode 
                 ? `${systemPrompt}\n\n[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
@@ -257,7 +254,7 @@ IMPORTANTE:
 
             const antigravityDirectives = await getAntigravityContext();
 
-            const systemPrompt = `[VÓRTEX AI STUDIO — GERADOR DE CÓDIGO NEXT.JS]
+            const systemPrompt = `[VÓRTEX AI STUDIO 3.1 — NAKED GENERATION PROTOCOL]
 ${roleSpecialization}${visionPrompt}
 
 [DIRETRIZES ANTIGRAVITY — SSOT]
@@ -266,27 +263,27 @@ ${antigravityDirectives}
 [REGRAS ABIDOS — INVIOLÁVEIS]
 ${context || 'Sem regras especiais em execução.'}
 
-[DESIGN SYSTEM OLED BLACK]
+[VÓRTEX PREVIEW ENVIRONMENT — "REGRAS DE OURO"]
+1. ZERO IMPORTS: Não inclua statements de 'import'. O ambiente de preview provê os globais automaticamente.
+2. NAKED SYNTAX: Use 'Lucide.IconName' para ícones e 'motion.div' para animações.
+3. GLOBALS DISPONÍVEIS: React (useState, useEffect, etc.), motion, Lucide, Link (Next.js), Image (Next.js).
+4. AMBIENTE: Renderização via React Sandbox. Código limpo, puramente funcional.
+
+[DESIGN SYSTEM OLED BLACK — PREMIUM]
 - Background: #050810 (Pure Black)
-- Accents: Teal (#14b8a6), Indigo (#6366f1), Cyan (#06b6d4)
-- Text: Gray-300 (body), White (headings)
-- Typography: Inter / Outfit
-- Icons: Use Lucide Icons (via data-lucide attribute)
+- Accents: Teal (#14b8a6), Indigo (#6366f1)
+- Typography: Outfit (Headings) / Inter (Body)
 
 [FORMATO DE RESPOSTA - JSON ESTRITO]
 Retorne APENAS um bloco JSON (sem markdown fora dele):
 {
-  "code": "Código React/JSX completo e funcional",
+  "code": "Código Naked completo e funcional (SEM IMPORTS)",
   "language": "typescriptreact",
   "filename": "page.tsx",
-  "explanation": "Resumo conciso das decisões técnicas (máx 2 frases)"
+  "explanation": "Resumo conciso (máx 2 frases)"
 }
 
-IMPORTANTE:
-- NÃO inclua campo "preview" — o preview é compilado automaticamente pelo React Sandbox no navegador.
-- NÃO inclua campo "subconscious_suggestions" — irrelevante para o output.
-- Concentre 100% do limite de tokens no campo "code" com código React de alta qualidade.
-- Mobile-first, Performance Lighthouse 100.`;
+IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP).`;
 
             const fullPrompt = currentCode 
                 ? `${systemPrompt}\n\n[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
