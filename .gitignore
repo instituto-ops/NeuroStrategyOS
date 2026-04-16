@@ -41,8 +41,9 @@ diff.txt
 wordpress-stubs.php
 /docs/prints/
 
-# Ignorar Ecossistema de Contexto Cognitivo (CSA)
-CSA/*
+# [CSA v2] Pasta CSA agora é rastreada para auditoria (AI-RO)
+# CSA/*
+
 # estado_atual.md (raiz) é rastreado por padrão.
 
 

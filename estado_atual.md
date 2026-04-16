@@ -1,30 +1,31 @@
 # 🧠 Estado Atual - Cognitive State Architecture (CSA)
 
-## 🎯 Status: Expansão do Vórtex AI Studio (Fase 3) 🧪
+## 🎯 Status: Estabilização do Vórtex Studio (Fase III - Logic) 🧪
 **Data:** 16/04/2026
-**Session ID:** 41616vfs (Vortex Foundation)
+**Session ID:** 41617next
 
 ---
 
-| Fase | Status | Descrição |
-| :--- | :--- | :--- |
-| **Fase 0 — Bootstrap** | ✅ OK | Assimilação CSA e Verificação de SSOT. |
-| **Fase 1 — Fundação** | ✅ OK | VFS robusto e UI OLED Black. |
-| **Fase 2 — Inteligência** | ✅ OK | Auditoria semântica e Parser robusto. |
-| **Fase 3 — Expansão** | ⏳ EXECUÇÃO | Multi-arquivo VFS e Integração WordPress. |
+## 💠 Estado Atual: `v3.1-hydration-logic`
+- **Fase I & II:** Concluídas. Preview Shell isolado e operacional.
+- **Fase III (Logic):** Em progresso. Dicionário de mapeamento e extrator de ícones implementados em `hydration-map.js`.
 
-### ✅ Progresso Atual
-1. [x] **CSA Onboard**: Estrutura validada e caminhos corrigidos.
-2. [x] **Diagnóstico Vortex**: Identificação do Token Leak e erros de MIME Type.
-3. [x] **Master Report**: Criado `vortex_3.0_architecture_report.md` com o blueprint da nova fase.
+### 🎯 Objetivos Imediatos
+1. Implementar a função `strip(code)` para limpeza de código pré-preview.
+2. Implementar a função `hydrate(code)` para materialização de código Next.js.
+3. Integrar o Mapper no fluxo de salvamento do `vortex-studio.js`.
+
+### ✅ Progresso Último
+1. [x] **Dicionário de Hidratação**: Mapeamento global → import finalizado.
+2. [x] **Extrator de Ícones**: Lógica de detecção de Lucide Icons (dot access & destructuring) validada.
+3. [x] **Auditoria de Fundação**: Preview Shell confirmado como SSOT de renderização.
 
 ### 🚧 Bloqueios Ativos
-- **Preview UI**: Substituição do Babel Standalone pelo Hybrid Preview Shell.
-- **Git Sync**: Automação do fluxo de push/commit sem intervenção manual.
+- Nenhum bloqueio técnico imediato. O plano segue micro-granular.
 
 ### 🧬 Arquivos de Controle
-- `frontend/public/js/vortex-studio.js`: Lógica principal do Studio.
-- `CSA/3_Engenharia_e_Arquitetura/vortex_3.0_architecture_report.md`: Blueprint 3.0.
+- `frontend/public/js/vortex-studio.js`: Host controlador.
+- `frontend/public/js/hydration-map.js`: Motor de transformação (Trans-Mapper).
 
 ---
-**Próximo Passo Lógico:** Implementar o `preview-shell.html` com Mocks de Next.js.
+**Próximo Passo Lógico:** Executar a **Etapa 3.3** (Implementar `strip(code)` no `hydration-map.js`).
