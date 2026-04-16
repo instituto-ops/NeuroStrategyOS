@@ -14,6 +14,9 @@
     <!-- [PIN] Tailwind CSS v3.4.1 -->
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
 
+    <!-- [PIN] Babel Standalone (JIT Compilation para JSX naked) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js" defer></script>
+
     <!-- [PIN] Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
 
@@ -199,12 +202,39 @@
         const rootEl = document.getElementById('root');
 
         try {
-            // Cria a função do componente a partir do código "nu"
+            // Transpilação JIT (Just-In-Time) com Babel
+            let transpiledCode = '';
+            try {
+                const babelResult = window.Babel.transform(code, {
+                    presets: ['env', 'react', 'typescript'],
+                    filename: 'vortex-component.tsx' // Necessário para habilitar o parser TSX
+                });
+                transpiledCode = babelResult.code;
+            } catch (babelErr) {
+                console.error('[Vórtex Babel] Syntaxe/Transpilation Error:', babelErr);
+                throw new Error('Falha de sintaxe na compilação do JSX:\\n' + babelErr.message);
+            }
+
+            // Injetamos um mock primitivo de módulo se o Babel gerar "exports" no preset env
+            const wrapCode = `
+                let exports = {}; 
+                let module = { exports: exports };
+                ${transpiledCode}
+                
+                // Extrai o componente compilado da variável global ou do exports
+                let FinalComponent = typeof Component !== "undefined" ? Component : 
+                                     typeof App !== "undefined" ? App : 
+                                     (exports.default || module.exports.default || null);
+                                     
+                return FinalComponent;
+            `;
+
+            // Cria a função do componente a partir do código transpilado
             const componentFn = new Function(
                 'React', 'useState', 'useEffect', 'useRef', 'useMemo', 'useCallback', 'Fragment',
                 'motion', 'AnimatePresence',
                 'Lucide', 'Link', 'Image', 'useRouter', 'usePathname', 'useSearchParams',
-                code + '\nreturn typeof Component !== "undefined" ? Component : (typeof App !== "undefined" ? App : null);'
+                wrapCode
             );
 
             const Component = componentFn(
@@ -276,9 +306,16 @@
         }
     });
 
-    // Sinaliza para o host que o Shell está pronto
-    window.parent.postMessage({ type: 'vortex-shell-ready' }, '*');
-    console.log('🌀 [VÓRTEX 3.1] Preview Shell carregado e pronto.');
+    // Sinaliza para o host que o Shell está pronto (Pre-warm Sync)
+    function notifyReady() {
+        if (window.Babel) {
+            window.parent.postMessage({ type: 'vortex-shell-ready' }, '*');
+            console.log('🌀 [VÓRTEX 3.1] Preview Shell + Babel JIT carregados e prontos.');
+        } else {
+            setTimeout(notifyReady, 50); // Polling aguardando defer do Babel
+        }
+    }
+    notifyReady();
     </script>
 </body>
 </html>

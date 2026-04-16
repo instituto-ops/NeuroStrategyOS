@@ -14,24 +14,24 @@ let vortexActiveCache = null;
 const cacheManager = process.env.GEMINI_API_KEY ? new GoogleAICacheManager(process.env.GEMINI_API_KEY) : null;
 const axios = require('axios');
 
-// Helper: Carregar Contexto Antigravity
+// Helper: Carregar Contexto CSA (Cognitive State Architecture)
 async function getAntigravityContext() {
-    const basePath = path.join(__dirname, '..', 'Antigravity', '1_Diretrizes_e_Memoria');
+    const basePath = path.join(__dirname, '..', '..', 'CSA', '1_Diretrizes_e_Memoria');
     let context = '';
     try {
         const rules = fs.readFileSync(path.join(basePath, 'regras_base.md'), 'utf8');
         const manual = fs.readFileSync(path.join(basePath, 'manual_do_arquiteto.md'), 'utf8');
         const dictionary = fs.readFileSync(path.join(basePath, 'dicionario_de_traducao.md'), 'utf8');
-        context = `[ANTIGRAVITY SYSTEM CONTEXT]\n${rules}\n\n[MANUAL DO ARQUITETO]\n${manual}\n\n[DICIONÁRIO ONTOLÓGICO]\n${dictionary}`;
+        context = `[CSA SYSTEM CONTEXT]\n${rules}\n\n[MANUAL DO ARQUITETO]\n${manual}\n\n[DICIONÁRIO ONTOLÓGICO]\n${dictionary}`;
     } catch (e) {
-        console.warn('⚠️ [VORTEX] Falha ao carregar diretrizes Antigravity:', e.message);
+        console.warn('⚠️ [VORTEX] Falha ao carregar diretrizes CSA:', e.message);
     }
     return context;
 }
 
 // Helper: Atualizar Estado Atual (RAM de Contexto)
 async function updateVortexState(action) {
-    const statePath = path.join(__dirname, '..', 'Antigravity', 'estado_atual.md');
+    const statePath = path.join(__dirname, '..', '..', 'estado_atual.md');
     const timestamp = new Date().toLocaleString('pt-BR');
     const logEntry = `\n- **[${timestamp}]**: ${action}`;
     try {
@@ -41,7 +41,19 @@ async function updateVortexState(action) {
     }
 }
 
+// Middleware de Autenticação do Vórtex (Fase 1)
+function checkVortexAuth(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || authHeader !== `Bearer ${process.env.VORTEX_API_KEY}`) {
+        return res.status(401).json({ error: 'Acesso negado: VORTEX_API_KEY inválida ou ausente no cabeçalho Authorization.' });
+    }
+    next();
+}
+
 module.exports = function setupVortexRoutes(app, { SITE_REPO_PATH }) {
+
+    // Proteger rotas da API do Vortex (Fase 1: Segurança)
+    app.use('/api/vortex', checkVortexAuth);
 
     // Servir Preview (VFS Simulator)
     app.get('/vortex-preview', (req, res) => {
@@ -101,26 +113,14 @@ module.exports = function setupVortexRoutes(app, { SITE_REPO_PATH }) {
 
     // Streaming SSE — Vibecoding Real
     app.post('/api/vortex/generate-stream', async (req, res) => {
+        console.log('🌀 [VORTEX REQ] Recebida requisição generate-stream');
         try {
             const { prompt, model, currentCode, abidosRules, context, useCache } = req.body;
             if (!prompt) return res.status(400).json({ error: 'Prompt vazio.' });
 
             const modelId = model || 'gemini-2.5-flash';
-            let target = modelId.includes('pro') ? PRO_MODEL : 
-                         modelId.includes('lite') ? LITE_MODEL : MAIN_MODEL;
-            
-            let aiModel;
-            if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
-                aiModel = genAI.getGenerativeModelFromCachedContent(vortexActiveCache.obj);
-                console.log(`🌀 [VORTEX STREAM] Hub Ativado. Cache: ${vortexActiveCache.name}`);
-            } else {
-                aiModel = genAI.getGenerativeModel({ 
-                    model: target, 
-                    generationConfig: { temperature: 0.8, maxOutputTokens: 16384 }
-                });
-            }
-
             const isPro = modelId.includes('pro');
+            
             const roleSpecialization = isPro 
                 ? `[ROLE: BRAIN/ARCHITECT]\n               Foco: Arquitetura, Domain-Driven Design, Lógica Complexa e Pacing & Leading Clínico.`
                 : `[ROLE: FLASH/VIBE]\n               Foco: Estética OLED Black, Performance Lighthouse 100, Tailwind CSS e Animações.`;
@@ -140,30 +140,25 @@ ${antigravityDirectives}
 [REGRAS ABIDOS — INVIOLÁVEIS]
 ${context || 'Sem regras especiais em execução.'}
 
-[VÓRTEX PREVIEW ENVIRONMENT — "REGRAS DE OURO"]
-1. ZERO IMPORTS: Não inclua statements de 'import'. O ambiente de preview provê os globais automaticamente.
-2. NAKED SYNTAX: Use 'Lucide.IconName' para ícones e 'motion.div' para animações.
-3. GLOBALS DISPONÍVEIS: React (useState, useEffect, etc.), motion, Lucide, Link (Next.js), Image (Next.js).
-4. AMBIENTE: Renderização via React Sandbox. Código limpo, puramente funcional.
+[REGRAS DE FORMATAÇÃO CRÍTICAS]
+1. NUNCA use statements de 'import' (React, Lucide, motion). Tudo deve ser acessado via namespaces globais (React, Lucide, motion).
+2. ENCAPSULE o código obrigatoriamente em tags <file path="app/page.tsx">...</file>.
+3. ESCREVA apenas o componente funcional. Sem conversas fora das tags de explicação.
+4. FOCO: SEO Local (Uberlândia/MG) e Ética Clínica (CFP).`;
 
-[DESIGN SYSTEM OLED BLACK — PREMIUM]
-- Background: #050810 (Pure Black)
-- Accents: Teal (#14b8a6), Indigo (#6366f1)
-- Typography: Outfit (Headings) / Inter (Body)
-- Estética: Glassmorphism, Bordas Finas, Gradients Sutis, Micro-interações.
-
-[FORMATO DE RESPOSTA — STREAMING MULTI-BLOCO]
-Use EXATAMENTE este formato XML:
-<file path="page.tsx" language="typescriptreact">
-// Código "Naked" aqui (SEM IMPORTS)
-</file>
-<explanation>Breve sumário (max 2 frases).</explanation>
-
-IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP).`;
+            let aiModel;
+            if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
+                // Instancia via cache e passa na Queue Singleton
+                aiModel = wrapModel(genAI.getGenerativeModelFromCachedContent(vortexActiveCache.obj));
+                console.log(`🌀 [VORTEX STREAM] Hub Ativado. Cache: ${vortexActiveCache.name}`);
+            } else {
+                // Instancia via Factory Central com 16k unificado (Etapa 1.3)
+                aiModel = getAIModel(modelId, 'text/plain', systemPrompt);
+            }
 
             const fullPrompt = currentCode 
-                ? `${systemPrompt}\n\n[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
-                : `${systemPrompt}\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`;
+                ? `[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
+                : `[INSTRUÇÃO DO USUÁRIO]\n${prompt}`;
 
             const requestParts = [ fullPrompt ];
 
@@ -203,23 +198,35 @@ IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP).`;
             const response = await result.response;
             trackUsage(response.usageMetadata);
 
+            // Verificação de Truncamento do Buffer do Servidor (Etapa 3.1)
+            const isTruncated = !fullText.includes("</file>");
+            if (isTruncated) {
+                console.warn("⚠️ [VORTEX STREAM] Truncamento de tokens detectado no backend! Faltantes tags de encerramento.");
+            }
+
             const fileMatch = fullText.match(/<file\s+path="([^"]+)"\s*(?:language="([^"]+)")?\s*>([\s\S]*?)<\/file>/);
+            const markdownMatch = !fileMatch ? fullText.match(/```(?:tsx|jsx|javascript|typescript|js)?\n([\s\S]*?)```/) : null;
             const explanationMatch = fullText.match(/<explanation>([\s\S]*?)<\/explanation>/);
 
+            let extractedCode = fullText;
+            if (fileMatch) extractedCode = fileMatch[3].trim();
+            else if (markdownMatch) extractedCode = markdownMatch[1].trim();
+
             const parsed = {
-                code: fileMatch ? fileMatch[3].trim() : fullText,
+                code: extractedCode,
                 language: fileMatch ? (fileMatch[2] || 'typescriptreact') : 'typescriptreact',
                 filename: fileMatch ? fileMatch[1].trim() : 'page.tsx',
-                explanation: explanationMatch ? explanationMatch[1].trim() : 'Código gerado via streaming.'
+                explanation: explanationMatch ? explanationMatch[1].trim() : 'Código gerado via streaming.',
+                isTruncated
             };
 
             sendEvent('complete', parsed);
             await updateVortexState(`[Stream] Geração para [${parsed.filename}] via ${modelId}`);
-            sendEvent('done', {});
+            sendEvent('done', { isTruncated });
             res.end();
 
         } catch (e) {
-            console.error('❌ [VORTEX STREAM ERROR]', e.message);
+            console.error('❌ [VORTEX STREAM ERROR TRACE]', e);
             try {
                 res.write(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`);
                 res.end();
@@ -234,16 +241,8 @@ IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP).`;
             if (!prompt) return res.status(400).json({ error: 'Prompt vazio.' });
 
             const modelId = model || 'gemini-2.5-flash';
-            
-            let aiModel;
-            if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
-                aiModel = wrapModel(genAI.getGenerativeModelFromCachedContent(vortexActiveCache.obj));
-                console.log(`🌀 [VORTEX] Hub Ativado. Utilizando cache: ${vortexActiveCache.name}`);
-            } else {
-                aiModel = getAIModel(modelId, 'text/plain');
-            }
-
             const isPro = modelId.includes('pro');
+            
             const roleSpecialization = isPro 
                 ? `[ROLE: BRAIN/ARCHITECT]\n               Foco: Arquitetura de Silos, Domain-Driven Design (NeuroEngine), Lógica Complexa e Pacing & Leading Clínico.\n               Siga rigorosamente a Ontologia do Arquiteto.`
                 : `[ROLE: FLASH/VIBE]\n               Foco: Estética OLED Black, Performance Lighthouse 100, Tailwind CSS e Animações Glassmorphism.\n               Materialize a intenção visual com máxima velocidade.`;
@@ -259,6 +258,17 @@ ${roleSpecialization}${visionPrompt}
 
 [DIRETRIZES ANTIGRAVITY — SSOT]
 ${antigravityDirectives}
+
+[REGRAS ABIDOS — INVIOLÁVEIS]
+${context || 'Sem regras especiais em execução.'}`;
+
+            let aiModel;
+            if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
+                aiModel = wrapModel(genAI.getGenerativeModelFromCachedContent(vortexActiveCache.obj));
+                console.log(`🌀 [VORTEX] Hub Ativado. Utilizando cache: ${vortexActiveCache.name}`);
+            } else {
+                aiModel = getAIModel(modelId, 'text/plain', systemPrompt);
+            }
 
 [REGRAS ABIDOS — INVIOLÁVEIS]
 ${context || 'Sem regras especiais em execução.'}
@@ -285,9 +295,11 @@ Retorne APENAS um bloco JSON (sem markdown fora dele):
 
 IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP).`;
 
+            aiModel = getAIModel(modelId, 'text/plain', systemPrompt);
+
             const fullPrompt = currentCode 
-                ? `${systemPrompt}\n\n[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
-                : `${systemPrompt}\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`;
+                ? `[CÓDIGO ATUAL]\n\`\`\`tsx\n${currentCode}\n\`\`\`\n\n[INSTRUÇÃO DO USUÁRIO]\n${prompt}`
+                : `[INSTRUÇÃO DO USUÁRIO]\n${prompt}`;
 
             const requestParts = [ fullPrompt ];
             

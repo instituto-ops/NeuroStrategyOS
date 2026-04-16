@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
 const axios = require('axios');
@@ -10,65 +10,13 @@ let ttsClient;
 try {
     ttsClient = new textToSpeech.TextToSpeechClient();
 } catch (err) {
-    console.warn("âš ï¸ [TTS] Falha ao inicializar TTS Client (sem credenciais):", err.message);
+    console.warn("âš ï¸  [TTS] Falha ao inicializar TTS Client (sem credenciais):", err.message);
 }
 const { BetaAnalyticsDataClient } = require('@google-analytics/data');
-require('dotenv').config({ path: '../.env' }); 
+require('dotenv').config({ path: '../.env' });
 
-// [QUEUE SYSTEM FOR 429 RATE-LIMIT - METODOLOGIA ANTIGRAVITY]
-const aiQueue = [];
-let isProcessingQueue = false;
-
-async function processQueue() {
-    if (isProcessingQueue) return;
-    isProcessingQueue = true;
-    while (aiQueue.length > 0) {
-        const { model, parts, resolve, reject, retries, delay } = aiQueue[0];
-        try {
-            const executeCall = async (r, d) => {
-                try {
-                    const res = await model.generateContent(parts);
-                    return res;
-                } catch (e) {
-                    if (e.message.includes('429') && r > 0) {
-                        console.warn(`âš ï¸ [AI QUEUE] 429 Hit. Waiting ${d}ms... (${r} retries left)`);
-                        await new Promise(res => setTimeout(res, d));
-                        return await executeCall(r - 1, d * 2);
-                    }
-                    throw e;
-                }
-            };
-            const result = await executeCall(retries, delay || 2000);
-            aiQueue.shift();
-            resolve(result);
-            // Throttle: Max 1 request per second to respect RPM quotas
-            await new Promise(res => setTimeout(res, 1000));
-        } catch (err) {
-            aiQueue.shift();
-            reject(err);
-        }
-    }
-    isProcessingQueue = false;
-}
-
-function queuedGenerate(model, parts, retries = 3) {
-    return new Promise((resolve, reject) => {
-        aiQueue.push({ model, parts, resolve, reject, retries });
-        processQueue();
-    });
-}
-
-const wrapModel = (rawModel) => {
-    if (!rawModel) return rawModel;
-    return new Proxy(rawModel, {
-        get(target, prop, receiver) {
-            if (prop === 'generateContent') {
-                return (parts) => queuedGenerate(target, parts);
-            }
-            return Reflect.get(target, prop, receiver);
-        }
-    });
-};
+// [QUEUE SYSTEM LEGADO REMOVIDO DAQUI - METODOLOGIA ANTIGRAVITY]
+// Toda a orquestração de fila agora reside no shared.js de forma Singleton.;
 
 // Inicializa cliente GA4 se as credenciais existirem
 let analyticsClient;
@@ -719,5 +667,15 @@ const server = app.listen(port, () => {
     console.log(`\n🚀 AntiGravity CMS: Mission Control Ativo!`);
     console.log(`📡 Frontend & API rodando em http://localhost:${port}`);
     console.log(`🛡️ Camada de Seguranca Proxy: ON`);
+    
+    // Inicializar WebSocket Server
+    wss = new WebSocket.Server({ server });
     console.log(`🎙️ WebSocket Voice Live: Disponivel em ws://localhost:${port}`);
+
+    wss.on('connection', (ws) => {
+        console.log('🔌 Conexao WebSocket estabelecida');
+        ws.on('message', (message) => {
+            console.log('📩 Mensagem WS recebida:', message.toString());
+        });
+    });
 });

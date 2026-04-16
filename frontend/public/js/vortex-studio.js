@@ -819,7 +819,37 @@ window.vortexStudio = (() => {
     // VÓRTEX REACT COMPILER (Zero-Token Preview Strategy)
     // =========================================================================
     function isReactCode(code) {
-        return code.includes('import ') || code.includes('export default function') || code.includes('className=') || code.includes('React.');
+        // [VÓRTEX 3.1] Scanner Sintático Empírico (AST Trial-and-Error)
+        // Cria a árvore AST do DOM via engine. Se for código React "Nu", a engine 
+        // vazará as declarações sintáticas de JS (imports, functions) para os nodos de texto cru.
+        try {
+            // Fail-fast para Documentos HTML perfeitos
+            if (/^\s*(<!DOCTYPE|<html|<body|<head)/i.test(code)) {
+                return false;
+            }
+
+            const parser = new DOMParser();
+            const ast = parser.parseFromString(code, 'text/html');
+            
+            // Scanner do Vazamento de AST: 
+            const leakedText = ast.body.textContent;
+            const astTokens = leakedText.match(/\b(import|export default|function\s+[A-Z]|const\s+\[|return\s+\(|useState|useEffect)\b/g);
+
+            if (astTokens && astTokens.length > 0) {
+                return true; // Engine capturou anomalias lógicas no fluxo estático = É React JSX
+            }
+
+            // Heurística secundária de propriedades JSX vs HTML
+            if (code.includes('className=') || code.includes('onClick={')) {
+                return true;
+            }
+
+            return false; // HTML estático validado nativamente
+        } catch (e) {
+            // Caso syntax falhe nativamente catastroficamente:
+            // Atua em HTML Estático de forma determinística (Graceful Degradation)
+            return false;
+        }
     }
 
     // =========================================================================
@@ -830,7 +860,8 @@ window.vortexStudio = (() => {
     function stripForPreview(code) {
         let stripped = code;
         // Remove todos os imports (o Shell já tem tudo no escopo global)
-        stripped = stripped.replace(/import\s+.*?from\s+['"][^'"]+['"];?\s*\n?/g, '');
+        stripped = stripped.replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"];?\s*\n?/g, '');
+        stripped = stripped.replace(/import\s+['"][^'"]+['"];?\s*\n?/g, '');
         // Remove 'use client' directive
         stripped = stripped.replace(/['"]use client['"];?\s*\n?/g, '');
         // Remove export default — o Shell procura por Component ou App

@@ -28,11 +28,13 @@ async function processQueue() {
     if (isProcessingQueue) return;
     isProcessingQueue = true;
     while (aiQueue.length > 0) {
-        const { model, parts, resolve, reject, retries, delay } = aiQueue[0];
+        const { model, parts, mode, resolve, reject, retries, delay } = aiQueue[0];
         try {
             const executeCall = async (r, d) => {
                 try {
-                    const res = await model.generateContent(parts);
+                    const res = (mode === 'stream') 
+                        ? await model.generateContentStream(parts)
+                        : await model.generateContent(parts);
                     return res;
                 } catch (e) {
                     if (e.message.includes('429') && r > 0) {
@@ -55,9 +57,9 @@ async function processQueue() {
     isProcessingQueue = false;
 }
 
-function queuedGenerate(model, parts, retries = 3) {
+function queuedGenerate(model, parts, mode = 'normal', retries = 3) {
     return new Promise((resolve, reject) => {
-        aiQueue.push({ model, parts, resolve, reject, retries });
+        aiQueue.push({ model, parts, mode, resolve, reject, retries });
         processQueue();
     });
 }
@@ -67,7 +69,10 @@ const wrapModel = (rawModel) => {
     return new Proxy(rawModel, {
         get(target, prop, receiver) {
             if (prop === 'generateContent') {
-                return (parts) => queuedGenerate(target, parts);
+                return (parts) => queuedGenerate(target, parts, 'normal');
+            }
+            if (prop === 'generateContentStream') {
+                return (parts) => queuedGenerate(target, parts, 'stream');
             }
             return Reflect.get(target, prop, receiver);
         }
@@ -75,7 +80,7 @@ const wrapModel = (rawModel) => {
 };
 
 // ── AI Model Factory ────────────────────────────────────────────────────
-function getAIModel(modelType, mimeType = "application/json") {
+function getAIModel(modelType, mimeType = "application/json", systemInstruction = null) {
     let target = MAIN_MODEL;
     if (modelType === 'lite' || modelType === 'gemini-2.5-flash-lite') target = LITE_MODEL;
     else if (modelType === 'pro' || modelType === 'gemini-2.5-pro') target = PRO_MODEL;
@@ -84,11 +89,14 @@ function getAIModel(modelType, mimeType = "application/json") {
 
     const config = { 
         temperature: 0.8,
-        maxOutputTokens: 8192
+        maxOutputTokens: 16384 // Modificado de 8192 (Estouro de malha) para 16384 - Plano de Resgate
     };
     if (mimeType === "application/json") config.responseMimeType = "application/json";
 
-    const rawModel = genAI.getGenerativeModel({ model: target, generationConfig: config });
+    const modelConfig = { model: target, generationConfig: config };
+    if (systemInstruction) modelConfig.systemInstruction = systemInstruction;
+
+    const rawModel = genAI.getGenerativeModel(modelConfig);
     return wrapModel(rawModel);
 }
 
