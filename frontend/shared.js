@@ -20,44 +20,74 @@ const LITE_MODEL = "gemini-2.5-flash-lite";
 const MAIN_MODEL = "gemini-2.5-flash";
 const PRO_MODEL  = "gemini-2.5-pro";
 
-// ── Queue System (429 Rate-Limit) ───────────────────────────────────────
+// ── Queue System (429 Rate-Limit & Sequential Stream) ───────────────────
 const aiQueue = [];
 let isProcessingQueue = false;
 
+/**
+ * Singleton Queue Manager para o VÓRTEX v3.2
+ * Garante que apenas uma requisição de IA (ou stream) ocorra por vez
+ * para evitar erros 429 (Rate Limit) em cenários de alta carga ou multi-usuário.
+ */
 async function processQueue() {
     if (isProcessingQueue) return;
     isProcessingQueue = true;
+
     while (aiQueue.length > 0) {
-        const { model, parts, mode, resolve, reject, retries, delay } = aiQueue[0];
+        const item = aiQueue[0];
+        const { model, parts, mode, resolve, reject, retries, delay } = item;
+
         try {
+            console.log(`🌀 [AI QUEUE] Processing ${mode} request. Queue size: ${aiQueue.length}`);
+            
             const executeCall = async (r, d) => {
                 try {
-                    const res = (mode === 'stream') 
+                    const result = (mode === 'stream') 
                         ? await model.generateContentStream(parts)
                         : await model.generateContent(parts);
-                    return res;
+                    
+                    // Se for stream, precisamos esperar o fim do consumo (response promise)
+                    // para garantir que a fila seja REALMENTE sequencial e respeite o rate limit.
+                    if (mode === 'stream' && result.response) {
+                        console.log(`   [AI QUEUE] Stream started. Waiting for completion...`);
+                        // O 'result.response' do Gemini resolve após o fim do stream completo.
+                        await result.response; 
+                        console.log(`   [AI QUEUE] Stream finished safely.`);
+                    }
+                    
+                    return result;
                 } catch (e) {
-                    if (e.message.includes('429') && r > 0) {
-                        console.warn(`⚠️ [AI QUEUE] 429 Hit. Waiting ${d}ms... (${r} retries left)`);
+                    const errorMsg = e.message || "";
+                    if ((errorMsg.includes('429') || errorMsg.includes('Resource has been exhausted')) && r > 0) {
+                        console.warn(`⚠️ [AI QUEUE] 429/Quota Hit. Backoff: ${d}ms... (${r} retries left)`);
                         await new Promise(res => setTimeout(res, d));
+                        // Exponential backoff
                         return await executeCall(r - 1, d * 2);
                     }
                     throw e;
                 }
             };
-            const result = await executeCall(retries, delay || 2000);
-            aiQueue.shift();
+
+            const result = await executeCall(retries, delay || 3000);
+            aiQueue.shift(); // Remove da fila após sucesso (incluindo stream completo)
             resolve(result);
-            await new Promise(res => setTimeout(res, 1000));
+
+            // Pequeno respiro (pacing clínico) entre chamadas para evitar burst 429
+            await new Promise(res => setTimeout(res, 500));
         } catch (err) {
-            aiQueue.shift();
+            console.error(`❌ [AI QUEUE] Critical failure in queue item:`, err.message);
+            aiQueue.shift(); // Remove para não travar a fila perpetuamente
             reject(err);
         }
     }
+
     isProcessingQueue = false;
+    if (aiQueue.length === 0) {
+        console.log(`✅ [AI QUEUE] All requests processed. Queue idle.`);
+    }
 }
 
-function queuedGenerate(model, parts, mode = 'normal', retries = 3) {
+function queuedGenerate(model, parts, mode = 'normal', retries = 5) {
     return new Promise((resolve, reject) => {
         aiQueue.push({ model, parts, mode, resolve, reject, retries });
         processQueue();

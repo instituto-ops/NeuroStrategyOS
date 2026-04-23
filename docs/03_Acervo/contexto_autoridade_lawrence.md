@@ -15,7 +15,7 @@ Este documento contém os dados oficiais de autoridade para serem injetados em s
 
 * **Site Oficial:** https://hipnolawrence.com
 * **Instagram:** https://www.instagram.com/hipnolawrence
-* **WhatsApp:** 62 98217 1845
+* **WhatsApp:** 62 991545295
 * **Doctoralia (Perfil):** [Perfil Doctoralia](https://www.doctoralia.com.br/victor-lawrence-bernardes-santana/psicologo-terapeuta-complementar/goiania)
 * **Doctoralia (Avaliações):** [Opinioes de Pacientes](https://www.doctoralia.com.br/opinions/doctor/victor-lawrence-bernardes-santana)
 * **Google Meu Negócio:** [Localização \& Reviews](https://share.google/6qS5KisdrjUNv1T3P)

@@ -47,9 +47,9 @@
 
 **Problema:** O LLM gasta tokens em boilerplate (imports, exports, interfaces TypeScript) que não são necessários no sandbox de preview.
 
-- [ ] **Microetapa 1.2.a — Alterar o system prompt em `vortex.js`**
-- [ ] **Microetapa 1.2.b — Validar o impacto no consumo de tokens**
-- [ ] **Microetapa 1.2.c — Ajustar o Preview Shell para expor as dependências no escopo global**
+- [x] **Microetapa 1.2.a — Alterar o system prompt em `vortex.js`**
+- [x] **Microetapa 1.2.b — Validar o impacto no consumo de tokens**
+- [x] **Microetapa 1.2.c — Ajustar o Preview Shell para expor as dependências no escopo global**
 
 **Meta:** Redução mensurável de latência e custo por requisição.
 
@@ -59,18 +59,16 @@
 
 **Problema:** Quando o Gemini trunca a resposta, o código chega incompleto e quebra o parser.
 
-- [ ] **Microetapa 1.3.a — Implementar a flag `isTruncated`**
-- [ ] **Microetapa 1.3.b — Implementar `isSyntacticallyComplete`**
-  - **Refinamento:** NÃO usar contagem simples de caracteres. Utilizar o próprio `@babel/parser` (ou um parser leve que ignore strings/comentários) para validar se o código é uma unidade mínima passível de execução.
-  - **Regra:** Ignorar chaves `{ }` e parênteses `( )` dentro de strings, templates literals e comentários.
+- [x] **Microetapa 1.3.a — Implementar a flag `isTruncated`**
+  - **Status:** CONCLUÍDO. Backend sinaliza truncamento via SSE.
+- [x] **Microetapa 1.3.b — Implementar `isSyntacticallyComplete`**
+  - **Status:** CONCLUÍDO. Implementado validador robusto base-stack em `vortex-studio.js`.
+- [x] **Microetapa 1.3.c — Implementar o Continue Motor**
+  - **Status:** CONCLUÍDO. Emenda automática de fragmentos de código via buffer `preContinuationCode`.
+- [x] **Microetapa 1.3.d — Definir limite de tentativas**
+  - **Status:** CONCLUÍDO. Implementado `MAX_CONTINUATIONS = 3` com recuperação automática silenciosa.
 
-- [ ] **Microetapa 1.3.c — Implementar o Continue Motor**
-  - Se `isTruncated === true`, realizar fatiamento dos últimos 200 caracteres (anchoring text) e empurrar recursivamente sem a interface ser travada pelo usuário.
-
-- [ ] **Microetapa 1.3.d — Definir limite de tentativas**
-  - Evitar Loops infinitos da base `isTruncated`, atrelando uma variável contadora `MAX_CONTINUATIONS = 3`.
-
-**Meta:** Zero intervenção manual do usuário em falhas de geração.
+**Meta:** Zero intervenção manual do usuário em falhas de geração. CONCLUÍDO.
 
 ---
 
@@ -82,34 +80,37 @@
 
 ---
 
-## 🟡 Fase II — Soberania Sintática (Média Prioridade)
+## 🔴 Fase II — Soberania Sintática (AST Migration)
 
-**Objetivo:** Substituir a extração frágil por regex por parsing real via AST, eliminando falhas silenciosas de extração de código.
-
----
-
-### Módulo 2.1 — Decisão de Biblioteca (Babel via AST)
-
-- [ ] **Microetapa 2.1.a — Reaproveitar Base Pre-Existente**
-- [ ] **Microetapa 2.1.b — Instalar dependencia caso não englobada em módulos locais.**
+**Objetivo:** Substituir a extração frágil por regex por parsing real via AST, eliminando falhas silenciosas de extração de código e garantindo que o "Naked Protocol" entregue código de produção 100% válido.
 
 ---
 
-### Módulo 2.2 — Substituição do RegEx por AST em `hydration-map.js` e Trans-Mapper (Hydrate NextJS)
+- [x] **Módulo 2.1 — Infraestrutura AST (Babel Standalone)**
+  - [x] **Microetapa 2.1.a — Carga Dinâmica do Babel na IDE Shell**
+    - Implementar em `vortex-studio.js` o carregamento de `babel.min.js` no host (IDE).
+  - [x] **Microetapa 2.1.b — Bridge de Análise em `hydration-map.js`**
+    - Criar wrapper `analyzeCodeWithAST(code)` que utiliza `Babel.packages.parser`.
 
-- [ ] **Microetapa 2.2.a — Mapear regex atuais**
-- [ ] **Microetapa 2.2.b — Implementar o extrator via AST**
-- [ ] **Microetapa 2.2.c — Implementar tratamento de falhas**
-- [ ] **Microetapa 2.2.d — Trans-Mapper Base (Fronteira Oculta/Hydration)**
+- [x] **Módulo 2.2 — Bridge de Análise Estrutural**
+  - [x] Substituir RegEx por `Babel.traverse` para extração de ícones Lucide.
+  - [x] Refatorar detecção de `mainComponentName` para exportação automática.
 
-**Meta:** Extração de código determinística. Componentes prontos para uso em produção.
+- [x] **Módulo 2.3 — Validação de Soberania Sintática**
+  - [x] Implementar `isSyntacticallyComplete` usando parser Babel (mais preciso que stack manual).
+  - [x] Testar hidratação com componentes complexos.
+  - [x] Garantir que o fallback para RegEx funcione caso o unpkg esteja offline.
+
+**Meta:** Extração de código determinística. Fidelidade absoluta entre Preview e Produção.
 
 ---
 
-## 🟢 Fase III — Infraestrutura de Escala (Baixa Prioridade / Condicional)
+## 🟢 Fase III — Infraestrutura de Escala (Escalabilidade e Resiliência)
 
-- [ ] **Módulo 3.1 — Singleton Queue para Rate Limit**
-  - Acionar somente se gatilho de erros 429 ou multi-usuário for detectado.
+- [x] **Módulo 3.1 — Singleton Queue para Rate Limit**
+  - [x] Implementar Fila Singleton real em `shared.js` com suporte a Streams Sequenciais.
+  - [x] Adicionar Retroalimentação (Backoff Exponencial) para erros 429/Exaustão.
+  - [x] Garantir que apenas uma requisição de IA ocorra por vez (Governança de Concorrência).
 
 ---
 
@@ -118,13 +119,15 @@
 ```
 [x] 1.1.a → [x] 1.1.b → [x] 1.1.c
               ↓
-[ ] 1.2.a → [ ] 1.2.b → [ ] 1.2.c
+[x] 1.2.a → [x] 1.2.b → [x] 1.2.c
               ↓
-[ ] 1.3.a → [ ] 1.3.b → [ ] 1.3.c → [ ] 1.3.d
+[x] 1.3.a → [x] 1.3.b → [x] 1.3.c → [x] 1.3.d
               ↓
-[ ] 2.1.a → [ ] 2.1.b
+[x] 2.1.a → [x] 2.1.b
               ↓
-[ ] 2.2.a → [ ] 2.2.b → [ ] 2.2.c → [ ] 2.2.d
+[x] 2.2.a → [x] 2.2.b → [x] 2.2.c → [x] 2.2.d
               ↓
-[ ] 3.1.a → [ ] 3.1.b
+[x] 2.3.a → [x] 2.3.b → [x] 2.3.c
+              ↓
+[x] 3.1.a → [x] 3.1.b → [x] 3.1.c
 ```

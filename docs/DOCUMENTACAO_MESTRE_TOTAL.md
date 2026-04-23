@@ -5,79 +5,57 @@ Este é o documento definitivo que consolida toda a inteligência, arquitetura e
 ---
 
 ## 🏛️ 1. Visão Geral (O Sistema)
-
-O **NeuroEngine OS** é um sistema operacional de marketing clínico e gestão de conteúdo **Headless**, projetado para transformar o conhecimento do Dr. Victor Lawrence em autoridade digital inabalável. Ele substitui o WordPress tradicional por uma arquitetura **Jamstack** de alta performance, integrada a uma orquestração multiagente de IA.
+O **NeuroEngine OS** é um sistema operacional de marketing clínico e gestão de conteúdo de autoridade. Ele substitui o WordPress tradicional por uma arquitetura **Jamstack** de alta performance.
 
 *   **Filosofia:** *Total Authority. Zero Friction. Clinical Excellence.*
-*   **Diferencial:** Não é apenas uma CMS; é um **Avaliador Ético e Clínico** que garante conformidade com o CFP enquanto domina o SEO.
+*   **Diferencial:** Não é apenas uma CMS; é um ecossistema que garante conformidade ética (CFP) enquanto domina o SEO Local.
 
 ---
 
-## 💻 2. Stack Tecnológica (A Stake)
+## 🌀 2. Vórtex AI Studio 3.1: O Coração Generativo
+O **Vórtex** evoluiu de um simples gerador para um estúdio de engenharia JIT (Just-In-Time).
 
-Consolidada para garantir latência zero e segurança máxima:
+### 2.1. Arquitetura "Naked Generation"
+O sistema gera componentes React "puros" (Naked), sem declarações de `import` que quebram o preview.
+- **Vantagem:** Renderização instantânea no navegador sem necessidade de build server.
+- **Segurança:** O código é auditado automaticamente pelas **Regras Abidos v5.6** e **Compliance CFP**.
 
-*   **Frontend:** HTML5 / JavaScript (Vanilla) / CSS3 (OLED Black Design).
-*   **Backend:** Node.js + Express (API & Orchestrator).
-*   **Cloud & Deploy:** Next.js (Core Site) / Vercel (Hosting) / Cloudinary (CDN de Mídia).
-*   **Comunicação:** WebSockets (Logs Real-time) + Heartbeat de Integridade.
-*   **Governança de Dados:** Sistema de Silos (`silos.json`) e Banco de Palavras-Chave.
+### 2.2. Hidratação e Materialização (Logic Mapper)
+O motor `hydration-map.js` transforma componentes "Naked" em arquivos Next.js completos para produção:
+1.  **Injeção de Imports:** Adiciona automaticamente as bibliotecas necessárias (Lucide, motion, etc).
+2.  **Deduplicação:** Garante que o código seja limpo e performático.
+3.  **Sync Local:** Salva o código materializado diretamente no diretório `/HipnoLawrence-Site` para deploy via Vercel.
 
----
-
-## 🤖 3. Arquitetura de IA: Governança Gemini 2.5
-
-O sistema é movido exclusivamente pela família **Gemini 2.5**, sob uma rígida **Norma de Economia de Tokens (Abidos Economy)**.
-
-### 3.1. Orquestração Centralizada
-O backend utiliza o `getAIModel` para garantir que todas as chamadas sigam a hierarquia:
-*   **🧠 Pro:** Auditorias complexas, refinamento de elite e análise de longo contexto.
-*   **⚡ Flash:** Geração padrão, automação de copy e mapeamento de SEO (Default).
-*   **⚡ Flash-Lite:** Interações rápidas, resumos de logs e suporte de interface.
-
-### 3.2. Hierarquia de Controle
-O usuário define o **Modelo Global** no Dashboard, mas cada módulo tem autonomia para seleção **Local**, permitindo precisão cirúrgica no uso de recursos.
+### 2.3. Hybrid Preview System (Zero Token Rendering)
+- **Preview Shell:** Uma sandbox isolada que recebe o código e renderiza via Babel.js no cliente.
+- **Estética OLED Black:** O design system premium é injetado nativamente em todas as gerações.
 
 ---
 
-## 🧠 4. Metodologia Abidos v5.6 (O Cérebro)
-
-A estratégia de mercado baseia-se na **Arquitetura de Domínio Hub & Spoke**:
-
-1.  **Hubs (Autoridade Regional):** Foco em SEO Local (ex: Psicólogo em Goiânia).
-2.  **Spokes (Nicho Nacional):** Foco em dores específicas (ex: Burnout Autista) para escala nacional.
-3.  **Copy Fatiado:** Estrutura Mobile-First (Kicker > H1 > Subtitle) para máxima retenção e conversão.
-
----
-
-## 🧩 5. Módulos Operacionais
-
-*   **🎨 AI Studio (Mission Control):** Geração modular de páginas, auditoria Abidos (Conversão) e Auditoria Clínica (Ética).
-*   **📊 Marketing Lab (Analytics):** Dashboard integrado ao GA4 (Next.js Core) com diagnóstico de PageSpeed (Lighthouse).
-*   **💬 Doctoralia Assistant:** Gestor de reputação e respostas inteligentes com clonagem de voz verbal do Dr. Victor.
-*   **📂 Gestão de Páginas (CMS):** Controle total de slugs, status de publicação e edição física de arquivos do repositório.
-*   **👑 Manager Agent:** Orquestrador central de logs e saúde do ecossistema.
+## 💻 3. Stack Tecnológica
+*   **Frontend:** Vanilla JS / OLED Black CSS (Premium Experience).
+*   **Backend:** Node.js + Express (API Modularizada).
+*   **IA Engine:** Gemini 2.5 (Flash para velocidade, Pro para lógica complexa).
+*   **Persistência:** VFS (Virtual File System) no navegador via IndexedDB + Mirroring no Disco Local.
+*   **Autenticação:** Blindagem via `VORTEX_API_KEY` entre Frontend e Backend.
 
 ---
 
-## 🛡️ 6. Governança, Ética e Segurança
-
-*   **Filtro CRP:** Whitelist/Blacklist rigorosa para evitar termos proibidos (Cura, Garantia, etc.).
-*   **Selo Verde (Audit):** Nenhuma página é enviada ao Next.js sem passar por um duplo check (IA + Humano).
-*   **Persistência de Dados:** Relatórios de auditoria e logs de sistema são resilientes e salvos para consulta histórica.
-
----
-
-## 📂 7. Guia Rápido de Documentos Complementares
-
-Para mergulhar em detalhes específicos, consulte:
-
-1.  [**Stake de Trabalho**](./01_Sistema/Stake_de_Trabalho.md): Detalhes técnicos e dependências.
-2.  [**Governança Gemini 2.5**](./04_Arquitetura_IA/Governança_Modelos_Gemini_2.5.md): Regras de uso de IA e economia.
-3.  [**Abidos Domain Intelligence**](./04_Arquitetura_IA/Abidos_Domain_Intelligence.md): Estratégia de SEO e Hubs.
-4.  [**Manual AI Studio**](./01_Sistema/Estudio_Conteudo_Producao_Abidos_Manual.md): Guia de criação de conteúdo.
+## 🛡️ 4. Metodologia de Operação
+O Vórtex opera sob 4 pilares de SSOT (Source of Truth):
+1.  **Prompt Base 3.1:** Protocolos de geração infalíveis para landing pages clínicas.
+2.  **Context Hub:** Cache de memória persistente para manter a "conversa" viva entre gerações.
+3.  **Continue Generation:** Recuperação automática de streams de IA truncados (Overflow).
+4.  **Audit Logs:** Registro em tempo real de toda alteração no ecossistema.
 
 ---
-**Documento Master Atualizado em:** 28 de Março de 2026  
-**Responsável:** Antigravity AI  
-**Status:** 👑 FONTE ÚNICA DA VERDADE (SSOT)
+
+## 📂 5. Guia de Documentos Estratégicos
+1. [**Plano Operacional Vórtex**](../docs/05_Planos_e_Backlogs/Plano_Operacional_Vortex_Refactoring.md): Roadmap técnico completo.
+2. [**Relatório Diagnóstico**](../docs/Relatorio_Diagnostico_Vortex_Landing_Uberlandia.md): Estado atual de testes e validação.
+3. [**Acervo Victor Lawrence**](../docs/03_Acervo/): Base de conhecimento de autoridade.
+
+---
+**Documento Master Atualizado em:** 16 de Abril de 2026  
+**Status:** 👑 ESTABILIDADE INDUSTRIAL ATINGIDA (Vórtex 3.1)  
+**Responsável:** Antigravity AI

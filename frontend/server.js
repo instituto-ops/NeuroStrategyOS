@@ -83,6 +83,12 @@ app.get('/api/previews/get/:id', (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/templates', express.static(path.join(__dirname, '../templates')));
 
+// [VÓRTEX CONFIG] Dynamic injection of API Key
+app.get('/js/vortex-config.js', (req, res) => {
+    res.type('application/javascript');
+    res.send(`window.VORTEX_API_KEY = "${process.env.VORTEX_API_KEY || ''}";`);
+});
+
 const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,

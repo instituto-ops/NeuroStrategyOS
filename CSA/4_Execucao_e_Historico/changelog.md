@@ -1,5 +1,15 @@
 # 📜 Changelog (Registro de Materialização)
 
+## [16/04/2026] - v3.1.1-SAGA (Protocolo de Resiliência)
+
+### ✅ Adicionado
+- **SAGA-LLM (Fase Inicial):** Estrutura de backups preventivos em `CSA/4_Execucao_e_Historico/Backup/`.
+- **Checkpoint de Estado:** Criado snapshot `pre-SAGA` dos arquivos SSOT.
+
+### 🛠️ Alterado
+- **Controle de Versão:** Sincronização de `estado_atual.md` para o novo roadmap de resiliência.
+
+
 ## [07/04/2026] - Refatoração de Desempenho e Arquitetura On-Demand
 
 ### ✅ Adicionado

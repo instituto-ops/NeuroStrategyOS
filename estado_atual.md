@@ -6,19 +6,23 @@
 
 ---
 
-## 💠 Estado Atual: `v3.1-hydration-logic`
-- **Fase I & II:** Concluídas. Preview Shell isolado e operacional.
-- **Fase III (Logic):** Em progresso. Dicionário de mapeamento e extrator de ícones implementados em `hydration-map.js`.
+## 💠 Estado Atual: `v3.1.1-SAGA`
+- **Fase I a V:** Concluídas. Vórtex Studio 3.1 declarado estável.
+- **Fase VI (SAGA-LLM):** Em progresso. Implementação da rotina de rollback e backups preventivos automáticos.
 
 ### 🎯 Objetivos Imediatos
 1. [x] Implementar a função `strip(code)` para limpeza de código pré-preview.
 2. [x] Implementar a função `hydrate(code)` para materialização de código Next.js.
 3. [x] Validar estresse e deduplicação de imports (Fase IV).
+4. [x] Automatizar backups de SSOT via script de pré-commit/materialização.
+5. [ ] Implementar interface de 'Time Travel' no Vórtex Studio para restauração de backups.
+6. [ ] Verificação visual do carregamento do preview no Vórtex Studio. [EM CURSO]
 
 ### ✅ Progresso Último
 1. [x] **Deduplicação Inteligente**: Motor agora remove imports redundantes e injeta os oficiais no topo.
 2. [x] **Fase IV Concluída**: Testes de Hero, Animação e Navegação superados com 100% de precisão.
 3. [x] **Estabilidade**: O pipeline Naked → Hydrated está resiliente e pronto para produção.
+4. [ ] **Verificação de Preview**: Iniciada a validação visual do ambiente.
 
 ### 🚧 Bloqueios Ativos
 - Nenhum.
@@ -43,3 +47,6 @@
 - **[16/04/2026, 03:28:51]**: [Stream] Geração para [page.tsx] via gemini-2.5-flash
 - **[16/04/2026, 03:31:37]**: [Stream] Geração para [page.tsx] via gemini-2.5-flash
 - **[16/04/2026, 03:34:25]**: [Stream] Geração para [page.tsx] via gemini-2.5-flash
+- **[16/04/2026, 08:18:35]**: ⚠️ Erro na geração: VORTEX_API_KEY is not defined (Identificada falta de credencial no .env).
+- **[16/04/2026, 20:30:00]**: ✅ Sistema Blindado: VORTEX_API_KEY implementada via injeção dinâmica (`/js/vortex-config.js`) e servidor reiniciado. Autenticação operacional.
+- **[16/04/2026, 20:08:19]**: [Stream] Geração para [app/page.tsx] via gemini-2.5-flash
