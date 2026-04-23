@@ -41,8 +41,8 @@ diff.txt
 wordpress-stubs.php
 /docs/prints/
 
-# [CSA v2] Pasta CSA agora é rastreada para auditoria (AI-RO)
-# CSA/*
+# [CSA v3.2] Apenas o arquivo estado_atual.md é versionado. Toda a pasta CSA/ é ignorada.
+CSA/
 
 # estado_atual.md (raiz) é rastreado por padrão.
 

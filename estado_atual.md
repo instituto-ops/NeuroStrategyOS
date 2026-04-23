@@ -1,14 +1,12 @@
 # 🧠 Estado Atual - Cognitive State Architecture (CSA)
 
-## 🎯 Status: Estabilização do Vórtex Studio (Fase III - Logic) 🧪
-**Data:** 16/04/2026
-**Session ID:** 41617next
-
+## 🎯 Status: Ativação CSA v3.2 & Governança Git 🏛️
+**Data:** 23/04/2026
+**Session ID:** 42326-SAGA
 ---
-
-## 💠 Estado Atual: `v3.1.1-SAGA`
-- **Fase I a V:** Concluídas. Vórtex Studio 3.1 declarado estável.
-- **Fase VI (SAGA-LLM):** Em progresso. Implementação da rotina de rollback e backups preventivos automáticos.
+## 💠 Estado Atual: `v3.2.0-SAGA`
+- **Governança Git:** Pasta `CSA/` removida do rastreamento (mantida apenas localmente) conforme novas diretrizes.
+- **Fase VI (SAGA-LLM):** Em preparação.
 
 ### 🎯 Objetivos Imediatos
 1. [x] Implementar a função `strip(code)` para limpeza de código pré-preview.
