@@ -82,3 +82,20 @@
 - **[16/04/2026, 08:18:35]**: ⚠️ Erro na geração: VORTEX_API_KEY is not defined (Identificada falta de credencial no .env).
 - **[16/04/2026, 20:30:00]**: ✅ Sistema Blindado: VORTEX_API_KEY implementada via injeção dinâmica (`/js/vortex-config.js`) e servidor reiniciado. Autenticação operacional.
 - **[16/04/2026, 20:08:19]**: [Stream] Geração para [app/page.tsx] via gemini-2.5-flash
+
+---
+## Sessão 2026-04-24 — Estabilização Vórtex V5 (Concluída)
+
+- **Diagnóstico Preview (Agente Claude):** Identificados dois bugs críticos que impediam a renderização automática:
+  1. **SSE Sync Gap:** O evento `done` do stream não acionava o `updatePreview()` em casos de fallback, deixando o código preso no editor sem renderizar.
+  2. **Race Condition no Refresh:** O `refreshPreview()` falhava ao carregar o `preview-shell.html` porque o iframe mantinha o `srcdoc` da tela de boas-vindas, gerando conflito de precedência no carregamento do shell.
+- **Correções Aplicadas:**
+  - Forçado trigger de `updatePreview()` no handler `done` do stream SSE.
+  - Ajustado `refreshPreview()` para limpar explicitamente o `srcdoc` antes de carregar o shell.
+- **Validação E2E:** 
+  - Teste manual com injeção de componente React + Refresh → **SUCESSO**.
+  - Teste de fluxo completo (Prompt → Stream → Render) → **SUCESSO** (Verificado via screenshot do componente Hipnose Card).
+- **Plano V5:** Fase 0 concluída. Checklist em `CSA/3_Engenharia_e_Arquitetura/plano_execucao_vortex_v5.md` atualizado.
+- **Próximo Passo:** Iniciar Fase 1 (Fusão AI Studio → Vórtex).
+
+**Status Final:** 🌀 VÓRTEX STUDIO V5 OPERACIONAL. Preview estabilizado. Pipeline de renderização 100% funcional.

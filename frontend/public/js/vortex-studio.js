@@ -628,6 +628,12 @@ window.vortexStudio = (() => {
                                 }
                             } else {
                                 state.continuationCount = 0; // Sucesso absoluto
+                                // [FIX] Se 'complete' não veio com event.code, forçar preview do conteúdo do editor
+                                const editorCode = getEditorContent();
+                                if (editorCode && editorCode.trim().length > 20 && !editorCode.startsWith('// 🌀')) {
+                                    updatePreview(sanitizeAIContent(editorCode));
+                                    addAuditLog('info', '✅ Preview atualizado automaticamente via evento done.');
+                                }
                             }
                             state.isContinuing = false; // Reset ao finalizar
                             break;
@@ -641,8 +647,13 @@ window.vortexStudio = (() => {
 
         // Se não recebemos um evento 'complete', tentar parsear do texto bruto
         if (!fullStreamText.includes('</file>')) {
-            setEditorContent(fullStreamText, 'typescriptreact');
+            const fallbackCode = sanitizeAIContent(fullStreamText);
+            setEditorContent(fallbackCode, 'typescriptreact');
             addMessage('ai', '✅ Código gerado via streaming.');
+            // [FIX] Também atualizar o preview com o código bruto
+            if (fallbackCode.trim().length > 20) {
+                updatePreview(fallbackCode);
+            }
         }
     }
 
@@ -1199,6 +1210,13 @@ function renderFallbackPanel(errorMsg) {
         if (btn) {
             btn.classList.add('spinning');
             setTimeout(() => btn.classList.remove('spinning'), 800);
+        }
+
+        // [FIX] Forçar reset do shell para garantir que o preview-shell.html seja carregado
+        const frame = document.getElementById('vortex-preview-frame');
+        if (frame) {
+            shellReady = false;
+            frame.removeAttribute('srcdoc');
         }
 
         // Sanitize and render
