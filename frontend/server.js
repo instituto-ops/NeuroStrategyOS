@@ -133,7 +133,7 @@ function reportAgentStatus(agent, status, reason = "", isDone = false) {
 // [PHASE 1.4 CONCLUÍDA] Modelos agora centralizados no shared.js
 const VISION_MODEL = MAIN_MODEL;
 const HEAVY_MODEL = PRO_MODEL;
-const draftsDb = []; // In-memory store for newly generated drafts before WP sync
+const draftsDb = []; // In-memory store for newly generated drafts (Vercel-ready)
 
 // [REDUNDÂNCIAS REMOVIDAS - AGORA UTILIZANDO SHARED.JS]
 // Funções extractJSON, repairTruncatedJSON, trackUsage e telemetria migradas para ./shared.js
@@ -511,7 +511,6 @@ const deps = {
 
 // Modulos Injetados Automaticamente
 require('./routes/acervo')(app, deps);
-require('./routes/wordpress')(app, deps);
 require('./routes/ai-generation')(app, deps);
 require('./routes/health-marketing')(app, deps);
 require('./routes/operations')(app, deps);

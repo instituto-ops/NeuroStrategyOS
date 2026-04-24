@@ -1119,6 +1119,17 @@
     to { transform: rotate(360deg); }
 }
 
+/* Refresh Preview Button Animation */
+.vortex-device-btn.spinning i,
+.vortex-device-btn.spinning svg {
+    animation: vortex-spin 0.6s ease-in-out;
+}
+
+.vortex-device-btn:hover {
+    color: #475569;
+    background: rgba(0, 0, 0, 0.05);
+}
+
 /* === RESPONSIVE ADJUSTMENTS === */
 @media (max-width: 1200px) {
     .vortex-workspace {

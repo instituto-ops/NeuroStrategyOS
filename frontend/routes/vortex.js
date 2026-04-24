@@ -15,14 +15,14 @@ const cacheManager = process.env.GEMINI_API_KEY ? new GoogleAICacheManager(proce
 const axios = require('axios');
 
 // Helper: Carregar Contexto CSA (Cognitive State Architecture)
-async function getAntigravityContext() {
+async function getCSAContext() {
     const basePath = path.join(__dirname, '..', '..', 'CSA', '1_Diretrizes_e_Memoria');
     let context = '';
     try {
         const rules = fs.readFileSync(path.join(basePath, 'regras_base.md'), 'utf8');
         const manual = fs.readFileSync(path.join(basePath, 'manual_do_arquiteto.md'), 'utf8');
-        const dictionary = fs.readFileSync(path.join(basePath, 'dicionario_de_traducao.md'), 'utf8');
-        context = `[CSA SYSTEM CONTEXT]\n${rules}\n\n[MANUAL DO ARQUITETO]\n${manual}\n\n[DICIONÁRIO ONTOLÓGICO]\n${dictionary}`;
+        const dictionary = fs.readFileSync(path.join(basePath, 'dicionario_de_termos.md'), 'utf8');
+        context = `[CSA SYSTEM CONTEXT]\n${rules}\n\n[MANUAL DO ARQUITETO]\n${manual}\n\n[DICIONARIO DE TERMOS]\n${dictionary}`;
     } catch (e) {
         console.warn('⚠️ [VORTEX] Falha ao carregar diretrizes CSA:', e.message);
     }
@@ -100,9 +100,9 @@ module.exports = function setupVortexRoutes(app, { SITE_REPO_PATH }) {
                 vortexActiveCache = null;
             }
 
-            const antigravityContext = await getAntigravityContext();
+            const csaContext = await getCSAContext();
             const baseSystem = systemPrompt || 'Você é o orquestrador sênior do Vórtex AI Studio.';
-            const fullSystemInstruction = `${baseSystem}\n\n${antigravityContext}`;
+            const fullSystemInstruction = `${baseSystem}\n\n${csaContext}`;
 
             const cacheObj = await cacheManager.create({
                 model: modelPath,
@@ -127,6 +127,7 @@ module.exports = function setupVortexRoutes(app, { SITE_REPO_PATH }) {
             const { prompt, model, currentCode, abidosRules, context, useCache } = req.body;
             if (!prompt) return res.status(400).json({ error: 'Prompt vazio.' });
 
+            const startedAt = Date.now();
             const modelId = model || 'gemini-2.5-flash';
             const isPro = modelId.includes('pro');
             
@@ -138,13 +139,13 @@ module.exports = function setupVortexRoutes(app, { SITE_REPO_PATH }) {
                 ? `\n[MODO VISION ATIVO — ANALISE A IMAGEM ANEXADA]\n               1. DECODIFIQUE a hierarquia visual.\n               2. TRADUZA para o Design System OLED Black.\n               3. MAPIE textos para Micro-copy de conversão.\n               4. SEJA FIEL ao layout original.`
                 : "";
 
-            const antigravityDirectives = await getAntigravityContext();
+            const csaDirectives = await getCSAContext();
 
             const systemPrompt = `[VÓRTEX AI STUDIO 3.1 — NAKED GENERATION PROTOCOL]
 ${roleSpecialization}${visionPrompt}
 
-[DIRETRIZES ANTIGRAVITY — SSOT]
-${antigravityDirectives}
+[DIRETRIZES CSA - SSOT]
+${csaDirectives}
 
 [REGRAS ABIDOS — INVIOLÁVEIS]
 ${context || 'Sem regras especiais em execução.'}
@@ -207,7 +208,15 @@ ${context || 'Sem regras especiais em execução.'}
             }
 
             const response = await result.response;
-            trackUsage(response.usageMetadata);
+            trackUsage(response.usageMetadata, {
+                route: 'vortex/generate-stream',
+                model: modelId,
+                durationMs: Date.now() - startedAt,
+                promptChars: systemPrompt.length + fullPrompt.length,
+                responseChars: fullText.length,
+                finishReason: response.candidates?.[0]?.finishReason || null,
+                isTruncated
+            });
 
             // Verificação de Truncamento do Buffer do Servidor (Etapa 1.3.b)
             const isTruncated = !fullText.trim().endsWith("</file>");
@@ -251,6 +260,7 @@ ${context || 'Sem regras especiais em execução.'}
             const { prompt, model, currentCode, abidosRules, context, useCache } = req.body;
             if (!prompt) return res.status(400).json({ error: 'Prompt vazio.' });
 
+            const startedAt = Date.now();
             const modelId = model || 'gemini-2.5-flash';
             const isPro = modelId.includes('pro');
             
@@ -262,13 +272,13 @@ ${context || 'Sem regras especiais em execução.'}
                 ? `\n[MODO VISION ATIVO — ANALISE A IMAGEM ANEXADA]\n               1. DECODIFIQUE a hierarquia visual (Grids, Flexbox, Spacing).\n               2. TRADUZA os elementos visuais para o Design System OLED Black.\n               3. MAPIE os textos e botões para o padrão Abidos (Micro-copy de conversão).\n               4. SEJA FIEL ao layout original, mas atualize-o para estética Cinematográfica.`
                 : "";
 
-            const antigravityDirectives = await getAntigravityContext();
+            const csaDirectives = await getCSAContext();
 
                         const systemPrompt = `[VÓRTEX AI STUDIO 3.1 — NAKED GENERATION PROTOCOL]
 ${roleSpecialization}${visionPrompt}
 
-[DIRETRIZES ANTIGRAVITY — SSOT]
-${antigravityDirectives}
+[DIRETRIZES CSA - SSOT]
+${csaDirectives}
 
 [REGRAS ABIDOS — INVIOLÁVEIS]
 ${context || 'Sem regras especiais em execução.'}
@@ -320,7 +330,15 @@ IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP). Use apen
 
             const result = await aiModel.generateContent(requestParts);
             const responseText = result.response.text();
-            trackUsage(result.response.usageMetadata);
+            trackUsage(result.response.usageMetadata, {
+                route: 'vortex/generate',
+                model: modelId,
+                durationMs: Date.now() - startedAt,
+                promptChars: systemPrompt.length + fullPrompt.length,
+                responseChars: responseText.length,
+                finishReason: result.response.candidates?.[0]?.finishReason || null,
+                isTruncated: false
+            });
 
             let parsed = extractJSON(responseText);
             if (!parsed) {

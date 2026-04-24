@@ -204,7 +204,7 @@ const getTelemetry = () => {
     return { tokens: { prompt: 0, candidates: 0, total: 0 }, calls: 0, errors: 0, last_sync: new Date().toISOString() };
 };
 
-const trackUsage = (usage) => {
+const trackUsage = (usage, details = {}) => {
     if (!usage) return;
     try {
         const stats = getTelemetry();
@@ -212,6 +212,19 @@ const trackUsage = (usage) => {
         stats.tokens.candidates += (usage.candidatesTokenCount || 0);
         stats.tokens.total += (usage.totalTokenCount || 0);
         stats.calls += 1;
+        stats.last_call = {
+            timestamp: new Date().toISOString(),
+            route: details.route || 'unknown',
+            model: details.model || 'unknown',
+            durationMs: details.durationMs || 0,
+            promptChars: details.promptChars || 0,
+            responseChars: details.responseChars || 0,
+            finishReason: details.finishReason || null,
+            isTruncated: !!details.isTruncated,
+            promptTokens: usage.promptTokenCount || 0,
+            candidatesTokens: usage.candidatesTokenCount || 0,
+            totalTokens: usage.totalTokenCount || 0
+        };
         stats.last_sync = new Date().toISOString();
         fs.writeFileSync(TELEMETRY_FILE, JSON.stringify(stats, null, 2));
     } catch (e) { console.error("❌ Falha na telemetria:", e.message); }

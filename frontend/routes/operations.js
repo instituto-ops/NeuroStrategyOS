@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 
 module.exports = function(app, deps) {
@@ -689,7 +689,14 @@ const { execSync } = require('child_process');
 // ==============================================================================
 // 1. PUBLICAR NO WORDPRESS (LEGADO / RASCUNHO)
 // ==============================================================================
-app.post('/api/content/publish-direct', async (req, res) => {
+// [LEGADO REMOVIDO: PUBLICAR NO WORDPRESS]
+app.post('/api/content/publish-wordpress', async (req, res) => {
+    return res.status(410).json({
+        success: false,
+        error: 'Fluxo WordPress legado/desativado. Use o pipeline Vercel + Next.js.',
+        replacement: '/api/content/publish-vercel'
+    });
+
     try {
         const { type, title, content, status, slug, metaTitle, metaDesc } = req.body;
         console.log(`Ã°Å¸Å¡â‚¬ [PUBLISH PROXY] Iniciando deploy do tipo ${type}: "${title}"`);

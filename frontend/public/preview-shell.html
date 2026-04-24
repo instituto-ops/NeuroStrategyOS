@@ -152,6 +152,8 @@
 
     window.usePathname = () => '/';
     window.useSearchParams = () => new URLSearchParams();
+    window.cn = (...classes) => classes.filter(Boolean).join(' ');
+    window.clsx = window.cn;
 
     // -----------------------------------------------------------------------
     // 3. ERROR BOUNDARY — Interceptador de erros de renderização
@@ -233,14 +235,14 @@
             const componentFn = new Function(
                 'React', 'useState', 'useEffect', 'useRef', 'useMemo', 'useCallback', 'Fragment',
                 'motion', 'AnimatePresence',
-                'Lucide', 'Link', 'Image', 'useRouter', 'usePathname', 'useSearchParams',
+                'Lucide', 'Link', 'Image', 'useRouter', 'usePathname', 'useSearchParams', 'cn', 'clsx',
                 wrapCode
             );
 
             const Component = componentFn(
                 React, useState, useEffect, useRef, useMemo, useCallback, Fragment,
                 motion, AnimatePresence,
-                LucideIcons, window.Link, window.Image, window.useRouter, window.usePathname, window.useSearchParams
+                LucideIcons, window.Link, window.Image, window.useRouter, window.usePathname, window.useSearchParams, window.cn, window.clsx
             );
 
             if (!Component) {

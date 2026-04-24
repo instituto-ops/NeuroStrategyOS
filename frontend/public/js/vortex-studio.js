@@ -179,6 +179,7 @@ window.vortexStudio = (() => {
     }
 
     async function vfsList() {
+        if (!state.db) return [];
         return await state.db.files.toArray();
     }
 
@@ -880,14 +881,24 @@ window.vortexStudio = (() => {
             
             // Scanner do Vazamento de AST: 
             const leakedText = ast.body.textContent;
-            const astTokens = leakedText.match(/\b(import|export default|function\s+[A-Z]|const\s+\[|return\s+\(|useState|useEffect)\b/g);
+            const astTokens = leakedText.match(/\b(import|export default|function\s+[A-Z]|const\s+[A-Z]|const\s+\[|return\s+\(|useState|useEffect)\b/g);
 
             if (astTokens && astTokens.length > 0) {
+                if (window.Babel?.packages?.parser) {
+                    try {
+                        window.Babel.packages.parser.parse(code, {
+                            sourceType: 'module',
+                            plugins: ['jsx', 'typescript']
+                        });
+                    } catch (parseErr) {
+                        console.warn('[VORTEX] React-like code failed Babel parser check:', parseErr.message);
+                    }
+                }
                 return true; // Engine capturou anomalias lógicas no fluxo estático = É React JSX
             }
 
             // Heurística secundária de propriedades JSX vs HTML
-            if (code.includes('className=') || code.includes('onClick={')) {
+            if (code.includes('className=') || code.includes('onClick={') || /<[A-Z][A-Za-z0-9]*\b/.test(code)) {
                 return true;
             }
 
@@ -904,6 +915,26 @@ window.vortexStudio = (() => {
     // Remove imports do código para injeção no Preview Shell isolado.
     // O Shell já possui React, Framer Motion, Lucide e Mocks no escopo global.
     // =========================================================================
+    function buildPreviewImportPrelude(code) {
+        const bindings = [];
+        const lucideRegex = /import\s+\{\s*([^}]+)\s*\}\s+from\s+['"]lucide-react['"];?/g;
+        let match;
+
+        while ((match = lucideRegex.exec(code)) !== null) {
+            match[1].split(',').forEach(part => {
+                const item = part.trim();
+                if (!item) return;
+
+                const aliasMatch = item.match(/^([A-Za-z0-9_$]+)\s+as\s+([A-Za-z0-9_$]+)$/);
+                const sourceName = aliasMatch ? aliasMatch[1] : item;
+                const localName = aliasMatch ? aliasMatch[2] : item;
+                bindings.push(`const ${localName} = Lucide.${sourceName};`);
+            });
+        }
+
+        return bindings.length ? `${bindings.join('\n')}\n` : '';
+    }
+
     function stripForPreview(code) {
         let stripped = code;
         // [Etapa 3.3] Minificação Expressa: Remover comentários da IA (Otimização de Payload)
@@ -913,6 +944,7 @@ window.vortexStudio = (() => {
         stripped = stripped.replace(/(^|[^\:])\/\/.*$/gm, '$1');
 
         // Remove todos os imports (o Shell já tem tudo no escopo global)
+        const importPrelude = buildPreviewImportPrelude(stripped);
         stripped = stripped.replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"];?\s*\n?/g, '');
         stripped = stripped.replace(/import\s+['"][^'"]+['"];?\s*\n?/g, '');
         // Remove 'use client' directive
@@ -921,12 +953,20 @@ window.vortexStudio = (() => {
         stripped = stripped.replace(/export\s+default\s+function\s+/, 'function ');
         stripped = stripped.replace(/export\s+default\s+/, '');
         
-        return stripped.trim();
+        return `${importPrelude}${stripped.trim()}`.trim();
     }
 
     function getComponentName(code) {
-        const match = code.match(/(?:export\s+default\s+)?function\s+([A-Za-z0-9_]+)/);
-        return match ? match[1] : 'App';
+        const functionMatch = code.match(/(?:export\s+default\s+)?function\s+([A-Za-z0-9_]+)/);
+        if (functionMatch) return functionMatch[1];
+
+        const arrowMatch = code.match(/(?:export\s+)?(?:const|let|var)\s+([A-Z][A-Za-z0-9_]*)\s*=\s*(?:\([^)]*\)|[A-Za-z0-9_]+)\s*=>/);
+        if (arrowMatch) return arrowMatch[1];
+
+        const defaultNameMatch = code.match(/export\s+default\s+([A-Z][A-Za-z0-9_]*)/);
+        if (defaultNameMatch) return defaultNameMatch[1];
+
+        return 'App';
     }
 
     // =========================================================================
@@ -953,9 +993,10 @@ window.vortexStudio = (() => {
                 // ============================================================
                 const strippedCode = stripForPreview(processedHtml);
                 const componentName = getComponentName(processedHtml);
+                const componentAlias = (componentName === 'App' || componentName === 'Component') ? '' : `\nconst App = ${componentName};`;
 
                 // Adiciona a variável Component para o Shell encontrar
-                const injectableCode = strippedCode + `\nconst Component = ${componentName};`;
+                const injectableCode = strippedCode + componentAlias;
 
                 // Carrega o shell se ainda não estiver ativo
                 const currentSrc = frame.getAttribute('src');
@@ -1008,16 +1049,16 @@ window.vortexStudio = (() => {
         ::-webkit-scrollbar-thumb { background: #2dd4bf20; border-radius: 10px; }
         .font-outfit { font-family: 'Outfit', sans-serif; }
     </style>
-    \${telemetryScript}
+    ${telemetryScript}
 </head>
-<body>\${processedHtml}</body>
+<body>${processedHtml}</body>
 </html>`;
                     fullHtml = injectDesignSystemToPreview(fullHtml);
                 } else {
                     if (!fullHtml.includes('unpkg.com/lucide')) {
                         fullHtml = fullHtml.replace('</head>', '<script src="https://unpkg.com/lucide@latest"></script></head>');
                     }
-                    fullHtml = fullHtml.replace('</body>', `\${telemetryScript}</body>`);
+                    fullHtml = fullHtml.replace('</body>', `${telemetryScript}</body>`);
                     fullHtml = injectDesignSystemToPreview(fullHtml);
                 }
 
@@ -1142,6 +1183,29 @@ function renderFallbackPanel(errorMsg) {
         }
     });
 
+
+    // =========================================================================
+    // REFRESH PREVIEW (Manual Re-Render from Editor Content)
+    // =========================================================================
+    function refreshPreview() {
+        const code = getEditorContent();
+        if (!code || code.trim().length < 10 || code.startsWith('// 🌀')) {
+            addMessage('system', '⚠️ Editor vazio ou sem código renderizável. Gere ou cole código antes de atualizar.');
+            return;
+        }
+
+        // Visual feedback on the button
+        const btn = document.getElementById('vortex-refresh-preview-btn');
+        if (btn) {
+            btn.classList.add('spinning');
+            setTimeout(() => btn.classList.remove('spinning'), 800);
+        }
+
+        // Sanitize and render
+        const cleanCode = sanitizeAIContent(code);
+        updatePreview(cleanCode);
+        addAuditLog('info', '🔄 Preview atualizado manualmente a partir do editor.');
+    }
 
     function setPreviewDevice(device) {
         state.previewDevice = device;
@@ -1722,6 +1786,9 @@ function renderFallbackPanel(errorMsg) {
                             </button>
                             <button class="vortex-device-btn active" data-device="desktop" onclick="vortexStudio.setDevice('desktop')">
                                 <i data-lucide="monitor"></i> Desktop
+                            </button>
+                            <button class="vortex-device-btn" onclick="vortexStudio.refreshPreview()" title="Atualizar Preview" id="vortex-refresh-preview-btn">
+                                <i data-lucide="refresh-cw"></i>
                             </button>
                             <button class="vortex-device-btn" onclick="vortexStudio.popOutPreview()" title="Abrir em nova aba">
                                 <i data-lucide="external-link"></i>
@@ -2557,6 +2624,13 @@ function renderFallbackPanel(errorMsg) {
         
         // 1. Render the UI skeleton
         renderUI();
+        updatePreview(`
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: #f8fafc; color: #64748b; text-align: center; padding: 40px;">
+                <div style="font-size: 48px; margin-bottom: 20px;">🌀</div>
+                <h2 style="font-size: 18px; font-weight: 800; color: #1e293b; margin: 0 0 10px;">Vortex Preview</h2>
+                <p style="font-size: 13px; max-width: 300px; line-height: 1.6;">Envie um prompt no chat para gerar sua pagina Next.js. O preview aparecera aqui em tempo real.</p>
+            </div>
+        `);
 
         // 2. Init VFS and External Libs
         if (!window.Babel) {
@@ -2622,6 +2696,7 @@ function renderFallbackPanel(errorMsg) {
         // auditSemantic — REMOVED (Vórtex 3.1 Purge)
         // Phase 3
         toggleZenMode,
+        refreshPreview,
         popOutPreview,
         closeQuickOpen,
         showTemplateLibrary,
