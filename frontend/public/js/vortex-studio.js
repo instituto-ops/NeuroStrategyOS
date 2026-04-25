@@ -41,7 +41,31 @@ window.vortexStudio = (() => {
         isContinuing: false,     // Step 3.2: Mode for emending code
         preContinuationCode: '', // Step 3.2: Buffer for previous code
         continuationCount: 0,    // Step 1.3.d: Continuation attempts
-        MAX_CONTINUATIONS: 3     // Step 1.3.d: Max automatic continuations
+        MAX_CONTINUATIONS: 3,    // Step 1.3.d: Max automatic continuations
+        template: {
+            mode: 'canvas',
+            selectedId: '',
+            catalog: [],
+            current: null,
+            modules: [],
+            values: {}
+        },
+        metadata: {
+            silos: [],
+            menus: [],
+            siloId: '',
+            menuId: ''
+        },
+        draft: {
+            id: null,
+            name: ''
+        },
+        voiceProfile: {
+            enabled: true,
+            rules: [],
+            lastUpdate: '',
+            source: ''
+        }
     };
 
     // =========================================================================
@@ -697,13 +721,414 @@ window.vortexStudio = (() => {
         }
     }
 
+    function getTemplateById(id) {
+        return state.template.catalog.find(t => t.id === id) || null;
+    }
+
+    function inferTemplatePlaceholder(key) {
+        const lower = key.toLowerCase();
+        if (lower.includes('nome')) return 'Dr. Victor Lawrence';
+        if (lower.includes('crp')) return '09/012681';
+        if (lower.includes('whatsapp')) return '62991545295';
+        if (lower.includes('email')) return 'instituto@hipnolawrence.com';
+        if (lower.includes('instagram')) return 'https://www.instagram.com/hipnolawrence';
+        if (lower.includes('agendamento') || lower.includes('link')) return 'https://www.hipnolawrence.com/agendamento';
+        if (lower.includes('seo_title') || lower.includes('titulo') || lower.includes('headline')) return 'Hipnose Clinica com Dr. Victor Lawrence';
+        if (lower.includes('descricao') || lower.includes('description') || lower.includes('texto') || lower.includes('bio')) {
+            return 'Estrutura inicial do Vortex para uma pagina clinica clara, etica e orientada a conversao.';
+        }
+        if ((lower.includes('img') || lower.includes('foto') || lower.includes('banner') || lower.includes('asset')) && !lower.includes('alt')) {
+            return '/img/logo-clinica-h-glass.png';
+        }
+        if (lower.includes('alt')) return 'Identidade visual clinica do Dr. Victor Lawrence';
+        if (lower.includes('cta')) return 'Agendar conversa inicial';
+        return 'Conteudo guia Vortex';
+    }
+
+    function buildTemplateValues(modules) {
+        const values = {};
+        modules.flatMap(mod => mod.variables || []).forEach(key => {
+            values[key] = inferTemplatePlaceholder(key);
+        });
+        return values;
+    }
+
+    function renderTemplateStatus(message) {
+        const status = document.getElementById('vortex-template-status');
+        if (!status) return;
+
+        const current = state.template.current;
+        const moduleCount = state.template.modules.length;
+        status.innerHTML = current
+            ? `<strong>${current.name}</strong><span>${moduleCount} modulos carregados</span>`
+            : `<strong>Canvas Livre</strong><span>${message || 'Sem template selecionado'}</span>`;
+    }
+
+    async function loadMasterTemplates() {
+        const select = document.getElementById('vortex-template-select');
+        if (!select) return;
+
+        try {
+            const response = await fetch('/api/templates');
+            const data = await response.json();
+            state.template.catalog = data.templates || [];
+
+            select.innerHTML = '<option value="">Sem Template (Canvas Livre)</option>' +
+                state.template.catalog.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            select.value = state.template.selectedId;
+            renderTemplateStatus();
+        } catch (err) {
+            console.warn('[VORTEX] Falha ao carregar Master Templates:', err.message);
+            renderTemplateStatus('Catalogo indisponivel');
+        }
+    }
+
+    function getSiloById(id) {
+        return state.metadata.silos.find(s => String(s.id || s.slug || s.hub) === String(id)) || null;
+    }
+
+    function getMenuById(id) {
+        return state.metadata.menus.find(m => String(m.id) === String(id)) || null;
+    }
+
+    async function loadVortexMetadata() {
+        await Promise.all([loadVortexSilos(), loadVortexMenus()]);
+        renderMetadataStatus();
+    }
+
+    async function loadVortexSilos() {
+        const select = document.getElementById('vortex-silo-select');
+        if (!select) return;
+
+        try {
+            const response = await fetch('/api/seo/silos');
+            const data = await response.json();
+            state.metadata.silos = data.silos || [];
+            select.innerHTML = '<option value="">Sem Silo/Hub</option>' + state.metadata.silos.map(s => {
+                const value = s.id || s.slug || s.hub;
+                const label = s.hub || s.name || s.title || value;
+                return `<option value="${value}">${label}</option>`;
+            }).join('');
+            select.value = state.metadata.siloId;
+        } catch (err) {
+            console.warn('[VORTEX] Falha ao carregar Silos:', err.message);
+            select.innerHTML = '<option value="">Silos indisponiveis</option>';
+        }
+    }
+
+    async function loadVortexMenus() {
+        const select = document.getElementById('vortex-menu-select');
+        if (!select) return;
+
+        try {
+            const response = await fetch('/api/menus');
+            const data = await response.json();
+            state.metadata.menus = data.menus || [];
+            select.innerHTML = '<option value="">Sem Menu</option>' + state.metadata.menus.map(m => {
+                const label = m.name || m.label || m.title || m.id;
+                return `<option value="${m.id}">${label}</option>`;
+            }).join('');
+            select.value = state.metadata.menuId;
+        } catch (err) {
+            console.warn('[VORTEX] Falha ao carregar Menus:', err.message);
+            select.innerHTML = '<option value="">Menus indisponiveis</option>';
+        }
+    }
+
+    function updateMetadata(type, value) {
+        if (type === 'silo') state.metadata.siloId = value || '';
+        if (type === 'menu') {
+            state.metadata.menuId = value || '';
+            if (state.template.selectedId) renderSelectedTemplatePreview();
+        }
+        renderMetadataStatus();
+    }
+
+    function renderMetadataStatus() {
+        const status = document.getElementById('vortex-metadata-status');
+        if (!status) return;
+
+        const silo = getSiloById(state.metadata.siloId);
+        const menu = getMenuById(state.metadata.menuId);
+        const siloLabel = silo ? (silo.hub || silo.name || silo.title || state.metadata.siloId) : 'Sem Silo';
+        const menuLabel = menu ? (menu.name || menu.label || menu.title || state.metadata.menuId) : 'Sem Menu';
+        status.innerHTML = `<strong>${siloLabel}</strong><span>${menuLabel}</span>`;
+    }
+
+    async function loadVoiceProfile() {
+        try {
+            const response = await fetch('/api/neuro-training/memory');
+            if (!response.ok) throw new Error(`Perfil verbal ${response.status}`);
+
+            const profile = await response.json();
+            state.voiceProfile.rules = Array.isArray(profile.style_rules) ? profile.style_rules : [];
+            state.voiceProfile.lastUpdate = profile.last_update || '';
+            state.voiceProfile.source = '/api/neuro-training/memory';
+            renderVoiceProfileStatus();
+        } catch (err) {
+            console.warn('[VORTEX] Falha ao carregar Perfil Verbal:', err.message);
+            state.voiceProfile.rules = [];
+            state.voiceProfile.source = 'indisponivel';
+            renderVoiceProfileStatus('Perfil indisponivel');
+        }
+    }
+
+    function toggleVoiceProfile() {
+        state.voiceProfile.enabled = !state.voiceProfile.enabled;
+        const el = document.querySelector('[data-vortex-toggle="voiceProfile"]');
+        if (el) el.classList.toggle('active', state.voiceProfile.enabled);
+        renderVoiceProfileStatus();
+        addAuditLog('info', `Perfil Verbal ${state.voiceProfile.enabled ? 'ativado' : 'desativado'} no prompt.`);
+    }
+
+    function renderVoiceProfileStatus(message) {
+        const status = document.getElementById('vortex-voice-profile-status');
+        if (!status) return;
+
+        status.innerHTML = '<strong></strong><span></span>';
+        const title = status.querySelector('strong');
+        const detail = status.querySelector('span');
+        const count = state.voiceProfile.rules.length;
+
+        if (!state.voiceProfile.enabled) {
+            title.textContent = 'Perfil Verbal desligado';
+            detail.textContent = 'As regras aprendidas nao entram no prompt';
+            return;
+        }
+
+        title.textContent = count ? `${count} regras verbais ativas` : 'Perfil Verbal ativo';
+        detail.textContent = message || (count ? 'DNA verbal injetado no system prompt' : 'Sem regras aprendidas ainda');
+    }
+
+    async function selectTemplate(templateId) {
+        state.template.selectedId = templateId || '';
+        state.template.mode = templateId ? 'template' : 'canvas';
+        state.template.current = getTemplateById(templateId);
+        state.template.modules = [];
+        state.template.values = {};
+
+        if (!templateId) {
+            renderTemplateStatus();
+            addAuditLog('info', 'Canvas Livre ativo.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/templates/${templateId}`);
+            if (!response.ok) throw new Error(`Template ${templateId} indisponivel`);
+
+            const data = await response.json();
+            state.template.current = data.template || state.template.current;
+            state.template.modules = data.modules || [];
+            state.template.values = buildTemplateValues(state.template.modules);
+            renderTemplateStatus();
+            addAuditLog('info', `Master Template ${templateId} carregada no Vortex.`);
+            await renderSelectedTemplatePreview();
+        } catch (err) {
+            console.error('[VORTEX] Erro ao selecionar template:', err);
+            renderTemplateStatus('Falha ao carregar template');
+            addAuditLog('error', `Falha ao carregar template: ${err.message}`);
+        }
+    }
+
+    async function renderSelectedTemplatePreview() {
+        if (!state.template.selectedId) return;
+
+        try {
+            const response = await fetch('/api/templates/preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    templateId: state.template.selectedId,
+                    values: state.template.values,
+                    menuId: state.metadata.menuId
+                })
+            });
+            if (!response.ok) throw new Error(`Preview ${response.status}`);
+            const html = await response.text();
+            updatePreview(html);
+        } catch (err) {
+            console.warn('[VORTEX] Preview de template indisponivel:', err.message);
+        }
+    }
+
+    function slugifyDraftName(name) {
+        return (name || 'vortex-draft')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '') || 'vortex-draft';
+    }
+
+    function buildDraftPayload(overwrite = true) {
+        const now = new Date().toISOString();
+        const name = state.draft.name || `Vortex Draft ${new Date().toLocaleString('pt-BR')}`;
+        return {
+            id: overwrite && state.draft.id ? state.draft.id : Date.now(),
+            source: 'vortex',
+            name,
+            slug: slugifyDraftName(name),
+            status: 'DRAFT',
+            code: getEditorContent(),
+            currentFile: state.currentFile || '/src/app/page.tsx',
+            templateId: state.template.selectedId,
+            templateName: state.template.current?.name || '',
+            templateValues: state.template.values,
+            metadata: {
+                siloId: state.metadata.siloId,
+                menuId: state.metadata.menuId
+            },
+            created_at: state.draft.id ? undefined : now,
+            updated_at: now
+        };
+    }
+
+    async function saveAsDraft(overwrite = true) {
+        const currentName = state.draft.name || `Vortex Draft ${new Date().toLocaleString('pt-BR')}`;
+        const name = overwrite && state.draft.name
+            ? state.draft.name
+            : prompt('Nome do rascunho Vortex:', currentName);
+        if (!name) return;
+
+        state.draft.name = name;
+        const payload = buildDraftPayload(overwrite);
+        payload.name = name;
+        payload.slug = slugifyDraftName(name);
+
+        try {
+            const response = await fetch('/api/drafts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (!response.ok || data.error) throw new Error(data.error || `Draft ${response.status}`);
+
+            state.draft.id = data.draft?.id || payload.id;
+            state.draft.name = data.draft?.name || name;
+            addAuditLog('info', `Rascunho salvo: ${state.draft.name}`);
+            addMessage('system', `💾 Rascunho salvo: ${state.draft.name}`);
+        } catch (err) {
+            console.error('[VORTEX] Falha ao salvar rascunho:', err);
+            addAuditLog('error', `Falha ao salvar rascunho: ${err.message}`);
+        }
+    }
+
+    async function applyDraft(draft) {
+        if (!draft) return;
+
+        state.draft.id = draft.id;
+        state.draft.name = draft.name || '';
+        state.currentFile = draft.currentFile || '/src/app/page.tsx';
+        state.metadata.siloId = draft.metadata?.siloId || '';
+        state.metadata.menuId = draft.metadata?.menuId || '';
+
+        const siloSelect = document.getElementById('vortex-silo-select');
+        const menuSelect = document.getElementById('vortex-menu-select');
+        if (siloSelect) siloSelect.value = state.metadata.siloId;
+        if (menuSelect) menuSelect.value = state.metadata.menuId;
+        renderMetadataStatus();
+
+        if (draft.templateId) {
+            const templateSelect = document.getElementById('vortex-template-select');
+            if (templateSelect) templateSelect.value = draft.templateId;
+            await selectTemplate(draft.templateId);
+            state.template.values = draft.templateValues || state.template.values;
+        }
+
+        if (draft.code) {
+            setEditorContent(draft.code, 'typescriptreact');
+            await vfsWrite(state.currentFile, draft.code);
+            updateFileTab(state.currentFile.split('/').pop(), true);
+            updatePreview(draft.code);
+        } else if (state.template.selectedId) {
+            await renderSelectedTemplatePreview();
+        }
+
+        addAuditLog('info', `Rascunho carregado: ${state.draft.name || draft.id}`);
+    }
+
+    async function loadDraftById(draftId) {
+        try {
+            const response = await fetch('/api/drafts');
+            const drafts = await response.json();
+            const draft = (Array.isArray(drafts) ? drafts : []).find(d => String(d.id) === String(draftId));
+            if (!draft) throw new Error('Rascunho nao encontrado');
+            await applyDraft(draft);
+        } catch (err) {
+            console.error('[VORTEX] Falha ao carregar rascunho:', err);
+            addAuditLog('error', `Falha ao carregar rascunho: ${err.message}`);
+        }
+    }
+
+    async function loadDraft() {
+        try {
+            const response = await fetch('/api/drafts');
+            const drafts = await response.json();
+            const vortexDrafts = (Array.isArray(drafts) ? drafts : []).filter(d => d.source === 'vortex' || d.code);
+            if (vortexDrafts.length === 0) {
+                addAuditLog('info', 'Nenhum rascunho Vortex encontrado.');
+                return;
+            }
+
+            const list = vortexDrafts.map((d, i) => `${i + 1}. ${d.name || d.slug || d.id}`).join('\n');
+            const choice = prompt(`Escolha o rascunho:\n${list}`);
+            if (!choice) return;
+
+            const draft = vortexDrafts[parseInt(choice, 10) - 1];
+            await applyDraft(draft);
+        } catch (err) {
+            console.error('[VORTEX] Falha ao carregar rascunho:', err);
+            addAuditLog('error', `Falha ao carregar rascunho: ${err.message}`);
+        }
+    }
+
+    function buildTemplateContext() {
+        if (!state.template.selectedId || !state.template.current) return '';
+
+        const moduleNames = state.template.modules.map(mod => mod.title).filter(Boolean).join(', ');
+        const silo = getSiloById(state.metadata.siloId);
+        const menu = getMenuById(state.metadata.menuId);
+        return [
+            '--- MASTER TEMPLATE SELECIONADO ---',
+            `ID: ${state.template.selectedId}`,
+            `Nome: ${state.template.current.name}`,
+            `Tipo: ${state.template.current.type || 'indefinido'}`,
+            `Direcao visual: ${state.template.current.designSummary || 'seguir design do template'}`,
+            state.metadata.siloId ? `Silo/Hub atribuido: ${silo?.hub || silo?.name || state.metadata.siloId}` : '',
+            state.metadata.menuId ? `Menu atribuido: ${menu?.name || menu?.label || state.metadata.menuId}` : '',
+            `Modulos esperados: ${moduleNames || 'usar estrutura do template'}`,
+            'Ao gerar codigo, preserve a intencao visual desta Master Template e mantenha compatibilidade com o preview do Vortex.'
+        ].filter(Boolean).join('\n');
+    }
+
+    function buildVoiceProfileContext() {
+        if (!state.voiceProfile.enabled || !state.voiceProfile.rules.length) return '';
+
+        const rules = state.voiceProfile.rules.slice(0, 12).map((rule, index) => {
+            if (typeof rule === 'string') return `- ${rule}`;
+            const title = rule.titulo || rule.categoria || rule.sintese || `Regra ${index + 1}`;
+            const body = rule.regra || rule.summary || rule.descricao || JSON.stringify(rule);
+            return `- ${title}: ${body}`;
+        }).join('\n');
+
+        return [
+            '--- PERFIL VERBAL DO DR. VICTOR ---',
+            'Use estas regras como diretriz de tom, cadencia, vocabulario e postura clinica. Preserve etica CFP e clareza humana.',
+            rules
+        ].join('\n');
+    }
+
     function buildAbidosContext() {
         const rules = [];
         if (state.abidosRules.singleH1) rules.push('Apenas UM <h1> por página. Use hierarquia semântica (h2, h3).');
         if (state.abidosRules.altTags) rules.push('Todas as <img> DEVEM ter alt descritivo orientado a SEO local (Uberlândia/Minas Gerais/Brasil).');
         if (state.abidosRules.cfpTerms) rules.push('PROIBIDO usar: "cura", "garantido", "melhor", "único". Siga as diretrizes do CFP.');
         if (state.abidosRules.whatsappCTA) rules.push('Incluir botão flutuante de WhatsApp com link direto.');
-        return rules.join('\n');
+        const templateContext = buildTemplateContext();
+        const voiceProfileContext = buildVoiceProfileContext();
+        return [rules.join('\n'), templateContext, voiceProfileContext].filter(Boolean).join('\n\n');
     }
 
     // =========================================================================
@@ -1661,6 +2086,12 @@ function renderFallbackPanel(errorMsg) {
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.downloadCode()" title="Baixar Código Next.js (Hidratado)">
                         <i data-lucide="code-2"></i>
                     </button>
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.saveAsDraft(true)" title="Salvar rascunho Vortex">
+                        <i data-lucide="archive"></i> DRAFT
+                    </button>
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.loadDraft()" title="Carregar rascunho Vortex">
+                        <i data-lucide="folder-open"></i>
+                    </button>
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.exportHTML()" title="Exportar HTML Estático (Preview)">
                         <i data-lucide="download"></i>
                     </button>
@@ -1697,6 +2128,37 @@ function renderFallbackPanel(errorMsg) {
                         </div>
                         <div id="vortex-file-tree" class="vortex-file-tree"></div>
                     </div>
+                    <div class="vortex-template-config">
+                        <div class="vortex-template-config-header">
+                            <div class="vortex-panel-title">
+                                <i data-lucide="layout-template"></i>
+                                MASTER TEMPLATE
+                            </div>
+                        </div>
+                        <select id="vortex-template-select" class="vortex-template-select" onchange="vortexStudio.selectTemplate(this.value)">
+                            <option value="">Sem Template (Canvas Livre)</option>
+                        </select>
+                        <div id="vortex-template-status" class="vortex-template-status">
+                            <strong>Canvas Livre</strong><span>Sem template selecionado</span>
+                        </div>
+                    </div>
+                    <div class="vortex-metadata-config">
+                        <div class="vortex-template-config-header">
+                            <div class="vortex-panel-title">
+                                <i data-lucide="network"></i>
+                                CONTEXTO
+                            </div>
+                        </div>
+                        <select id="vortex-silo-select" class="vortex-template-select" onchange="vortexStudio.updateMetadata('silo', this.value)">
+                            <option value="">Sem Silo/Hub</option>
+                        </select>
+                        <select id="vortex-menu-select" class="vortex-template-select" onchange="vortexStudio.updateMetadata('menu', this.value)">
+                            <option value="">Sem Menu</option>
+                        </select>
+                        <div id="vortex-metadata-status" class="vortex-template-status">
+                            <strong>Sem Silo</strong><span>Sem Menu</span>
+                        </div>
+                    </div>
                     <!-- Chat -->
                     <div class="vortex-panel-header">
                         <div class="vortex-panel-title">
@@ -1732,6 +2194,13 @@ function renderFallbackPanel(errorMsg) {
                         <div class="vortex-toggle-row">
                             <div class="vortex-toggle-label"><i data-lucide="message-circle"></i> WhatsApp CTA</div>
                             <div class="vortex-switch active" data-abidos-toggle="whatsappCTA" onclick="vortexStudio.toggleRule('whatsappCTA')"></div>
+                        </div>
+                        <div class="vortex-toggle-row">
+                            <div class="vortex-toggle-label"><i data-lucide="mic-2"></i> Perfil Verbal</div>
+                            <div class="vortex-switch active" data-vortex-toggle="voiceProfile" onclick="vortexStudio.toggleVoiceProfile()"></div>
+                        </div>
+                        <div id="vortex-voice-profile-status" class="vortex-template-status vortex-voice-profile-status">
+                            <strong>Perfil Verbal ativo</strong><span>Carregando memoria verbal...</span>
                         </div>
                     </div>
                     <div class="vortex-chat-input-area" style="transition: background 0.3s;"
@@ -2642,6 +3111,9 @@ function renderFallbackPanel(errorMsg) {
         
         // 1. Render the UI skeleton
         renderUI();
+        await loadMasterTemplates();
+        await loadVortexMetadata();
+        await loadVoiceProfile();
         updatePreview(`
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: #f8fafc; color: #64748b; text-align: center; padding: 40px;">
                 <div style="font-size: 48px; margin-bottom: 20px;">🌀</div>
@@ -2711,6 +3183,9 @@ function renderFallbackPanel(errorMsg) {
         switchDrawerTab,
         addAuditLog,
         createSnapshot,
+        saveAsDraft,
+        loadDraft,
+        loadDraftById,
         // auditSemantic — REMOVED (Vórtex 3.1 Purge)
         // Phase 3
         toggleZenMode,
@@ -2719,6 +3194,12 @@ function renderFallbackPanel(errorMsg) {
         closeQuickOpen,
         showTemplateLibrary,
         useTemplate,
+        selectTemplate,
+        loadMasterTemplates,
+        updateMetadata,
+        loadVortexMetadata,
+        loadVoiceProfile,
+        toggleVoiceProfile,
         updateBreadcrumbs,
         // Phase 4
         showDiffReview,

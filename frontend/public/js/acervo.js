@@ -17,14 +17,17 @@ window.acervoManager = {
         
         try {
             // Carregar páginas do repositório E páginas manuais em paralelo
-            const [acervoRes, manualRes] = await Promise.all([
+            const [acervoRes, manualRes, draftsRes] = await Promise.all([
                 fetch('/api/acervo/listar'),
-                fetch('/api/acervo/manual')
+                fetch('/api/acervo/manual'),
+                fetch('/api/drafts')
             ]);
             const data = await acervoRes.json();
             const manualData = await manualRes.json();
+            const draftsData = await draftsRes.json();
             
             this.manualPages = manualData.success ? manualData.pages : [];
+            const vortexDrafts = Array.isArray(draftsData) ? draftsData.filter(d => d.source === 'vortex') : [];
 
             if (data.success && data.paginas) {
                 this.paginas = data.paginas;
@@ -135,6 +138,34 @@ window.acervoManager = {
                                 ${hasHtml ? `<button class="btn btn-secondary" onclick="acervoManager.publishManualPage('${page.id}')" style="font-size: 9px; padding: 5px 10px; border-color: var(--color-success); color: var(--color-success);" title="Publicar como Rascunho">🚀 SALVAR</button>` : ''}
                                 <button class="btn btn-secondary" onclick="acervoManager.deleteManualPage('${page.id}')" style="font-size: 9px; padding: 5px 10px; border-color: #ef4444; color: #ef4444;" title="Excluir">🗑️</button>
                             </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                vortexDrafts.forEach((draft) => {
+                    const dateObj = new Date(draft.updated_at || draft.last_update || Date.now());
+                    const formattedDate = dateObj.toLocaleDateString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+                    const tr = document.createElement('tr');
+                    tr.style.background = 'rgba(45, 212, 191, 0.04)';
+                    tr.style.borderRadius = '8px';
+                    tr.style.borderLeft = '3px solid #2dd4bf';
+                    tr.innerHTML = `
+                        <td style="padding: 15px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="background: rgba(45, 212, 191, 0.16); color: #2dd4bf; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">VORTEX</span>
+                                <span style="color: #fff; font-weight: 800; font-size: 13px;">${draft.name || 'Rascunho Vortex'}</span>
+                            </div>
+                        </td>
+                        <td style="padding: 15px;">
+                            <span style="background: rgba(0,0,0,0.3); border: 1px solid var(--color-border); color: var(--color-secondary); font-family: monospace; font-size: 11px; padding: 6px 10px; border-radius: 6px;">/${draft.slug || 'vortex-draft'}</span>
+                        </td>
+                        <td style="color: var(--color-text-light); font-size: 11px; padding: 15px;">${formattedDate}</td>
+                        <td style="padding: 15px;">
+                            <span style="font-size: 10px; font-weight: 900; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid currentColor; border-radius: 4px; padding: 4px 8px; text-transform: uppercase;">Rascunho</span>
+                        </td>
+                        <td style="padding: 15px; text-align: right;">
+                            <button class="btn btn-secondary" onclick="app.showSection('vortex-studio'); window.vortexStudio?.loadDraftById('${draft.id}')" style="font-size: 10px; padding: 6px 12px; border-color: #2dd4bf; color: #2dd4bf;">ABRIR VORTEX</button>
                         </td>
                     `;
                     tbody.appendChild(tr);

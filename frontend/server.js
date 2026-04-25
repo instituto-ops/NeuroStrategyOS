@@ -55,6 +55,10 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+app.get('/favicon.ico', (req, res) => {
+    res.status(204).end();
+});
+
 // Rotas de Preview
 app.post('/api/previews/save', (req, res) => {
     try {
@@ -442,6 +446,28 @@ app.get('/api/templates/:id', async (req, res) => {
 });
 
 // [API] Gerar Preview Final (Processador de VariÃ¡veis)
+function generateTOC(htmlContent) {
+    const regex = /<h2[^>]*>(.*?)<\/h2>/gi;
+    let match;
+    const tocItems = [];
+    let modifiedHtml = htmlContent;
+    let index = 1;
+
+    while ((match = regex.exec(htmlContent)) !== null) {
+        const cleanTitle = match[1].replace(/<[^>]+>/g, '').trim();
+        if (cleanTitle && cleanTitle.length > 5 && !cleanTitle.includes('{{')) {
+            const anchorId = `secao-${index}-${cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+            tocItems.push({ label: cleanTitle, url: `#${anchorId}` });
+            const originalH2 = match[0];
+            const newH2 = originalH2.replace('<h2', `<h2 id="${anchorId}"`);
+            modifiedHtml = modifiedHtml.replace(originalH2, newH2);
+            index++;
+        }
+    }
+
+    return { modifiedHtml, tocItems };
+}
+
 app.post('/api/templates/preview', async (req, res) => {
     const { templateId, values, menuId } = req.body;
     const entry = TEMPLATE_CATALOG.find(t => t.id === templateId);
@@ -464,7 +490,7 @@ app.post('/api/templates/preview', async (req, res) => {
 
         // 3. Injetar Menu DinÃ¢mico
         let menuHtml = '';
-        if (menuId) {
+        if (menuId && typeof generateMenuHtmlForTemplate === 'function') {
             menuHtml = generateMenuHtmlForTemplate(menuId, templateId, { slug: "preview", title: values.SEO_TITLE || '' });
 
             // Auto-TOC append (preview mode)
@@ -506,6 +532,7 @@ const SITE_REPO_PATH = path.join(__dirname, '../../HipnoLawrence-Site/src/app');
 const deps = {
     SITE_REPO_PATH,
     TEMPLATE_CATALOG,
+    analyticsClient,
     upload
 };
 

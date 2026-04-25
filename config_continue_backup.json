@@ -1,0 +1,20 @@
+{
+  "models": [
+    {
+      "title": "Qwen 2.5 Coder 7B (Local)",
+      "model": "qwen2.5-coder:7b",
+      "provider": "ollama"
+    },
+    {
+      "title": "Qwen 2.5 3B (Local)",
+      "model": "qwen2.5:3b",
+      "provider": "ollama"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Qwen 2.5 Coder 7B",
+    "model": "qwen2.5-coder:7b",
+    "provider": "ollama"
+  },
+  "allowAnonymousTelemetry": false
+}

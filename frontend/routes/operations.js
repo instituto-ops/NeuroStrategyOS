@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const { getAIModel, getTelemetry, getVictorStyle, MEMORY_FILE_PATH, trackUsage } = require('../shared');
 
 module.exports = function(app, deps) {
-const { upload } = deps;
+const { upload, analyticsClient = null } = deps;
 
 // 7. AGENTES DA ESTEIRA DE PRODUÃƒâ€¡ÃƒÆ’O (FASE 2: MÃƒÂQUINA DE ESTADOS)
 // ==============================================================================
@@ -591,7 +592,9 @@ app.get('/api/system/telemetry', (req, res) => {
 app.delete('/api/neuro-training/memory/:id', (req, res) => {
     try {
         const memory = getVictorStyle();
-        memory.style_rules = memory.style_rules.filter(r => r.id !== req.params.id);
+        memory.style_rules = Array.isArray(memory.style_rules)
+            ? memory.style_rules.filter(r => r.id !== req.params.id)
+            : [];
         fs.writeFileSync(MEMORY_FILE_PATH, JSON.stringify(memory, null, 2));
         res.json({ success: true });
     } catch (e) {
