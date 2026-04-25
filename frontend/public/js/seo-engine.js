@@ -2,8 +2,10 @@ window.seoEngine = {
     upcomingPosts: JSON.parse(localStorage.getItem('abidos_upcoming_posts') || '[]'),
     fullData: null,
     expandedHubs: new Set(),
+    activeLens: 'silos',
 
     async init() {
+        this.prepareStrategyStudio();
         this.analyze();
         await this.syncAbidosReportFromServer(); // Recuperar última estratégia do servidor
     },
@@ -12,10 +14,11 @@ window.seoEngine = {
         try {
             const res = await fetch('/api/seo/silos');
             const data = await res.json();
-            this.fullData = data; 
+            this.fullData = this.normalizeSiloCatalog(data); 
             
             this.renderSilos();
             this.renderUpcomingPosts();
+            this.applyStrategyLens();
 
             if(window.cytoscape && document.getElementById('cy-map')) {
                 this.renderGraph(data);
@@ -24,6 +27,113 @@ window.seoEngine = {
         } catch (e) {
             console.error("Erro interno no Planejamento:", e);
         }
+    },
+
+    slugify(value) {
+        return String(value || '')
+            .trim()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    },
+
+    normalizeSpoke(spoke, idx) {
+        const raw = typeof spoke === 'string' ? { title: spoke } : { ...(spoke || {}) };
+        const title = raw.title || raw.name || `Spoke ${idx + 1}`;
+        return {
+            ...raw,
+            title,
+            slug: raw.slug || this.slugify(title),
+            status: raw.status || 'planejado',
+            vortexSyncStatus: raw.vortexSyncStatus || raw.syncStatus || 'nao_sincronizado',
+            vortexPageId: raw.vortexPageId || raw.pageId || ''
+        };
+    },
+
+    normalizeSiloCatalog(data) {
+        const silos = Array.isArray(data) ? data : (data?.silos || []);
+        return {
+            ...data,
+            silos: silos.map((silo, idx) => {
+                const hub = silo.hub || silo.name || silo.title || `Silo ${idx + 1}`;
+                const slug = silo.slug || this.slugify(hub);
+                return {
+                    ...silo,
+                    id: silo.id || `silo_${slug || idx + 1}`,
+                    hub,
+                    slug,
+                    scope: silo.scope || 'national',
+                    vortexSyncStatus: silo.vortexSyncStatus || silo.syncStatus || 'nao_sincronizado',
+                    vortexPageId: silo.vortexPageId || silo.pageId || '',
+                    spokes: Array.isArray(silo.spokes) ? silo.spokes.map((spoke, spokeIdx) => this.normalizeSpoke(spoke, spokeIdx)) : []
+                };
+            })
+        };
+    },
+
+    prepareStrategyStudio() {
+        const planning = document.getElementById('planning');
+        if (!planning || planning.dataset.strategyReady) return;
+        planning.dataset.strategyReady = 'true';
+        planning.dataset.strategyLens = this.activeLens;
+
+        const architectureTitle = Array.from(planning.querySelectorAll('h2, h3')).find(el => (el.textContent || '').includes('Arquitetura'));
+        const architectureCard = architectureTitle?.closest('.card');
+        const pautaCard = document.getElementById('upcoming-posts-table')?.closest('.card');
+        const abidosCard = document.getElementById('abidos-inline-report-card');
+        const graphCard = document.getElementById('cy-map')?.closest('.card');
+        const mediaCard = document.getElementById('media-demand-table')?.closest('.card');
+
+        architectureCard?.setAttribute('data-strategy-panel', 'silos');
+        pautaCard?.setAttribute('data-strategy-panel', 'silos pauta');
+        abidosCard?.setAttribute('data-strategy-panel', 'abidos');
+        graphCard?.setAttribute('data-strategy-panel', 'autoridade');
+        mediaCard?.setAttribute('data-strategy-panel', 'pauta');
+
+        if (architectureCard && pautaCard && pautaCard.parentElement === architectureCard.parentElement) {
+            architectureCard.insertAdjacentElement('afterend', pautaCard);
+        }
+
+        const toolbar = document.createElement('div');
+        toolbar.className = 'strategy-lens-bar';
+        toolbar.innerHTML = `
+            <button data-strategy-lens-btn="silos" onclick="window.seoEngine.setStrategyLens('silos')">1 · Silos</button>
+            <button data-strategy-lens-btn="abidos" onclick="window.seoEngine.setStrategyLens('abidos')">2 · Abidos</button>
+            <button data-strategy-lens-btn="autoridade" onclick="window.seoEngine.setStrategyLens('autoridade')">3 · Autoridade</button>
+            <button data-strategy-lens-btn="pauta" onclick="window.seoEngine.setStrategyLens('pauta')">4 · Pauta</button>
+        `;
+        const header = planning.querySelector(':scope > .card > div');
+        if (header) header.insertAdjacentElement('afterend', toolbar);
+        this.applyStrategyLens();
+    },
+
+    setStrategyLens(lens) {
+        this.activeLens = lens || 'silos';
+        this.applyStrategyLens();
+        if (this.activeLens === 'autoridade' && window.cytoscape && this.fullData) {
+            setTimeout(() => this.renderGraph(this.fullData), 80);
+        }
+    },
+
+    applyStrategyLens() {
+        const planning = document.getElementById('planning');
+        if (!planning) return;
+        planning.dataset.strategyLens = this.activeLens;
+        planning.querySelectorAll('[data-strategy-lens-btn]').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.strategyLensBtn === this.activeLens);
+        });
+    },
+
+    syncBadge(status) {
+        const labels = {
+            disponivel: 'Disponível no Vórtex',
+            sincronizando: 'Sincronizando',
+            nao_sincronizado: 'Não sincronizado'
+        };
+        const key = status || 'nao_sincronizado';
+        return `<span class="vortex-sync-badge ${key}">${labels[key] || key}</span>`;
     },
 
     copyArchitecture() {
@@ -131,6 +241,7 @@ window.seoEngine = {
                         <span style="font-size: 9px; color: #94a3b8; font-weight: 700;">
                             ${spokeCount} Spokes
                         </span>
+                        <div style="margin-top: 6px;">${this.syncBadge(silo.vortexSyncStatus)}</div>
                     </td>
                     <td style="padding: 15px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.03);">
                         <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
@@ -142,6 +253,9 @@ window.seoEngine = {
                             </button>
                             <button class="btn btn-secondary" title="Criar no Vortex" style="height: 28px; padding:0 10px; display: flex; align-items: center; justify-content: center; gap: 5px; background: rgba(45,212,191,0.08); border: 1px solid rgba(45,212,191,0.25); color: #2dd4bf; font-size: 9px; font-weight: 900;" onclick="event.stopPropagation(); window.seoEngine.openVortexForSilo('${silo.id}')">
                                 <i data-lucide="tornado" style="width: 13px; height: 13px;"></i> VORTEX
+                            </button>
+                            <button class="btn btn-secondary" title="Sincronizar Vortex" style="height: 28px; padding:0 10px; display: flex; align-items: center; justify-content: center; gap: 5px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.25); color: #a5b4fc; font-size: 9px; font-weight: 900;" onclick="event.stopPropagation(); window.seoEngine.syncSiloToVortex('${silo.id}')">
+                                <i data-lucide="refresh-cw" style="width: 13px; height: 13px;"></i> SYNC
                             </button>
                             <button class="btn btn-danger" title="Excluir" style="width: 28px; height: 28px; padding:0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444;" onclick="event.stopPropagation(); window.seoEngine.deleteSilo('${silo.id}')">
                                 <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
@@ -256,6 +370,10 @@ window.seoEngine = {
                                         <button class="btn btn-primary" style="height: 32px; font-size: 10px; font-weight: 800; letter-spacing: 1px; border-radius: 8px;" onclick="window.seoEngine.writePostPrompt('${spoke.title.replace(/'/g, "\\'")}', 'Hub: ${silo.hub}')">ESCREVER</button>
                                         <button class="btn btn-secondary" style="height: 32px; font-size: 10px; font-weight: 900; border-color:#2dd4bf; color:#2dd4bf;" onclick="window.seoEngine.openVortexForSilo('${silo.id}', ${idx})">VORTEX</button>
                                     </div>
+                                    <div style="margin-top: 10px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                                        ${this.syncBadge(spoke.vortexSyncStatus)}
+                                        <button class="btn btn-secondary" style="height: 26px; font-size: 9px; padding: 0 10px; color:#a5b4fc; border-color:rgba(99,102,241,0.25); background:rgba(99,102,241,0.08);" onclick="window.seoEngine.syncSiloToVortex('${silo.id}', ${idx})">Sincronizar Vortex</button>
+                                    </div>
                                 </div>
                             `;
                         }).join('')}
@@ -332,7 +450,10 @@ window.seoEngine = {
         const newSilo = { 
             id: 'silo_' + Date.now(), 
             hub: title, 
-            slug: title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-'),
+            slug: this.slugify(title),
+            scope: 'local',
+            vortexSyncStatus: 'nao_sincronizado',
+            vortexPageId: '',
             spokes: [] 
         };
         
@@ -376,7 +497,10 @@ window.seoEngine = {
         
         const newSpoke = {
             title: spokeTitle,
-            slug: spokeTitle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-')
+            slug: this.slugify(spokeTitle),
+            status: 'planejado',
+            vortexSyncStatus: 'nao_sincronizado',
+            vortexPageId: ''
         };
 
         if (!silo.spokes) silo.spokes = [];
@@ -397,6 +521,7 @@ window.seoEngine = {
 
     async saveSilos() {
         try {
+            this.fullData = this.normalizeSiloCatalog(this.fullData);
             await fetch('/api/seo/silos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -460,7 +585,7 @@ window.seoEngine = {
                     <input type="text" value="${p.focus}" class="inline-edit" style="width: 100%; border: none; background: transparent; color: var(--color-text-light); font-size: 12px;" onchange="window.seoEngine.updatePostField(${p.id}, 'focus', this.value)">
                 </td>
                 <td style="padding: 12px;">
-                    <select class="inline-edit" style="width: 100%; border: none; background: transparent; color: var(--color-secondary); font-size: 11px; font-weight: 700;" onchange="window.seoEngine.updatePostField(${p.id}, 'silo', this.value)">
+                    <select class="inline-edit strategy-dark-select" style="width: 100%; border: 1px solid rgba(255,255,255,0.08); background: #111827; color: #e5e7eb; font-size: 11px; font-weight: 700;" onchange="window.seoEngine.updatePostField(${p.id}, 'silo', this.value)">
                         <option value="">Nenhum Silo</option>
                         ${this.renderSiloOptions(p.silo)}
                     </select>
@@ -515,6 +640,28 @@ window.seoEngine = {
         }
     },
 
+    async syncSiloToVortex(siloId, spokeIdx = null) {
+        const silo = this.fullData?.silos?.find(s => s.id === siloId);
+        if (!silo) return;
+        const target = spokeIdx !== null ? silo.spokes?.[spokeIdx] : silo;
+        if (!target) return;
+
+        target.vortexSyncStatus = 'sincronizando';
+        this.renderSilos();
+        await new Promise(resolve => setTimeout(resolve, 250));
+
+        const pageId = spokeIdx !== null
+            ? `spoke-${silo.slug}-${target.slug || this.slugify(target.title)}`
+            : `hub-${silo.slug}`;
+        target.vortexSyncStatus = 'disponivel';
+        target.vortexPageId = pageId;
+        await this.saveSilos();
+        this.renderSilos();
+        if (window.notificationSystem) {
+            window.notificationSystem.push('Vortex sincronizado', `${target.title || silo.hub} agora está disponível no Vortex.`, 'success');
+        }
+    },
+
     async openVortexForSilo(siloId, spokeIdx = null) {
         const silo = this.fullData?.silos?.find(s => s.id === siloId);
         if (!silo) return;
@@ -531,7 +678,15 @@ window.seoEngine = {
             if (!window.vortexStudio?.importFromSilo) return;
             window.vortexStudio.importFromSilo({
                 siloId: silo.id,
+                hubId: silo.id,
                 siloName: silo.hub,
+                hubName: silo.hub,
+                spokeIndex: spokeIdx,
+                spokeTitle: spokeObj?.title || '',
+                spokeSlug: spokeObj?.slug || '',
+                pageType: spokeObj ? 'spoke' : 'hub',
+                syncStatus: spokeObj?.vortexSyncStatus || silo.vortexSyncStatus || 'nao_sincronizado',
+                vortexPageId: spokeObj?.vortexPageId || silo.vortexPageId || '',
                 title,
                 slug,
                 keywords,
@@ -871,8 +1026,9 @@ window.seoEngine = {
         if (!content) return;
 
         const item = this.currentAuditItem;
-        const [hubId, spokeIdx] = item.itemId.split('_');
-        const silo = this.fullData.silos.find(s => s.id === hubId);
+        const silo = this.fullData.silos.find(s => item.itemId === s.id || item.itemId.startsWith(`${s.id}_`));
+        const spokeIdx = item.itemId === silo?.id ? null : Number(String(item.itemId).slice(String(silo?.id).length + 1));
+        if (!silo) return;
         const currentValue = (item.field === 'title') ? silo.hub : (item.field === 'slug' ? silo.slug : (typeof silo.spokes[spokeIdx] === 'string' ? silo.spokes[spokeIdx] : silo.spokes[spokeIdx].title));
 
         // Loading state
@@ -1083,6 +1239,80 @@ window.seoEngine = {
     },
 
     // --- MÉTODOS DE SINCRONIZAÇÃO COM O SERVIDOR ---
+    renderAbidosReport() {
+        const card = document.getElementById('abidos-inline-report-card');
+        const content = document.getElementById('abidos-card-content');
+        const time = document.getElementById('abidos-card-timestamp');
+        if (!card || !content) return;
+
+        const report = localStorage.getItem('abidos_last_report');
+        const timestamp = localStorage.getItem('abidos_report_time');
+        if (!report) {
+            card.style.display = 'none';
+            return;
+        }
+
+        card.style.display = 'block';
+        if (time) time.innerText = `Gerado em: ${timestamp}`;
+
+        const universalAudit = JSON.parse(localStorage.getItem('abidos_universal_audit') || '{}');
+        const nodes = Object.entries(universalAudit.audit_nodes || {});
+        const actionNodes = nodes.filter(([, audit]) => audit && audit.status !== 'GREEN');
+        const redCount = actionNodes.filter(([, audit]) => audit.status === 'RED').length;
+        const yellowCount = actionNodes.filter(([, audit]) => audit.status === 'YELLOW').length;
+        const topNode = actionNodes[0];
+        const isSpokeNode = (id) => this.fullData?.silos?.some(s => id.startsWith(`${s.id}_`));
+        const resolveNodeLabel = (id) => {
+            const silo = this.fullData?.silos?.find(s => id === s.id || id.startsWith(`${s.id}_`));
+            if (!silo) return id;
+            const idx = Number(String(id).split('_').pop());
+            const spoke = Number.isFinite(idx) ? silo.spokes?.[idx] : null;
+            return spoke ? `${silo.hub} › ${spoke.title}` : silo.hub;
+        };
+
+        content.innerHTML = `
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:18px;">
+                <div class="abidos-action-card"><strong>${actionNodes.length}</strong><p>oportunidades priorizadas</p></div>
+                <div class="abidos-action-card"><strong>${redCount}</strong><p>upgrades de alto impacto</p></div>
+                <div class="abidos-action-card"><strong>${yellowCount}</strong><p>melhorias rápidas</p></div>
+                <div class="abidos-action-card"><strong>${topNode ? resolveNodeLabel(topNode[0]) : 'Arquitetura estável'}</strong><p>maior gargalo atual</p></div>
+            </div>
+            <div class="abidos-action-grid">
+                ${actionNodes.map(([id, audit]) => `
+                    <div class="abidos-action-card">
+                        <strong>${resolveNodeLabel(id)}</strong>
+                        <p>${audit.reason || 'Oportunidade de elevação detectada pelo Abidos.'}</p>
+                        ${(audit.suggestions || []).slice(0, 3).map(s => `<button onclick="window.seoEngine.currentAuditItem={itemId:'${id}',field:'${isSpokeNode(id) ? 'spoke_title' : 'title'}',status:'${audit.status}',reason:'${String(audit.reason || '').replace(/'/g, "\\'")}'}; window.seoEngine.applyUniversalSuggestion('${String(s).replace(/'/g, "\\'")}')">Aplicar: ${s}</button>`).join('')}
+                        <button onclick="window.seoEngine.openItemAuditCard('${id}', '${isSpokeNode(id) ? 'spoke_title' : 'title'}', '${audit.status}', '${String(audit.reason || '').replace(/'/g, "\\'")}')">Editar</button>
+                        <button onclick="window.seoEngine.openVortexFromAudit('${id}')">Abrir no Vortex</button>
+                        <button onclick="window.seoEngine.ignoreAbidosNode('${id}')">Ignorar</button>
+                    </div>
+                `).join('') || '<div class="abidos-action-card"><strong>Nenhuma ação pendente</strong><p>A arquitetura não possui upgrades prioritários nesta leitura.</p></div>'}
+            </div>
+            <div style="margin-top:18px; display:flex; justify-content:flex-end;">
+                <button class="btn btn-secondary" onclick="window.seoEngine.openAbidosVault()" style="font-size: 10px; padding: 8px 14px;">Ver relatório completo</button>
+            </div>
+        `;
+        if (window.lucide) window.lucide.createIcons();
+    },
+
+    openVortexFromAudit(id) {
+        const silo = this.fullData?.silos?.find(s => id === s.id || id.startsWith(`${s.id}_`));
+        if (!silo) return;
+        const idx = Number(String(id).split('_').pop());
+        this.openVortexForSilo(silo.id, id === silo.id || !Number.isFinite(idx) ? null : idx);
+    },
+
+    ignoreAbidosNode(id) {
+        const universalAudit = JSON.parse(localStorage.getItem('abidos_universal_audit') || '{}');
+        if (universalAudit.audit_nodes?.[id]) {
+            delete universalAudit.audit_nodes[id];
+            localStorage.setItem('abidos_universal_audit', JSON.stringify(universalAudit));
+            this.renderAbidosReport();
+            if (window.notificationSystem) window.notificationSystem.push('Abidos', 'Recomendação ignorada nesta rodada.', 'info');
+        }
+    },
+
     async saveAbidosReportToServer(report, timestamp, universalAudit) {
         try {
             await fetch('/api/seo/abidos-report', {
@@ -1185,5 +1415,63 @@ _styleSeo.textContent = `
     .scope-local:hover { background: rgba(245, 158, 11, 0.2); }
     .scope-national { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
     .scope-national:hover { background: rgba(16, 185, 129, 0.2); }
+
+    .strategy-lens-bar {
+        display: flex;
+        gap: 10px;
+        padding: 14px 24px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        background: rgba(2,6,23,0.36);
+    }
+    .strategy-lens-bar button {
+        border: 1px solid rgba(148,163,184,0.16);
+        background: rgba(15,23,42,0.72);
+        color: #cbd5e1;
+        border-radius: 8px;
+        padding: 9px 14px;
+        font-size: 11px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+    .strategy-lens-bar button.active {
+        background: rgba(45,212,191,0.14);
+        border-color: rgba(45,212,191,0.36);
+        color: #67e8f9;
+    }
+    #planning[data-strategy-lens="silos"] [data-strategy-panel]:not([data-strategy-panel~="silos"]),
+    #planning[data-strategy-lens="abidos"] [data-strategy-panel]:not([data-strategy-panel~="abidos"]),
+    #planning[data-strategy-lens="autoridade"] [data-strategy-panel]:not([data-strategy-panel~="autoridade"]),
+    #planning[data-strategy-lens="pauta"] [data-strategy-panel]:not([data-strategy-panel~="pauta"]) {
+        display: none !important;
+    }
+    #planning select,
+    #planning option,
+    #planning optgroup,
+    .strategy-dark-select,
+    .strategy-dark-select option,
+    .strategy-dark-select optgroup {
+        background: #111827 !important;
+        color: #e5e7eb !important;
+    }
+    .vortex-sync-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 8px;
+        font-weight: 900;
+        border: 1px solid rgba(148,163,184,0.18);
+        color: #94a3b8;
+        background: rgba(148,163,184,0.08);
+        white-space: nowrap;
+    }
+    .vortex-sync-badge.disponivel { color: #34d399; border-color: rgba(52,211,153,0.28); background: rgba(52,211,153,0.1); }
+    .vortex-sync-badge.sincronizando { color: #a5b4fc; border-color: rgba(165,180,252,0.3); background: rgba(99,102,241,0.14); }
+    .vortex-sync-badge.nao_sincronizado { color: #fbbf24; border-color: rgba(251,191,36,0.28); background: rgba(251,191,36,0.1); }
+    .abidos-action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .abidos-action-card { border: 1px solid rgba(148,163,184,0.13); border-radius: 10px; background: rgba(15,23,42,0.72); padding: 16px; }
+    .abidos-action-card strong { color: #fff; display: block; margin-bottom: 6px; }
+    .abidos-action-card p { color: #94a3b8; font-size: 12px; line-height: 1.5; margin: 0 0 12px; }
+    .abidos-action-card button { border: 1px solid rgba(45,212,191,0.25); background: rgba(45,212,191,0.1); color: #67e8f9; border-radius: 8px; padding: 7px 10px; font-size: 10px; font-weight: 900; margin: 4px 4px 0 0; cursor: pointer; }
 `;
 document.head.appendChild(_styleSeo);

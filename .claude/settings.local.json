@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --check frontend/public/js/vortex-studio.js)",
+      "Bash(node --check frontend/public/js/seo-engine.js)",
+      "Bash(node --check frontend/routes/operations.js)",
+      "Bash(node --check frontend/routes/vortex.js)"
+    ]
+  }
+}

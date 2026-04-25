@@ -16,6 +16,73 @@ window.vortexStudio = (() => {
     // =========================================================================
     const VOICE_PROFILE_STORAGE_KEY = 'vortex.voiceProfile.enabled';
     const OPERATION_MODE_STORAGE_KEY = 'vortex.operationMode';
+    const VISUAL_MODE_STORAGE_KEY = 'vortex-visual-mode';
+    const VISUAL_LAYER_STORAGE_KEY = 'vortex.visual.layer';
+    const VISUAL_SESSION_STORAGE_KEY = 'vortex.visual.session';
+    const VISUAL_HISTORY_STORAGE_KEY = 'vortex.visual.history';
+    const VISUAL_SCORE_STORAGE_KEY = 'vortex.visual.score';
+    const VISUAL_DEFAULT_VERSION_KEY = 'vortex.visual.defaultVersion';
+    const CREATION_BRIEF_STORAGE_KEY = 'vortex.creation.brief';
+
+    const DEFAULT_CONTACTS = {
+        whatsapp: '62991545295',
+        email: 'instituto@hipnolawrence.com',
+        instagram: 'https://www.instagram.com/hipnolawrence',
+        bookingLink: 'www.hipnolawrence.com/agendamento'
+    };
+
+    const TIER_1_KEYWORDS = [
+        {
+            id: 'hipnose-tea-adultos',
+            keyword: 'hipnose clínica para TEA em adultos',
+            objective: 'landing_page',
+            hub: 'Hipnose Clínica',
+            spoke: 'Hipnose Clínica para TEA em Adultos',
+            generationMode: 'hybrid',
+            templateHint: 'landing',
+            context: 'Landing page premium para adultos com suspeita ou diagnóstico de TEA que buscam hipnose clínica ética, segura e especializada. Foco em acolhimento, autoridade clínica, triagem e CTA para conversa inicial.'
+        },
+        {
+            id: 'autismo-feminino-adultas',
+            keyword: 'psicólogo online especializado em autismo feminino em adultas',
+            objective: 'landing_page',
+            hub: 'Autismo Adulto',
+            spoke: 'Autismo Feminino em Adultas',
+            generationMode: 'structured',
+            templateHint: 'landing',
+            context: 'Página de conversão para mulheres adultas com suspeita de autismo, diagnóstico tardio, masking e exaustão social. Tom clínico, acolhedor, sem promessa de cura.'
+        },
+        {
+            id: 'suspeita-tea-sem-diagnostico',
+            keyword: 'psicólogo para adultos com suspeita de TEA que não fecham diagnóstico',
+            objective: 'content_page',
+            hub: 'Autismo Adulto',
+            spoke: 'Suspeita de TEA sem Diagnóstico',
+            generationMode: 'hybrid',
+            templateHint: 'artigo',
+            context: 'Conteúdo educativo e conversivo para adultos que já pesquisaram TEA, têm dúvidas persistentes e precisam de orientação clínica para próximos passos sem linguagem alarmista.'
+        },
+        {
+            id: 'autismo-tardio-adultos',
+            keyword: 'terapia para adulto que descobriu autismo tarde',
+            objective: 'content_page',
+            hub: 'Autismo Adulto',
+            spoke: 'Terapia após Diagnóstico Tardio',
+            generationMode: 'hybrid',
+            templateHint: 'artigo',
+            context: 'Página de autoridade sobre reorganização de vida, identidade, relações e energia após diagnóstico tardio de autismo em adultos.'
+        },
+        {
+            id: 'alto-funcionamento-adultos',
+            keyword: 'psicólogo especialista em autismo de alto funcionamento em adultos',
+            objective: 'landing_page',
+            hub: 'Autismo Adulto',
+            spoke: 'Autismo Nível 1 em Adultos',
+            generationMode: 'structured',
+            templateHint: 'landing',
+            context: 'Landing page para adultos com autismo nível 1 ou alto funcionamento que buscam atendimento especializado, clareza clínica e acolhimento sem infantilização.'
+        }
+    ];
 
     const state = {
         db: null,               // Dexie instance
@@ -64,11 +131,52 @@ window.vortexStudio = (() => {
             silos: [],
             menus: [],
             siloId: '',
+            hubId: '',
+            hubName: '',
+            spokeIndex: null,
+            spokeTitle: '',
+            spokeSlug: '',
+            pageType: 'hub',
+            syncStatus: '',
+            vortexPageId: '',
             menuId: ''
+        },
+        creationBrief: {
+            mode: 'edit',
+            generationMode: 'hybrid',
+            model: 'gemini-2.5-flash',
+            objective: 'landing_page',
+            themeKeyword: '',
+            ideaContext: '',
+            keywordId: '',
+            siloId: '',
+            hubName: '',
+            spokeSlug: '',
+            menuId: '',
+            contacts: { ...DEFAULT_CONTACTS },
+            templateId: ''
         },
         draft: {
             id: null,
             name: ''
+        },
+        visual: {
+            enabled: true,
+            layer: 'edit',
+            aiMode: 'mock',
+            xrayOpen: false,
+            selectedSection: 'hero',
+            selectedField: 'headline',
+            targetPage: 'Masking e Exaustao',
+            snapshots: [],
+            history: [],
+            score: null,
+            summaryReady: false,
+            lastIntent: '',
+            pendingProposal: null,
+            compareMode: false,
+            manualFieldHistory: {},
+            manualMode: 'direct'
         },
         voiceProfile: {
             enabled: true,
@@ -112,9 +220,91 @@ window.vortexStudio = (() => {
         }
     }
 
+    function loadVisualModePreference() {
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            const queryFlag = params.get('vortex_visual_mode') || params.get('vortex_v6');
+            if (queryFlag === '1' || queryFlag === 'true') {
+                state.visual.enabled = true;
+                localStorage.setItem(VISUAL_MODE_STORAGE_KEY, 'true');
+            } else if (queryFlag === '0' || queryFlag === 'false') {
+                state.visual.enabled = false;
+                localStorage.setItem(VISUAL_MODE_STORAGE_KEY, 'false');
+            } else {
+                const defaultVersion = localStorage.getItem(VISUAL_DEFAULT_VERSION_KEY);
+                const stored = localStorage.getItem(VISUAL_MODE_STORAGE_KEY);
+                if (defaultVersion !== 'v6.5-default-on') {
+                    state.visual.enabled = true;
+                    localStorage.setItem(VISUAL_MODE_STORAGE_KEY, 'true');
+                    localStorage.setItem(VISUAL_DEFAULT_VERSION_KEY, 'v6.5-default-on');
+                } else {
+                    state.visual.enabled = stored === null ? true : stored !== 'false';
+                }
+            }
+
+            const storedLayer = localStorage.getItem(VISUAL_LAYER_STORAGE_KEY);
+            if (['context', 'edit', 'performance', 'publish'].includes(storedLayer)) {
+                state.visual.layer = storedLayer;
+            }
+
+            const storedSession = JSON.parse(sessionStorage.getItem(VISUAL_SESSION_STORAGE_KEY) || '{}');
+            if (Array.isArray(storedSession.snapshots)) state.visual.snapshots = storedSession.snapshots.slice(-20);
+
+            const storedHistory = JSON.parse(localStorage.getItem(VISUAL_HISTORY_STORAGE_KEY) || '[]');
+            if (Array.isArray(storedHistory)) state.visual.history = storedHistory.slice(-20);
+
+            const storedScore = JSON.parse(localStorage.getItem(VISUAL_SCORE_STORAGE_KEY) || 'null');
+            if (storedScore && typeof storedScore.total === 'number') state.visual.score = storedScore;
+
+            const storedBrief = JSON.parse(localStorage.getItem(CREATION_BRIEF_STORAGE_KEY) || 'null');
+            if (storedBrief && typeof storedBrief === 'object') {
+                state.creationBrief = {
+                    ...state.creationBrief,
+                    ...storedBrief,
+                    contacts: { ...DEFAULT_CONTACTS, ...(storedBrief.contacts || {}) }
+                };
+            }
+        } catch (err) {
+            console.warn('[VORTEX V6] Preferencia visual indisponivel:', err.message);
+        }
+    }
+
+    function persistVisualSession() {
+        try {
+            localStorage.setItem(VISUAL_MODE_STORAGE_KEY, String(state.visual.enabled));
+            localStorage.setItem(VISUAL_LAYER_STORAGE_KEY, state.visual.layer);
+            localStorage.setItem(VISUAL_HISTORY_STORAGE_KEY, JSON.stringify(state.visual.history.slice(-20)));
+            if (state.visual.score) localStorage.setItem(VISUAL_SCORE_STORAGE_KEY, JSON.stringify(state.visual.score));
+            localStorage.setItem(CREATION_BRIEF_STORAGE_KEY, JSON.stringify(state.creationBrief));
+            sessionStorage.setItem(VISUAL_SESSION_STORAGE_KEY, JSON.stringify({
+                snapshots: state.visual.snapshots.slice(-20),
+                targetPage: state.visual.targetPage,
+                updatedAt: new Date().toISOString()
+            }));
+        } catch (err) {
+            console.warn('[VORTEX V6] Falha ao persistir sessao visual:', err.message);
+        }
+    }
+
     // =========================================================================
     // UTILS: SANITIZAÇÃO E LIMPEZA (ANTI-HALLUCINATION)
     // =========================================================================
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function safeJsString(value) {
+        return String(value ?? '')
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/\r?\n/g, ' ');
+    }
+
     function sanitizeAIContent(content) {
         if (!content) return '';
         let clean = content;
@@ -907,6 +1097,7 @@ window.vortexStudio = (() => {
                 state.template.catalog.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
             select.value = state.template.selectedId;
             renderTemplateStatus();
+            renderV6TemplateShelf();
         } catch (err) {
             console.warn('[VORTEX] Falha ao carregar Master Templates:', err.message);
             renderTemplateStatus('Catalogo indisponivel');
@@ -928,9 +1119,20 @@ window.vortexStudio = (() => {
 
     async function importFromSilo(config) {
         state.metadata.siloId = config.siloId || config.siloName || '';
+        state.metadata.hubId = config.hubId || config.siloId || '';
+        state.metadata.hubName = config.hubName || config.siloName || '';
+        state.metadata.spokeIndex = Number.isInteger(config.spokeIndex) ? config.spokeIndex : null;
+        state.metadata.spokeTitle = config.spokeTitle || '';
+        state.metadata.spokeSlug = config.spokeSlug || '';
+        state.metadata.pageType = config.pageType || (config.spokeTitle ? 'spoke' : 'hub');
+        state.metadata.syncStatus = config.syncStatus || '';
+        state.metadata.vortexPageId = config.vortexPageId || '';
         const siloSelect = document.getElementById('vortex-silo-select');
-        if (siloSelect) siloSelect.value = state.metadata.siloId;
+        if (siloSelect) siloSelect.value = state.metadata.pageType === 'spoke'
+            ? `spoke:${state.metadata.siloId}:${state.metadata.spokeIndex}`
+            : `hub:${state.metadata.siloId}`;
         renderMetadataStatus();
+        renderV6Silos();
 
         const targetType = config.templateHint === 'artigo' ? 'artigo' : 'landing';
         const suggested = state.template.catalog.find(t => t.type === targetType) || state.template.catalog[0];
@@ -964,9 +1166,17 @@ window.vortexStudio = (() => {
             select.innerHTML = '<option value="">Sem Silo/Hub</option>' + state.metadata.silos.map(s => {
                 const value = s.id || s.slug || s.hub;
                 const label = s.hub || s.name || s.title || value;
-                return `<option value="${value}">${label}</option>`;
+                const spokes = Array.isArray(s.spokes) ? s.spokes : [];
+                return `
+                    <optgroup label="HUB: ${label}">
+                        <option value="hub:${value}">Hub: ${label}</option>
+                        ${spokes.map((spoke, idx) => `<option value="spoke:${value}:${idx}">Spoke: ${spoke.title || spoke}</option>`).join('')}
+                    </optgroup>
+                `;
             }).join('');
-            select.value = state.metadata.siloId;
+            select.value = state.metadata.pageType === 'spoke'
+                ? `spoke:${state.metadata.siloId}:${state.metadata.spokeIndex}`
+                : (state.metadata.siloId ? `hub:${state.metadata.siloId}` : '');
         } catch (err) {
             console.warn('[VORTEX] Falha ao carregar Silos:', err.message);
             select.innerHTML = '<option value="">Silos indisponiveis</option>';
@@ -993,7 +1203,35 @@ window.vortexStudio = (() => {
     }
 
     function updateMetadata(type, value) {
-        if (type === 'silo') state.metadata.siloId = value || '';
+        if (type === 'silo') {
+            const parts = String(value || '').split(':');
+            if (parts[0] === 'spoke') {
+                const silo = getSiloById(parts[1]);
+                const spoke = silo?.spokes?.[Number(parts[2])];
+                state.metadata.siloId = parts[1] || '';
+                state.metadata.hubId = parts[1] || '';
+                state.metadata.hubName = silo?.hub || '';
+                state.metadata.spokeIndex = Number(parts[2]);
+                state.metadata.spokeTitle = spoke?.title || '';
+                state.metadata.spokeSlug = spoke?.slug || '';
+                state.metadata.pageType = 'spoke';
+                state.metadata.syncStatus = spoke?.vortexSyncStatus || '';
+                state.metadata.vortexPageId = spoke?.vortexPageId || '';
+            } else if (parts[0] === 'hub') {
+                const silo = getSiloById(parts[1]);
+                state.metadata.siloId = parts[1] || '';
+                state.metadata.hubId = parts[1] || '';
+                state.metadata.hubName = silo?.hub || '';
+                state.metadata.spokeIndex = null;
+                state.metadata.spokeTitle = '';
+                state.metadata.spokeSlug = '';
+                state.metadata.pageType = 'hub';
+                state.metadata.syncStatus = silo?.vortexSyncStatus || '';
+                state.metadata.vortexPageId = silo?.vortexPageId || '';
+            } else {
+                state.metadata.siloId = value || '';
+            }
+        }
         if (type === 'menu') {
             state.metadata.menuId = value || '';
             if (state.template.selectedId) renderSelectedTemplatePreview();
@@ -1007,9 +1245,13 @@ window.vortexStudio = (() => {
 
         const silo = getSiloById(state.metadata.siloId);
         const menu = getMenuById(state.metadata.menuId);
-        const siloLabel = silo ? (silo.hub || silo.name || silo.title || state.metadata.siloId) : 'Sem Silo';
+        const hubLabel = state.metadata.hubName || silo?.hub || silo?.name || silo?.title || state.metadata.siloId;
+        const siloLabel = state.metadata.pageType === 'spoke' && state.metadata.spokeTitle
+            ? `${hubLabel} › ${state.metadata.spokeTitle}`
+            : (hubLabel || 'Sem Silo');
         const menuLabel = menu ? (menu.name || menu.label || menu.title || state.metadata.menuId) : 'Sem Menu';
-        status.innerHTML = `<strong>${siloLabel}</strong><span>${menuLabel}</span>`;
+        const syncLabel = state.metadata.syncStatus ? ` · ${state.metadata.syncStatus.replace('nao_sincronizado', 'não sincronizado')}` : '';
+        status.innerHTML = `<strong>${siloLabel}</strong><span>${menuLabel}${syncLabel}</span>`;
     }
 
     async function loadVoiceProfile() {
@@ -1140,6 +1382,14 @@ window.vortexStudio = (() => {
             auditStatus: state.auditStatus,
             metadata: {
                 siloId: state.metadata.siloId,
+                hubId: state.metadata.hubId,
+                hubName: state.metadata.hubName,
+                spokeIndex: state.metadata.spokeIndex,
+                spokeTitle: state.metadata.spokeTitle,
+                spokeSlug: state.metadata.spokeSlug,
+                pageType: state.metadata.pageType,
+                syncStatus: state.metadata.syncStatus,
+                vortexPageId: state.metadata.vortexPageId,
                 menuId: state.metadata.menuId
             },
             created_at: state.draft.id ? undefined : now,
@@ -1186,11 +1436,21 @@ window.vortexStudio = (() => {
         state.draft.name = draft.name || '';
         state.currentFile = draft.currentFile || '/src/app/page.tsx';
         state.metadata.siloId = draft.metadata?.siloId || '';
+        state.metadata.hubId = draft.metadata?.hubId || draft.metadata?.siloId || '';
+        state.metadata.hubName = draft.metadata?.hubName || '';
+        state.metadata.spokeIndex = Number.isInteger(draft.metadata?.spokeIndex) ? draft.metadata.spokeIndex : null;
+        state.metadata.spokeTitle = draft.metadata?.spokeTitle || '';
+        state.metadata.spokeSlug = draft.metadata?.spokeSlug || '';
+        state.metadata.pageType = draft.metadata?.pageType || 'hub';
+        state.metadata.syncStatus = draft.metadata?.syncStatus || '';
+        state.metadata.vortexPageId = draft.metadata?.vortexPageId || '';
         state.metadata.menuId = draft.metadata?.menuId || '';
 
         const siloSelect = document.getElementById('vortex-silo-select');
         const menuSelect = document.getElementById('vortex-menu-select');
-        if (siloSelect) siloSelect.value = state.metadata.siloId;
+        if (siloSelect) siloSelect.value = state.metadata.pageType === 'spoke'
+            ? `spoke:${state.metadata.siloId}:${state.metadata.spokeIndex}`
+            : (state.metadata.siloId ? `hub:${state.metadata.siloId}` : '');
         if (menuSelect) menuSelect.value = state.metadata.menuId;
         renderMetadataStatus();
 
@@ -1672,7 +1932,11 @@ window.vortexStudio = (() => {
                 // Reset para srcdoc mode
                 frame.removeAttribute('src');
                 frame.srcdoc = fullHtml;
-                frame.onload = () => setTimeout(installPreviewInteractionTools, 120);
+                frame.onload = () => setTimeout(() => {
+                    installPreviewInteractionTools();
+                    installV6PreviewFieldTools();
+                    renderV6Proposal();
+                }, 120);
             }
         } catch (err) {
             console.error('🌀 [VORTEX] Fallback Triggered via Catch:', err);
@@ -1765,7 +2029,11 @@ function renderFallbackPanel(errorMsg) {
             // Renderização bem-sucedida
             case 'vortex-render-success':
                 addAuditLog('success', '✅ Preview renderizado com sucesso.');
-                setTimeout(installPreviewInteractionTools, 80);
+                setTimeout(() => {
+                    installPreviewInteractionTools();
+                    installV6PreviewFieldTools();
+                    renderV6Proposal();
+                }, 80);
                 break;
 
             // Erro de renderização no shell
@@ -2254,6 +2522,12 @@ function renderFallbackPanel(errorMsg) {
                     </div>
                 </div>
                 <div class="vortex-toolbar-right">
+                    <button id="vortex-v6-toggle" class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.toggleVisualMode()" title="Alternar Vortex Visual v6">
+                        <i data-lucide="sparkles"></i> <span>Visual V6</span>
+                    </button>
+                    <button class="vortex-btn vortex-btn-secondary vortex-xray-btn" onclick="vortexStudio.toggleXrayMode()" title="Modo Raio-X">
+                        <i data-lucide="code-2"></i>
+                    </button>
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.syncContextHub()" id="vortex-hub-btn" title="Armazena a teia de componentes no Google Cache API para reduzir custos e aumentar alinhamento do Design System">
                         <i data-lucide="database"></i> SYNC HUB
                     </button>
@@ -2561,6 +2835,1172 @@ function renderFallbackPanel(errorMsg) {
         log.scrollTop = log.scrollHeight;
     }
 
+    function toggleVisualMode(force) {
+        state.visual.enabled = typeof force === 'boolean' ? force : !state.visual.enabled;
+        persistVisualSession();
+        applyVisualModeState();
+        if (state.visual.enabled) {
+            ensureVisualStarterPage();
+            setVisualLayer(state.visual.layer || 'edit');
+            addAuditLog('info', 'V6 Visual Mode ativado.');
+        } else {
+            addAuditLog('info', 'V6 Visual Mode desativado. V5 preservado.');
+        }
+    }
+
+    function renderV6Surface() {
+        const studio = document.getElementById('vortex-studio');
+        if (!studio || document.getElementById('vortex-v6-surface')) return;
+
+        const surface = document.createElement('div');
+        surface.id = 'vortex-v6-surface';
+        surface.className = 'vortex-v6-surface';
+        surface.innerHTML = `
+            <div class="vortex-v6-lenses" role="tablist" aria-label="Lentes Vortex">
+                <button data-vortex-layer="context" onclick="vortexStudio.setVisualLayer('context')"><span>1</span> Contexto</button>
+                <button data-vortex-layer="edit" onclick="vortexStudio.setVisualLayer('edit')"><span>2</span> Edicao</button>
+                <button data-vortex-layer="performance" onclick="vortexStudio.setVisualLayer('performance')"><span>3</span> Performance</button>
+                <button data-vortex-layer="publish" onclick="vortexStudio.setVisualLayer('publish')"><span>4</span> Publicar</button>
+            </div>
+
+            <aside id="vortex-v6-context" class="vortex-v6-panel">
+                <div class="vortex-v6-panel-title">Silos</div>
+                <div id="vortex-v6-silo-hub" class="vortex-v6-silo-hub"></div>
+                <div id="vortex-v6-briefing" class="vortex-v6-briefing"></div>
+                <div id="vortex-v6-strategy-summary" class="vortex-v6-summary">
+                    <div class="vortex-v6-shimmer"></div>
+                    <span>Carregando contexto...</span>
+                </div>
+            </aside>
+
+            <aside id="vortex-v6-performance" class="vortex-v6-panel">
+                <div class="vortex-v6-panel-title">Score de Impacto</div>
+                <div class="vortex-v6-score"><span id="vortex-v6-score-value">73</span><small>/100</small></div>
+                <div id="vortex-v6-metrics" class="vortex-v6-metrics"></div>
+                <div id="vortex-v6-upgrades" class="vortex-v6-upgrades"></div>
+            </aside>
+
+            <section id="vortex-v6-proposal" class="vortex-v6-proposal" aria-live="polite"></section>
+            <section id="vortex-v6-template-shelf" class="vortex-v6-template-shelf" aria-label="Biblioteca de templates"></section>
+
+            <div id="vortex-v6-prompt" class="vortex-v6-prompt">
+                <div class="vortex-v6-pills">
+                    <button onclick="vortexStudio.runVisualPrompt('Refinar Hero')">Refinar Hero</button>
+                    <button onclick="vortexStudio.runVisualPrompt('Melhorar CTA')">Melhorar CTA</button>
+                    <button onclick="vortexStudio.runVisualPrompt('Trocar Paleta')">Trocar Paleta</button>
+                    <button onclick="vortexStudio.runVisualPrompt('Adicionar Secao')">Adicionar Secao</button>
+                    <button onclick="vortexStudio.runVisualPrompt('Simplificar Texto')">Simplificar Texto</button>
+                    <button onclick="vortexStudio.runVisualPrompt('Otimizar Mobile')">Otimizar Mobile</button>
+                </div>
+                <div class="vortex-v6-input-row">
+                    <textarea id="vortex-v6-input" rows="1" placeholder="Digite direto no preview. Ou use IA para melhorar a intenção..." onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();vortexStudio.runVisualPrompt();}"></textarea>
+                    <button id="vortex-v6-send" onclick="vortexStudio.runVisualPrompt()" title="Enviar"><i data-lucide="send"></i></button>
+                    <button id="vortex-v6-ai-mode" onclick="vortexStudio.toggleVisualAIMode()" title="Alternar mock/IA">Mock</button>
+                </div>
+                <div id="vortex-v6-progress" class="vortex-v6-progress"></div>
+            </div>
+
+            <div id="vortex-v6-publish-backdrop" class="vortex-v6-publish-backdrop" hidden></div>
+            <div id="vortex-v6-publish-card" class="vortex-v6-publish-card" hidden>
+                <h3>Pronto para publicar?</h3>
+                <p id="vortex-v6-publish-summary">Você melhorou o título, ajustou a intenção e preservou o preview.</p>
+                <div class="vortex-v6-publish-score"><span id="vortex-v6-publish-score-value">81</span>/100</div>
+                <small id="vortex-v6-version-label">Esta versão será salva como melhoria do Hero</small>
+                <div class="vortex-v6-publish-actions">
+                    <button onclick="vortexStudio.publishVisualVersion()">Publicar Página</button>
+                    <button onclick="vortexStudio.setVisualLayer('edit')">Voltar e Refinar</button>
+                </div>
+            </div>
+
+            <div id="vortex-v6-success" class="vortex-v6-success" hidden>Publicado com sucesso</div>
+        `;
+        studio.appendChild(surface);
+        renderV6Silos();
+        renderV6Performance();
+        renderV6Briefing();
+        renderV6TemplateShelf();
+        renderV6Proposal();
+    }
+
+    function getBriefTemplateHint() {
+        const selectedKeyword = TIER_1_KEYWORDS.find(k => k.id === state.creationBrief.keywordId);
+        return selectedKeyword?.templateHint || (state.creationBrief.objective === 'blog_post' ? 'artigo' : 'landing');
+    }
+
+    function renderV6Briefing() {
+        const panel = document.getElementById('vortex-v6-briefing');
+        if (!panel) return;
+        const brief = state.creationBrief;
+        const selectedKeyword = TIER_1_KEYWORDS.find(k => k.id === brief.keywordId);
+        const menus = state.metadata.menus || [];
+        const silos = state.metadata.silos || [];
+        panel.innerHTML = `
+            <div class="vortex-v6-brief-head">
+                <strong>Briefing Criativo</strong>
+                <div>
+                    <button class="${brief.mode === 'create' ? 'active' : ''}" onclick="vortexStudio.setCreationMode('create')">Criar</button>
+                    <button class="${brief.mode === 'edit' ? 'active' : ''}" onclick="vortexStudio.setCreationMode('edit')">Editar</button>
+                </div>
+            </div>
+            <label>Keyword Tier 1</label>
+            <select onchange="vortexStudio.applyTierKeyword(this.value)">
+                <option value="">Escolher oportunidade...</option>
+                ${TIER_1_KEYWORDS.map(k => `<option value="${escapeHtml(k.id)}" ${brief.keywordId === k.id ? 'selected' : ''}>${escapeHtml(k.keyword)}</option>`).join('')}
+            </select>
+            <div class="vortex-v6-brief-grid">
+                <label>Motor
+                    <select onchange="vortexStudio.setCreationBriefField('model', this.value)">
+                        <option value="gemini-2.5-flash" ${brief.model === 'gemini-2.5-flash' ? 'selected' : ''}>Gemini 2.5 Flash</option>
+                        <option value="gemini-2.5-pro" ${brief.model === 'gemini-2.5-pro' ? 'selected' : ''}>Gemini 2.5 Pro</option>
+                    </select>
+                </label>
+                <label>Objetivo
+                    <select onchange="vortexStudio.setCreationBriefField('objective', this.value)">
+                        <option value="landing_page" ${brief.objective === 'landing_page' ? 'selected' : ''}>Landing Page</option>
+                        <option value="content_page" ${brief.objective === 'content_page' ? 'selected' : ''}>Página do Site</option>
+                        <option value="blog_post" ${brief.objective === 'blog_post' ? 'selected' : ''}>Blog / SEO</option>
+                    </select>
+                </label>
+            </div>
+            <label>Tema / Palavra-chave</label>
+            <input value="${escapeHtml(brief.themeKeyword)}" placeholder="Ex: hipnose clínica para TEA em adultos" oninput="vortexStudio.setCreationBriefField('themeKeyword', this.value)">
+            <label>Hub / Silo</label>
+            <select onchange="vortexStudio.setCreationBriefField('siloId', this.value)">
+                <option value="">Sem Silo</option>
+                ${silos.map(s => {
+                    const id = String(s.id || s.slug || s.hub || '');
+                    const label = s.hub || s.name || s.title || id;
+                    return `<option value="${escapeHtml(id)}" ${brief.siloId === id ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+                }).join('')}
+            </select>
+            <label>Menu</label>
+            <select onchange="vortexStudio.setCreationBriefField('menuId', this.value)">
+                <option value="">Sem Menu</option>
+                ${menus.map(m => `<option value="${escapeHtml(m.id)}" ${brief.menuId === String(m.id) ? 'selected' : ''}>${escapeHtml(m.name || m.label || m.title || m.id)}</option>`).join('')}
+            </select>
+            <label>Rascunho de ideias & contexto</label>
+            <textarea rows="4" placeholder="Quanto mais contexto, mais precisa fica a voz clínica." oninput="vortexStudio.setCreationBriefField('ideaContext', this.value)">${escapeHtml(brief.ideaContext || selectedKeyword?.context || '')}</textarea>
+            <div class="vortex-v6-contact-grid">
+                <input aria-label="WhatsApp" value="${escapeHtml(brief.contacts.whatsapp)}" placeholder="WhatsApp" oninput="vortexStudio.setCreationBriefField('contacts.whatsapp', this.value)">
+                <input aria-label="Email" value="${escapeHtml(brief.contacts.email)}" placeholder="Email" oninput="vortexStudio.setCreationBriefField('contacts.email', this.value)">
+                <input aria-label="Instagram" value="${escapeHtml(brief.contacts.instagram)}" placeholder="Instagram" oninput="vortexStudio.setCreationBriefField('contacts.instagram', this.value)">
+                <input aria-label="Agendamento" value="${escapeHtml(brief.contacts.bookingLink)}" placeholder="Link agendamento" oninput="vortexStudio.setCreationBriefField('contacts.bookingLink', this.value)">
+            </div>
+            <button class="vortex-v6-primary-action" onclick="vortexStudio.generateFromBrief()">Gerar com Briefing</button>
+        `;
+    }
+
+    function renderV6TemplateShelf() {
+        const shelf = document.getElementById('vortex-v6-template-shelf');
+        if (!shelf) return;
+        const brief = state.creationBrief;
+        const templates = state.template.catalog || [];
+        const cards = templates.slice(0, 11).map(t => `
+            <button class="${brief.templateId === t.id ? 'active' : ''}" onclick="vortexStudio.selectVisualTemplate('${safeJsString(t.id)}')">
+                <small>${escapeHtml(t.id)}</small>
+                <strong>${escapeHtml(t.name || t.title || `Template ${t.id}`)}</strong>
+                <span>${escapeHtml(t.type || 'Abidos')}</span>
+            </button>
+        `).join('');
+        shelf.innerHTML = `
+            <div class="vortex-v6-template-head">
+                <strong>Criação</strong>
+                <div>
+                    <button class="${brief.generationMode === 'structured' ? 'active' : ''}" onclick="vortexStudio.setGenerationMode('structured')">Estruturado</button>
+                    <button class="${brief.generationMode === 'free' ? 'active' : ''}" onclick="vortexStudio.setGenerationMode('free')">Livre Premium</button>
+                    <button class="${brief.generationMode === 'hybrid' ? 'active' : ''}" onclick="vortexStudio.setGenerationMode('hybrid')">Híbrido</button>
+                </div>
+            </div>
+            <div class="vortex-v6-template-grid">
+                ${cards}
+                <button class="${!brief.templateId ? 'active' : ''}" onclick="vortexStudio.selectVisualTemplate('')">
+                    <small>00</small>
+                    <strong>Em branco</strong>
+                    <span>Do zero</span>
+                </button>
+            </div>
+        `;
+    }
+
+    function setCreationBriefField(field, value) {
+        if (field.startsWith('contacts.')) {
+            const key = field.split('.')[1];
+            state.creationBrief.contacts[key] = value;
+        } else {
+            state.creationBrief[field] = value;
+        }
+        if (field === 'siloId') {
+            const silo = getSiloById(value);
+            state.creationBrief.hubName = silo?.hub || '';
+        }
+        if (field === 'menuId') updateMetadata('menu', value);
+        persistVisualSession();
+        renderV6TemplateShelf();
+    }
+
+    function setCreationMode(mode) {
+        state.creationBrief.mode = mode === 'create' ? 'create' : 'edit';
+        persistVisualSession();
+        renderV6Briefing();
+    }
+
+    function setGenerationMode(mode) {
+        state.creationBrief.generationMode = ['structured', 'free', 'hybrid'].includes(mode) ? mode : 'hybrid';
+        setOperationMode(state.creationBrief.generationMode === 'free' ? 'canvas' : 'template');
+        persistVisualSession();
+        renderV6TemplateShelf();
+    }
+
+    function applyTierKeyword(keywordId) {
+        const keyword = TIER_1_KEYWORDS.find(k => k.id === keywordId);
+        state.creationBrief.keywordId = keywordId || '';
+        if (keyword) {
+            const silo = state.metadata.silos.find(s => (s.hub || s.name || '').toLowerCase() === keyword.hub.toLowerCase());
+            state.creationBrief = {
+                ...state.creationBrief,
+                mode: 'create',
+                generationMode: keyword.generationMode,
+                objective: keyword.objective,
+                themeKeyword: keyword.keyword,
+                ideaContext: keyword.context,
+                siloId: String(silo?.id || silo?.slug || keyword.hub),
+                hubName: keyword.hub,
+                spokeSlug: slugifyDraftName(keyword.spoke)
+            };
+            const input = document.getElementById('vortex-v6-input');
+            if (input) input.value = `Criar ${keyword.spoke} com foco em "${keyword.keyword}".`;
+        }
+        persistVisualSession();
+        renderV6Briefing();
+        renderV6TemplateShelf();
+    }
+
+    async function selectVisualTemplate(templateId) {
+        state.creationBrief.templateId = templateId || '';
+        if (templateId) {
+            await selectTemplate(templateId);
+            if (state.creationBrief.generationMode !== 'free') setOperationMode('template');
+        } else {
+            await selectTemplate('');
+            setOperationMode('canvas');
+        }
+        persistVisualSession();
+        renderV6TemplateShelf();
+    }
+
+    async function generateFromBrief() {
+        const brief = state.creationBrief;
+        const modeLabel = {
+            structured: 'Estruturado Abidos',
+            free: 'Livre Premium',
+            hybrid: 'Híbrido'
+        }[brief.generationMode] || 'Híbrido';
+        const prompt = [
+            `Modo: ${modeLabel}`,
+            `Objetivo: ${brief.objective}`,
+            brief.themeKeyword ? `Tema/keyword: ${brief.themeKeyword}` : '',
+            brief.hubName ? `Hub/Silo: ${brief.hubName}` : '',
+            brief.spokeSlug ? `Spoke destino: ${brief.spokeSlug}` : '',
+            brief.menuId ? `Menu: ${brief.menuId}` : '',
+            `CTAs reais: WhatsApp ${brief.contacts.whatsapp}; Email ${brief.contacts.email}; Instagram ${brief.contacts.instagram}; Agendamento ${brief.contacts.bookingLink}`,
+            brief.ideaContext ? `Contexto: ${brief.ideaContext}` : '',
+            'Padrão visual: ultra premium, sóbrio, moderno, autoral, sem estética genérica, com ética clínica, E-E-A-T, H1 único e CTA claro.'
+        ].filter(Boolean).join('\n');
+
+        const modelSelect = document.getElementById('vortex-model-select');
+        if (modelSelect) modelSelect.value = brief.model;
+        if (brief.menuId) updateMetadata('menu', brief.menuId);
+        if (brief.siloId) updateMetadata('silo', `hub:${brief.siloId}`);
+
+        if (brief.generationMode !== 'free' && brief.templateId) {
+            if (state.template.selectedId !== brief.templateId) await selectTemplate(brief.templateId);
+            setOperationMode('template');
+            state.template.values = {
+                ...state.template.values,
+                tema: brief.themeKeyword,
+                keyword_principal: brief.themeKeyword,
+                contexto_extra: brief.ideaContext,
+                whatsapp: brief.contacts.whatsapp,
+                email: brief.contacts.email,
+                instagram: brief.contacts.instagram,
+                link_agendamento: brief.contacts.bookingLink
+            };
+            syncTemplateEditor();
+            await sendTemplatePrompt(prompt, brief.model, buildAbidosContext());
+        } else {
+            setOperationMode('canvas');
+            const input = document.getElementById('vortex-v6-input');
+            if (input) input.value = prompt;
+            await runVisualPrompt(prompt);
+        }
+        setVisualLayer('edit');
+        addAuditLog('success', `Briefing criativo enviado em modo ${modeLabel}.`);
+    }
+
+    function startNewSpokeFromSilo(siloId) {
+        const silo = getSiloById(siloId);
+        state.creationBrief = {
+            ...state.creationBrief,
+            mode: 'create',
+            generationMode: 'hybrid',
+            siloId,
+            hubName: silo?.hub || silo?.name || '',
+            spokeSlug: '',
+            themeKeyword: '',
+            ideaContext: ''
+        };
+        setVisualLayer('context');
+        renderV6Briefing();
+    }
+
+    function applyPerformanceUpgrade(label, delta) {
+        const intent = `Aplicar upgrade de performance (+${delta}): ${label}`;
+        const input = document.getElementById('vortex-v6-input');
+        if (input) input.value = intent;
+        runVisualPrompt(intent);
+    }
+
+    function applyVisualModeState() {
+        const studio = document.getElementById('vortex-studio');
+        if (!studio) return;
+        renderV6Surface();
+        studio.classList.toggle('vortex-visual-mode', state.visual.enabled);
+        studio.classList.toggle('vortex-xray-open', state.visual.enabled && state.visual.xrayOpen);
+        studio.setAttribute('data-vortex-layer', state.visual.layer);
+        document.querySelectorAll('[data-vortex-layer]').forEach(btn => {
+            const active = btn.dataset.vortexLayer === state.visual.layer;
+            btn.classList.toggle('active', active);
+            btn.classList.toggle('done', layerIndex(btn.dataset.vortexLayer) < layerIndex(state.visual.layer));
+        });
+        const toggle = document.getElementById('vortex-v6-toggle');
+        if (toggle) {
+            toggle.classList.toggle('active', state.visual.enabled);
+            const label = toggle.querySelector('span');
+            if (label) label.textContent = state.visual.enabled ? 'Visual V6' : 'Visual V6';
+        }
+        const ai = document.getElementById('vortex-v6-ai-mode');
+        if (ai) ai.textContent = state.visual.aiMode === 'real' ? '✦ IA' : 'Mock';
+        renderV6Briefing();
+        renderV6TemplateShelf();
+        renderV6Proposal();
+        if (state.visual.enabled) {
+            setTimeout(ensureVisualStarterPage, 120);
+            setTimeout(() => {
+                installV6PreviewFieldTools();
+                renderV6Proposal();
+            }, 520);
+        }
+    }
+
+    function layerIndex(layer) {
+        return { context: 1, edit: 2, performance: 3, publish: 4 }[layer] || 2;
+    }
+
+    function setVisualLayer(layer) {
+        if (!['context', 'edit', 'performance', 'publish'].includes(layer)) return;
+        state.visual.layer = layer;
+        persistVisualSession();
+        applyVisualModeState();
+        if (layer === 'context') renderV6Silos();
+        if (layer === 'performance') renderV6Performance(true);
+        if (layer === 'publish') renderV6PublishCard();
+        if (layer !== 'publish') {
+            const card = document.getElementById('vortex-v6-publish-card');
+            if (card) card.hidden = true;
+            const backdrop = document.getElementById('vortex-v6-publish-backdrop');
+            if (backdrop) backdrop.hidden = true;
+        }
+    }
+
+    function toggleXrayMode(force) {
+        state.visual.xrayOpen = typeof force === 'boolean' ? force : !state.visual.xrayOpen;
+        applyVisualModeState();
+        if (state.editor) setTimeout(() => state.editor.layout(), 260);
+        addAuditLog('info', state.visual.xrayOpen ? 'Modo Raio-X aberto.' : 'Modo Raio-X fechado.');
+    }
+
+    function toggleVisualAIMode() {
+        state.visual.aiMode = state.visual.aiMode === 'mock' ? 'real' : 'mock';
+        applyVisualModeState();
+        addAuditLog('info', state.visual.aiMode === 'real' ? 'Prompt visual usara IA real.' : 'Prompt visual voltou para mock.');
+    }
+
+    function ensureVisualStarterPage() {
+        if (!state.visual.enabled) return;
+        const fields = readVortexFields();
+        if (fields.length) return;
+        const starter = getVisualStarterHtml();
+        updatePreview(starter);
+        state.currentFile = state.currentFile || '/src/app/masking-e-exaustao.html';
+        state.lastPreviewCode = starter;
+        setTimeout(() => {
+            installV6PreviewFieldTools();
+            renderV6Proposal();
+        }, 180);
+    }
+
+    function getVisualStarterHtml() {
+        return `
+<style>
+  .vortex-v6-page { min-height: 100vh; background: #f8fafc; color: #111827; font-family: Inter, system-ui, sans-serif; }
+  .vortex-v6-hero { min-height: 72vh; display: grid; align-content: center; gap: 22px; padding: clamp(40px, 8vw, 92px); background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 55%, #ecfeff 100%); }
+  .vortex-v6-kicker { color: #6d28d9; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
+  .vortex-v6-hero h1 { max-width: 920px; margin: 0; font-size: clamp(38px, 6vw, 74px); line-height: .96; letter-spacing: 0; color: #0f172a; }
+  .vortex-v6-hero p { max-width: 680px; margin: 0; color: #475569; font-size: clamp(17px, 2vw, 22px); line-height: 1.55; }
+  .vortex-v6-hero a { width: fit-content; display: inline-flex; padding: 14px 18px; border-radius: 8px; background: #111827; color: #fff; text-decoration: none; font-weight: 800; }
+  .vortex-v6-copy { padding: 48px clamp(28px, 8vw, 92px); display: grid; gap: 10px; background: white; }
+  .vortex-v6-copy h2 { margin: 0; font-size: 28px; color: #111827; }
+  .vortex-v6-copy p { max-width: 760px; color: #475569; font-size: 18px; line-height: 1.65; }
+</style>
+<main class="vortex-v6-page">
+  <section data-vortex-section="hero" class="vortex-v6-hero">
+    <div class="vortex-v6-kicker">Nucleo Clinico</div>
+    <h1 data-vortex-field="headline">Masking e exaustao: quando parecer bem custa energia demais</h1>
+    <p data-vortex-field="subtitle">Uma pagina acolhedora para adultos que suspeitam de TEA e procuram entender por que adaptar-se o tempo todo pode esgotar.</p>
+    <a data-vortex-field="cta" href="#contato">Conversar com cuidado</a>
+  </section>
+  <section data-vortex-section="insight" class="vortex-v6-copy">
+    <h2 data-vortex-field="title">O que esta pagina precisa fazer</h2>
+    <p data-vortex-field="body">Validar a experiencia de quem mascara sinais, explicar o custo emocional e conduzir para um proximo passo clinico sem prometer resultado.</p>
+  </section>
+</main>`;
+    }
+
+    function getPreviewDocument() {
+        const frame = document.getElementById('vortex-preview-frame');
+        try {
+            return frame?.contentDocument || frame?.contentWindow?.document || null;
+        } catch (err) {
+            return null;
+        }
+    }
+
+    function readVortexFields() {
+        const doc = getPreviewDocument();
+        if (!doc) return [];
+        return Array.from(doc.querySelectorAll('[data-vortex-section] [data-vortex-field]')).map(el => ({
+            section: el.closest('[data-vortex-section]')?.dataset.vortexSection || '',
+            field: el.dataset.vortexField || '',
+            value: el.textContent.trim(),
+            element: el
+        })).filter(item => item.section && item.field);
+    }
+
+    function findVortexField(section, field) {
+        return readVortexFields().find(item => item.section === section && item.field === field) || null;
+    }
+
+    function installV6PreviewFieldTools() {
+        const doc = getPreviewDocument();
+        if (!doc || doc.__vortexV6Installed) return;
+        doc.__vortexV6Installed = true;
+        const style = doc.createElement('style');
+        style.textContent = `
+            [data-vortex-section] { position: relative; }
+            [data-vortex-section].vortex-v6-active-section { outline: 2px solid rgba(139,92,246,.72); outline-offset: 6px; }
+            [data-vortex-field] { transition: opacity .22s ease, filter .22s ease, outline .22s ease; }
+            [data-vortex-field]:hover { outline: 2px solid rgba(45,212,191,.75); outline-offset: 4px; cursor: text; }
+            [data-vortex-field][contenteditable="true"] { outline: 2px solid rgba(45,212,191,.95); outline-offset: 5px; border-radius: 6px; }
+            .vortex-v6-mini-toolbar { position: fixed; z-index: 2147483647; display:flex; gap:5px; background: rgba(5,8,16,.94); border:1px solid rgba(45,212,191,.5); border-radius: 9px; padding: 6px; box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+            .vortex-v6-mini-toolbar button { border:0; border-radius:6px; background: rgba(255,255,255,.08); color:#e5e7eb; font: 800 11px Inter, sans-serif; padding: 6px 8px; cursor:pointer; }
+            .vortex-v6-mini-toolbar button:last-child { background: rgba(139,92,246,.24); color:#ddd6fe; }
+            [data-vortex-field].vortex-v6-working { opacity: .5; filter: blur(1px); }
+            [data-vortex-section].vortex-v6-section-working::after {
+                content: '';
+                position: absolute;
+                inset: -10px;
+                border-radius: 18px;
+                background: rgba(139,92,246,.14);
+                backdrop-filter: blur(2px);
+                pointer-events: none;
+                animation: vortexV6Pulse 1.2s ease-in-out infinite;
+            }
+            @keyframes vortexV6Pulse { 0%,100% { opacity: .45; } 50% { opacity: .9; } }
+        `;
+        doc.head.appendChild(style);
+        doc.addEventListener('click', event => {
+            const field = event.target?.closest?.('[data-vortex-field]');
+            const section = event.target?.closest?.('[data-vortex-section]');
+            if (!field || !section || !state.visual.enabled) return;
+            state.visual.selectedSection = section.dataset.vortexSection;
+            state.visual.selectedField = field.dataset.vortexField;
+            activateManualFieldEdit(field, section);
+            renderV6Proposal();
+            addAuditLog('info', `Campo visual selecionado: ${state.visual.selectedSection}.${state.visual.selectedField}`);
+        }, true);
+    }
+
+    function activateManualFieldEdit(field, section) {
+        const doc = field.ownerDocument;
+        const sectionName = section.dataset.vortexSection;
+        const fieldName = field.dataset.vortexField;
+        const key = `${sectionName}.${fieldName}`;
+        doc.querySelectorAll('.vortex-v6-mini-toolbar').forEach(el => el.remove());
+        doc.querySelectorAll('[data-vortex-field][contenteditable="true"]').forEach(el => {
+            if (el !== field) el.removeAttribute('contenteditable');
+        });
+
+        const before = field.textContent.trim();
+        field.setAttribute('contenteditable', 'true');
+        field.focus();
+        try {
+            const range = doc.createRange();
+            range.selectNodeContents(field);
+            range.collapse(false);
+            const selection = doc.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        } catch (err) {}
+
+        field.oninput = () => {
+            state.visual.selectedSection = sectionName;
+            state.visual.selectedField = fieldName;
+            renderV6Proposal();
+        };
+        field.onblur = () => {
+            const after = field.textContent.trim();
+            if (after && after !== before) {
+                createManualFieldSnapshot(sectionName, fieldName, before, after);
+            }
+        };
+
+        const rect = field.getBoundingClientRect();
+        const toolbar = doc.createElement('div');
+        toolbar.className = 'vortex-v6-mini-toolbar';
+        toolbar.style.left = `${Math.max(8, rect.left)}px`;
+        toolbar.style.top = `${Math.max(8, rect.top - 46)}px`;
+        toolbar.innerHTML = `
+            <button onclick="window.parent.vortexStudio.manualFieldCommand('bold')">B</button>
+            <button onclick="window.parent.vortexStudio.manualFieldCommand('h1')">H1</button>
+            <button onclick="window.parent.vortexStudio.manualFieldCommand('h2')">H2</button>
+            <button onclick="window.parent.vortexStudio.manualFieldCommand('copy')">Copiar</button>
+            <button onclick="window.parent.vortexStudio.undoVisualEdit()">Desfazer</button>
+            <button onclick="window.parent.vortexStudio.focusVisualPromptForField()">✦ IA</button>
+        `;
+        doc.body.appendChild(toolbar);
+    }
+
+    function createManualFieldSnapshot(section, field, previousValue, nextValue) {
+        const snapshot = {
+            id: Date.now(),
+            section,
+            field,
+            previousValue,
+            nextValue,
+            intent: 'edicao manual direta',
+            timestamp: new Date().toISOString()
+        };
+        state.visual.snapshots = [...state.visual.snapshots, snapshot].slice(-20);
+        const key = `${section}.${field}`;
+        state.visual.manualFieldHistory[key] = [
+            { value: nextValue, timestamp: snapshot.timestamp },
+            ...(state.visual.manualFieldHistory[key] || [])
+        ].slice(0, 8);
+        state.visual.history = [
+            {
+                id: snapshot.id,
+                title: `Edicao manual - ${key}`,
+                section,
+                field,
+                value: nextValue,
+                timestamp: snapshot.timestamp
+            },
+            ...state.visual.history
+        ].slice(0, 20);
+        state.lastPreviewCode = getPreviewDocument()?.documentElement?.outerHTML || state.lastPreviewCode;
+        persistVisualSession();
+        renderSnapshotTimeline();
+        renderV6Proposal();
+    }
+
+    function manualFieldCommand(command) {
+        const target = findVortexField(state.visual.selectedSection, state.visual.selectedField);
+        if (!target?.element) return;
+        const doc = target.element.ownerDocument;
+        if (command === 'bold') {
+            doc.execCommand('bold', false, null);
+            return;
+        }
+        if (command === 'copy') {
+            navigator.clipboard?.writeText(target.element.textContent.trim());
+            return;
+        }
+        if (command === 'h1' || command === 'h2') {
+            const replacement = doc.createElement(command);
+            Array.from(target.element.attributes).forEach(attr => replacement.setAttribute(attr.name, attr.value));
+            replacement.innerHTML = target.element.innerHTML;
+            target.element.replaceWith(replacement);
+            activateManualFieldEdit(replacement, replacement.closest('[data-vortex-section]'));
+        }
+    }
+
+    function focusVisualPromptForField() {
+        const input = document.getElementById('vortex-v6-input');
+        const selected = `${state.visual.selectedSection}.${state.visual.selectedField}`;
+        if (input) {
+            input.value = `Melhore o campo ${selected}: `;
+            input.focus();
+        }
+    }
+
+    function setManualFieldMode(mode) {
+        state.visual.manualMode = mode === 'ai' ? 'ai' : 'direct';
+        if (state.visual.manualMode === 'ai') focusVisualPromptForField();
+        renderV6Proposal();
+    }
+
+    function formatManualField(mode) {
+        const target = findVortexField(state.visual.selectedSection, state.visual.selectedField);
+        if (!target?.element) return;
+        const before = target.element.textContent.trim();
+        let after = before;
+        if (mode === 'upper') after = before.toUpperCase();
+        if (mode === 'lower') after = before.toLowerCase();
+        if (mode === 'title') {
+            after = before.toLowerCase().replace(/\b\p{L}/gu, char => char.toUpperCase());
+        }
+        if (after !== before) {
+            target.element.textContent = after;
+            createManualFieldSnapshot(state.visual.selectedSection, state.visual.selectedField, before, after);
+        }
+    }
+
+    function createVisualSnapshot(section, field, nextValue, intent) {
+        const target = findVortexField(section, field);
+        if (!target) return null;
+        const snapshot = {
+            id: Date.now(),
+            section,
+            field,
+            previousValue: target.value,
+            nextValue,
+            intent: intent || 'ajuste visual',
+            timestamp: new Date().toISOString()
+        };
+        state.visual.snapshots = [...state.visual.snapshots, snapshot].slice(-20);
+        persistVisualSession();
+        return snapshot;
+    }
+
+    function restoreVisualSnapshot(id) {
+        const snapshot = state.visual.snapshots.find(item => String(item.id) === String(id)) || state.visual.snapshots[state.visual.snapshots.length - 1];
+        if (!snapshot) return;
+        applyTargetedFieldEdit(snapshot.section, snapshot.field, snapshot.previousValue, `Restaurar: ${snapshot.intent}`, { skipSnapshot: true });
+    }
+
+    async function applyTargetedFieldEdit(section, field, value, intent, options = {}) {
+        const target = findVortexField(section, field);
+        if (!target || !target.element) {
+            addAuditLog('warn', `Campo visual nao encontrado: ${section}.${field}`);
+            return false;
+        }
+        if (!options.skipSnapshot) createVisualSnapshot(section, field, value, intent);
+
+        const sectionEl = target.element.closest('[data-vortex-section]');
+        sectionEl?.classList.add('vortex-v6-section-working');
+        target.element.classList.add('vortex-v6-working');
+        await new Promise(resolve => setTimeout(resolve, options.instant ? 0 : 160));
+        target.element.textContent = value;
+        target.element.classList.remove('vortex-v6-working');
+        sectionEl?.classList.remove('vortex-v6-section-working');
+
+        state.visual.lastIntent = intent || '';
+        state.visual.history = [
+            {
+                id: Date.now(),
+                title: buildHumanVersionName(intent, section, field),
+                section,
+                field,
+                value,
+                timestamp: new Date().toISOString()
+            },
+            ...state.visual.history
+        ].slice(0, 20);
+        state.lastPreviewCode = getPreviewDocument()?.documentElement?.outerHTML || state.lastPreviewCode;
+        persistVisualSession();
+        renderSnapshotTimeline();
+        renderV6Proposal();
+        return true;
+    }
+
+    function buildHumanVersionName(intent, section, field) {
+        const cleanIntent = String(intent || 'Ajuste visual').replace(/\s+/g, ' ').trim();
+        return `${cleanIntent.slice(0, 54)} - ${section}.${field}`;
+    }
+
+    function getMockVisualSuggestion(intent) {
+        const lower = String(intent || '').toLowerCase();
+        if (lower.includes('cta')) {
+            return { section: 'hero', field: 'cta', value: 'Agendar uma conversa acolhedora', explanation: 'CTA ficou mais humano e claro.' };
+        }
+        if (lower.includes('simpl')) {
+            return { section: 'hero', field: 'subtitle', value: 'Entenda o custo de se adaptar o tempo todo e encontre um caminho clinico mais leve.', explanation: 'Subtitulo ficou mais direto.' };
+        }
+        if (lower.includes('mobile')) {
+            return { section: 'hero', field: 'subtitle', value: 'Um guia claro sobre masking, exaustao e proximos passos em avaliacao clinica.', explanation: 'Texto ficou mais compacto para telas menores.' };
+        }
+        return {
+            section: 'hero',
+            field: 'headline',
+            value: 'Masking e exaustao: o peso invisivel de parecer bem o tempo todo',
+            explanation: 'Headline reforca reconhecimento e acolhimento sem dramatizar.'
+        };
+    }
+
+    async function getRealVisualSuggestion(intent) {
+        const fields = readVortexFields().map(({ section, field, value }) => ({ section, field, value }));
+        const model = document.getElementById('vortex-model-select')?.value || 'gemini-2.5-flash';
+        const response = await fetch('/api/vortex/visual-intent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${VORTEX_API_KEY}`
+            },
+            body: JSON.stringify({
+                prompt: intent,
+                model,
+                target: { section: state.visual.selectedSection, field: state.visual.selectedField },
+                page: state.visual.targetPage,
+                fields,
+                context: buildAbidosContext()
+            })
+        });
+        const data = await response.json();
+        if (!response.ok || data.error) throw new Error(data.error || `Visual intent ${response.status}`);
+        return {
+            section: data.section || state.visual.selectedSection,
+            field: data.field || state.visual.selectedField,
+            value: data.value,
+            explanation: data.explanation || 'Proposta gerada pela IA.'
+        };
+    }
+
+    async function runVisualPrompt(intentOverride) {
+        if (!state.visual.enabled) return sendPrompt(typeof intentOverride === 'string' ? intentOverride : undefined);
+        const input = document.getElementById('vortex-v6-input');
+        const sendBtn = document.getElementById('vortex-v6-send');
+        const progress = document.getElementById('vortex-v6-progress');
+        const intent = String(intentOverride || input?.value || '').trim() || 'Melhore o Hero';
+        if (input) {
+            input.value = '';
+            input.style.height = 'auto';
+        }
+        if (sendBtn) sendBtn.classList.add('working');
+        if (progress) progress.classList.add('active');
+        setGenerating(true);
+
+        try {
+            const suggestion = state.visual.aiMode === 'real'
+                ? await getRealVisualSuggestion(intent)
+                : await new Promise(resolve => setTimeout(() => resolve(getMockVisualSuggestion(intent)), 900));
+            state.visual.pendingProposal = { ...suggestion, intent };
+            await applyTargetedFieldEdit(suggestion.section, suggestion.field, suggestion.value, intent);
+            renderV6Proposal();
+            addAuditLog('success', suggestion.explanation || 'Proposta visual aplicada.');
+        } catch (err) {
+            addAuditLog('error', `Prompt visual falhou: ${err.message}`);
+        } finally {
+            if (sendBtn) sendBtn.classList.remove('working');
+            if (progress) progress.classList.remove('active');
+            setGenerating(false);
+        }
+    }
+
+    function renderV6Proposal() {
+        const panel = document.getElementById('vortex-v6-proposal');
+        if (!panel) return;
+        const selected = `${state.visual.selectedSection}.${state.visual.selectedField}`;
+        const proposal = state.visual.pendingProposal;
+        const snapshots = state.visual.snapshots.slice(-5).reverse();
+        const target = findVortexField(state.visual.selectedSection, state.visual.selectedField);
+        const fieldText = target?.value || '';
+        const fieldHistory = state.visual.manualFieldHistory[selected] || [];
+        const visibleFieldHistory = fieldHistory.slice(-2).reverse();
+        const hiddenFieldHistoryCount = Math.max(0, fieldHistory.length - visibleFieldHistory.length);
+        const visibleVersions = state.visual.history.slice(0, 2);
+        const hiddenVersionsCount = Math.max(0, state.visual.history.length - visibleVersions.length);
+        const charState = fieldText.length >= 50 && fieldText.length <= 70 ? 'ideal' : 'attention';
+        panel.innerHTML = `
+            <div class="vortex-v6-proposal-head">
+                <strong>${proposal ? 'Alterações propostas' : 'Campo selecionado'}</strong>
+                <span>${escapeHtml(selected)}</span>
+            </div>
+            ${proposal ? `<p>${escapeHtml(proposal.explanation || 'Conteúdo atualizado no preview.')}</p>` : '<p>Clique e digite direto no preview. Ou use IA pelo prompt.</p>'}
+            <div class="vortex-v6-field-panel">
+                <div class="vortex-v6-char-count ${charState}"><strong>${fieldText.length}</strong><span> caracteres</span></div>
+                <div class="vortex-v6-field-toggle">
+                    <button class="${state.visual.manualMode === 'direct' ? 'active' : ''}" onclick="vortexStudio.setManualFieldMode('direct')">Direto</button>
+                    <button class="${state.visual.manualMode === 'ai' ? 'active' : ''}" onclick="vortexStudio.setManualFieldMode('ai')">✦ IA</button>
+                </div>
+                <div class="vortex-v6-field-actions">
+                    <button onclick="vortexStudio.formatManualField('title')">Título</button>
+                    <button onclick="vortexStudio.formatManualField('upper')">MAIÚS</button>
+                    <button onclick="vortexStudio.formatManualField('lower')">minús</button>
+                </div>
+                <div class="vortex-v6-field-local-history">
+                    ${visibleFieldHistory.map(item => `<button onclick="vortexStudio.applyTargetedFieldEdit('${safeJsString(state.visual.selectedSection)}', '${safeJsString(state.visual.selectedField)}', '${safeJsString(item.value)}', 'restaurar edicao manual')">${new Date(item.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · ${escapeHtml(String(item.value).slice(0, 34))}</button>`).join('') || '<small>Sem histórico manual neste campo.</small>'}
+                    ${hiddenFieldHistoryCount ? `<small>Ver mais (${hiddenFieldHistoryCount})</small>` : ''}
+                </div>
+            </div>
+            <div class="vortex-v6-proposal-actions">
+                <button onclick="vortexStudio.acceptVisualProposal()">Aplicar</button>
+                <button onclick="vortexStudio.undoVisualEdit()">Desfazer</button>
+                <button onclick="vortexStudio.toggleVisualCompare()">Comparar</button>
+            </div>
+            <div class="vortex-v6-history">
+                ${snapshots.map(s => `<button onclick="vortexStudio.restoreVisualSnapshot(${s.id})">${new Date(s.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} ${escapeHtml(`${s.section}.${s.field}`)}</button>`).join('') || '<small>Sem snapshots nesta sessão.</small>'}
+            </div>
+            <div class="vortex-v6-versions">
+                <strong>Histórico</strong>
+                ${visibleVersions.map(v => `
+                    <div>
+                        <span>${escapeHtml(v.title)}</span>
+                        <button onclick="vortexStudio.restoreVisualVersion(${v.id})">Restaurar</button>
+                        <button onclick="vortexStudio.compareVisualVersion(${v.id})">Comparar</button>
+                        <button onclick="vortexStudio.duplicateVisualVersion(${v.id})">Duplicar</button>
+                    </div>
+                `).join('') || '<small>Nenhuma versão visual ainda.</small>'}
+                ${hiddenVersionsCount ? `<small>Ver mais (${hiddenVersionsCount})</small>` : ''}
+            </div>
+        `;
+        return;
+        panel.innerHTML = `
+            <div class="vortex-v6-proposal-head">
+                <strong>${proposal ? 'Alteracoes propostas' : 'Campo selecionado'}</strong>
+                <span>${selected}</span>
+            </div>
+            ${proposal ? `<p>${proposal.explanation || 'Conteudo atualizado no preview.'}</p>` : '<p>Clique e digite direto no preview. Ou use IA pelo prompt.</p>'}
+            <div class="vortex-v6-field-panel">
+                <div><strong>${fieldText.length}</strong><span> caracteres</span></div>
+                <div class="vortex-v6-field-toggle">
+                    <button class="${state.visual.manualMode === 'direct' ? 'active' : ''}" onclick="vortexStudio.setManualFieldMode('direct')">Direto</button>
+                    <button class="${state.visual.manualMode === 'ai' ? 'active' : ''}" onclick="vortexStudio.setManualFieldMode('ai')">IA</button>
+                </div>
+                <div class="vortex-v6-field-actions">
+                    <button onclick="vortexStudio.formatManualField('title')">Título</button>
+                    <button onclick="vortexStudio.formatManualField('upper')">MAIÚS</button>
+                    <button onclick="vortexStudio.formatManualField('lower')">minús</button>
+                </div>
+                <div class="vortex-v6-field-local-history">
+                    ${fieldHistory.map(item => `<button onclick="vortexStudio.applyTargetedFieldEdit('${state.visual.selectedSection}', '${state.visual.selectedField}', '${String(item.value).replace(/'/g, "\\'")}', 'restaurar edicao manual')">${new Date(item.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · ${String(item.value).slice(0, 34)}</button>`).join('') || '<small>Sem histórico manual neste campo.</small>'}
+                </div>
+            </div>
+            <div class="vortex-v6-proposal-actions">
+                <button onclick="vortexStudio.acceptVisualProposal()">Aplicar</button>
+                <button onclick="vortexStudio.undoVisualEdit()">Desfazer</button>
+                <button onclick="vortexStudio.toggleVisualCompare()">Comparar</button>
+            </div>
+            <div class="vortex-v6-history">
+                ${snapshots.map(s => `<button onclick="vortexStudio.restoreVisualSnapshot(${s.id})">${new Date(s.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} ${s.section}.${s.field}</button>`).join('') || '<small>Sem snapshots nesta sessao.</small>'}
+            </div>
+            <div class="vortex-v6-versions">
+                <strong>Historico</strong>
+                ${state.visual.history.slice(0, 5).map(v => `
+                    <div>
+                        <span>${v.title}</span>
+                        <button onclick="vortexStudio.restoreVisualVersion(${v.id})">Restaurar</button>
+                        <button onclick="vortexStudio.compareVisualVersion(${v.id})">Comparar</button>
+                        <button onclick="vortexStudio.duplicateVisualVersion(${v.id})">Duplicar</button>
+                    </div>
+                `).join('') || '<small>Nenhuma versao visual ainda.</small>'}
+            </div>
+        `;
+    }
+
+    function acceptVisualProposal() {
+        if (!state.visual.pendingProposal) return;
+        state.visual.pendingProposal = null;
+        renderV6Proposal();
+        addAuditLog('success', 'Proposta visual mantida no preview.');
+    }
+
+    function undoVisualEdit() {
+        restoreVisualSnapshot();
+    }
+
+    function toggleVisualCompare() {
+        const last = state.visual.snapshots[state.visual.snapshots.length - 1];
+        if (!last) return;
+        state.visual.compareMode = !state.visual.compareMode;
+        const target = findVortexField(last.section, last.field);
+        if (!target) return;
+        target.element.textContent = state.visual.compareMode ? last.previousValue : last.nextValue;
+        renderV6Proposal();
+    }
+
+    function getVisualVersion(id) {
+        return state.visual.history.find(item => String(item.id) === String(id)) || null;
+    }
+
+    function restoreVisualVersion(id) {
+        const version = getVisualVersion(id);
+        if (!version || !version.section || !version.field) return;
+        applyTargetedFieldEdit(version.section, version.field, version.value, `Restaurar ${version.title}`, { skipSnapshot: false });
+    }
+
+    function compareVisualVersion(id) {
+        const version = getVisualVersion(id);
+        if (!version) return;
+        const target = findVortexField(version.section, version.field);
+        if (!target) return;
+        const current = target.value;
+        target.element.textContent = current === version.value
+            ? (state.visual.snapshots.find(s => s.section === version.section && s.field === version.field)?.previousValue || version.value)
+            : version.value;
+    }
+
+    function duplicateVisualVersion(id) {
+        const version = getVisualVersion(id);
+        if (!version) return;
+        state.visual.history = [
+            { ...version, id: Date.now(), title: `Copia - ${version.title}`, timestamp: new Date().toISOString() },
+            ...state.visual.history
+        ].slice(0, 20);
+        persistVisualSession();
+        renderV6Proposal();
+        addAuditLog('info', `Versao duplicada: ${version.title}`);
+    }
+
+    function renderV6Performance(animate = false) {
+        const metricsEl = document.getElementById('vortex-v6-metrics');
+        const upgradesEl = document.getElementById('vortex-v6-upgrades');
+        const scoreEl = document.getElementById('vortex-v6-score-value');
+        const score = state.visual.score || {
+            total: 81,
+            metrics: [
+                { label: 'Conversao', value: 78 },
+                { label: 'Clareza', value: 86 },
+                { label: 'SEO', value: 74 },
+                { label: 'Etica Clinica', value: 91 }
+            ],
+            upgrades: [
+                { label: 'Adicionar meta description', delta: 8 },
+                { label: 'Aumentar contraste do CTA', delta: 5 },
+                { label: 'Simplificar paragrafo 2', delta: 4 }
+            ]
+        };
+        state.visual.score = score;
+        persistVisualSession();
+        if (scoreEl) {
+            if (animate) animateScore(scoreEl, score.total);
+            else scoreEl.textContent = score.total;
+        }
+        if (metricsEl) {
+            metricsEl.innerHTML = score.metrics.map(m => `
+                <div class="vortex-v6-metric">
+                    <span>${m.label}</span>
+                    <strong>${m.value}</strong>
+                    <i style="--w:${m.value}%"></i>
+                </div>
+            `).join('');
+        }
+        if (upgradesEl) {
+            upgradesEl.innerHTML = score.upgrades.map(u => `
+                <div class="vortex-v6-upgrade-row">
+                    <div><span>${escapeHtml(u.label)}</span><strong>+${u.delta}</strong></div>
+                    <button onclick="vortexStudio.applyPerformanceUpgrade('${safeJsString(u.label)}', ${Number(u.delta) || 0})">✦ Aplicar</button>
+                </div>
+            `).join('');
+        }
+    }
+
+    function animateScore(el, finalValue) {
+        const start = performance.now();
+        const duration = 600;
+        const tick = now => {
+            const progress = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(finalValue * eased);
+            if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    }
+
+    function renderV6PublishCard() {
+        renderV6Performance();
+        const card = document.getElementById('vortex-v6-publish-card');
+        const backdrop = document.getElementById('vortex-v6-publish-backdrop');
+        const score = document.getElementById('vortex-v6-publish-score-value');
+        const summary = document.getElementById('vortex-v6-publish-summary');
+        const version = document.getElementById('vortex-v6-version-label');
+        if (!card) return;
+        if (backdrop) backdrop.hidden = false;
+        card.hidden = false;
+        if (score) score.textContent = state.visual.score?.total || 81;
+        if (summary) summary.textContent = state.visual.lastIntent
+            ? `Você aplicou "${state.visual.lastIntent}" e preservou o histórico de sessão.`
+            : 'Você revisou a página, manteve snapshots e preparou uma versão publicável.';
+        if (version) version.textContent = `Esta versão será salva como v${state.visual.history.length + 1} - Melhoria do Hero`;
+    }
+
+    async function publishVisualVersion() {
+        const doc = getPreviewDocument();
+        const html = doc?.documentElement?.outerHTML || state.lastPreviewCode || getVisualStarterHtml();
+        state.currentFile = state.currentFile || '/src/app/masking-e-exaustao.html';
+        if (state.db) {
+            await vfsWrite(state.currentFile, html);
+        }
+        state.visual.history = [
+            {
+                id: Date.now(),
+                title: `Publicacao visual v${state.visual.history.length + 1} - ${state.visual.targetPage}`,
+                section: state.visual.selectedSection,
+                field: state.visual.selectedField,
+                value: 'publicado',
+                timestamp: new Date().toISOString()
+            },
+            ...state.visual.history
+        ].slice(0, 20);
+        persistVisualSession();
+        const success = document.getElementById('vortex-v6-success');
+        if (success) {
+            success.hidden = false;
+            setTimeout(() => { success.hidden = true; }, 1600);
+        }
+        addAuditLog('success', 'Versao visual salva no VFS local.');
+    }
+
+    function getVisualSyncLabel(status) {
+        const normalized = String(status || 'nao_sincronizado');
+        if (normalized === 'disponivel' || normalized === 'publicado' || normalized === 'alinhado') return 'Pronto';
+        if (normalized === 'nao_sincronizado') return 'Revisar';
+        return normalized.replace(/_/g, ' ');
+    }
+
+    function renderV6Silos() {
+        const hub = document.getElementById('vortex-v6-silo-hub');
+        const summary = document.getElementById('vortex-v6-strategy-summary');
+        if (!hub) return;
+        const silos = state.metadata.silos.length ? state.metadata.silos.slice(0, 6) : [
+            { id: 'clinico', hub: 'Nucleo Clinico', spokes: [{ title: 'Pagina principal', slug: 'pagina-principal' }] },
+            { id: 'marketing', hub: 'Marketing', spokes: [{ title: 'Landing de conversao', slug: 'landing' }] }
+        ];
+        hub.innerHTML = silos.map((s, index) => {
+            const siloId = String(s.id || s.slug || s.name || index);
+            const label = s.hub || s.name || s.title || `Silo ${index + 1}`;
+            const spokes = Array.isArray(s.spokes) ? s.spokes : [];
+            return `
+                <div class="vortex-v6-silo-card">
+                    <button class="vortex-v6-hub-button" onclick="vortexStudio.openVisualSilo('${safeJsString(siloId)}')">
+                        <span class="vortex-v6-hub-chip">Hub</span>
+                        <strong>${escapeHtml(label)}</strong>
+                        <span>${spokes.length} spokes · conjunto de páginas</span>
+                        <i class="${getVisualSyncLabel(s.vortexSyncStatus).toLowerCase()}">${getVisualSyncLabel(s.vortexSyncStatus)}</i>
+                    </button>
+                    <div class="vortex-v6-spoke-list">
+                        ${spokes.map((spoke, idx) => `
+                            <button onclick="vortexStudio.openVisualSpoke('${safeJsString(siloId)}', ${idx})">
+                                <strong>${escapeHtml(spoke.title || spoke)}</strong>
+                                <span>${escapeHtml(label)} › página editável</span>
+                                <i class="${getVisualSyncLabel(spoke.vortexSyncStatus).toLowerCase()}">${getVisualSyncLabel(spoke.vortexSyncStatus)}</i>
+                            </button>
+                        `).join('')}
+                        <button class="vortex-v6-new-spoke" onclick="vortexStudio.startNewSpokeFromSilo('${safeJsString(siloId)}')">+ Novo Spoke</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        if (summary) {
+            summary.innerHTML = `
+                <strong>Contexto ativo</strong>
+                <p>${escapeHtml(state.metadata.hubName || state.creationBrief.hubName || 'Escolha um Hub ou crie um novo Spoke.')}</p>
+                <strong>Destino</strong>
+                <p>${escapeHtml(state.metadata.spokeTitle || state.creationBrief.themeKeyword || 'Briefing criativo pronto para orientar o Vórtex.')}</p>
+            `;
+        }
+        renderV6Briefing();
+        return;
+        hub.innerHTML = silos.map((s, index) => `
+            <div class="vortex-v6-silo-card">
+                <button onclick="vortexStudio.openVisualSilo('${String(s.id || s.slug || s.name || index).replace(/'/g, '')}')">
+                    <strong>${s.hub || s.name || s.title || `Silo ${index + 1}`}</strong>
+                    <span>${(s.spokes || []).length} spokes · Hub</span>
+                    <i>${s.vortexSyncStatus || 'nao_sincronizado'}</i>
+                </button>
+                <div class="vortex-v6-spoke-list">
+                    ${(s.spokes || []).map((spoke, idx) => `
+                        <button onclick="vortexStudio.openVisualSpoke('${String(s.id || s.slug || s.hub).replace(/'/g, '')}', ${idx})">
+                            <strong>${spoke.title || spoke}</strong>
+                            <span>${s.hub || s.name || 'Silo'} › página editável</span>
+                            <i>${spoke.vortexSyncStatus || 'nao_sincronizado'}</i>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+        if (summary) {
+            setTimeout(() => {
+                state.visual.summaryReady = true;
+                summary.innerHTML = `
+                    <strong>Intencao detectada</strong>
+                    <p>Pagina de conscientizacao sobre masking e exaustao em adultos.</p>
+                    <strong>Publico provavel</strong>
+                    <p>Adultos nao diagnosticados, 25-45 anos.</p>
+                    <strong>Alinhamento</strong>
+                    <p>Alinhado com Nucleo Clinico.</p>
+                `;
+            }, 700);
+        }
+    }
+
+    function openVisualSilo(id) {
+        state.metadata.siloId = id;
+        const silo = getSiloById(id);
+        state.metadata.hubId = id;
+        state.metadata.hubName = silo?.hub || '';
+        state.metadata.spokeIndex = null;
+        state.metadata.spokeTitle = '';
+        state.metadata.spokeSlug = '';
+        state.metadata.pageType = 'hub';
+        state.metadata.syncStatus = silo?.vortexSyncStatus || '';
+        state.metadata.vortexPageId = silo?.vortexPageId || '';
+        state.creationBrief = {
+            ...state.creationBrief,
+            mode: 'edit',
+            siloId: id,
+            hubName: silo?.hub || '',
+            themeKeyword: silo?.hub || state.creationBrief.themeKeyword
+        };
+        persistVisualSession();
+        renderMetadataStatus();
+        setVisualLayer('edit');
+        ensureVisualStarterPage();
+        addAuditLog('info', `Silo ativo no V6: ${id}`);
+    }
+
+    function openVisualSpoke(siloId, spokeIndex) {
+        const silo = getSiloById(siloId);
+        const spoke = silo?.spokes?.[spokeIndex];
+        if (!silo || !spoke) return;
+        importFromSilo({
+            siloId,
+            hubId: siloId,
+            siloName: silo.hub,
+            hubName: silo.hub,
+            spokeIndex,
+            spokeTitle: spoke.title,
+            spokeSlug: spoke.slug,
+            pageType: 'spoke',
+            syncStatus: spoke.vortexSyncStatus,
+            vortexPageId: spoke.vortexPageId,
+            title: spoke.title,
+            slug: `/${silo.slug}/${spoke.slug}`,
+            keywords: [silo.hub, spoke.title].filter(Boolean),
+            templateHint: 'artigo'
+        });
+        state.creationBrief = {
+            ...state.creationBrief,
+            mode: 'edit',
+            siloId,
+            hubName: silo.hub,
+            spokeSlug: spoke.slug || '',
+            themeKeyword: spoke.title || state.creationBrief.themeKeyword,
+            ideaContext: `Editar spoke "${spoke.title}" dentro do Hub ${silo.hub}.`
+        };
+        persistVisualSession();
+        setVisualLayer('edit');
+    }
+
     function installPreviewInteractionTools() {
         const frame = document.getElementById('vortex-preview-frame');
         const doc = frame?.contentDocument;
@@ -2589,6 +4029,7 @@ function renderFallbackPanel(errorMsg) {
         doc.addEventListener('click', event => {
             const target = event.target;
             if (!target || target.closest?.('.vortex-micro-bar')) return;
+            if (state.visual.enabled && target.closest?.('[data-vortex-field]')) return;
             event.preventDefault();
             event.stopPropagation();
             selectPreviewNode(target);
@@ -3606,10 +5047,13 @@ function renderFallbackPanel(errorMsg) {
         
         loadVoiceProfilePreference();
         loadOperationModePreference();
+        loadVisualModePreference();
 
         // 1. Render the UI skeleton
         renderUI();
+        renderV6Surface();
         renderOperationMode();
+        applyVisualModeState();
         await loadMasterTemplates();
         await loadVortexMetadata();
         await loadVoiceProfile();
@@ -3705,12 +5149,41 @@ function renderFallbackPanel(errorMsg) {
         loadVoiceProfile,
         toggleVoiceProfile,
         setOperationMode,
+        toggleVisualMode,
+        setVisualLayer,
+        toggleXrayMode,
+        toggleVisualAIMode,
+        runVisualPrompt,
+        applyTargetedFieldEdit,
+        restoreVisualSnapshot,
+        restoreVisualVersion,
+        compareVisualVersion,
+        duplicateVisualVersion,
+        acceptVisualProposal,
+        undoVisualEdit,
+        toggleVisualCompare,
+        manualFieldCommand,
+        focusVisualPromptForField,
+        setManualFieldMode,
+        formatManualField,
+        publishVisualVersion,
+        openVisualSilo,
+        openVisualSpoke,
         sendStyleFeedback,
         insertMediaAsset,
         auditCurrentDraft,
         deployDraftPreview,
         runMicroPrompt,
         updateBreadcrumbs,
+        // Briefing Criativo / Templates / Keywords (Studio Central)
+        setCreationMode,
+        setCreationBriefField,
+        setGenerationMode,
+        applyTierKeyword,
+        selectVisualTemplate,
+        generateFromBrief,
+        startNewSpokeFromSilo,
+        applyPerformanceUpgrade,
         // Phase 4
         showDiffReview,
         closeDiffReview,

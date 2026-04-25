@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "menu_1777139424508",
+    "name": "Padrão",
+    "items": [
+      {
+        "id": "item_1777139439099",
+        "label": "sobre",
+        "url": "/sobre",
+        "status": "published",
+        "children": []
+      }
+    ]
+  }
+]

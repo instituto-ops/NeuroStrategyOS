@@ -6,9 +6,7 @@ WhatsApp (62) 991545295
 
 www.hipnolawrence.com
 
-Atendimento presencial e online
-
-Rua 94-D, nº 102, Setor Sul, Goiânia, CEP 74080-120
+Atendimento online
 
 Perfil Doctoralia: https://www.doctoralia.com.br/victor-lawrence-bernardes-santana/psicologo-terapeuta-complementar/goiania
 
@@ -17,6 +15,7 @@ Curriculo Lattes: https://lattes.cnpq.br/7486371353673780
 ORCID: https://orcid.org/0000-0002-2184-7310
 
 Instagram: https://www.instagram.com/hipnolawrence
+
 
 
 Resumo Profissional

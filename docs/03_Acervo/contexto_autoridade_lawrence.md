@@ -9,7 +9,7 @@ Este documento contém os dados oficiais de autoridade para serem injetados em s
 * **Titulação:** Mestrando em Ciências da Saúde (Mestrado Profissional) - Universidade Federal de Uberlândia (UFU).
 * **Especialidades:** Hipnose Clínica (Ericksoniana), TEA (Transtorno do Espectro Autista) em Adultos, Diagnóstico Tardio, Masking, Burnout.
 * **Instituição:** Instituto Lawrence de Hipnose Clínica.
-* **Localização:** Goiânia, GO / Online.
+* **Localização:** Online.
 
 ## 🔗 Ecossistema Digital (Backlinks \& Autoridade)
 
@@ -29,7 +29,7 @@ Este documento contém os dados oficiais de autoridade para serem injetados em s
 ## 📋 Regras de Uso (Método Abidos)
 
 1. **Dobra Hero:** Sempre mencionar o CRP e a titulação acadêmica (Mestrando UFU) logo abaixo do nome para gerar autoridade imediata. Utilizar o título "Psicólogo Victor Lawrence".
-2. **Prova Social:** Utilizar referências ao Doctoralia e Google Meu Negócio.
+2. **Prova Social:** Utilizar referências a opiniões na Doctoralia e Google Meu Negócio.
 3. **E-E-A-T:** Em artigos técnicos, incluir o ORCID para fundamentação científica.
 4. **CTAs:** O WhatsApp (629991545295) é o canal prioritário de conversão.
 

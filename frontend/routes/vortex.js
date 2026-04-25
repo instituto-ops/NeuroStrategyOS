@@ -629,6 +629,57 @@ ${buildStylePreferenceContext()}`;
         }
     });
 
+    app.post('/api/vortex/visual-intent', async (req, res) => {
+        try {
+            const { prompt, model, target, page, fields, context } = req.body;
+            if (!prompt) return res.status(400).json({ error: 'Prompt vazio.' });
+            const safeFields = Array.isArray(fields) ? fields : [];
+            if (!safeFields.length) return res.status(400).json({ error: 'Nenhum campo visual anotado recebido.' });
+
+            const modelId = model || 'gemini-2.5-flash';
+            const systemPrompt = `[VORTEX VISUAL INTENT]
+Voce edita intencao estruturada, nao codigo.
+Retorne JSON estrito:
+{ "section": "hero", "field": "headline", "value": "novo texto", "explanation": "..." }
+Use apenas section/field presentes em CAMPOS DISPONIVEIS.
+Nao retorne HTML, markdown, comentario, CSS ou TSX.
+Mantenha tom clinico, acolhedor, etico e sem promessas de resultado.
+
+[PAGINA]
+${compactForPrompt(page, 500)}
+
+[ALVO PREFERENCIAL]
+${compactForPrompt(target, 1000)}
+
+[CAMPOS DISPONIVEIS]
+${compactForPrompt(safeFields, 5000)}
+
+[CONTEXTO]
+${compactForPrompt(context, 3000)}
+
+${buildStylePreferenceContext()}`;
+
+            const aiModel = getAIModel(modelId, 'application/json', systemPrompt);
+            const result = await aiModel.generateContent(`[INTENCAO]\n${prompt}`);
+            const parsed = extractJSON(result.response.text());
+            if (!parsed?.section || !parsed?.field || typeof parsed.value !== 'string') {
+                throw new Error('IA nao retornou JSON visual valido.');
+            }
+            const exists = safeFields.some(item => item.section === parsed.section && item.field === parsed.field);
+            if (!exists) throw new Error(`Campo visual nao permitido: ${parsed.section}.${parsed.field}`);
+            res.json({
+                success: true,
+                section: parsed.section,
+                field: parsed.field,
+                value: parsed.value,
+                explanation: parsed.explanation || 'Intencao aplicada ao campo visual.'
+            });
+        } catch (e) {
+            console.error('❌ [VORTEX VISUAL INTENT]', e.message);
+            res.status(500).json({ error: e.message, success: false });
+        }
+    });
+
     app.get('/api/vortex/style-preferences', (req, res) => {
         res.json(readStylePreferences());
     });

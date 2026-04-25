@@ -1297,6 +1297,94 @@ app.post('/api/ai/audit-clinical', async (req, res) => {
 });
 
 // [API] SEO Silos (Arquitetura Hub & Spoke)
+const SEO_SILOS_PATH = path.join(__dirname, 'silos.json');
+const SEO_SILOS_MIRROR_PATH = path.join(__dirname, '..', 'silos.json');
+
+function slugifySeo(value) {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+function normalizeSeoSpoke(spoke, idx) {
+    const raw = typeof spoke === 'string' ? { title: spoke } : { ...(spoke || {}) };
+    const title = raw.title || raw.name || `Spoke ${idx + 1}`;
+    return {
+        ...raw,
+        title,
+        slug: raw.slug || slugifySeo(title),
+        status: raw.status || 'planejado',
+        vortexSyncStatus: raw.vortexSyncStatus || raw.syncStatus || 'nao_sincronizado',
+        vortexPageId: raw.vortexPageId || raw.pageId || ''
+    };
+}
+
+function normalizeSeoSilo(silo, idx) {
+    const raw = { ...(silo || {}) };
+    const hub = raw.hub || raw.name || raw.title || `Silo ${idx + 1}`;
+    const slug = raw.slug || slugifySeo(hub);
+    return {
+        ...raw,
+        id: raw.id || `silo_${slug || idx + 1}`,
+        hub,
+        slug,
+        scope: raw.scope || 'national',
+        vortexSyncStatus: raw.vortexSyncStatus || raw.syncStatus || 'nao_sincronizado',
+        vortexPageId: raw.vortexPageId || raw.pageId || '',
+        spokes: Array.isArray(raw.spokes) ? raw.spokes.map(normalizeSeoSpoke) : []
+    };
+}
+
+function normalizeSeoSilosPayload(payload) {
+    const silos = Array.isArray(payload) ? payload : (payload?.silos || []);
+    return silos.map((silo, idx) => normalizeSeoSilo(silo, idx));
+}
+
+function getDefaultSeoSilos() {
+    return normalizeSeoSilosPayload([
+        { id: 'silo_autismo_adulto', hub: 'Autismo Adulto', slug: 'autismo-adulto', scope: 'national', vortexSyncStatus: 'disponivel', spokes: ['Diagnóstico Tardio', 'Sinais Sutis em Mulheres'] },
+        { id: 'silo_ansiedade_burnout', hub: 'Ansiedade e Burnout', slug: 'ansiedade-burnout', scope: 'local', vortexSyncStatus: 'disponivel', spokes: ['Terapia Estratégica', 'Sintomas Físicos'] },
+        { id: 'silo_hipnose_clinica', hub: 'Hipnose Clínica', slug: 'hipnose-clinica', scope: 'local', vortexSyncStatus: 'nao_sincronizado', spokes: ['Hipnose Clínica em Uberlândia', 'Hipnose Clínica Online'] }
+    ]);
+}
+
+function writeSeoSilos(silos) {
+    const payload = JSON.stringify({ silos }, null, 2);
+    fs.writeFileSync(SEO_SILOS_PATH, payload, 'utf8');
+    fs.writeFileSync(SEO_SILOS_MIRROR_PATH, payload, 'utf8');
+}
+
+app.get('/api/seo/silos', (req, res) => {
+    try {
+        if (fs.existsSync(SEO_SILOS_PATH)) {
+            const data = JSON.parse(fs.readFileSync(SEO_SILOS_PATH, 'utf8'));
+            return res.json({ silos: normalizeSeoSilosPayload(data) });
+        }
+
+        const silos = getDefaultSeoSilos();
+        writeSeoSilos(silos);
+        res.json({ silos });
+    } catch (e) {
+        console.error('[API-SILO] Falha ao carregar silos:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/seo/silos', (req, res) => {
+    try {
+        const silos = normalizeSeoSilosPayload(req.body);
+        writeSeoSilos(silos);
+        res.json({ success: true, silos });
+    } catch (e) {
+        console.error('[API-SILO] Falha ao persistir silos:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.get('/api/seo/silos', (req, res) => {
     const siloPath = path.join(__dirname, 'silos.json');
     if (fs.existsSync(siloPath)) {
