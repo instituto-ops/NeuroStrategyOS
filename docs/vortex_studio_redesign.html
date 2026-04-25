@@ -1,0 +1,658 @@
+
+<h2 class="sr-only">Vórtex Studio — protótipo interativo v2 com 4 lentes e navegação Hub/Spoke</h2>
+<style>
+/* ── Reset ─────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+#vx{font-family:var(--font-sans)}
+
+/* ── Utilitários ────────────────────────────────── */
+.vx-divider{height:0.5px;background:var(--color-border-tertiary);margin:10px 0}
+.vx-label{font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px}
+.vx-tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:500}
+.vx-tag-artigo{background:#EEEDFE;color:#3C3489}
+.vx-tag-landing{background:#FAEEDA;color:#633806}
+.vx-tag-livre{background:#F1EFE8;color:#444441}
+.vx-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg)}
+.vx-badge{font-size:9px;padding:2px 7px;border-radius:100px;font-weight:500}
+.vx-badge-pub{background:#EAF3DE;color:#3B6D11;border:0.5px solid #C0DD97}
+.vx-badge-pot{background:#FAEEDA;color:#633806;border:0.5px solid #FAC775}
+.vx-badge-rev{background:#FDF3E0;color:#8A5E00;border:0.5px solid #FAC775}
+
+/* ── Botões ─────────────────────────────────────── */
+.vx-btn-primary{padding:8px 18px;background:#534AB7;color:#fff;border:none;border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer;transition:opacity .12s}
+.vx-btn-primary:hover{opacity:.88}
+.vx-btn-ghost{padding:8px 18px;background:none;color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;transition:background .12s}
+.vx-btn-ghost:hover{background:var(--color-background-secondary)}
+.vx-toggle-btn{padding:6px 14px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;border:0.5px solid var(--color-border-secondary);cursor:pointer;background:none;color:var(--color-text-secondary);transition:all .12s}
+.vx-toggle-btn.active{background:#534AB7;color:#fff;border-color:#534AB7}
+.vx-mode-btn{flex:1;padding:8px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:12px;font-weight:500;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-secondary);transition:all .12s;text-align:center}
+.vx-mode-btn.active{border-color:#534AB7;background:#EEEDFE;color:#3C3489}
+.vx-quick-btn{padding:5px 11px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:99px;font-size:11px;cursor:pointer;color:var(--color-text-secondary);white-space:nowrap;transition:all .12s}
+.vx-quick-btn:hover{border-color:#534AB7;color:#534AB7}
+
+/* ── Topbar / Lentes ────────────────────────────── */
+.vx-lens{display:none}
+.vx-lens.active{display:block}
+.vx-nav-step{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:var(--border-radius-md);cursor:pointer;font-size:12px;font-weight:500;color:var(--color-text-tertiary);border:none;background:none;transition:all .15s}
+.vx-nav-step.active{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.vx-nav-step.done{color:var(--color-text-secondary)}
+.vx-step-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;background:var(--color-background-secondary);color:var(--color-text-tertiary);flex-shrink:0}
+.vx-nav-step.active .vx-step-num{background:#534AB7;color:#fff}
+.vx-nav-step.done .vx-step-num{background:#1D9E75;color:#fff}
+
+/* ── Hub / Spoke Navigation ─────────────────────── */
+.hs-silo{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-bottom:10px;overflow:hidden}
+.hs-hub{padding:10px 12px;background:var(--color-background-secondary);display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.hs-hub-icon{width:26px;height:26px;border-radius:7px;background:rgba(83,74,183,.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.hs-hub-info{flex:1}
+.hs-hub-name{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.hs-hub-meta{font-size:10px;color:var(--color-text-tertiary);margin-top:1px}
+.hs-hub-chevron{font-size:11px;color:var(--color-text-tertiary);transition:transform .2s}
+.hs-silo.collapsed .hs-hub-chevron{transform:rotate(-90deg)}
+.hs-spokes{padding:6px 8px}
+.hs-silo.collapsed .hs-spokes{display:none}
+.hs-spoke{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--border-radius-md);cursor:pointer;margin-bottom:3px;transition:background .12s}
+.hs-spoke:hover{background:var(--color-background-secondary)}
+.hs-spoke.active{background:rgba(83,74,183,.08);border:0.5px solid rgba(83,74,183,.2)}
+.hs-connector{width:12px;height:14px;border-left:1.5px solid var(--color-border-secondary);border-bottom:1.5px solid var(--color-border-secondary);border-radius:0 0 0 4px;flex-shrink:0;margin-left:5px;align-self:flex-start;margin-top:2px}
+.hs-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.hs-dot.pub{background:#4ade80}
+.hs-dot.draft{background:var(--color-border-secondary)}
+.hs-dot.pending{background:#f59e0b}
+.hs-spoke-info{flex:1;min-width:0}
+.hs-spoke-name{font-size:11px;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hs-spoke-url{font-size:9px;color:var(--color-text-tertiary);margin-top:1px}
+.hs-edit-btn{font-size:10px;background:#534AB7;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;opacity:0;transition:opacity .12s;flex-shrink:0}
+.hs-spoke:hover .hs-edit-btn,.hs-spoke.active .hs-edit-btn{opacity:1}
+.hs-add-spoke{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px dashed var(--color-border-tertiary);margin:0 4px 4px;transition:border-color .12s}
+.hs-add-spoke:hover{border-color:#534AB7}
+.hs-add-spoke span{font-size:10px;color:var(--color-text-tertiary);transition:color .12s}
+.hs-add-spoke:hover span{color:#534AB7}
+
+/* ── Lente 1 — Templates ────────────────────────── */
+.vx-tpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.vx-tpl-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px;cursor:pointer;transition:border-color .15s,box-shadow .15s;background:var(--color-background-primary)}
+.vx-tpl-card:hover{border-color:#534AB7}
+.vx-tpl-card.selected{border-color:#534AB7;background:#EEEDFE}
+.vx-tpl-num{font-size:10px;color:var(--color-text-tertiary);margin-bottom:3px;font-variant-numeric:tabular-nums}
+.vx-tpl-name{font-size:11px;font-weight:500;color:var(--color-text-primary);line-height:1.35;margin-bottom:5px}
+
+/* ── Lente 2 — Preview ──────────────────────────── */
+.vx-preview-shell{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.vx-preview-hero{padding:28px;background:var(--color-background-primary);position:relative}
+.vx-preview-kicker{font-size:10px;font-weight:600;color:#534AB7;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.vx-preview-title{font-size:22px;font-weight:500;color:var(--color-text-primary);line-height:1.3;margin-bottom:12px}
+.vx-preview-sub{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:20px}
+.vx-preview-cta{display:inline-block;padding:10px 20px;background:#534AB7;color:#fff;border-radius:var(--border-radius-md);font-size:13px;font-weight:500}
+.vx-selection-ring{border:2px solid #534AB7;border-radius:var(--border-radius-md);position:absolute;inset:16px;pointer-events:none}
+.vx-field-tag{position:absolute;top:17px;left:28px;background:#534AB7;color:#fff;font-size:9px;padding:2px 7px;border-radius:0 0 5px 5px;letter-spacing:.04em}
+.vx-prompt-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg)}
+.vx-prompt-input{flex:1;border:none;background:none;font-size:13px;color:var(--color-text-primary);font-family:var(--font-sans);outline:none}
+.vx-send-btn{width:32px;height:32px;background:#534AB7;border:none;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.vx-mock-btn{padding:6px 14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:11px;background:none;cursor:pointer;color:var(--color-text-secondary)}
+
+/* ── Lente 2 — Painel de Campo ──────────────────── */
+.vx-field-panel{padding:12px}
+.vx-field-panel .fp-counter{font-size:28px;font-weight:500;color:var(--color-text-primary);line-height:1}
+.vx-field-panel .fp-unit{font-size:10px;color:var(--color-text-tertiary);margin-bottom:10px}
+.vx-hist-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-secondary);padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.vx-hist-row:last-of-type{border:none}
+
+/* ── Lente 3 — Performance ──────────────────────── */
+.vx-score-num{font-size:52px;font-weight:500;color:#534AB7;line-height:1}
+.vx-metric-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.vx-metric-label{font-size:11px;color:var(--color-text-secondary);width:75px;flex-shrink:0}
+.vx-metric-bar-bg{flex:1;height:3px;background:var(--color-background-secondary);border-radius:2px}
+.vx-metric-bar{height:3px;border-radius:2px}
+.vx-metric-val{font-size:11px;font-weight:500;width:22px;text-align:right;flex-shrink:0}
+.vx-upgrade-item{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:8px}
+.vx-upgrade-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.vx-upgrade-label{font-size:12px;color:var(--color-text-primary);line-height:1.35}
+.vx-upgrade-pts{font-size:10px;font-weight:600;color:#1D9E75;background:#E1F5EE;padding:2px 6px;border-radius:4px;white-space:nowrap;margin-left:8px;flex-shrink:0}
+.vx-apply-btn{width:100%;padding:7px;background:#EEEDFE;color:#3C3489;border:none;border-radius:var(--border-radius-md);font-size:11px;font-weight:500;cursor:pointer;transition:background .12s}
+.vx-apply-btn:hover{background:#CECBF6}
+.vx-apply-btn.applied{background:#E1F5EE;color:#0F6E56;cursor:default}
+
+/* ── Lente 4 — Publicar ─────────────────────────── */
+.vx-publish-wrap{position:relative;border-radius:var(--border-radius-lg);overflow:hidden}
+.vx-publish-bg{opacity:.28}
+.vx-publish-overlay{position:absolute;inset:0;background:rgba(10,8,26,.72);backdrop-filter:blur(2px)}
+.vx-publish-modal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:24px 22px;text-align:center;width:268px;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+</style>
+
+<div id="vx">
+
+<!-- ── Topbar ─────────────────────────────────────── -->
+<div style="border-bottom:0.5px solid var(--color-border-tertiary);padding-bottom:12px;margin-bottom:16px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+
+    <div style="display:flex;align-items:center;gap:8px;min-width:0">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><circle cx="12" cy="12" r="9" stroke="#534AB7" stroke-width="1.5"/><path d="M12 7v5l3 3" stroke="#534AB7" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span style="font-size:14px;font-weight:500;color:var(--color-text-primary)">Vórtex</span>
+      <span style="font-size:11px;color:var(--color-text-tertiary)">AI Studio</span>
+      <span id="vx-breadcrumb" style="font-size:11px;color:var(--color-text-tertiary);display:none">
+        <span style="margin:0 4px;color:var(--color-border-secondary)">›</span>
+        <span style="color:var(--color-text-secondary)">Autismo Adulto</span>
+        <span style="margin:0 4px;color:var(--color-border-secondary)">›</span>
+        <span style="color:var(--color-text-primary);font-weight:500">Masking e Exaustão</span>
+      </span>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:2px;flex-shrink:0">
+      <button class="vx-nav-step done" id="nav1" onclick="goLens(1)">
+        <span class="vx-step-num" id="sn1">1</span>Contexto
+      </button>
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="flex-shrink:0"><path d="M3 2l4 3-4 3" stroke="var(--color-border-secondary)" stroke-width="1.2"/></svg>
+      <button class="vx-nav-step active" id="nav2" onclick="goLens(2)">
+        <span class="vx-step-num" id="sn2">2</span>Edição
+      </button>
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="flex-shrink:0"><path d="M3 2l4 3-4 3" stroke="var(--color-border-secondary)" stroke-width="1.2"/></svg>
+      <button class="vx-nav-step" id="nav3" onclick="goLens(3)">
+        <span class="vx-step-num" id="sn3">3</span>Performance
+      </button>
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="flex-shrink:0"><path d="M3 2l4 3-4 3" stroke="var(--color-border-secondary)" stroke-width="1.2"/></svg>
+      <button class="vx-nav-step" id="nav4" onclick="goLens(4)">
+        <span class="vx-step-num" id="sn4">4</span>Publicar
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- LENTE 1 — CONTEXTO                            -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="lens1" class="vx-lens">
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+    <button class="vx-toggle-btn active" id="btn-criar" onclick="setMode('criar')">+ Criar</button>
+    <button class="vx-toggle-btn" id="btn-editar" onclick="setMode('editar')">Editar página</button>
+  </div>
+
+  <!-- MODO CRIAR -->
+  <div id="modo-criar">
+    <div style="margin-bottom:12px">
+      <label class="vx-label">Palavra-chave principal</label>
+      <input style="width:100%;padding:8px 12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary);font-family:var(--font-sans);outline:none" placeholder="ex: autismo feminino adulto" value="masking e exaustão TEA" onfocus="this.style.borderColor='#534AB7'" onblur="this.style.borderColor=''"/>
+    </div>
+
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button class="vx-mode-btn active" onclick="activateMode(this)">Estruturado Abidos</button>
+      <button class="vx-mode-btn" onclick="activateMode(this)">Livre Premium</button>
+      <button class="vx-mode-btn" onclick="activateMode(this)">Híbrido</button>
+    </div>
+
+    <label class="vx-label">Escolha um template</label>
+    <div class="vx-tpl-grid">
+      <div class="vx-tpl-card" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">01</div>
+        <div class="vx-tpl-name">Dark Glass: Autoridade Clínica</div>
+        <span class="vx-tag vx-tag-landing" style="margin-top:5px">landing</span>
+      </div>
+      <div class="vx-tpl-card selected" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">02</div>
+        <div class="vx-tpl-name">Artigo Editorial: Conteúdo de Redação</div>
+        <span class="vx-tag vx-tag-artigo" style="margin-top:5px">artigo</span>
+      </div>
+      <div class="vx-tpl-card" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">03</div>
+        <div class="vx-tpl-name">Editorial Premium: Artigo de Capa</div>
+        <span class="vx-tag vx-tag-artigo" style="margin-top:5px">artigo</span>
+      </div>
+      <div class="vx-tpl-card" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">04</div>
+        <div class="vx-tpl-name">Artigo Imersivo: Relatos e Reflexões</div>
+        <span class="vx-tag vx-tag-artigo" style="margin-top:5px">artigo</span>
+      </div>
+      <div class="vx-tpl-card" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">05</div>
+        <div class="vx-tpl-name">Tech Editorial: Lançamentos e Tech</div>
+        <span class="vx-tag vx-tag-artigo" style="margin-top:5px">artigo</span>
+      </div>
+      <div class="vx-tpl-card" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">06</div>
+        <div class="vx-tpl-name">Orgânico: Saúde Mental e Bem-estar</div>
+        <span class="vx-tag vx-tag-artigo" style="margin-top:5px">artigo</span>
+      </div>
+      <div class="vx-tpl-card" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">07</div>
+        <div class="vx-tpl-name">Ensaio Vintage: Acadêmico / Denso</div>
+        <span class="vx-tag vx-tag-artigo" style="margin-top:5px">artigo</span>
+      </div>
+      <div class="vx-tpl-card" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">08</div>
+        <div class="vx-tpl-name">Ethereal Glass: Criatividade</div>
+        <span class="vx-tag vx-tag-artigo" style="margin-top:5px">artigo</span>
+      </div>
+      <div class="vx-tpl-card" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">09</div>
+        <div class="vx-tpl-name">Luxury Dark: Mentoria Premium</div>
+        <span class="vx-tag vx-tag-artigo" style="margin-top:5px">artigo</span>
+      </div>
+      <div class="vx-tpl-card" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">10</div>
+        <div class="vx-tpl-name">Tech Focus: Docs e Whitepapers</div>
+        <span class="vx-tag vx-tag-artigo" style="margin-top:5px">artigo</span>
+      </div>
+      <div class="vx-tpl-card" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">11</div>
+        <div class="vx-tpl-name">Landing Abidos: Conversão (Ads)</div>
+        <span class="vx-tag vx-tag-landing" style="margin-top:5px">landing</span>
+      </div>
+      <div class="vx-tpl-card" onclick="selectTpl(this)">
+        <div class="vx-tpl-num">00</div>
+        <div class="vx-tpl-name">Em branco: Do zero</div>
+        <span class="vx-tag vx-tag-livre" style="margin-top:5px">livre</span>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end">
+      <button class="vx-btn-primary" onclick="goLens(2)">Gerar com IA →</button>
+    </div>
+  </div>
+
+  <!-- MODO EDITAR — Hub / Spoke navigation -->
+  <div id="modo-editar" style="display:none">
+    <label class="vx-label" style="margin-bottom:10px">Silos → Hub → Spokes</label>
+
+    <!-- Silo 1: Autismo Adulto (publicado, expandido) -->
+    <div class="hs-silo" id="silo1">
+      <div class="hs-hub" onclick="toggleSilo('silo1')">
+        <div class="hs-hub-icon">🧠</div>
+        <div class="hs-hub-info">
+          <div class="hs-hub-name">Autismo Adulto</div>
+          <div class="hs-hub-meta">Hub · /autismo-adulto · 3 spokes</div>
+        </div>
+        <span class="vx-badge vx-badge-pub">publicado</span>
+        <span class="hs-hub-chevron" style="margin-left:8px">▾</span>
+      </div>
+      <div class="hs-spokes">
+        <div class="hs-spoke" onclick="selectSpoke(this, 2)">
+          <div class="hs-connector"></div>
+          <div class="hs-dot pub"></div>
+          <div class="hs-spoke-info">
+            <div class="hs-spoke-name">Masking e exaustão</div>
+            <div class="hs-spoke-url">/autismo-adulto/masking-exaustao</div>
+          </div>
+          <button class="hs-edit-btn" onclick="event.stopPropagation();selectSpoke(this.closest('.hs-spoke'),2)">Editar</button>
+        </div>
+        <div class="hs-spoke active" onclick="selectSpoke(this, 2)">
+          <div class="hs-connector"></div>
+          <div class="hs-dot pub"></div>
+          <div class="hs-spoke-info">
+            <div class="hs-spoke-name">Diagnóstico tardio feminino</div>
+            <div class="hs-spoke-url">/autismo-adulto/diagnostico-tardio</div>
+          </div>
+          <button class="hs-edit-btn" onclick="event.stopPropagation();selectSpoke(this.closest('.hs-spoke'),2)">Editar</button>
+        </div>
+        <div class="hs-spoke" onclick="selectSpoke(this, 2)">
+          <div class="hs-connector"></div>
+          <div class="hs-dot pending"></div>
+          <div class="hs-spoke-info">
+            <div class="hs-spoke-name">Hipnose clínica para TEA</div>
+            <div class="hs-spoke-url">/autismo-adulto/hipnose-tea</div>
+          </div>
+          <button class="hs-edit-btn" onclick="event.stopPropagation();selectSpoke(this.closest('.hs-spoke'),2)">Editar</button>
+        </div>
+        <div class="hs-add-spoke">
+          <span style="font-size:14px;color:var(--color-text-tertiary)">＋</span>
+          <span>Novo spoke</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Silo 2: Ansiedade e Burnout (potencial, colapsado) -->
+    <div class="hs-silo collapsed" id="silo2">
+      <div class="hs-hub" onclick="toggleSilo('silo2')">
+        <div class="hs-hub-icon">💆</div>
+        <div class="hs-hub-info">
+          <div class="hs-hub-name">Ansiedade e Burnout</div>
+          <div class="hs-hub-meta">Hub · /ansiedade-burnout · 2 spokes</div>
+        </div>
+        <span class="vx-badge vx-badge-pot">potencial</span>
+        <span class="hs-hub-chevron" style="margin-left:8px">▾</span>
+      </div>
+      <div class="hs-spokes">
+        <div class="hs-spoke" onclick="selectSpoke(this, 2)">
+          <div class="hs-connector"></div>
+          <div class="hs-dot draft"></div>
+          <div class="hs-spoke-info">
+            <div class="hs-spoke-name">Terapia Estratégica</div>
+            <div class="hs-spoke-url">/ansiedade-burnout/terapia-estrategica</div>
+          </div>
+          <button class="hs-edit-btn" onclick="event.stopPropagation();selectSpoke(this.closest('.hs-spoke'),2)">Editar</button>
+        </div>
+        <div class="hs-spoke" onclick="selectSpoke(this, 2)">
+          <div class="hs-connector"></div>
+          <div class="hs-dot pending"></div>
+          <div class="hs-spoke-info">
+            <div class="hs-spoke-name">Sintomas Físicos</div>
+            <div class="hs-spoke-url">/ansiedade-burnout/sintomas-fisicos</div>
+          </div>
+          <button class="hs-edit-btn" onclick="event.stopPropagation();selectSpoke(this.closest('.hs-spoke'),2)">Editar</button>
+        </div>
+        <div class="hs-add-spoke">
+          <span style="font-size:14px;color:var(--color-text-tertiary)">＋</span>
+          <span>Novo spoke</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Silo 3: Hipnose Clínica (revisar, colapsado) -->
+    <div class="hs-silo collapsed" id="silo3">
+      <div class="hs-hub" onclick="toggleSilo('silo3')">
+        <div class="hs-hub-icon">✨</div>
+        <div class="hs-hub-info">
+          <div class="hs-hub-name">Hipnose Clínica</div>
+          <div class="hs-hub-meta">Hub · /hipnose-clinica · 1 spoke</div>
+        </div>
+        <span class="vx-badge vx-badge-rev">revisar</span>
+        <span class="hs-hub-chevron" style="margin-left:8px">▾</span>
+      </div>
+      <div class="hs-spokes">
+        <div class="hs-spoke" onclick="selectSpoke(this, 2)">
+          <div class="hs-connector"></div>
+          <div class="hs-dot draft"></div>
+          <div class="hs-spoke-info">
+            <div class="hs-spoke-name">O que a ciência diz</div>
+            <div class="hs-spoke-url">/hipnose-clinica/evidencias</div>
+          </div>
+          <button class="hs-edit-btn" onclick="event.stopPropagation();selectSpoke(this.closest('.hs-spoke'),2)">Editar</button>
+        </div>
+        <div class="hs-add-spoke">
+          <span style="font-size:14px;color:var(--color-text-tertiary)">＋</span>
+          <span>Novo spoke</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /modo-editar -->
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- LENTE 2 — EDIÇÃO                              -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="lens2" class="vx-lens active">
+  <div style="display:flex;gap:12px;align-items:flex-start">
+
+    <!-- Painel lateral esquerdo -->
+    <div style="width:176px;flex-shrink:0;display:flex;flex-direction:column;gap:10px">
+
+      <div class="vx-card">
+        <div class="vx-field-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span class="vx-label" style="margin:0">Campo</span>
+            <span style="font-size:10px;background:#EEEDFE;color:#3C3489;padding:2px 7px;border-radius:4px;font-weight:500">hero.headline</span>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:10px;line-height:1.4">Clique no preview ou use IA pelo prompt.</div>
+          <div class="vx-divider"></div>
+          <div class="fp-counter">59</div>
+          <div class="fp-unit">caracteres</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:10px;background:#534AB7;color:#fff;padding:2px 7px;border-radius:4px;font-weight:500">Direto</span>
+            <span style="font-size:10px;background:#EEEDFE;color:#3C3489;padding:2px 7px;border-radius:4px;font-weight:500;cursor:pointer">✦ IA</span>
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            <button style="font-size:11px;padding:4px 8px;border-radius:4px;border:0.5px solid #534AB7;background:#534AB7;color:#fff;cursor:pointer">Aplicar</button>
+            <button style="font-size:11px;padding:4px 8px;border-radius:4px;border:0.5px solid var(--color-border-secondary);background:none;color:var(--color-text-secondary);cursor:pointer">Desfazer</button>
+            <button style="font-size:11px;padding:4px 8px;border-radius:4px;border:0.5px solid var(--color-border-secondary);background:none;color:var(--color-text-secondary);cursor:pointer">Comparar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="vx-card" style="padding:12px">
+        <span class="vx-label">Histórico</span>
+        <div class="vx-hist-row">
+          <svg width="7" height="7" viewBox="0 0 7 7" fill="none" style="flex-shrink:0"><circle cx="3.5" cy="3.5" r="3" fill="#1D9E75"/></svg>
+          Melhoria do Hero
+        </div>
+        <div class="vx-hist-row">
+          <svg width="7" height="7" viewBox="0 0 7 7" fill="none" style="flex-shrink:0"><circle cx="3.5" cy="3.5" r="3" fill="#534AB7"/></svg>
+          Trocar Paleta
+        </div>
+        <div style="font-size:11px;color:#534AB7;cursor:pointer;margin-top:6px">Ver mais (2) →</div>
+      </div>
+
+    </div>
+
+    <!-- Preview central -->
+    <div style="flex:1;min-width:0">
+      <div class="vx-preview-shell" style="margin-bottom:10px">
+        <div class="vx-preview-hero">
+          <div class="vx-selection-ring"></div>
+          <div class="vx-field-tag">hero.headline</div>
+          <div class="vx-preview-kicker">Núcleo Clínico</div>
+          <div class="vx-preview-title">Masking e exaustão: quando parecer bem custa energia demais</div>
+          <div class="vx-preview-sub">Uma página acolhedora para adultos que suspeitam de TEA e procuram entender por que adaptar-se ao tempo todo pode esgotar.</div>
+          <div class="vx-preview-cta">Conversar com cuidado</div>
+        </div>
+        <div style="padding:8px 12px;background:var(--color-background-secondary);display:flex;gap:6px;flex-wrap:wrap">
+          <button class="vx-quick-btn">Refinar Hero</button>
+          <button class="vx-quick-btn">Melhorar CTA</button>
+          <button class="vx-quick-btn">Trocar Paleta</button>
+          <button class="vx-quick-btn">Adicionar Seção</button>
+          <button class="vx-quick-btn">Simplificar Texto</button>
+          <button class="vx-quick-btn">Otimizar Mobile</button>
+        </div>
+      </div>
+      <div class="vx-prompt-bar">
+        <input class="vx-prompt-input" placeholder="Digite direto no preview. Ou use IA para melhorar a intenção..." />
+        <button class="vx-send-btn">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <button class="vx-mock-btn">Mock</button>
+      </div>
+    </div>
+
+  </div>
+  <div style="display:flex;justify-content:space-between;margin-top:14px">
+    <button class="vx-btn-ghost" onclick="goLens(1)">← Contexto</button>
+    <button class="vx-btn-primary" onclick="goLens(3)">Analisar Performance →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- LENTE 3 — PERFORMANCE                         -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="lens3" class="vx-lens">
+  <div style="display:flex;gap:12px;align-items:flex-start">
+
+    <!-- Preview -->
+    <div style="flex:1;min-width:0">
+      <div class="vx-preview-shell" style="margin-bottom:10px">
+        <div class="vx-preview-hero">
+          <div class="vx-preview-kicker">Núcleo Clínico</div>
+          <div class="vx-preview-title">Masking e exaustão: quando parecer bem custa energia demais</div>
+          <div class="vx-preview-sub">Uma página acolhedora para adultos que suspeitam de TEA e procuram entender por que adaptar-se ao tempo todo pode esgotar.</div>
+          <div class="vx-preview-cta">Conversar com cuidado</div>
+        </div>
+        <div style="padding:8px 12px;background:var(--color-background-secondary);display:flex;gap:6px;flex-wrap:wrap">
+          <button class="vx-quick-btn">Refinar Hero</button>
+          <button class="vx-quick-btn">Melhorar CTA</button>
+          <button class="vx-quick-btn">Simplificar Texto</button>
+        </div>
+      </div>
+      <div class="vx-prompt-bar">
+        <input class="vx-prompt-input" placeholder="Peça melhorias ou ajustes..." />
+        <button class="vx-send-btn">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Painel de Score -->
+    <div style="width:204px;flex-shrink:0;display:flex;flex-direction:column;gap:10px">
+
+      <div class="vx-card" style="padding:16px;text-align:center">
+        <div class="vx-label" style="text-align:center;margin-bottom:8px">Score de Impacto</div>
+        <div class="vx-score-num">81</div>
+        <div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:14px">/100</div>
+        <div class="vx-divider"></div>
+        <div style="margin-top:12px">
+          <div class="vx-metric-row">
+            <span class="vx-metric-label">Conversão</span>
+            <div class="vx-metric-bar-bg"><div class="vx-metric-bar" style="width:78%;background:#534AB7"></div></div>
+            <span class="vx-metric-val" style="color:var(--color-text-primary)">78</span>
+          </div>
+          <div class="vx-metric-row">
+            <span class="vx-metric-label">Clareza</span>
+            <div class="vx-metric-bar-bg"><div class="vx-metric-bar" style="width:86%;background:#534AB7"></div></div>
+            <span class="vx-metric-val" style="color:var(--color-text-primary)">86</span>
+          </div>
+          <div class="vx-metric-row">
+            <span class="vx-metric-label">SEO</span>
+            <div class="vx-metric-bar-bg"><div class="vx-metric-bar" style="width:74%;background:#BA7517"></div></div>
+            <span class="vx-metric-val" style="color:#BA7517">74</span>
+          </div>
+          <div class="vx-metric-row">
+            <span class="vx-metric-label">Ética Clínica</span>
+            <div class="vx-metric-bar-bg"><div class="vx-metric-bar" style="width:91%;background:#1D9E75"></div></div>
+            <span class="vx-metric-val" style="color:#1D9E75">91</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="vx-card" style="padding:12px">
+        <span class="vx-label" style="margin-bottom:10px">Upgrades disponíveis</span>
+        <div class="vx-upgrade-item">
+          <div class="vx-upgrade-top">
+            <span class="vx-upgrade-label">Adicionar meta description</span>
+            <span class="vx-upgrade-pts">+8 SEO</span>
+          </div>
+          <button class="vx-apply-btn" onclick="applyUpgrade(this)">✦ Aplicar</button>
+        </div>
+        <div class="vx-upgrade-item">
+          <div class="vx-upgrade-top">
+            <span class="vx-upgrade-label">Aumentar contraste do CTA</span>
+            <span class="vx-upgrade-pts">+5 Conv.</span>
+          </div>
+          <button class="vx-apply-btn" onclick="applyUpgrade(this)">✦ Aplicar</button>
+        </div>
+        <div class="vx-upgrade-item">
+          <div class="vx-upgrade-top">
+            <span class="vx-upgrade-label">Simplificar parágrafo 2</span>
+            <span class="vx-upgrade-pts">+4 Clareza</span>
+          </div>
+          <button class="vx-apply-btn" onclick="applyUpgrade(this)">✦ Aplicar</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <div style="display:flex;justify-content:space-between;margin-top:14px">
+    <button class="vx-btn-ghost" onclick="goLens(2)">← Edição</button>
+    <button class="vx-btn-primary" onclick="goLens(4)">Pronto para publicar →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- LENTE 4 — PUBLICAR                            -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="lens4" class="vx-lens">
+  <div class="vx-publish-wrap">
+    <!-- Preview opacificado -->
+    <div class="vx-preview-shell vx-publish-bg">
+      <div class="vx-preview-hero">
+        <div class="vx-preview-kicker">Núcleo Clínico</div>
+        <div class="vx-preview-title">Masking e exaustão: quando parecer bem custa energia demais</div>
+        <div class="vx-preview-sub">Uma página acolhedora para adultos que suspeitam de TEA e procuram entender por que adaptar-se ao tempo todo pode esgotar.</div>
+        <div class="vx-preview-cta">Conversar com cuidado</div>
+      </div>
+    </div>
+    <!-- Overlay escuro -->
+    <div class="vx-publish-overlay"></div>
+    <!-- Modal de publicação -->
+    <div class="vx-publish-modal" id="publish-modal">
+      <div style="font-size:10px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Pronto para publicar?</div>
+
+      <div style="font-size:46px;font-weight:500;color:#534AB7;line-height:1">81</div>
+      <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:14px">/100 — Score de Impacto</div>
+
+      <div class="vx-divider"></div>
+
+      <div style="font-size:11px;color:var(--color-text-secondary);line-height:1.55;margin:12px 0 16px;text-align:left">
+        Você revisou a página, montou snapshots e aplicou melhorias. Esta versão será salva como
+        <span style="font-weight:500;color:var(--color-text-primary)">v5 — Melhoria de Hero</span>.
+      </div>
+
+      <button class="vx-btn-primary" style="width:100%;margin-bottom:8px;justify-content:center" id="publish-btn" onclick="doPublish()">
+        Publicar Página
+      </button>
+      <button class="vx-btn-ghost" style="width:100%" onclick="goLens(3)">Voltar e Refinar</button>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:flex-start;margin-top:14px">
+    <button class="vx-btn-ghost" onclick="goLens(3)">← Performance</button>
+  </div>
+</div>
+
+</div><!-- /vx -->
+
+<script>
+var currentLens = 2;
+
+function goLens(n) {
+  currentLens = n;
+  document.querySelectorAll('.vx-lens').forEach(function(el){ el.classList.remove('active'); });
+  var el = document.getElementById('lens'+n);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.vx-nav-step').forEach(function(btn, i){
+    var idx = i + 1;
+    btn.classList.remove('active','done');
+    var sn = document.getElementById('sn'+(i+1));
+    if (idx < n) { btn.classList.add('done'); if(sn) sn.textContent = '✓'; }
+    else if (idx === n) { btn.classList.add('active'); if(sn) sn.textContent = idx; }
+    else { if(sn) sn.textContent = idx; }
+  });
+  var bc = document.getElementById('vx-breadcrumb');
+  if (bc) bc.style.display = (n >= 2) ? 'inline-flex' : 'none';
+}
+
+function setMode(m) {
+  document.getElementById('modo-criar').style.display = m === 'criar' ? 'block' : 'none';
+  document.getElementById('modo-editar').style.display = m === 'editar' ? 'block' : 'none';
+  document.getElementById('btn-criar').classList.toggle('active', m === 'criar');
+  document.getElementById('btn-editar').classList.toggle('active', m === 'editar');
+}
+
+function activateMode(btn) {
+  btn.closest('div').querySelectorAll('.vx-mode-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function selectTpl(el) {
+  el.closest('.vx-tpl-grid').querySelectorAll('.vx-tpl-card').forEach(function(c){ c.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+function toggleSilo(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.toggle('collapsed');
+}
+
+function selectSpoke(row, lensTarget) {
+  document.querySelectorAll('.hs-spoke').forEach(function(s){ s.classList.remove('active'); });
+  row.classList.add('active');
+  if (lensTarget) goLens(lensTarget);
+}
+
+function applyUpgrade(btn) {
+  btn.classList.add('applied');
+  btn.textContent = '✓ Aplicado';
+  btn.disabled = true;
+}
+
+function doPublish() {
+  var btn = document.getElementById('publish-btn');
+  if (!btn) return;
+  btn.textContent = '…';
+  btn.disabled = true;
+  setTimeout(function(){
+    btn.textContent = '✓ Publicado com sucesso';
+    btn.style.background = '#1D9E75';
+  }, 900);
+}
+
+goLens(2);
+</script>

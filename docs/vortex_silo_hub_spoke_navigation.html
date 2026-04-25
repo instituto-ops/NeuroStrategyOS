@@ -1,0 +1,208 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.root{font-family:var(--font-sans);display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.col{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.col-head{padding:10px 14px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:8px}
+.col-title{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.badge{font-size:9px;padding:2px 7px;border-radius:100px;font-weight:500}
+.bad-red{background:#FCEBEB;color:#A32D2D;border:0.5px solid #F7C1C1}
+.bad-green{background:#EAF3DE;color:#3B6D11;border:0.5px solid #C0DD97}
+.col-body{padding:10px}
+
+.wrong-silo{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:8px;cursor:pointer}
+.ws-name{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.ws-meta{font-size:10px;color:var(--color-text-tertiary);margin-top:3px}
+.ws-open{font-size:10px;color:#7c5cfc;margin-top:6px;padding:4px 8px;background:rgba(124,92,252,0.08);border-radius:4px;display:inline-block}
+.ws-warn{font-size:9px;color:#A32D2D;background:#FCEBEB;border-radius:4px;padding:2px 6px;margin-top:4px;display:inline-block}
+
+.right-silo{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-bottom:10px;overflow:hidden}
+.rs-hub{padding:10px 12px;background:var(--color-background-secondary);display:flex;align-items:center;gap:8px;cursor:pointer}
+.rs-hub-icon{width:24px;height:24px;border-radius:6px;background:rgba(124,92,252,0.12);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.rs-hub-info{flex:1}
+.rs-hub-name{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.rs-hub-meta{font-size:10px;color:var(--color-text-tertiary);margin-top:1px}
+.rs-hub-chevron{font-size:10px;color:var(--color-text-tertiary)}
+.rs-hub-badge{font-size:9px;background:#EAF3DE;color:#3B6D11;border:0.5px solid #C0DD97;border-radius:4px;padding:1px 6px;margin-left:auto;margin-right:6px}
+.rs-spokes{padding:6px 8px}
+.spoke-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--border-radius-md);cursor:pointer;margin-bottom:3px}
+.spoke-item:hover{background:var(--color-background-secondary)}
+.spoke-item.active{background:rgba(124,92,252,0.08);border:0.5px solid rgba(124,92,252,0.2)}
+.spoke-connector{width:12px;height:12px;border-left:1.5px solid var(--color-border-secondary);border-bottom:1.5px solid var(--color-border-secondary);border-radius:0 0 0 4px;flex-shrink:0;margin-left:4px}
+.spoke-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.spoke-dot.pub{background:#4ade80}
+.spoke-dot.draft{background:var(--color-border-secondary)}
+.spoke-dot.pending{background:#f59e0b}
+.spoke-name{font-size:11px;color:var(--color-text-primary);flex:1}
+.spoke-url{font-size:9px;color:var(--color-text-tertiary)}
+.spoke-edit{font-size:9px;background:#7c5cfc;color:white;border:none;border-radius:4px;padding:2px 7px;cursor:pointer;opacity:0}
+.spoke-item:hover .spoke-edit,.spoke-item.active .spoke-edit{opacity:1}
+.spoke-add{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px dashed var(--color-border-tertiary);margin:0 4px 4px}
+.spoke-add:hover{border-color:#7c5cfc}
+.spoke-add-text{font-size:10px;color:var(--color-text-tertiary)}
+.spoke-add:hover .spoke-add-text{color:#7c5cfc}
+
+.divider-label{font-size:9px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.8px;padding:6px 0 4px;display:flex;align-items:center;gap:6px}
+.divider-line{flex:1;height:0.5px;background:var(--color-border-tertiary)}
+
+.diff-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+.diff-table th{font-size:9px;text-transform:uppercase;letter-spacing:0.8px;color:var(--color-text-tertiary);padding:4px 8px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary)}
+.diff-table td{padding:6px 8px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary);vertical-align:top}
+.diff-table tr:nth-child(even) td{background:var(--color-background-secondary)}
+.td-concept{font-weight:500;color:var(--color-text-primary)}
+.td-wrong{color:#A32D2D}
+.td-right{color:#3B6D11}
+</style>
+
+<h2 class="sr-only">Comparação entre o comportamento atual e o correto para navegação de Silos no Vórtex</h2>
+
+<div style="margin-bottom:14px">
+  <table class="diff-table">
+    <thead>
+      <tr>
+        <th>Conceito</th>
+        <th>Como o Vórtex está tratando</th>
+        <th>Como deveria tratar</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="td-concept">Silo</td>
+        <td class="td-wrong">Uma única página para abrir</td>
+        <td class="td-right">Namespace — contém Hub + N Spokes</td>
+      </tr>
+      <tr>
+        <td class="td-concept">Hub</td>
+        <td class="td-wrong">Não existe no Vórtex</td>
+        <td class="td-right">Página-mãe do silo (editável)</td>
+      </tr>
+      <tr>
+        <td class="td-concept">Spoke</td>
+        <td class="td-wrong">Não existe no Vórtex</td>
+        <td class="td-right">Página-filha — a unidade real de edição</td>
+      </tr>
+      <tr>
+        <td class="td-concept">Clicar no Silo</td>
+        <td class="td-wrong">Abre uma página genérica</td>
+        <td class="td-right">Expande e mostra Hub + Spokes</td>
+      </tr>
+      <tr>
+        <td class="td-concept">Clicar num Spoke</td>
+        <td class="td-wrong">Não existe</td>
+        <td class="td-right">Abre aquela página na Lente 2</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="root">
+
+  <div class="col">
+    <div class="col-head">
+      <div class="col-title">Comportamento atual</div>
+      <span class="badge bad-red">incorreto</span>
+    </div>
+    <div class="col-body">
+      <div class="divider-label"><div class="divider-line"></div>Silos<div class="divider-line"></div></div>
+      <div class="wrong-silo">
+        <div class="ws-name">Autismo Adulto</div>
+        <div class="ws-meta">1 página · Alinhado</div>
+        <div class="ws-warn">Silo inteiro = 1 página?</div>
+        <div class="ws-open">Abrir →</div>
+      </div>
+      <div class="wrong-silo">
+        <div class="ws-name">Ansiedade e Burnout</div>
+        <div class="ws-meta">1 página · Potencial</div>
+        <div class="ws-warn">Spokes ignorados</div>
+        <div class="ws-open">Abrir →</div>
+      </div>
+      <div style="margin-top:10px;padding:8px;background:#FCEBEB;border-radius:var(--border-radius-md);border:0.5px solid #F7C1C1">
+        <div style="font-size:10px;color:#A32D2D;line-height:1.5">Diagnóstico Tardio, Sinais Sutis em Mulheres, Terapia Estratégica e Sintomas Físicos são <strong>invisíveis</strong> para o Vórtex. Não há como editá-los daqui.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="col-head">
+      <div class="col-title">Comportamento correto</div>
+      <span class="badge bad-green">proposto</span>
+    </div>
+    <div class="col-body">
+      <div class="divider-label"><div class="divider-line"></div>Silos → Hub → Spokes<div class="divider-line"></div></div>
+
+      <div class="right-silo">
+        <div class="rs-hub">
+          <div class="rs-hub-icon">🧠</div>
+          <div class="rs-hub-info">
+            <div class="rs-hub-name">Autismo Adulto</div>
+            <div class="rs-hub-meta">Hub · /autismo-adulto · 2 spokes</div>
+          </div>
+          <span class="rs-hub-badge">publicado</span>
+          <div class="rs-hub-chevron">▾</div>
+        </div>
+        <div class="rs-spokes">
+          <div class="spoke-item">
+            <div class="spoke-connector"></div>
+            <div class="spoke-dot pub"></div>
+            <div style="flex:1">
+              <div class="spoke-name">Diagnóstico Tardio</div>
+              <div class="spoke-url">/autismo-adulto/diagnostico-tardio</div>
+            </div>
+            <button class="spoke-edit">Editar</button>
+          </div>
+          <div class="spoke-item active">
+            <div class="spoke-connector"></div>
+            <div class="spoke-dot pub"></div>
+            <div style="flex:1">
+              <div class="spoke-name">Sinais Sutis em Mulheres</div>
+              <div class="spoke-url">/autismo-adulto/sinais-sutis-em-mulheres</div>
+            </div>
+            <button class="spoke-edit">Editar</button>
+          </div>
+          <div class="spoke-add">
+            <span style="font-size:13px;color:var(--color-text-tertiary)">＋</span>
+            <span class="spoke-add-text">Novo spoke</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-silo">
+        <div class="rs-hub">
+          <div class="rs-hub-icon">💆</div>
+          <div class="rs-hub-info">
+            <div class="rs-hub-name">Ansiedade e Burnout</div>
+            <div class="rs-hub-meta">Hub · /ansiedade-burnout · 2 spokes</div>
+          </div>
+          <span class="rs-hub-badge" style="background:#FAEEDA;color:#633806;border-color:#FAC775">potencial</span>
+          <div class="rs-hub-chevron">▾</div>
+        </div>
+        <div class="rs-spokes">
+          <div class="spoke-item">
+            <div class="spoke-connector"></div>
+            <div class="spoke-dot draft"></div>
+            <div style="flex:1">
+              <div class="spoke-name">Terapia Estratégica</div>
+              <div class="spoke-url">/ansiedade-burnout/terapia-estrategica</div>
+            </div>
+            <button class="spoke-edit">Editar</button>
+          </div>
+          <div class="spoke-item">
+            <div class="spoke-connector"></div>
+            <div class="spoke-dot pending"></div>
+            <div style="flex:1">
+              <div class="spoke-name">Sintomas Físicos</div>
+              <div class="spoke-url">/ansiedade-burnout/sintomas-fisicos</div>
+            </div>
+            <button class="spoke-edit">Editar</button>
+          </div>
+          <div class="spoke-add">
+            <span style="font-size:13px;color:var(--color-text-tertiary)">＋</span>
+            <span class="spoke-add-text">Novo spoke</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
