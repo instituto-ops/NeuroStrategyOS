@@ -14,6 +14,9 @@ window.vortexStudio = (() => {
     // =========================================================================
     // STATE
     // =========================================================================
+    const VOICE_PROFILE_STORAGE_KEY = 'vortex.voiceProfile.enabled';
+    const OPERATION_MODE_STORAGE_KEY = 'vortex.operationMode';
+
     const state = {
         db: null,               // Dexie instance
         editor: null,           // Monaco instance
@@ -33,6 +36,13 @@ window.vortexStudio = (() => {
         fs: null,               // LightningFS instance
         pfs: null,              // LightningFS Promises API
         contextHubEnabled: false,
+        operationMode: 'canvas',
+        lastPreviewCode: '',
+        selectedPreviewNode: null,
+        stylePreferences: { positive: [], negative: [], history: [] },
+        mediaAssets: [],
+        auditStatus: null,
+        deploymentUrl: '',
         lastAuditResult: null,  // Phase 2.4: Last audit result for commit gate
         snapshotId: 0,          // Phase 2.2: Auto-increment snapshot counter
         generationCache: new Map(), // Phase 4.8: Local cache by prompt hash
@@ -67,6 +77,40 @@ window.vortexStudio = (() => {
             source: ''
         }
     };
+
+    function loadVoiceProfilePreference() {
+        try {
+            const stored = localStorage.getItem(VOICE_PROFILE_STORAGE_KEY);
+            if (stored !== null) state.voiceProfile.enabled = stored === 'true';
+        } catch (err) {
+            console.warn('[VORTEX] Preferencia do Perfil Verbal indisponivel:', err.message);
+        }
+    }
+
+    function persistVoiceProfilePreference() {
+        try {
+            localStorage.setItem(VOICE_PROFILE_STORAGE_KEY, String(state.voiceProfile.enabled));
+        } catch (err) {
+            console.warn('[VORTEX] Falha ao persistir Perfil Verbal:', err.message);
+        }
+    }
+
+    function loadOperationModePreference() {
+        try {
+            const stored = localStorage.getItem(OPERATION_MODE_STORAGE_KEY);
+            if (stored === 'template' || stored === 'canvas') state.operationMode = stored;
+        } catch (err) {
+            console.warn('[VORTEX] Preferencia de modo indisponivel:', err.message);
+        }
+    }
+
+    function persistOperationModePreference() {
+        try {
+            localStorage.setItem(OPERATION_MODE_STORAGE_KEY, state.operationMode);
+        } catch (err) {
+            console.warn('[VORTEX] Falha ao persistir modo:', err.message);
+        }
+    }
 
     // =========================================================================
     // UTILS: SANITIZAÇÃO E LIMPEZA (ANTI-HALLUCINATION)
@@ -469,6 +513,82 @@ window.vortexStudio = (() => {
         if(fileInput) fileInput.value = '';
     }
 
+    function setOperationMode(mode) {
+        state.operationMode = mode === 'template' ? 'template' : 'canvas';
+        persistOperationModePreference();
+        renderOperationMode();
+        addAuditLog('info', `Modo ${state.operationMode === 'template' ? 'Template Guiado' : 'Canvas Livre'} ativo.`);
+    }
+
+    function renderOperationMode() {
+        document.querySelectorAll('[data-vortex-mode]').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.vortexMode === state.operationMode);
+        });
+        const input = document.getElementById('vortex-chat-input');
+        if (input) {
+            input.placeholder = state.operationMode === 'template'
+                ? 'Peça ajustes nas variáveis da Master Template...'
+                : 'Descreva a página ou anexe um print...';
+        }
+    }
+
+    function syncTemplateEditor() {
+        if (state.operationMode !== 'template' || !state.template.selectedId) return;
+        const payload = {
+            templateId: state.template.selectedId,
+            templateName: state.template.current?.name || '',
+            values: state.template.values
+        };
+        setEditorContent(JSON.stringify(payload, null, 2), 'json');
+        updateFileTab('template-values.json', true);
+        state.currentFile = '/vortex/template-values.json';
+        updateBreadcrumbs(state.currentFile);
+    }
+
+    function readTemplateValuesFromEditor() {
+        if (state.operationMode !== 'template') return state.template.values;
+        try {
+            const parsed = JSON.parse(getEditorContent() || '{}');
+            if (parsed.values && typeof parsed.values === 'object') return parsed.values;
+            return parsed;
+        } catch (err) {
+            addAuditLog('warn', 'JSON do Template Guiado invalido; usando valores em memoria.');
+            return state.template.values;
+        }
+    }
+
+    async function sendTemplatePrompt(prompt, model, abidosContext) {
+        if (!state.template.selectedId || !state.template.current) {
+            addMessage('system', 'Selecione uma Master Template antes de usar o Template Guiado.');
+            return;
+        }
+
+        state.template.values = readTemplateValuesFromEditor();
+        const response = await fetch('/api/vortex/generate-template', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${VORTEX_API_KEY}`
+            },
+            body: JSON.stringify({
+                prompt,
+                model,
+                template: state.template.current,
+                modules: state.template.modules,
+                values: state.template.values,
+                context: [abidosContext, buildMediaContext()].filter(Boolean).join('\n\n')
+            })
+        });
+        const data = await response.json();
+        if (!response.ok || data.error) throw new Error(data.error || `Template ${response.status}`);
+
+        state.template.values = data.values || state.template.values;
+        syncTemplateEditor();
+        await renderSelectedTemplatePreview();
+        await createSnapshot(`template:${prompt}`);
+        addMessage('ai', data.explanation || 'Variaveis da template atualizadas.');
+    }
+
     async function sendPrompt() {
         const input = document.getElementById('vortex-chat-input');
         if (state.isGenerating) return;
@@ -490,18 +610,28 @@ window.vortexStudio = (() => {
             const currentCode = getEditorContent();
             const defaultCode = '// 🌀 Vórtex AI Studio\n// Envie um prompt no chat para gerar código Next.js\n';
 
+            if (state.operationMode === 'template' && state.template.selectedId) {
+                await sendTemplatePrompt(prompt, model, abidosContext);
+                return;
+            }
+
             // [PHASE 2.2] Snapshot antes de cada geração
             await createSnapshot(prompt);
 
             // [PHASE 2.3] Contexto seletivo (arquivo ativo + imports)
             const selectiveCtx = await buildSelectiveContext();
+            const mediaCtx = buildMediaContext();
 
             const payload = {
                 prompt: typeof arguments[0] === 'string' ? arguments[0] : prompt,
                 model,
                 currentCode: currentCode !== defaultCode ? currentCode : '',
                 abidosRules: state.abidosRules,
-                context: abidosContext + (selectiveCtx ? '\n\n--- CONTEXTO DO PROJETO ---\n' + selectiveCtx : ''),
+                context: [
+                    abidosContext,
+                    mediaCtx,
+                    selectiveCtx ? '--- CONTEXTO DO PROJETO ---\n' + selectiveCtx : ''
+                ].filter(Boolean).join('\n\n'),
                 useCache: state.contextHubEnabled,
                 imageBase64: uploadedImageBase64
             };
@@ -796,6 +926,33 @@ window.vortexStudio = (() => {
         renderMetadataStatus();
     }
 
+    async function importFromSilo(config) {
+        state.metadata.siloId = config.siloId || config.siloName || '';
+        const siloSelect = document.getElementById('vortex-silo-select');
+        if (siloSelect) siloSelect.value = state.metadata.siloId;
+        renderMetadataStatus();
+
+        const targetType = config.templateHint === 'artigo' ? 'artigo' : 'landing';
+        const suggested = state.template.catalog.find(t => t.type === targetType) || state.template.catalog[0];
+        if (suggested) {
+            const templateSelect = document.getElementById('vortex-template-select');
+            if (templateSelect) templateSelect.value = suggested.id;
+            await selectTemplate(suggested.id);
+            setOperationMode('template');
+        }
+
+        const prompt = [
+            `Criar pagina para: ${config.title || config.siloName}`,
+            config.slug ? `URL planejada: ${config.slug}` : '',
+            config.keywords?.length ? `Keywords: ${config.keywords.join(', ')}` : '',
+            'Usar tom clinico, etico e orientado a conversao.'
+        ].filter(Boolean).join('\n');
+
+        const input = document.getElementById('vortex-chat-input');
+        if (input) input.value = prompt;
+        addAuditLog('info', `Silo importado para Vortex: ${config.title || config.siloName}`);
+    }
+
     async function loadVortexSilos() {
         const select = document.getElementById('vortex-silo-select');
         if (!select) return;
@@ -875,6 +1032,7 @@ window.vortexStudio = (() => {
 
     function toggleVoiceProfile() {
         state.voiceProfile.enabled = !state.voiceProfile.enabled;
+        persistVoiceProfilePreference();
         const el = document.querySelector('[data-vortex-toggle="voiceProfile"]');
         if (el) el.classList.toggle('active', state.voiceProfile.enabled);
         renderVoiceProfileStatus();
@@ -923,6 +1081,7 @@ window.vortexStudio = (() => {
             state.template.values = buildTemplateValues(state.template.modules);
             renderTemplateStatus();
             addAuditLog('info', `Master Template ${templateId} carregada no Vortex.`);
+            if (state.operationMode === 'template') syncTemplateEditor();
             await renderSelectedTemplatePreview();
         } catch (err) {
             console.error('[VORTEX] Erro ao selecionar template:', err);
@@ -933,6 +1092,9 @@ window.vortexStudio = (() => {
 
     async function renderSelectedTemplatePreview() {
         if (!state.template.selectedId) return;
+        if (state.operationMode === 'template') {
+            state.template.values = readTemplateValuesFromEditor();
+        }
 
         try {
             const response = await fetch('/api/templates/preview', {
@@ -975,6 +1137,7 @@ window.vortexStudio = (() => {
             templateId: state.template.selectedId,
             templateName: state.template.current?.name || '',
             templateValues: state.template.values,
+            auditStatus: state.auditStatus,
             metadata: {
                 siloId: state.metadata.siloId,
                 menuId: state.metadata.menuId
@@ -992,6 +1155,7 @@ window.vortexStudio = (() => {
         if (!name) return;
 
         state.draft.name = name;
+        await auditCurrentDraft();
         const payload = buildDraftPayload(overwrite);
         payload.name = name;
         payload.slug = slugifyDraftName(name);
@@ -1214,6 +1378,12 @@ window.vortexStudio = (() => {
             });
             state.snapshotId++;
             addAuditLog('info', `📸 Snapshot #${state.snapshotId} salvo (${state.currentFile.split('/').pop()})`);
+            const allSnapshots = await state.db.snapshots.orderBy('timestamp').toArray();
+            if (allSnapshots.length > 20) {
+                const overflow = allSnapshots.slice(0, allSnapshots.length - 20);
+                await state.db.snapshots.bulkDelete(overflow.map(s => s.id));
+            }
+            renderSnapshotTimeline();
         } catch(e) {
             console.warn('[SNAPSHOT]', e);
         }
@@ -1417,6 +1587,7 @@ window.vortexStudio = (() => {
         try {
             const frame = document.getElementById('vortex-preview-frame');
             if (!frame) return;
+            state.lastPreviewCode = htmlContent || '';
 
             // Sanitização Anti-Hallucination
             let processedHtml = htmlContent;
@@ -1501,6 +1672,7 @@ window.vortexStudio = (() => {
                 // Reset para srcdoc mode
                 frame.removeAttribute('src');
                 frame.srcdoc = fullHtml;
+                frame.onload = () => setTimeout(installPreviewInteractionTools, 120);
             }
         } catch (err) {
             console.error('🌀 [VORTEX] Fallback Triggered via Catch:', err);
@@ -1593,6 +1765,7 @@ function renderFallbackPanel(errorMsg) {
             // Renderização bem-sucedida
             case 'vortex-render-success':
                 addAuditLog('success', '✅ Preview renderizado com sucesso.');
+                setTimeout(installPreviewInteractionTools, 80);
                 break;
 
             // Erro de renderização no shell
@@ -2075,6 +2248,10 @@ function renderFallbackPanel(errorMsg) {
                         <option value="gemini-2.5-pro">🧠 GEMINI 2.5 PRO</option>
                         <option value="gemini-2.5-flash-lite">💡 FLASH LITE</option>
                     </select>
+                    <div class="vortex-mode-switch" role="tablist" aria-label="Modo de operacao">
+                        <button data-vortex-mode="canvas" onclick="vortexStudio.setOperationMode('canvas')" title="Canvas Livre"><i data-lucide="palette"></i> Canvas</button>
+                        <button data-vortex-mode="template" onclick="vortexStudio.setOperationMode('template')" title="Template Guiado"><i data-lucide="layout-template"></i> Template</button>
+                    </div>
                 </div>
                 <div class="vortex-toolbar-right">
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.syncContextHub()" id="vortex-hub-btn" title="Armazena a teia de componentes no Google Cache API para reduzir custos e aumentar alinhamento do Design System">
@@ -2101,6 +2278,15 @@ function renderFallbackPanel(errorMsg) {
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.showTemplateLibrary()" title="Templates">
                         <i data-lucide="layout-template"></i>
                     </button>
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.auditCurrentDraft()" title="Auditoria formal Abidos">
+                        <i data-lucide="shield-check"></i> <span id="vortex-formal-audit-badge" class="vortex-audit-badge idle">Audit -</span>
+                    </button>
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.deployDraftPreview()" title="Criar preview Vercel do rascunho">
+                        <i data-lucide="cloud-upload"></i>
+                    </button>
+                    <a id="vortex-deploy-link" class="vortex-btn vortex-btn-secondary" href="#" target="_blank" style="display:none;" title="Ver preview Vercel">
+                        <i data-lucide="external-link"></i> Vercel
+                    </a>
                     <button class="vortex-btn vortex-btn-success" onclick="vortexStudio.commitAndPush()">
                         <i data-lucide="git-branch"></i> COMMIT & PUSH
                     </button>
@@ -2159,6 +2345,17 @@ function renderFallbackPanel(errorMsg) {
                             <strong>Sem Silo</strong><span>Sem Menu</span>
                         </div>
                     </div>
+                    <div class="vortex-media-config">
+                        <div class="vortex-template-config-header">
+                            <div class="vortex-panel-title">
+                                <i data-lucide="image"></i>
+                                ACERVO VISUAL
+                            </div>
+                        </div>
+                        <div id="vortex-media-strip" class="vortex-media-strip">
+                            <span class="vortex-empty-chip">Carregando midia...</span>
+                        </div>
+                    </div>
                     <!-- Chat -->
                     <div class="vortex-panel-header">
                         <div class="vortex-panel-title">
@@ -2197,7 +2394,7 @@ function renderFallbackPanel(errorMsg) {
                         </div>
                         <div class="vortex-toggle-row">
                             <div class="vortex-toggle-label"><i data-lucide="mic-2"></i> Perfil Verbal</div>
-                            <div class="vortex-switch active" data-vortex-toggle="voiceProfile" onclick="vortexStudio.toggleVoiceProfile()"></div>
+                            <div class="vortex-switch${state.voiceProfile.enabled ? ' active' : ''}" data-vortex-toggle="voiceProfile" onclick="vortexStudio.toggleVoiceProfile()"></div>
                         </div>
                         <div id="vortex-voice-profile-status" class="vortex-template-status vortex-voice-profile-status">
                             <strong>Perfil Verbal ativo</strong><span>Carregando memoria verbal...</span>
@@ -2283,7 +2480,13 @@ function renderFallbackPanel(errorMsg) {
                         </div>
                     </div>
                     <iframe id="vortex-preview-frame" class="vortex-preview-frame vortex-panel-body" sandbox="allow-scripts allow-same-origin"></iframe>
+                    <div class="vortex-preview-feedback">
+                        <button onclick="vortexStudio.sendStyleFeedback('positive')" title="Gostei deste estilo"><i data-lucide="thumbs-up"></i></button>
+                        <button onclick="vortexStudio.sendStyleFeedback('negative')" title="Evitar este estilo"><i data-lucide="thumbs-down"></i></button>
+                        <span id="vortex-style-memory-status">0 aprovados / 0 evitados</span>
+                    </div>
                     <div class="vortex-vitals-bar">
+                        <div id="vortex-snapshot-timeline" class="vortex-snapshot-timeline"></div>
                         <div class="vortex-vital-metric">
                             <span class="vortex-vital-label">LCP</span>
                             <span class="vortex-vital-value good" id="vortex-lcp">—</span>
@@ -2356,6 +2559,298 @@ function renderFallbackPanel(errorMsg) {
         entry.innerHTML = `<span class="audit-time">${new Date().toLocaleTimeString()}</span> ${message}`;
         log.appendChild(entry);
         log.scrollTop = log.scrollHeight;
+    }
+
+    function installPreviewInteractionTools() {
+        const frame = document.getElementById('vortex-preview-frame');
+        const doc = frame?.contentDocument;
+        if (!doc || doc.__vortexMicroInstalled) return;
+        doc.__vortexMicroInstalled = true;
+
+        const style = doc.createElement('style');
+        style.textContent = `
+            [data-vortex-hover] { outline: 2px solid #2dd4bf !important; outline-offset: 2px !important; cursor: crosshair !important; }
+            .vortex-micro-bar { position: fixed; z-index: 2147483647; display: flex; gap: 6px; align-items: center; background: rgba(5, 8, 16, 0.94); border: 1px solid #2dd4bf; border-radius: 8px; padding: 6px; box-shadow: 0 12px 30px rgba(0,0,0,.35); }
+            .vortex-micro-bar input { width: 260px; background: #111827; color: #e5e7eb; border: 1px solid rgba(255,255,255,.14); border-radius: 6px; padding: 7px 9px; font: 12px Inter, sans-serif; }
+            .vortex-micro-bar button { background: #2dd4bf; color: #04111a; border: 0; border-radius: 6px; padding: 7px 10px; font: 800 11px Inter, sans-serif; cursor: pointer; }
+        `;
+        doc.head.appendChild(style);
+
+        doc.addEventListener('mouseover', event => {
+            const target = event.target;
+            if (!target || target === doc.body || target.closest?.('.vortex-micro-bar')) return;
+            target.setAttribute('data-vortex-hover', 'true');
+        }, true);
+
+        doc.addEventListener('mouseout', event => {
+            event.target?.removeAttribute?.('data-vortex-hover');
+        }, true);
+
+        doc.addEventListener('click', event => {
+            const target = event.target;
+            if (!target || target.closest?.('.vortex-micro-bar')) return;
+            event.preventDefault();
+            event.stopPropagation();
+            selectPreviewNode(target);
+        }, true);
+    }
+
+    function selectPreviewNode(node) {
+        const rect = node.getBoundingClientRect();
+        const doc = node.ownerDocument;
+        doc.querySelectorAll('.vortex-micro-bar').forEach(el => el.remove());
+        state.selectedPreviewNode = {
+            html: node.outerHTML,
+            label: node.tagName.toLowerCase() + (node.id ? `#${node.id}` : '') + (node.className ? `.${String(node.className).split(/\s+/).slice(0, 2).join('.')}` : '')
+        };
+
+        const bar = doc.createElement('div');
+        bar.className = 'vortex-micro-bar';
+        bar.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 360)) + 'px';
+        bar.style.top = Math.max(8, rect.top - 48) + 'px';
+        bar.innerHTML = `<input id="vortex-micro-input" placeholder="Ajustar somente este bloco..." /><button id="vortex-micro-apply">Aplicar</button>`;
+        doc.body.appendChild(bar);
+        const input = bar.querySelector('#vortex-micro-input');
+        input.focus();
+        bar.querySelector('#vortex-micro-apply').onclick = () => runMicroPrompt(input.value);
+        input.onkeydown = event => {
+            if (event.key === 'Enter') runMicroPrompt(input.value);
+        };
+        addAuditLog('info', `Componente selecionado: ${state.selectedPreviewNode.label}`);
+    }
+
+    async function runMicroPrompt(promptText) {
+        if (!promptText || !state.selectedPreviewNode) return;
+        const model = document.getElementById('vortex-model-select')?.value || 'gemini-2.5-flash';
+        setGenerating(true);
+        try {
+            const before = getEditorContent();
+            await createSnapshot(`micro:${promptText}`);
+            const response = await fetch('/api/vortex/micro-edit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${VORTEX_API_KEY}`
+                },
+                body: JSON.stringify({
+                    prompt: promptText,
+                    model,
+                    selectedHtml: state.selectedPreviewNode.html,
+                    selectedSource: state.selectedPreviewNode.html,
+                    context: buildAbidosContext()
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || data.error) throw new Error(data.error || `Micro ${response.status}`);
+
+            const replacement = sanitizeAIContent(data.replacement);
+            const nextCode = before.includes(state.selectedPreviewNode.html)
+                ? before.replace(state.selectedPreviewNode.html, replacement)
+                : `${before}\n\n{/* Micro-prompt: ${promptText.replace(/\*\//g, '')} */}\n${replacement}`;
+            const audit = auditCode(nextCode);
+            setEditorContent(nextCode, state.operationMode === 'template' ? 'json' : 'typescriptreact');
+            updatePreview(nextCode);
+            addMessage('ai', data.explanation || 'Componente atualizado por micro-prompt.');
+            if (!audit.passes) addMessage('system', 'Micro-prompt aplicado com alertas Abidos.');
+        } catch (err) {
+            addAuditLog('error', `Micro-prompt falhou: ${err.message}`);
+        } finally {
+            setGenerating(false);
+        }
+    }
+
+    async function sendStyleFeedback(sentiment) {
+        const code = state.selectedPreviewNode?.html || state.lastPreviewCode || getEditorContent();
+        try {
+            const response = await fetch('/api/vortex/style-preferences/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${VORTEX_API_KEY}`
+                },
+                body: JSON.stringify({
+                    sentiment,
+                    code,
+                    componentLabel: state.selectedPreviewNode?.label || 'preview'
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || data.error) throw new Error(data.error || `Feedback ${response.status}`);
+            state.stylePreferences = data.preferences;
+            renderStyleMemoryStatus();
+            addAuditLog('success', `Memoria estetica atualizada: ${data.signals.length} sinais.`);
+        } catch (err) {
+            addAuditLog('error', `Feedback estetico falhou: ${err.message}`);
+        }
+    }
+
+    async function loadStylePreferences() {
+        try {
+            const response = await fetch('/api/vortex/style-preferences', {
+                headers: { 'Authorization': `Bearer ${VORTEX_API_KEY}` }
+            });
+            state.stylePreferences = await response.json();
+            renderStyleMemoryStatus();
+        } catch (err) {
+            addAuditLog('warn', 'Memoria estetica indisponivel.');
+        }
+    }
+
+    function renderStyleMemoryStatus() {
+        const el = document.getElementById('vortex-style-memory-status');
+        if (!el) return;
+        const pos = state.stylePreferences.positive?.length || 0;
+        const neg = state.stylePreferences.negative?.length || 0;
+        el.textContent = `${pos} aprovados / ${neg} evitados`;
+    }
+
+    async function loadVortexMedia() {
+        try {
+            const response = await fetch('/api/vortex/media', {
+                headers: { 'Authorization': `Bearer ${VORTEX_API_KEY}` }
+            });
+            const data = await response.json();
+            state.mediaAssets = data.items || [];
+            renderMediaStrip();
+        } catch (err) {
+            addAuditLog('warn', 'Acervo Visual indisponivel no Vortex.');
+        }
+    }
+
+    function renderMediaStrip() {
+        const strip = document.getElementById('vortex-media-strip');
+        if (!strip) return;
+        const items = state.mediaAssets.slice(0, 8);
+        strip.innerHTML = items.length ? items.map(item => `
+            <button class="vortex-media-chip ${item.overused ? 'overused' : ''}" title="${item.title || item.alt || item.url}" onclick="vortexStudio.insertMediaAsset('${encodeURIComponent(item.url || '')}', '${encodeURIComponent(item.id || '')}')">
+                <img src="${item.url}" alt="${item.alt || item.title || 'Midia do acervo'}">
+                <span>${item.usageCount || 0}</span>
+            </button>
+        `).join('') : '<span class="vortex-empty-chip">Sem midia</span>';
+    }
+
+    function buildMediaContext() {
+        if (!state.mediaAssets.length) return '';
+        const items = state.mediaAssets.slice(0, 12).map(item => {
+            const label = item.title || item.alt || item.url;
+            const usage = item.usageCount || 0;
+            return `- ${label}: ${item.url} (uso: ${usage}${item.overused ? ', evitar sobreuso' : ''})`;
+        }).join('\n');
+        return `--- ACERVO VISUAL DISPONIVEL ---\n${items}`;
+    }
+
+    async function insertMediaAsset(encodedUrl, encodedId) {
+        const url = decodeURIComponent(encodedUrl || '');
+        const id = decodeURIComponent(encodedId || '');
+        if (!url) return;
+        const input = document.getElementById('vortex-chat-input');
+        if (input) {
+            input.value = `${input.value ? input.value + '\n' : ''}Use esta imagem do acervo: ${url}`;
+            input.focus();
+        }
+        await fetch('/api/vortex/media/track', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${VORTEX_API_KEY}`
+            },
+            body: JSON.stringify({ itemId: id, url })
+        }).catch(() => {});
+        loadVortexMedia();
+    }
+
+    async function auditCurrentDraft() {
+        try {
+            const response = await fetch('/api/vortex/audit-draft', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${VORTEX_API_KEY}`
+                },
+                body: JSON.stringify({
+                    draft: state.draft,
+                    code: getEditorContent(),
+                    templateValues: state.template.values
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || data.error) throw new Error(data.error || `Audit ${response.status}`);
+            state.auditStatus = data;
+            renderFormalAuditBadge();
+            addAuditLog(data.approved ? 'success' : 'warn', `Auditoria formal: ${data.approved ? 'aprovado' : 'requer ajustes'}.`);
+            return data;
+        } catch (err) {
+            addAuditLog('error', `Auditoria formal falhou: ${err.message}`);
+            return null;
+        }
+    }
+
+    function renderFormalAuditBadge() {
+        const badge = document.getElementById('vortex-formal-audit-badge');
+        if (!badge) return;
+        if (!state.auditStatus) {
+            badge.textContent = 'Audit -';
+            badge.className = 'vortex-audit-badge idle';
+            return;
+        }
+        badge.textContent = state.auditStatus.approved ? 'Audit OK' : 'Audit alerta';
+        badge.className = `vortex-audit-badge ${state.auditStatus.approved ? 'approved' : 'warning'}`;
+    }
+
+    async function deployDraftPreview() {
+        try {
+            const name = state.draft.name || state.template.current?.name || 'vortex-preview';
+            const response = await fetch('/api/vortex/deploy-draft', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${VORTEX_API_KEY}`
+                },
+                body: JSON.stringify({
+                    draftId: state.draft.id,
+                    name,
+                    files: [{ file: 'index.html', data: state.lastPreviewCode || getEditorContent() }]
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || data.error) throw new Error(data.error || `Deploy ${response.status}`);
+            state.deploymentUrl = data.url;
+            renderDeployLink();
+            addAuditLog('success', `Preview Vercel criado: ${data.url}`);
+        } catch (err) {
+            addAuditLog('error', `Deploy preview falhou: ${err.message}`);
+        }
+    }
+
+    function renderDeployLink() {
+        const link = document.getElementById('vortex-deploy-link');
+        if (!link) return;
+        if (!state.deploymentUrl) {
+            link.style.display = 'none';
+            return;
+        }
+        link.href = state.deploymentUrl;
+        link.style.display = 'inline-flex';
+    }
+
+    async function renderSnapshotTimeline() {
+        const bar = document.getElementById('vortex-snapshot-timeline');
+        if (!bar || !state.db) return;
+        const snapshots = await state.db.snapshots.orderBy('timestamp').reverse().limit(20).toArray();
+        bar.innerHTML = snapshots.map(s => `
+            <button class="vortex-snapshot-dot" title="${new Date(s.timestamp).toLocaleString()} - ${s.prompt || 'manual'}" onclick="vortexStudio.restoreSnapshot(${s.id})"></button>
+        `).join('');
+    }
+
+    async function restoreSnapshot(id) {
+        if (!state.db) return;
+        const snapshot = await state.db.snapshots.get(Number(id));
+        if (!snapshot) return;
+        state.currentFile = snapshot.filePath;
+        setEditorContent(snapshot.content, snapshot.filePath.endsWith('.json') ? 'json' : 'typescriptreact');
+        updatePreview(snapshot.content);
+        updateBreadcrumbs(snapshot.filePath);
+        addAuditLog('info', `Snapshot restaurado: ${snapshot.prompt || snapshot.id}`);
     }
 
     // =========================================================================
@@ -3109,11 +3604,17 @@ function renderFallbackPanel(errorMsg) {
     async function init() {
         console.log('🌀 [VORTEX] Initializing AI Studio...');
         
+        loadVoiceProfilePreference();
+        loadOperationModePreference();
+
         // 1. Render the UI skeleton
         renderUI();
+        renderOperationMode();
         await loadMasterTemplates();
         await loadVortexMetadata();
         await loadVoiceProfile();
+        await loadStylePreferences();
+        await loadVortexMedia();
         updatePreview(`
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: #f8fafc; color: #64748b; text-align: center; padding: 40px;">
                 <div style="font-size: 48px; margin-bottom: 20px;">🌀</div>
@@ -3128,6 +3629,7 @@ function renderFallbackPanel(errorMsg) {
             loadScript('https://unpkg.com/@babel/standalone/babel.min.js').catch(e => console.error('Failed to load Babel:', e));
         }
         await initVFS();
+        await renderSnapshotTimeline();
 
         // 3. Init text area resize
         initTextareaResize();
@@ -3183,6 +3685,7 @@ function renderFallbackPanel(errorMsg) {
         switchDrawerTab,
         addAuditLog,
         createSnapshot,
+        restoreSnapshot,
         saveAsDraft,
         loadDraft,
         loadDraftById,
@@ -3198,8 +3701,15 @@ function renderFallbackPanel(errorMsg) {
         loadMasterTemplates,
         updateMetadata,
         loadVortexMetadata,
+        importFromSilo,
         loadVoiceProfile,
         toggleVoiceProfile,
+        setOperationMode,
+        sendStyleFeedback,
+        insertMediaAsset,
+        auditCurrentDraft,
+        deployDraftPreview,
+        runMicroPrompt,
         updateBreadcrumbs,
         // Phase 4
         showDiffReview,

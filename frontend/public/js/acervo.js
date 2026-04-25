@@ -146,6 +146,9 @@ window.acervoManager = {
                 vortexDrafts.forEach((draft) => {
                     const dateObj = new Date(draft.updated_at || draft.last_update || Date.now());
                     const formattedDate = dateObj.toLocaleDateString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+                    const auditBadge = draft.auditStatus?.approved
+                        ? '<span style="background: rgba(16,185,129,0.14); color:#34d399; font-size:8px; font-weight:900; padding:2px 6px; border-radius:4px;">AUDIT OK</span>'
+                        : (draft.auditStatus ? '<span style="background: rgba(245,158,11,0.14); color:#fbbf24; font-size:8px; font-weight:900; padding:2px 6px; border-radius:4px;">AUDIT ALERTA</span>' : '');
                     const tr = document.createElement('tr');
                     tr.style.background = 'rgba(45, 212, 191, 0.04)';
                     tr.style.borderRadius = '8px';
@@ -155,6 +158,7 @@ window.acervoManager = {
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span style="background: rgba(45, 212, 191, 0.16); color: #2dd4bf; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">VORTEX</span>
                                 <span style="color: #fff; font-weight: 800; font-size: 13px;">${draft.name || 'Rascunho Vortex'}</span>
+                                ${auditBadge}
                             </div>
                         </td>
                         <td style="padding: 15px;">

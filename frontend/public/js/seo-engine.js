@@ -140,6 +140,9 @@ window.seoEngine = {
                             <button class="btn btn-secondary" title="Descer" style="width: 28px; height: 28px; padding:0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);" onclick="event.stopPropagation(); window.seoEngine.moveSilo('${silo.id}', 1)">
                                 <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
                             </button>
+                            <button class="btn btn-secondary" title="Criar no Vortex" style="height: 28px; padding:0 10px; display: flex; align-items: center; justify-content: center; gap: 5px; background: rgba(45,212,191,0.08); border: 1px solid rgba(45,212,191,0.25); color: #2dd4bf; font-size: 9px; font-weight: 900;" onclick="event.stopPropagation(); window.seoEngine.openVortexForSilo('${silo.id}')">
+                                <i data-lucide="tornado" style="width: 13px; height: 13px;"></i> VORTEX
+                            </button>
                             <button class="btn btn-danger" title="Excluir" style="width: 28px; height: 28px; padding:0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444;" onclick="event.stopPropagation(); window.seoEngine.deleteSilo('${silo.id}')">
                                 <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                             </button>
@@ -249,7 +252,10 @@ window.seoEngine = {
                                         <div style="font-size: 10px; color: #64748b; margin: 10px 0 15px 0; line-height:1.4; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 2px solid var(--color-primary);">S: ${spoke.subtitle}</div>
                                     ` : ''}
 
-                                    <button class="btn btn-primary" style="width: 100%; height: 32px; font-size: 10px; font-weight: 800; letter-spacing: 1px; border-radius: 8px;" onclick="window.seoEngine.writePostPrompt('${spoke.title.replace(/'/g, "\\'")}', 'Hub: ${silo.hub}')">ESCREVER ARTIGO</button>
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                        <button class="btn btn-primary" style="height: 32px; font-size: 10px; font-weight: 800; letter-spacing: 1px; border-radius: 8px;" onclick="window.seoEngine.writePostPrompt('${spoke.title.replace(/'/g, "\\'")}', 'Hub: ${silo.hub}')">ESCREVER</button>
+                                        <button class="btn btn-secondary" style="height: 32px; font-size: 10px; font-weight: 900; border-color:#2dd4bf; color:#2dd4bf;" onclick="window.seoEngine.openVortexForSilo('${silo.id}', ${idx})">VORTEX</button>
+                                    </div>
                                 </div>
                             `;
                         }).join('')}
@@ -507,6 +513,31 @@ window.seoEngine = {
                 }, 100);
             }
         }
+    },
+
+    async openVortexForSilo(siloId, spokeIdx = null) {
+        const silo = this.fullData?.silos?.find(s => s.id === siloId);
+        if (!silo) return;
+        const spoke = spokeIdx !== null ? silo.spokes?.[spokeIdx] : null;
+        const spokeObj = typeof spoke === 'string'
+            ? { title: spoke, slug: spoke.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-') }
+            : spoke;
+        const title = spokeObj?.title || silo.hub;
+        const slug = spokeObj ? `/${silo.slug}/${spokeObj.slug || ''}` : `/${silo.slug}`;
+        const keywords = [silo.hub, title, ...(silo.keywords || [])].filter(Boolean);
+
+        app.showSection('vortex-studio');
+        setTimeout(() => {
+            if (!window.vortexStudio?.importFromSilo) return;
+            window.vortexStudio.importFromSilo({
+                siloId: silo.id,
+                siloName: silo.hub,
+                title,
+                slug,
+                keywords,
+                templateHint: spokeObj ? 'artigo' : 'landing'
+            });
+        }, 120);
     },
 
     async writePost(title, focus) {

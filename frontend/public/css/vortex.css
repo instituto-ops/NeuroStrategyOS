@@ -960,6 +960,174 @@
     color: #e2e8f0;
 }
 
+.vortex-mode-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    margin-left: 8px;
+}
+
+.vortex-mode-switch button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #94a3b8;
+    padding: 5px 9px;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.vortex-mode-switch button.active {
+    background: rgba(45, 212, 191, 0.14);
+    color: #2dd4bf;
+}
+
+.vortex-mode-switch svg {
+    width: 13px;
+    height: 13px;
+}
+
+.vortex-media-config {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vortex-media-strip {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    padding: 4px 0;
+}
+
+.vortex-media-chip {
+    position: relative;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #0f172a;
+    cursor: pointer;
+}
+
+.vortex-media-chip img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.vortex-media-chip span {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    min-width: 14px;
+    padding: 1px 4px;
+    border-radius: 999px;
+    background: rgba(5, 8, 16, 0.85);
+    color: #e2e8f0;
+    font-size: 9px;
+    font-weight: 900;
+}
+
+.vortex-media-chip.overused {
+    border-color: #f59e0b;
+}
+
+.vortex-empty-chip {
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.vortex-audit-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 2px 7px;
+    font-size: 9px;
+    font-weight: 900;
+    background: rgba(148, 163, 184, 0.12);
+    color: #94a3b8;
+}
+
+.vortex-audit-badge.approved {
+    background: rgba(16, 185, 129, 0.14);
+    color: #34d399;
+}
+
+.vortex-audit-badge.warning {
+    background: rgba(245, 158, 11, 0.14);
+    color: #fbbf24;
+}
+
+.vortex-preview-feedback {
+    position: absolute;
+    right: 18px;
+    bottom: 48px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+}
+
+.vortex-preview-feedback button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 6px;
+    color: #0f172a;
+    background: rgba(15, 23, 42, 0.06);
+    cursor: pointer;
+}
+
+.vortex-preview-feedback span {
+    color: #475569;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.vortex-snapshot-timeline {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 100px;
+    margin-right: 10px;
+}
+
+.vortex-snapshot-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    border: 0;
+    background: #94a3b8;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.vortex-snapshot-dot:hover {
+    background: #2dd4bf;
+    opacity: 1;
+}
+
 /* === REPAIR BUTTON === */
 .vortex-btn-repair {
     margin-top: 8px;

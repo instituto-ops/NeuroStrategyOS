@@ -13,6 +13,64 @@ const { genAI, getAIModel, wrapModel, extractJSON, trackUsage,
 let vortexActiveCache = null;
 const cacheManager = process.env.GEMINI_API_KEY ? new GoogleAICacheManager(process.env.GEMINI_API_KEY) : null;
 const axios = require('axios');
+const STYLE_PREFERENCES_PATH = path.join(__dirname, '..', 'data', 'style_preferences.json');
+
+function ensureStylePreferences() {
+    const dir = path.dirname(STYLE_PREFERENCES_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(STYLE_PREFERENCES_PATH)) {
+        fs.writeFileSync(STYLE_PREFERENCES_PATH, JSON.stringify({ positive: [], negative: [], history: [] }, null, 2));
+    }
+}
+
+function readStylePreferences() {
+    try {
+        ensureStylePreferences();
+        return JSON.parse(fs.readFileSync(STYLE_PREFERENCES_PATH, 'utf8'));
+    } catch (e) {
+        return { positive: [], negative: [], history: [] };
+    }
+}
+
+function writeStylePreferences(preferences) {
+    ensureStylePreferences();
+    fs.writeFileSync(STYLE_PREFERENCES_PATH, JSON.stringify(preferences, null, 2), 'utf8');
+}
+
+function extractStyleSignals(code) {
+    const source = String(code || '');
+    const signals = new Set();
+
+    const classRegex = /class(?:Name)?=["'`]([^"'`]+)["'`]/g;
+    let match;
+    while ((match = classRegex.exec(source)) !== null) {
+        match[1].split(/\s+/).filter(Boolean).slice(0, 18).forEach(cls => signals.add(cls));
+    }
+
+    const colorRegex = /#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|\b(?:teal|indigo|slate|emerald|amber|rose|cyan|violet|zinc|neutral|stone)-\d{2,3}\b/g;
+    while ((match = colorRegex.exec(source)) !== null) signals.add(match[0]);
+
+    return Array.from(signals).slice(0, 40);
+}
+
+function buildStylePreferenceContext() {
+    const preferences = readStylePreferences();
+    const positive = (preferences.positive || []).slice(-30);
+    const negative = (preferences.negative || []).slice(-30);
+    if (!positive.length && !negative.length) return '';
+
+    return [
+        '[MEMORIA ESTETICA DO VORTEX]',
+        positive.length ? `Preferencias aprovadas: ${positive.join(', ')}` : '',
+        negative.length ? `Evitar padroes rejeitados: ${negative.join(', ')}` : '',
+        'Use estas preferencias como diretriz leve; mantenha legibilidade, performance e compliance Abidos.'
+    ].filter(Boolean).join('\n').slice(0, 2500);
+}
+
+function compactForPrompt(value, max = 12000) {
+    const text = typeof value === 'string' ? value : JSON.stringify(value || {}, null, 2);
+    return text.length > max ? text.slice(0, max) + '\n...[truncado]' : text;
+}
 
 // Helper: Carregar Contexto CSA (Cognitive State Architecture)
 async function getCSAContext() {
@@ -140,6 +198,7 @@ module.exports = function setupVortexRoutes(app, { SITE_REPO_PATH }) {
                 : "";
 
             const csaDirectives = await getCSAContext();
+            const stylePreferenceContext = buildStylePreferenceContext();
 
             const systemPrompt = `[VÓRTEX AI STUDIO 3.1 — NAKED GENERATION PROTOCOL]
 ${roleSpecialization}${visionPrompt}
@@ -149,6 +208,8 @@ ${csaDirectives}
 
 [REGRAS ABIDOS — INVIOLÁVEIS]
 ${context || 'Sem regras especiais em execução.'}
+
+${stylePreferenceContext}
 
 [REGRAS DE FORMATAÇÃO — NAKED PROTOCOL]
 1. ZERO IMPORTS: Nunca use statements de 'import'. Tudo (React, Lucide, motion) é global.
@@ -208,6 +269,7 @@ ${context || 'Sem regras especiais em execução.'}
             }
 
             const response = await result.response;
+            const isTruncated = !fullText.trim().endsWith("</file>");
             trackUsage(response.usageMetadata, {
                 route: 'vortex/generate-stream',
                 model: modelId,
@@ -219,7 +281,6 @@ ${context || 'Sem regras especiais em execução.'}
             });
 
             // Verificação de Truncamento do Buffer do Servidor (Etapa 1.3.b)
-            const isTruncated = !fullText.trim().endsWith("</file>");
             if (isTruncated) {
                 console.warn("⚠️ [VORTEX STREAM] Truncamento detectado! Faltam tags de encerramento.");
             }
@@ -273,6 +334,7 @@ ${context || 'Sem regras especiais em execução.'}
                 : "";
 
             const csaDirectives = await getCSAContext();
+            const stylePreferenceContext = buildStylePreferenceContext();
 
                         const systemPrompt = `[VÓRTEX AI STUDIO 3.1 — NAKED GENERATION PROTOCOL]
 ${roleSpecialization}${visionPrompt}
@@ -282,6 +344,8 @@ ${csaDirectives}
 
 [REGRAS ABIDOS — INVIOLÁVEIS]
 ${context || 'Sem regras especiais em execução.'}
+
+${stylePreferenceContext}
 
 [VÓRTEX PREVIEW ENVIRONMENT — "REGRAS DE OURO"]
 1. ZERO IMPORTS: Não inclua statements de 'import'.
@@ -485,6 +549,196 @@ IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP). Use apen
             res.json({ success: true, path: filePath });
         } catch (e) {
             res.status(500).json({ error: e.message });
+        }
+    });
+
+    app.post('/api/vortex/generate-template', async (req, res) => {
+        try {
+            const { prompt, model, template, modules, values, context } = req.body;
+            if (!prompt) return res.status(400).json({ error: 'Prompt vazio.' });
+
+            const variableKeys = (modules || []).flatMap(mod => mod.variables || []);
+            if (!template?.id || variableKeys.length === 0) {
+                return res.status(400).json({ error: 'Template guiado sem variaveis.' });
+            }
+
+            const modelId = model || 'gemini-2.5-flash';
+            const systemPrompt = `[VORTEX TEMPLATE GUIDED MODE]
+Voce atualiza apenas variaveis JSON de uma Master Template.
+Retorne JSON estrito no formato { "values": { ... }, "explanation": "..." }.
+Nao retorne codigo TSX, HTML, markdown ou comentarios.
+Preserve chaves existentes e altere somente campos necessarios.
+
+[TEMPLATE]
+${compactForPrompt(template, 3000)}
+
+[VARIAVEIS DISPONIVEIS]
+${variableKeys.join(', ')}
+
+[CONTEXTO]
+${compactForPrompt(context, 5000)}
+
+${buildStylePreferenceContext()}`;
+
+            const aiModel = getAIModel(modelId, 'application/json', systemPrompt);
+            const fullPrompt = `[VALORES ATUAIS]\n${compactForPrompt(values, 10000)}\n\n[INSTRUCAO]\n${prompt}`;
+            const result = await aiModel.generateContent(fullPrompt);
+            const responseText = result.response.text();
+            const parsed = extractJSON(responseText);
+
+            if (!parsed) throw new Error('IA nao retornou JSON valido para Template Guiado.');
+            const nextValues = parsed.values && typeof parsed.values === 'object' ? parsed.values : parsed;
+            res.json({
+                success: true,
+                values: { ...(values || {}), ...nextValues },
+                explanation: parsed.explanation || 'Variaveis da template atualizadas.'
+            });
+        } catch (e) {
+            console.error('❌ [VORTEX TEMPLATE]', e.message);
+            res.status(500).json({ error: e.message, success: false });
+        }
+    });
+
+    app.post('/api/vortex/micro-edit', async (req, res) => {
+        try {
+            const { prompt, model, selectedHtml, selectedSource, context } = req.body;
+            if (!prompt || (!selectedHtml && !selectedSource)) {
+                return res.status(400).json({ error: 'Prompt e componente selecionado sao obrigatorios.' });
+            }
+
+            const modelId = model || 'gemini-2.5-flash';
+            const systemPrompt = `[VORTEX MICRO-PROMPT]
+Edite apenas o componente selecionado. Retorne JSON estrito:
+{ "replacement": "codigo/html atualizado apenas do componente", "explanation": "..." }
+Nao reescreva a pagina inteira. Nao adicione imports/exports. Mantenha compliance CFP.
+
+[CONTEXTO LIMITADO]
+${compactForPrompt(context, 4000)}
+
+${buildStylePreferenceContext()}`;
+
+            const aiModel = getAIModel(modelId, 'application/json', systemPrompt);
+            const fullPrompt = `[COMPONENTE SELECIONADO]\n${compactForPrompt(selectedSource || selectedHtml, 6000)}\n\n[INSTRUCAO]\n${prompt}`;
+            const result = await aiModel.generateContent(fullPrompt);
+            const parsed = extractJSON(result.response.text());
+            if (!parsed?.replacement) throw new Error('IA nao retornou replacement valido.');
+            res.json({ success: true, replacement: parsed.replacement, explanation: parsed.explanation || 'Componente atualizado.' });
+        } catch (e) {
+            console.error('❌ [VORTEX MICRO]', e.message);
+            res.status(500).json({ error: e.message, success: false });
+        }
+    });
+
+    app.get('/api/vortex/style-preferences', (req, res) => {
+        res.json(readStylePreferences());
+    });
+
+    app.post('/api/vortex/style-preferences/feedback', (req, res) => {
+        try {
+            const { sentiment, code, componentLabel } = req.body;
+            if (!['positive', 'negative'].includes(sentiment)) {
+                return res.status(400).json({ error: 'sentiment deve ser positive ou negative.' });
+            }
+
+            const preferences = readStylePreferences();
+            const signals = extractStyleSignals(code);
+            const target = new Set(preferences[sentiment] || []);
+            signals.forEach(signal => target.add(signal));
+            preferences[sentiment] = Array.from(target).slice(-120);
+            preferences.history = [
+                ...(preferences.history || []),
+                { sentiment, componentLabel: componentLabel || 'ultimo-componente', signals, timestamp: new Date().toISOString() }
+            ].slice(-80);
+
+            writeStylePreferences(preferences);
+            res.json({ success: true, signals, preferences });
+        } catch (e) {
+            res.status(500).json({ error: e.message, success: false });
+        }
+    });
+
+    app.get('/api/vortex/media', (req, res) => {
+        try {
+            const mediaPath = path.join(__dirname, '..', 'acervo_links.json');
+            const usagePath = path.join(__dirname, '..', 'data', 'media_usage.json');
+            const items = fs.existsSync(mediaPath) ? JSON.parse(fs.readFileSync(mediaPath, 'utf8')) : [];
+            const usage = fs.existsSync(usagePath) ? JSON.parse(fs.readFileSync(usagePath, 'utf8')) : {};
+            const normalized = (Array.isArray(items) ? items : (items.items || [])).map(item => ({
+                ...item,
+                usageCount: usage[item.id || item.url] || 0,
+                overused: (usage[item.id || item.url] || 0) > 3
+            }));
+            res.json({ items: normalized });
+        } catch (e) {
+            res.status(500).json({ error: e.message, items: [] });
+        }
+    });
+
+    app.post('/api/vortex/media/track', (req, res) => {
+        try {
+            const { itemId, url } = req.body;
+            const key = itemId || url;
+            if (!key) return res.status(400).json({ error: 'itemId ou url obrigatorio.' });
+            const usagePath = path.join(__dirname, '..', 'data', 'media_usage.json');
+            const usage = fs.existsSync(usagePath) ? JSON.parse(fs.readFileSync(usagePath, 'utf8')) : {};
+            usage[key] = (usage[key] || 0) + 1;
+            fs.writeFileSync(usagePath, JSON.stringify(usage, null, 2), 'utf8');
+            res.json({ success: true, count: usage[key] });
+        } catch (e) {
+            res.status(500).json({ error: e.message, success: false });
+        }
+    });
+
+    app.post('/api/vortex/audit-draft', async (req, res) => {
+        try {
+            const { draft, code, templateValues } = req.body;
+            const source = code || JSON.stringify(templateValues || draft || {}, null, 2);
+            const forbidden = ['cura', 'garantido', 'melhor', 'unico', '�nico'];
+            const ethics = forbidden.filter(term => new RegExp(`\\b${term}\\b`, 'i').test(source));
+            const seoWarnings = [];
+            if ((source.match(/<h1/gi) || []).length > 1) seoWarnings.push('Multiplos H1 detectados.');
+            if (/<img\b(?![^>]*\balt=)/i.test(source)) seoWarnings.push('Imagem sem alt detectada.');
+            const designWarnings = source.length < 200 ? ['Conteudo curto para avaliacao visual robusta.'] : [];
+            const approved = ethics.length === 0 && seoWarnings.length === 0;
+            res.json({
+                success: true,
+                approved,
+                badge: approved ? 'approved' : 'warning',
+                checks: {
+                    seo: seoWarnings,
+                    ethics,
+                    design: designWarnings
+                }
+            });
+        } catch (e) {
+            res.status(500).json({ error: e.message, success: false });
+        }
+    });
+
+    app.post('/api/vortex/deploy-draft', async (req, res) => {
+        try {
+            const { draftId, name, files } = req.body;
+            const token = process.env.VERCEL_TOKEN;
+            if (!token) {
+                return res.status(400).json({ success: false, error: 'VERCEL_TOKEN nao configurado.' });
+            }
+
+            const deploymentFiles = Array.isArray(files) && files.length
+                ? files
+                : [{ file: 'index.html', data: `<main><h1>${name || draftId || 'Vortex Draft'}</h1><p>Preview Vortex</p></main>` }];
+
+            const response = await axios.post('https://api.vercel.com/v13/deployments', {
+                name: (name || `vortex-draft-${Date.now()}`).toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 48),
+                files: deploymentFiles,
+                projectSettings: { framework: null }
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            res.json({ success: true, url: response.data.url ? `https://${response.data.url}` : response.data.alias?.[0], deployment: response.data });
+        } catch (e) {
+            console.error('❌ [VORTEX DEPLOY DRAFT]', e.message);
+            res.status(500).json({ error: e.message, success: false });
         }
     });
 
