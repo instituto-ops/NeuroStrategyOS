@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Abidos Page Schema V1.0",
+  "description": "Estrutura estrutural governada para páginas geradas pelo Vórtex.",
+  "type": "object",
+  "required": ["version", "type", "sections"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["landing", "hub", "spoke", "article"]
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/definitions/hero_section" },
+          { "$ref": "#/definitions/clinical_evidence_section" },
+          { "$ref": "#/definitions/pacing_leading_section" },
+          { "$ref": "#/definitions/methodology_section" },
+          { "$ref": "#/definitions/social_proof_section" },
+          { "$ref": "#/definitions/faq_section" },
+          { "$ref": "#/definitions/cta_section" },
+          { "$ref": "#/definitions/author_section" }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "hero_section": {
+      "type": "object",
+      "required": ["type", "headline", "subheadline"],
+      "properties": {
+        "type": { "const": "hero" },
+        "headline": { "type": "string" },
+        "subheadline": { "type": "string" },
+        "cta_label": { "type": "string" },
+        "background_asset_id": { "type": "string" },
+        "variant": { "type": "string", "enum": ["dark", "light", "glass"] }
+      }
+    },
+    "clinical_evidence_section": {
+      "type": "object",
+      "required": ["type", "title", "items"],
+      "properties": {
+        "type": { "const": "clinical_evidence" },
+        "title": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "value": { "type": "string" },
+              "icon": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "pacing_leading_section": {
+      "type": "object",
+      "required": ["type", "pain_points", "leading_message"],
+      "properties": {
+        "type": { "const": "pacing_leading" },
+        "pain_points": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "leading_message": { "type": "string" }
+      }
+    },
+    "methodology_section": {
+      "type": "object",
+      "required": ["type", "title", "steps"],
+      "properties": {
+        "type": { "const": "methodology" },
+        "title": { "type": "string" },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "icon": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "social_proof_section": {
+      "type": "object",
+      "required": ["type", "items"],
+      "properties": {
+        "type": { "const": "social_proof" },
+        "items": {
+          "type": "array",
+          "items": { "type": "integer" } 
+        }
+      }
+    },
+    "faq_section": {
+      "type": "object",
+      "required": ["type", "questions"],
+      "properties": {
+        "type": { "const": "faq" },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "question": { "type": "string" },
+              "answer": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "cta_section": {
+      "type": "object",
+      "required": ["type", "title", "button_label"],
+      "properties": {
+        "type": { "const": "cta" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "button_label": { "type": "string" },
+        "button_url": { "type": "string" }
+      }
+    },
+    "author_section": {
+      "type": "object",
+      "required": ["type", "name", "bio", "crp"],
+      "properties": {
+        "type": { "const": "author" },
+        "name": { "type": "string" },
+        "bio": { "type": "string" },
+        "crp": { "type": "string" },
+        "academic_highlights": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -7,7 +7,12 @@
       "Bash(node --check frontend/routes/vortex.js)",
       "Bash(node -e ' *)",
       "Bash(node --check frontend/server.js)",
-      "Bash(node --check \"c:\\\\Users\\\\artes\\\\Documents\\\\NeuroStrategy OS - VM\\\\Nucleo de Marketing\\\\frontend\\\\public\\\\js\\\\vortex-studio.js\")"
+      "Bash(node --check \"c:\\\\Users\\\\artes\\\\Documents\\\\NeuroStrategy OS - VM\\\\Nucleo de Marketing\\\\frontend\\\\public\\\\js\\\\vortex-studio.js\")",
+      "Bash(node --check public/js/vortex-studio.js)",
+      "Bash(node --check routes/vortex.js)",
+      "Bash(node scripts/check-db.js)",
+      "Bash(node scripts/migrate.js)",
+      "Bash(node scripts/sync-cloudinary.js)"
     ]
   }
 }

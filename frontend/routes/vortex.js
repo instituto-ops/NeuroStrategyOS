@@ -8,6 +8,10 @@
 const { genAI, getAIModel, wrapModel, extractJSON, trackUsage,
         LITE_MODEL, MAIN_MODEL, PRO_MODEL, GoogleAICacheManager,
         fs, path } = require('../shared');
+const { query } = require('../shared/db');
+const { z } = require('zod');
+const crypto = require('crypto');
+
 
 // Estado global do cache Vórtex
 let vortexActiveCache = null;
@@ -708,20 +712,35 @@ ${buildStylePreferenceContext()}`;
         }
     });
 
-    app.get('/api/vortex/media', (req, res) => {
+    // [NOVO] Listar assets do Acervo Visual (V7.5.2)
+    app.get('/api/vortex/media', async (req, res) => {
         try {
-            const mediaPath = path.join(__dirname, '..', 'acervo_links.json');
-            const usagePath = path.join(__dirname, '..', 'data', 'media_usage.json');
-            const items = fs.existsSync(mediaPath) ? JSON.parse(fs.readFileSync(mediaPath, 'utf8')) : [];
-            const usage = fs.existsSync(usagePath) ? JSON.parse(fs.readFileSync(usagePath, 'utf8')) : {};
-            const normalized = (Array.isArray(items) ? items : (items.items || [])).map(item => ({
-                ...item,
-                usageCount: usage[item.id || item.url] || 0,
-                overused: (usage[item.id || item.url] || 0) > 3
-            }));
-            res.json({ items: normalized });
-        } catch (e) {
-            res.status(500).json({ error: e.message, items: [] });
+            const { category } = req.query;
+            let sql = 'SELECT * FROM vortex_assets ORDER BY created_at DESC';
+            const params = [];
+            
+            if (category) {
+                sql = 'SELECT * FROM vortex_assets WHERE category = $1 ORDER BY created_at DESC';
+                params.push(category);
+            }
+
+            const { rows } = await query(sql, params);
+            res.json({ items: rows });
+        } catch (error) {
+            console.error('Erro ao buscar mídia:', error);
+            res.status(500).json({ error: 'Erro ao buscar mídia no banco.', items: [] });
+        }
+    });
+
+    // [NOVO] Sincronizar Cloudinary (V7.5.2)
+    app.post('/api/vortex/media/sync', async (req, res) => {
+        try {
+            const syncCloudinary = require('../scripts/sync-cloudinary');
+            await syncCloudinary();
+            res.json({ success: true, message: 'Sincronização concluída.' });
+        } catch (error) {
+            console.error('Erro na sincronização:', error);
+            res.status(500).json({ error: 'Erro ao sincronizar com Cloudinary.' });
         }
     });
 
@@ -790,6 +809,559 @@ ${buildStylePreferenceContext()}`;
         } catch (e) {
             console.error('❌ [VORTEX DEPLOY DRAFT]', e.message);
             res.status(500).json({ error: e.message, success: false });
+        }
+    });
+
+    // ==========================================================================
+    // CICLO TRANSACIONAL V7 (POSTGRES) — Schema Real Neon
+    // vortex_drafts: id, slug, title, briefing_json, sections_json, seo_json,
+    //                generation_context_snapshot_json, created_at, updated_at
+    // vortex_revisions: id, page_id, path, title, snapshot_json,
+    //                   abidos_review_status, abidos_compliance_json, schema_version, created_at
+    // vortex_published_pages: id, path, title, sections_json, seo_json,
+    //                         current_revision_id, published_at, updated_at
+    // vortex_publish_logs: id, action, path, revision_id, details, user_id, timestamp
+    // ==========================================================================
+
+    // 1. Salvar Rascunho (Upsert) — Traceability Snapshot (1.5.3)
+    app.post('/api/vortex/save-draft', async (req, res) => {
+        try {
+            const SaveDraftSchema = z.object({
+                id: z.string().uuid().optional(),
+                slug: z.string().optional(),
+                title: z.string().optional(),
+                briefing_json: z.any().optional(),
+                sections_json: z.any().optional(),
+                seo_json: z.any().optional(),
+                generation_context_snapshot_json: z.any().optional()
+            });
+            const parsed = SaveDraftSchema.safeParse(req.body);
+            if (!parsed.success) return res.status(400).json({ error: parsed.error.errors[0]?.message });
+
+            const { id, slug, title, briefing_json, sections_json, seo_json, generation_context_snapshot_json } = parsed.data;
+
+            const snapshot = generation_context_snapshot_json || {
+                saved_at: new Date().toISOString(),
+                schema_version: '1.0'
+            };
+
+            const result = await query(`
+                INSERT INTO vortex_drafts (id, slug, title, briefing_json, sections_json, seo_json, generation_context_snapshot_json, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+                ON CONFLICT (id) DO UPDATE SET
+                    slug = COALESCE(EXCLUDED.slug, vortex_drafts.slug),
+                    title = COALESCE(EXCLUDED.title, vortex_drafts.title),
+                    briefing_json = COALESCE(EXCLUDED.briefing_json, vortex_drafts.briefing_json),
+                    sections_json = COALESCE(EXCLUDED.sections_json, vortex_drafts.sections_json),
+                    seo_json = COALESCE(EXCLUDED.seo_json, vortex_drafts.seo_json),
+                    generation_context_snapshot_json = EXCLUDED.generation_context_snapshot_json,
+                    updated_at = NOW()
+                RETURNING *
+            `, [
+                id || crypto.randomUUID(),
+                slug || null,
+                title || null,
+                briefing_json ? JSON.stringify(briefing_json) : null,
+                sections_json ? JSON.stringify(sections_json) : null,
+                seo_json ? JSON.stringify(seo_json) : null,
+                JSON.stringify(snapshot)
+            ]);
+
+            res.json({ success: true, draft: result.rows[0] });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // 2. Publicar — Snapshot imutável + Update produção (schema V7 real)
+    app.post('/api/vortex/publish', async (req, res) => {
+        try {
+            const { draft_id, author_id } = req.body;
+
+            const draftRes = await query('SELECT * FROM vortex_drafts WHERE id = $1', [draft_id]);
+            if (draftRes.rows.length === 0) return res.status(404).json({ error: 'Rascunho não encontrado.' });
+            const draft = draftRes.rows[0];
+
+            const pagePath = draft.slug || draft.id;
+            const abidosCompliance = req.body.abidos_compliance_json
+                ? JSON.stringify(req.body.abidos_compliance_json) : null;
+            const abidosStatus = req.body.abidos_review_status || 'approved';
+
+            await query('BEGIN');
+            try {
+                // 2.1 Upsert página publicada (current_revision_id = NULL primeiro)
+                const pubRes = await query(`
+                    INSERT INTO vortex_published_pages (path, title, sections_json, seo_json, current_revision_id)
+                    VALUES ($1, $2, $3, $4, NULL)
+                    ON CONFLICT (path) DO UPDATE SET
+                        title = EXCLUDED.title,
+                        sections_json = EXCLUDED.sections_json,
+                        seo_json = EXCLUDED.seo_json,
+                        updated_at = NOW()
+                    RETURNING id
+                `, [pagePath, draft.title, draft.sections_json, draft.seo_json]);
+
+                const page_id = pubRes.rows[0].id;
+
+                // 2.2 Criar revisão imutável com snapshot completo
+                const snapshotJson = JSON.stringify({
+                    title: draft.title,
+                    sections_json: draft.sections_json,
+                    seo_json: draft.seo_json,
+                    briefing_json: draft.briefing_json,
+                    generation_context: draft.generation_context_snapshot_json,
+                    author_id: author_id || 'vortex-studio',
+                    published_at: new Date().toISOString(),
+                    schema_version: '1.0'
+                });
+
+                const revRes = await query(`
+                    INSERT INTO vortex_revisions
+                        (page_id, path, title, snapshot_json, abidos_review_status, abidos_compliance_json, schema_version)
+                    VALUES ($1, $2, $3, $4, $5, $6, '1.0')
+                    RETURNING id
+                `, [page_id, pagePath, draft.title, snapshotJson, abidosStatus, abidosCompliance]);
+
+                const revision_id = revRes.rows[0].id;
+
+                // 2.3 Atualizar ponteiro de revisão corrente
+                await query(
+                    'UPDATE vortex_published_pages SET current_revision_id = $1, updated_at = NOW() WHERE id = $2',
+                    [revision_id, page_id]
+                );
+
+                // 2.4 Audit log
+                await query(
+                    'INSERT INTO vortex_publish_logs (action, path, revision_id, details, user_id) VALUES ($1, $2, $3, $4, $5)',
+                    ['PUBLISH', pagePath, revision_id, `Draft ${draft_id}`, author_id || 'vortex-studio']
+                );
+
+                await query('COMMIT');
+
+                // ISR revalidation (best-effort)
+                try {
+                    const siteUrl = process.env.APP_URL || 'http://localhost:3000';
+                    await axios.post(`${siteUrl}/api/revalidate`, {
+                        path: pagePath,
+                        secret: process.env.VORTEX_API_KEY
+                    });
+                } catch (revalErr) {
+                    console.warn('⚠️ [VORTEX] Revalidação ISR falhou:', revalErr.message);
+                }
+
+                res.json({ success: true, revision_id, path: pagePath });
+            } catch (innerErr) {
+                await query('ROLLBACK');
+                throw innerErr;
+            }
+        } catch (e) {
+            console.error('❌ [VORTEX PUBLISH]', e);
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // 3. Listar Rascunhos
+    app.get('/api/vortex/drafts', async (req, res) => {
+        try {
+            const result = await query(
+                'SELECT id, slug, title, updated_at FROM vortex_drafts ORDER BY updated_at DESC'
+            );
+            res.json(result.rows);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // 4. Buscar Revisões de uma Página (via path denormalizado)
+    app.get('/api/vortex/revisions/:path', async (req, res) => {
+        try {
+            const pagePath = decodeURIComponent(req.params.path);
+            const result = await query(
+                'SELECT id, path, title, abidos_review_status, schema_version, created_at FROM vortex_revisions WHERE path = $1 ORDER BY created_at DESC',
+                [pagePath]
+            );
+            res.json(result.rows);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // 5. Listar Páginas Publicadas
+    app.get('/api/vortex/published-pages', async (req, res) => {
+        try {
+            const result = await query(
+                'SELECT id, path, title, current_revision_id, updated_at FROM vortex_published_pages ORDER BY updated_at DESC'
+            );
+            res.json(result.rows);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // 6. Abidos Review Gate — Valida sections_json e HTML contra regras editoriais
+    app.post('/api/vortex/abidos-review', async (req, res) => {
+        try {
+            const { sections_json, html_code, seo_json } = req.body;
+
+            const issues = [];
+            let hasBlocked = false;
+
+            const cfpProibidos = [
+                /cura\s+garantida/i, /garantimos\s+resultado/i, /100%\s+eficaz/i,
+                /eliminar\s+para\s+sempre/i, /tratamento\s+milagroso/i, /cura\s+definitiva/i,
+                /livre\s+da\s+ansiedade\s+para\s+sempre/i, /acaba\s+com\s+a\s+depress[aã]o/i,
+                /resultados\s+garantidos/i, /n[aã]o\s+ter[aá]\s+mais/i
+            ];
+
+            const html = String(html_code || '');
+            const sectionsArr = Array.isArray(sections_json) ? sections_json :
+                (sections_json?.sections || []);
+
+            // Blocked: CFP — promessas de cura
+            for (const rx of cfpProibidos) {
+                if (rx.test(html)) {
+                    issues.push({ severity: 'blocked', code: 'CFP_PROMESSA_CURA', message: `Termos proibidos pelo CFP: "${rx.source}"` });
+                    hasBlocked = true;
+                    break;
+                }
+            }
+
+            // Blocked: falta CRP em conteúdo clínico
+            const isClinical = /hipno|psicolog|depress|ansied|terapia|psiquiatr|clín/i.test(html);
+            const hasCRP = /CRP[-\s]?\d{2}\/\d{4,6}/i.test(html);
+            if (isClinical && !hasCRP) {
+                issues.push({ severity: 'blocked', code: 'CFP_SEM_CRP', message: 'Conteúdo clínico detectado sem número de CRP do profissional.' });
+                hasBlocked = true;
+            }
+
+            // Blocked: sem H1
+            const hasH1 = /<h1[\s>]/i.test(html) ||
+                sectionsArr.some(s => s.type === 'hero' && s.headline);
+            if (html && !hasH1) {
+                issues.push({ severity: 'blocked', code: 'FALTA_H1', message: 'A página não possui H1. Obrigatório para SEO e acessibilidade.' });
+                hasBlocked = true;
+            }
+
+            // Warning: sem CTA
+            const hasCTA = /<a\s/i.test(html) || /<button/i.test(html) ||
+                sectionsArr.some(s => s.type === 'cta');
+            if (html && !hasCTA) {
+                issues.push({ severity: 'warning', code: 'SEM_CTA', message: 'Nenhum call-to-action encontrado. Recomendado para conversão.' });
+            }
+
+            // Warning: sem SEO description
+            if (!seo_json?.description && !seo_json?.meta_description) {
+                issues.push({ severity: 'warning', code: 'SEM_SEO_DESCRIPTION', message: 'Meta description ausente. Impacta CTR orgânico.' });
+            }
+
+            // Warning: links externos sem nofollow
+            const extLinkRx = /<a\s[^>]*href=["']https?:\/\/(?!hipnolawrence)[^"']+["'][^>]*>/gi;
+            const matches = html.match(extLinkRx) || [];
+            const badLinks = matches.filter(m => !/rel=["'][^"']*nofollow/i.test(m));
+            if (badLinks.length > 0) {
+                issues.push({ severity: 'warning', code: 'LINK_EXTERNO_SEM_NOFOLLOW', message: `${badLinks.length} link(s) externo(s) sem rel="nofollow".` });
+            }
+
+            // Warning: poucas seções estruturais
+            if (sectionsArr.length > 0 && sectionsArr.length < 2) {
+                issues.push({ severity: 'warning', code: 'POUCAS_SECOES', message: 'Menos de 2 seções Abidos. Estrutura mínima não atingida.' });
+            }
+
+            const score = Math.max(0, 100
+                - issues.filter(i => i.severity === 'blocked').length * 35
+                - issues.filter(i => i.severity === 'warning').length * 10);
+
+            const status = hasBlocked ? 'blocked' : issues.length > 0 ? 'warning' : 'approved';
+
+            res.json({ status, score, issues });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // 7. Criar Rascunho de Revisão a partir de Página Publicada (schema V7 real)
+    app.post('/api/vortex/revision-draft', async (req, res) => {
+        try {
+            const { path: pagePath } = req.body;
+            if (!pagePath) return res.status(400).json({ error: 'path obrigatório.' });
+
+            const pubRes = await query(
+                'SELECT id, path, title, sections_json, seo_json FROM vortex_published_pages WHERE path = $1',
+                [pagePath]
+            );
+            if (pubRes.rows.length === 0) return res.status(404).json({ error: 'Página publicada não encontrada.' });
+            const pub = pubRes.rows[0];
+
+            const result = await query(`
+                INSERT INTO vortex_drafts (id, slug, title, sections_json, seo_json, updated_at)
+                VALUES ($1, $2, $3, $4, $5, NOW())
+                RETURNING id, slug, title, updated_at
+            `, [
+                crypto.randomUUID(),
+                pub.path,
+                `[Revisão] ${pub.title || pagePath}`,
+                pub.sections_json,
+                pub.seo_json
+            ]);
+
+            res.json({ success: true, draft: result.rows[0] });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // 8. Rollback — Reverter Página Publicada para Revisão Anterior (schema V7 real)
+    app.post('/api/vortex/rollback', async (req, res) => {
+        try {
+            const { path: pagePath, revision_id, author_id } = req.body;
+            if (!pagePath || !revision_id) return res.status(400).json({ error: 'path e revision_id obrigatórios.' });
+
+            const revRes = await query('SELECT * FROM vortex_revisions WHERE id = $1', [revision_id]);
+            if (revRes.rows.length === 0) return res.status(404).json({ error: 'Revisão não encontrada.' });
+            const rev = revRes.rows[0];
+
+            // Extrair dados do snapshot_json imutável
+            const snap = typeof rev.snapshot_json === 'string'
+                ? JSON.parse(rev.snapshot_json)
+                : (rev.snapshot_json || {});
+
+            await query('BEGIN');
+            try {
+                await query(`
+                    UPDATE vortex_published_pages
+                    SET current_revision_id = $1,
+                        sections_json = $2,
+                        seo_json = $3,
+                        title = $4,
+                        updated_at = NOW()
+                    WHERE path = $5
+                `, [
+                    revision_id,
+                    snap.sections_json ? JSON.stringify(snap.sections_json) : null,
+                    snap.seo_json ? JSON.stringify(snap.seo_json) : null,
+                    snap.title || rev.title || pagePath,
+                    pagePath
+                ]);
+
+                await query(
+                    'INSERT INTO vortex_publish_logs (action, path, revision_id, details, user_id) VALUES ($1, $2, $3, $4, $5)',
+                    ['ROLLBACK', pagePath, revision_id, `Rollback para revisão ${revision_id}`, author_id || 'system']
+                );
+
+                await query('COMMIT');
+                res.json({ success: true, message: `Rollback para revisão ${revision_id} concluído.` });
+            } catch (innerErr) {
+                await query('ROLLBACK');
+                throw innerErr;
+            }
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // 9. Social Proof — Listar e Criar
+    app.get('/api/vortex/social-proof', async (req, res) => {
+        try {
+            const result = await query(
+                'SELECT * FROM abidos_social_proof WHERE is_approved = TRUE ORDER BY created_at DESC LIMIT 50'
+            );
+            res.json(result.rows);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    app.post('/api/vortex/social-proof', async (req, res) => {
+        try {
+            const { patient_name, demand_type, content, professional_response, source_date, rating } = req.body;
+            if (!content) return res.status(400).json({ error: 'content obrigatório.' });
+
+            const result = await query(`
+                INSERT INTO abidos_social_proof (patient_name, demand_type, content, professional_response, source_date, rating, is_approved)
+                VALUES ($1, $2, $3, $4, $5, $6, FALSE)
+                RETURNING *
+            `, [patient_name, demand_type, content, professional_response, source_date, rating]);
+
+            res.json({ success: true, item: result.rows[0] });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // 9b. Social Proof — Aprovar item (PATCH)
+    app.patch('/api/vortex/social-proof/:id/approve', async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { approve } = req.body;
+            const result = await query(
+                'UPDATE abidos_social_proof SET is_approved = $1 WHERE id = $2 RETURNING *',
+                [approve !== false, parseInt(id, 10)]
+            );
+            if (result.rows.length === 0) return res.status(404).json({ error: 'Item não encontrado.' });
+            res.json({ success: true, item: result.rows[0] });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // 9c. Social Proof — Listar pendentes (para revisão editorial)
+    app.get('/api/vortex/social-proof/pending', async (req, res) => {
+        try {
+            const result = await query(
+                'SELECT * FROM abidos_social_proof WHERE is_approved = FALSE ORDER BY created_at DESC'
+            );
+            res.json(result.rows);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // ==========================================================================
+    // 10. ABIDOS-NATIVE ENGINE — Geração de sections_json estruturado (1.5.1)
+    // ==========================================================================
+    app.post('/api/vortex/generate-sections', async (req, res) => {
+        try {
+            const GenerateSectionsSchema = z.object({
+                briefing_json: z.record(z.any()),
+                page_type: z.enum(['landing', 'hub', 'spoke', 'article']).default('spoke'),
+                model: z.string().optional()
+            });
+            const parsed = GenerateSectionsSchema.safeParse(req.body);
+            if (!parsed.success) return res.status(400).json({ error: parsed.error.errors[0]?.message });
+
+            const { briefing_json, page_type, model } = parsed.data;
+            const modelId = model || 'gemini-2.5-flash';
+
+            const schemaPath = path.join(__dirname, '..', '..', 'docs', '04_Arquivos_de_Referência', 'schemas', 'abidos_page_schema.json');
+            let abidosSchema = '{}';
+            try { abidosSchema = fs.readFileSync(schemaPath, 'utf8'); } catch (e) {}
+
+            const systemPrompt = `Você é o Abidos-Native Engine, gerador estrutural de conteúdo clínico-psicológico.
+
+MISSÃO: Gerar um objeto JSON que represente a estrutura de uma página ${page_type} para um psicólogo/hipnoterapeuta clínico.
+
+SCHEMA ABIDOS (siga rigorosamente):
+${abidosSchema}
+
+REGRAS OBRIGATÓRIAS:
+1. Retorne APENAS JSON puro (sem markdown, sem texto adicional).
+2. O campo "version" deve ser "1.0" e "type" deve ser "${page_type}".
+3. Inclua obrigatoriamente uma seção "author" com campo "crp" preenchido com o CRP do briefing ou "XX/XXXXX".
+4. Proibido: promessas de cura, garantias de resultado, linguagem que viole o CFP.
+5. Use Pacing & Leading clínico: valide a dor do paciente antes de apresentar a solução.
+6. O array "sections" deve ter pelo menos 4 seções: hero, pacing_leading, methodology, cta.`;
+
+            const briefSummary = compactForPrompt(briefing_json, 4000);
+            const userPrompt = `[BRIEFING DA PÁGINA]\n${briefSummary}\n\nGere o sections_json completo para esta página ${page_type}.`;
+
+            const aiModel = getAIModel(modelId, 'application/json', systemPrompt);
+            const result = await aiModel.generateContent(userPrompt);
+            const responseText = result.response.text();
+
+            let sectionsJson;
+            try {
+                const clean = responseText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+                sectionsJson = JSON.parse(clean);
+            } catch (parseErr) {
+                return res.status(422).json({ error: 'IA retornou JSON inválido.', raw: responseText.slice(0, 500) });
+            }
+
+            trackUsage(result.response.usageMetadata, {
+                route: 'vortex/generate-sections',
+                model: modelId,
+                promptChars: systemPrompt.length + userPrompt.length,
+                responseChars: responseText.length
+            });
+
+            res.json({ success: true, sections_json: sectionsJson, schema_version: '1.0' });
+        } catch (e) {
+            console.error('❌ [ABIDOS ENGINE]', e.message);
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // ==========================================================================
+    // 11. SELETOR DE ASSETS — Lista assets do Cloudinary Index (2.2)
+    // ==========================================================================
+    app.get('/api/vortex/assets', async (req, res) => {
+        try {
+            const { category, limit = 50 } = req.query;
+            const params = [];
+            let where = '';
+            if (category) {
+                where = 'WHERE category = $1';
+                params.push(category);
+            }
+            const result = await query(
+                `SELECT va.id, va.url, va.filename, va.thumbnail_url, va.mime_type, va.category,
+                        nam.alt_text, nam.seo_role, nam.is_approved_clinically
+                 FROM vortex_assets va
+                 LEFT JOIN neuro_asset_metadata nam ON nam.asset_id = va.id
+                 ${where}
+                 ORDER BY va.updated_at DESC
+                 LIMIT $${params.length + 1}`,
+                [...params, parseInt(limit, 10) || 50]
+            );
+            res.json(result.rows);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // ==========================================================================
+    // 12. MANUTENÇÃO — Cleanup e Slugs Reservados (4.4)
+    // ==========================================================================
+    app.post('/api/vortex/maintenance/cleanup-orphans', async (req, res) => {
+        try {
+            const { days_old = 30 } = req.body;
+            const result = await query(`
+                DELETE FROM vortex_drafts
+                WHERE (path IS NULL OR path = '')
+                  AND updated_at < NOW() - INTERVAL '${parseInt(days_old, 10)} days'
+                RETURNING id, title
+            `);
+            res.json({ success: true, deleted: result.rows.length, items: result.rows });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // Slugs reservados — armazenados em JSON local (baixo overhead)
+    const RESERVED_SLUGS_PATH = path.join(__dirname, '..', 'data', 'reserved_slugs.json');
+    function readReservedSlugs() {
+        try { return JSON.parse(fs.readFileSync(RESERVED_SLUGS_PATH, 'utf8')); } catch { return []; }
+    }
+
+    app.get('/api/vortex/maintenance/reserved-slugs', (req, res) => {
+        res.json(readReservedSlugs());
+    });
+
+    app.post('/api/vortex/maintenance/reserve-slug', (req, res) => {
+        try {
+            const SlugSchema = z.object({ slug: z.string().min(1).max(255), reason: z.string().optional() });
+            const parsed = SlugSchema.safeParse(req.body);
+            if (!parsed.success) return res.status(400).json({ error: parsed.error.errors[0]?.message });
+            const { slug, reason } = parsed.data;
+            const list = readReservedSlugs();
+            if (list.find(s => s.slug === slug)) return res.status(409).json({ error: 'Slug já reservado.' });
+            list.push({ slug, reason: reason || '', reserved_at: new Date().toISOString() });
+            const dir = path.dirname(RESERVED_SLUGS_PATH);
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(RESERVED_SLUGS_PATH, JSON.stringify(list, null, 2), 'utf8');
+            res.json({ success: true, slug });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    app.delete('/api/vortex/maintenance/reserved-slugs/:slug', (req, res) => {
+        try {
+            const { slug } = req.params;
+            const list = readReservedSlugs().filter(s => s.slug !== decodeURIComponent(slug));
+            fs.writeFileSync(RESERVED_SLUGS_PATH, JSON.stringify(list, null, 2), 'utf8');
+            res.json({ success: true });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
         }
     });
 

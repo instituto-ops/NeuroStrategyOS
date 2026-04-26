@@ -1,0 +1,330 @@
+
+<h2 class="sr-only">Vórtex Lente 1 — redesign funcional com silos colapsáveis, rascunho ativo e edição manual</h2>
+<style>
+.fx { background: #0B0816; border-radius: 12px; overflow: hidden; font-family: var(--font-sans); color: #EDE9F7; border: 1px solid rgba(255,255,255,0.06); }
+.fx * { box-sizing: border-box; }
+.fx button, .fx input, .fx select, .fx textarea { font-family: inherit; }
+.fxh { display: flex; align-items: center; padding: 10px 16px; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.06); background: linear-gradient(180deg, rgba(142,120,255,0.04), transparent); }
+.fxh-logo { display: flex; align-items: center; gap: 7px; }
+.fxh-bcrumb { display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(237,233,247,0.45); flex: 1; min-width: 0; }
+.fxh-bcrumb b { color: rgba(237,233,247,0.85); font-weight: 500; }
+.fxh-tag { font-size: 10px; padding: 2px 8px; background: rgba(245,176,68,0.12); color: #F5B044; border-radius: 99px; font-weight: 500; }
+.fxh-stepper { display: flex; align-items: center; gap: 2px; }
+.fxh-step { padding: 5px 10px; font-size: 11px; font-weight: 500; color: rgba(237,233,247,0.4); background: none; border: none; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 5px; }
+.fxh-step .dot { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; background: rgba(255,255,255,0.05); color: rgba(237,233,247,0.5); }
+.fxh-step.active { background: rgba(142,120,255,0.12); color: #BDABFF; }
+.fxh-step.active .dot { background: #8E78FF; color: #0B0816; }
+.fxh-arrow { width: 8px; height: 8px; opacity: 0.25; }
+.fxm { display: flex; min-height: 480px; max-height: 480px; }
+.fxm-rail { width: 250px; flex-shrink: 0; padding: 14px 12px; border-right: 1px solid rgba(255,255,255,0.05); overflow-y: auto; }
+.fxm-stage { flex: 1; min-width: 0; padding: 14px 18px; display: flex; flex-direction: column; overflow-y: auto; }
+.fx-rail-title { font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(237,233,247,0.4); margin-bottom: 10px; padding: 0 4px; }
+.fx-silo-bcrumb { display: flex; align-items: center; gap: 4px; font-size: 9px; letter-spacing: 0.08em; color: rgba(237,233,247,0.35); text-transform: uppercase; padding: 0 4px 8px; }
+.fx-silo-bcrumb svg { width: 6px; height: 6px; opacity: 0.5; }
+.fx-silo-card { background: rgba(255,255,255,0.025); border: 0.5px solid rgba(255,255,255,0.06); border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color 0.15s; }
+.fx-silo-card.expanded { border-color: rgba(142,120,255,0.3); }
+.fx-silo-head { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; cursor: pointer; }
+.fx-silo-head:hover { background: rgba(255,255,255,0.02); }
+.fx-silo-icon { width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, rgba(142,120,255,0.25), rgba(189,171,255,0.1)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+.fx-silo-info { flex: 1; min-width: 0; }
+.fx-silo-name { font-size: 13px; font-weight: 500; color: #EDE9F7; }
+.fx-silo-meta { font-size: 10px; color: rgba(237,233,247,0.45); margin-top: 1px; font-family: var(--font-mono); }
+.fx-silo-status { font-size: 8px; padding: 2px 6px; border-radius: 99px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; flex-shrink: 0; }
+.fx-status-ok { background: rgba(77,211,160,0.15); color: #4DD3A0; }
+.fx-status-warn { background: rgba(245,176,68,0.15); color: #F5B044; }
+.fx-silo-chev { color: rgba(237,233,247,0.3); flex-shrink: 0; transition: transform 0.2s; align-self: center; }
+.fx-silo-card.expanded .fx-silo-chev { transform: rotate(90deg); }
+.fx-spoke-list { padding: 0 8px 8px; display: none; }
+.fx-silo-card.expanded .fx-spoke-list { display: block; }
+.fx-spoke { display: flex; align-items: flex-start; gap: 8px; padding: 6px 8px; border-left: 1.5px solid rgba(142,120,255,0.18); margin-left: 8px; cursor: pointer; border-radius: 0 5px 5px 0; transition: all 0.12s; }
+.fx-spoke:hover { background: rgba(142,120,255,0.06); border-left-color: #8E78FF; }
+.fx-spoke.active { background: rgba(142,120,255,0.1); border-left-color: #8E78FF; }
+.fx-spoke-dot { width: 4px; height: 4px; border-radius: 50%; background: #8E78FF; margin-top: 6px; flex-shrink: 0; }
+.fx-spoke-info { flex: 1; min-width: 0; }
+.fx-spoke-name { font-size: 11px; color: rgba(237,233,247,0.75); line-height: 1.3; }
+.fx-spoke-slug { font-size: 9px; color: rgba(237,233,247,0.35); font-family: var(--font-mono); margin-top: 1px; }
+.fx-spoke-edit { font-size: 9px; padding: 3px 8px; background: #5A4DE0; color: #fff; border: none; border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.12s; align-self: center; }
+.fx-spoke:hover .fx-spoke-edit, .fx-spoke.active .fx-spoke-edit { opacity: 1; }
+.fx-spoke-add { display: block; width: calc(100% - 16px); margin: 4px 8px 0; padding: 5px; font-size: 10px; color: rgba(189,171,255,0.6); background: none; border: 1px dashed rgba(142,120,255,0.2); border-radius: 5px; cursor: pointer; }
+.fx-spoke-add:hover { border-color: rgba(142,120,255,0.4); color: #BDABFF; }
+.fx-rail-divider { height: 1px; background: rgba(255,255,255,0.05); margin: 14px 0; }
+.fx-add-silo { display: block; width: 100%; padding: 8px; font-size: 11px; color: rgba(189,171,255,0.7); background: rgba(142,120,255,0.05); border: 1px dashed rgba(142,120,255,0.25); border-radius: 8px; cursor: pointer; }
+.fx-add-silo:hover { background: rgba(142,120,255,0.1); border-color: rgba(142,120,255,0.5); color: #BDABFF; }
+.fx-stage-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 0.5px solid rgba(255,255,255,0.06); }
+.fx-stage-title { font-size: 14px; font-weight: 500; color: #EDE9F7; }
+.fx-stage-sub { font-size: 11px; color: rgba(237,233,247,0.5); margin-top: 2px; }
+.fx-stage-actions { display: flex; gap: 6px; align-items: center; }
+.fx-vp-toggle { display: flex; gap: 2px; padding: 3px; background: rgba(255,255,255,0.04); border-radius: 6px; border: 0.5px solid rgba(255,255,255,0.06); }
+.fx-vp-toggle button { padding: 4px 7px; font-size: 10px; background: none; border: none; border-radius: 4px; color: rgba(237,233,247,0.45); cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.fx-vp-toggle button.on { background: rgba(142,120,255,0.18); color: #BDABFF; }
+.fx-brief { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; margin-top: 4px; }
+.fx-brief-col { background: rgba(255,255,255,0.02); border: 0.5px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 14px; }
+.fx-brief-col-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.fx-brief-col-title { font-size: 11px; font-weight: 500; color: #EDE9F7; }
+.fx-brief-col-num { width: 18px; height: 18px; border-radius: 50%; background: rgba(142,120,255,0.18); color: #BDABFF; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; }
+.fx-field { margin-bottom: 10px; }
+.fx-field-label { font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(237,233,247,0.4); margin-bottom: 5px; display: block; }
+.fx-field input, .fx-field select, .fx-field textarea { width: 100%; background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 7px 9px; color: #EDE9F7; font-size: 12px; outline: none; }
+.fx-field input:focus, .fx-field select:focus, .fx-field textarea:focus { border-color: #8E78FF; }
+.fx-field textarea { resize: none; min-height: 56px; line-height: 1.4; }
+.fx-field-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fx-keyword-row { display: flex; gap: 6px; align-items: stretch; }
+.fx-keyword-row input { flex: 1; }
+.fx-keyword-add { padding: 0 12px; font-size: 11px; color: #BDABFF; background: rgba(142,120,255,0.12); border: 0.5px solid rgba(142,120,255,0.25); border-radius: 6px; cursor: pointer; white-space: nowrap; }
+.fx-keyword-add:hover { background: rgba(142,120,255,0.2); }
+.fx-keyword-pills { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.fx-keyword-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 3px 6px 3px 8px; background: rgba(142,120,255,0.1); color: #BDABFF; border: 0.5px solid rgba(142,120,255,0.25); border-radius: 99px; cursor: pointer; }
+.fx-keyword-pill.suggested { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: rgba(237,233,247,0.55); }
+.fx-keyword-pill .x { color: rgba(189,171,255,0.5); cursor: pointer; padding-left: 2px; }
+.fx-keyword-pill .x:hover { color: #fff; }
+.fx-mode-pick { display: flex; gap: 5px; margin-top: 4px; }
+.fx-mode-pick button { flex: 1; padding: 8px 6px; background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.06); border-radius: 6px; color: rgba(237,233,247,0.55); cursor: pointer; text-align: left; }
+.fx-mode-pick button.on { background: rgba(142,120,255,0.12); border-color: rgba(142,120,255,0.4); color: #BDABFF; }
+.fx-mode-pick .name { font-size: 11px; font-weight: 500; }
+.fx-mode-pick .desc { font-size: 9px; color: rgba(237,233,247,0.4); margin-top: 2px; line-height: 1.3; }
+.fx-mode-pick button.on .desc { color: rgba(189,171,255,0.65); }
+.fx-status { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(142,120,255,0.05); border: 0.5px solid rgba(142,120,255,0.15); border-radius: 8px; margin-top: 14px; }
+.fx-status-icon { width: 20px; height: 20px; border-radius: 50%; background: rgba(142,120,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.fx-status-text { flex: 1; font-size: 11px; color: rgba(237,233,247,0.7); line-height: 1.4; }
+.fx-status-text b { color: #EDE9F7; font-weight: 500; }
+.fx-cta-row { display: flex; gap: 8px; margin-top: 14px; }
+.fx-cta-primary { flex: 1; padding: 10px; background: #5A4DE0; color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.fx-cta-primary:hover { background: #6F60E8; }
+.fx-cta-ghost { padding: 10px 16px; background: none; color: rgba(237,233,247,0.55); border: 0.5px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 12px; cursor: pointer; }
+.fx-cta-ghost:hover { color: #EDE9F7; border-color: rgba(255,255,255,0.2); }
+.fx-tip { font-size: 10px; color: rgba(237,233,247,0.4); margin-top: 8px; line-height: 1.5; }
+.fx-tip kbd { font-family: var(--font-mono); font-size: 9px; padding: 1px 4px; background: rgba(255,255,255,0.06); border-radius: 3px; border: 0.5px solid rgba(255,255,255,0.08); }
+</style>
+
+<div class="fx">
+  <header class="fxh">
+    <div class="fxh-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#8E78FF" stroke-width="1.5"/><path d="M8 12c1.5-3 3-4 4-4s2.5 1 4 4-1 4-4 4-5.5-1-4-4z" fill="#8E78FF"/></svg>
+      <span style="font-size: 13px; font-weight: 500;">Vórtex</span>
+    </div>
+    <div class="fxh-bcrumb">
+      <span>Rascunho ativo</span>
+      <svg class="fxh-arrow" viewBox="0 0 8 8"><path d="M2 1l3 3-3 3" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+      <b id="bcrumb-name">Hipnose Clínica · página nova</b>
+      <span class="fxh-tag">não publicado</span>
+    </div>
+    <div class="fxh-stepper">
+      <button class="fxh-step active"><span class="dot">1</span>Contexto</button>
+      <svg class="fxh-arrow" viewBox="0 0 8 8"><path d="M2 1l3 3-3 3" stroke="rgba(237,233,247,0.5)" stroke-width="1" fill="none"/></svg>
+      <button class="fxh-step"><span class="dot">2</span>Edição</button>
+      <svg class="fxh-arrow" viewBox="0 0 8 8"><path d="M2 1l3 3-3 3" stroke="rgba(237,233,247,0.5)" stroke-width="1" fill="none"/></svg>
+      <button class="fxh-step"><span class="dot">3</span>Performance</button>
+      <svg class="fxh-arrow" viewBox="0 0 8 8"><path d="M2 1l3 3-3 3" stroke="rgba(237,233,247,0.5)" stroke-width="1" fill="none"/></svg>
+      <button class="fxh-step"><span class="dot">4</span>Publicar</button>
+    </div>
+  </header>
+
+  <div class="fxm">
+    <aside class="fxm-rail">
+      <div class="fx-silo-bcrumb">SILOS<svg viewBox="0 0 6 6"><path d="M1 1l2 2-2 2" stroke="currentColor" stroke-width="1" fill="none"/></svg>HUB<svg viewBox="0 0 6 6"><path d="M1 1l2 2-2 2" stroke="currentColor" stroke-width="1" fill="none"/></svg>SPOKES</div>
+      <div id="silos-list"></div>
+      <div class="fx-rail-divider"></div>
+      <button class="fx-add-silo">+ Criar novo Silo</button>
+    </aside>
+
+    <main class="fxm-stage">
+      <div class="fx-stage-head">
+        <div>
+          <div class="fx-stage-title">Briefing criativo</div>
+          <div class="fx-stage-sub">Defina contexto, voz e formato. Selecionar silos no painel ao lado preenche automaticamente.</div>
+        </div>
+        <div class="fx-stage-actions">
+          <div class="fx-vp-toggle" title="Viewport do preview">
+            <button class="on"><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2.5" width="11" height="7.5" rx="0.8" stroke="currentColor" stroke-width="1"/><path d="M5 12h4" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>Desktop</button>
+            <button><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><rect x="3" y="1.5" width="8" height="11" rx="1" stroke="currentColor" stroke-width="1"/><circle cx="7" cy="10.5" r="0.5" fill="currentColor"/></svg>Tablet</button>
+            <button><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><rect x="4.5" y="1.5" width="5" height="11" rx="0.8" stroke="currentColor" stroke-width="1"/><circle cx="7" cy="10.5" r="0.4" fill="currentColor"/></svg>Mobile</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="fx-brief">
+        <div class="fx-brief-col">
+          <div class="fx-brief-col-h">
+            <span class="fx-brief-col-title">Direção criativa</span>
+            <span class="fx-brief-col-num">1</span>
+          </div>
+
+          <div class="fx-field">
+            <label class="fx-field-label">Palavra-chave principal</label>
+            <div class="fx-keyword-row">
+              <input id="kw-input" placeholder="ex: hipnose clínica para TEA em adultos" />
+              <button class="fx-keyword-add" onclick="addKeyword()">+ Adicionar</button>
+            </div>
+            <div class="fx-keyword-pills" id="kw-pills"></div>
+            <div class="fx-tip" style="margin-top: 6px;">Sugestões Tier 1 (clique para adicionar):</div>
+            <div class="fx-keyword-pills">
+              <span class="fx-keyword-pill suggested" onclick="addSuggested(this)">hipnose clínica para TEA em adultos</span>
+              <span class="fx-keyword-pill suggested" onclick="addSuggested(this)">autismo feminino em adultas</span>
+              <span class="fx-keyword-pill suggested" onclick="addSuggested(this)">diagnóstico tardio</span>
+            </div>
+          </div>
+
+          <div class="fx-field-2" style="margin-top: 12px;">
+            <div class="fx-field"><label class="fx-field-label">Motor IA</label><select><option>Gemini 2.5 Flash</option><option>Gemini 2.5 Pro</option></select></div>
+            <div class="fx-field"><label class="fx-field-label">Formato</label><select><option>Landing page</option><option>Página do site</option><option>Artigo de blog</option></select></div>
+          </div>
+
+          <div class="fx-field">
+            <label class="fx-field-label">Contexto livre</label>
+            <textarea placeholder="Quanto mais contexto, mais precisa fica a voz clínica. Conte público-alvo, dor central, diferencial..."></textarea>
+          </div>
+        </div>
+
+        <div class="fx-brief-col">
+          <div class="fx-brief-col-h">
+            <span class="fx-brief-col-title">Modo de criação</span>
+            <span class="fx-brief-col-num">2</span>
+          </div>
+
+          <div class="fx-mode-pick">
+            <button class="on">
+              <div class="name">Estruturado Abidos</div>
+              <div class="desc">Template clínico testado · SEO garantido</div>
+            </button>
+            <button>
+              <div class="name">Livre Premium</div>
+              <div class="desc">Do zero · liberdade visual total</div>
+            </button>
+            <button>
+              <div class="name">Híbrido</div>
+              <div class="desc">Começa com base · evolui livre</div>
+            </button>
+          </div>
+
+          <div class="fx-field" style="margin-top: 14px;">
+            <label class="fx-field-label">CTAs reais (já preenchidos)</label>
+            <div class="fx-field-2">
+              <input value="62 99154-5295" placeholder="WhatsApp" />
+              <input value="instituto@hipnolawrence.com" placeholder="Email" />
+            </div>
+            <div class="fx-field-2" style="margin-top: 6px;">
+              <input value="@hipnolawrence" placeholder="Instagram" />
+              <input value="hipnolawrence.com/agendamento" placeholder="Agendamento" />
+            </div>
+          </div>
+
+          <div class="fx-status">
+            <div class="fx-status-icon">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="2" fill="#BDABFF"/></svg>
+            </div>
+            <div class="fx-status-text">
+              <b>Hipnose Clínica</b> selecionado como Hub. Spoke ainda não definido — você pode <span style="color:#BDABFF; cursor:pointer;">criar um novo</span> ou pedir sugestão à IA.
+            </div>
+          </div>
+
+          <div class="fx-cta-row">
+            <button class="fx-cta-primary">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.5l1.5 3.5 3.5.5-2.5 2.5.5 3.5L6 9.5 3 11.5l.5-3.5L1 5.5l3.5-.5z" fill="currentColor"/></svg>
+              Gerar com IA
+            </button>
+            <button class="fx-cta-ghost">Salvar rascunho</button>
+          </div>
+
+          <div class="fx-tip">Pressione <kbd>Esc</kbd> a qualquer momento para deselecionar. <kbd>⌘</kbd>+<kbd>Enter</kbd> envia o briefing.</div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+var fxKeywords = [];
+var fxSilos = [
+  { name: 'Autismo Adulto', icon: '🧠', spokes: 2, status: 'ok', statusLabel: 'Pronto', expanded: false, items: [
+    { name: 'Diagnóstico Tardio', slug: '/autismo-adulto/diagnostico-tardio' },
+    { name: 'Sinais Sutis em Mulheres', slug: '/autismo-adulto/sinais-sutis-mulheres' }
+  ]},
+  { name: 'Hipnose Clínica', icon: '🌀', spokes: 2, status: 'warn', statusLabel: 'Em revisão', expanded: true, selected: true, items: [
+    { name: 'Hipnose Clínica em Uberlândia', slug: '/hipnose-clinica/uberlandia' },
+    { name: 'Hipnose Clínica Online', slug: '/hipnose-clinica/online' }
+  ]},
+  { name: 'Ansiedade e Burnout', icon: '⚡', spokes: 2, status: 'ok', statusLabel: 'Pronto', expanded: false, items: [
+    { name: 'Terapia Estratégica', slug: '/ansiedade/terapia-estrategica' },
+    { name: 'Sintomas Físicos', slug: '/ansiedade/sintomas-fisicos' }
+  ]}
+];
+
+function renderSilos() {
+  var html = '';
+  fxSilos.forEach(function(s, i) {
+    var statusClass = s.status === 'ok' ? 'fx-status-ok' : 'fx-status-warn';
+    html += '<div class="fx-silo-card ' + (s.expanded ? 'expanded' : '') + (s.selected ? ' selected' : '') + '">';
+    html += '<div class="fx-silo-head" onclick="toggleSilo(' + i + ')">';
+    html += '<div class="fx-silo-icon">' + s.icon + '</div>';
+    html += '<div class="fx-silo-info"><div class="fx-silo-name">' + s.name + '</div><div class="fx-silo-meta">' + s.spokes + ' spokes</div></div>';
+    html += '<span class="fx-silo-status ' + statusClass + '">' + s.statusLabel + '</span>';
+    html += '<svg class="fx-silo-chev" width="8" height="8" viewBox="0 0 8 8"><path d="M2 1l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>';
+    html += '</div>';
+    html += '<div class="fx-spoke-list">';
+    s.items.forEach(function(sp, j) {
+      html += '<div class="fx-spoke" onclick="selectSpoke(' + i + ',' + j + ', event)">';
+      html += '<div class="fx-spoke-dot"></div>';
+      html += '<div class="fx-spoke-info"><div class="fx-spoke-name">' + sp.name + '</div><div class="fx-spoke-slug">' + sp.slug + '</div></div>';
+      html += '<button class="fx-spoke-edit" onclick="editSpoke(event,' + i + ',' + j + ')">Editar</button>';
+      html += '</div>';
+    });
+    html += '<button class="fx-spoke-add" onclick="addSpoke(' + i + ')">+ Novo Spoke neste Hub</button>';
+    html += '</div>';
+    html += '</div>';
+  });
+  document.getElementById('silos-list').innerHTML = html;
+}
+
+function toggleSilo(i) {
+  fxSilos[i].expanded = !fxSilos[i].expanded;
+  renderSilos();
+}
+
+function selectSpoke(i, j, ev) {
+  ev.stopPropagation();
+  fxSilos.forEach(function(s){ s.items.forEach(function(sp){ sp.active = false; }); });
+  fxSilos[i].items[j].active = true;
+  // Não navega para etapa 2 — apenas seleciona como contexto
+  document.getElementById('bcrumb-name').textContent = fxSilos[i].name + ' › ' + fxSilos[i].items[j].name;
+  renderSilos();
+}
+
+function editSpoke(ev, i, j) {
+  ev.stopPropagation();
+  // Aqui SIM navega para edição
+  alert('Abriria a Lente 2 com este spoke específico para edição.');
+}
+
+function addSpoke(i) {
+  alert('Abriria modal para nomear novo Spoke dentro de "' + fxSilos[i].name + '".');
+}
+
+function addKeyword() {
+  var input = document.getElementById('kw-input');
+  var v = input.value.trim();
+  if (!v) return;
+  if (fxKeywords.indexOf(v) === -1) fxKeywords.push(v);
+  input.value = '';
+  renderKeywords();
+}
+
+function addSuggested(el) {
+  var v = el.textContent;
+  if (fxKeywords.indexOf(v) === -1) fxKeywords.push(v);
+  renderKeywords();
+}
+
+function removeKeyword(v) {
+  fxKeywords = fxKeywords.filter(function(k){ return k !== v; });
+  renderKeywords();
+}
+
+function renderKeywords() {
+  var html = fxKeywords.map(function(k){
+    return '<span class="fx-keyword-pill">' + k + '<span class="x" onclick="removeKeyword(\'' + k.replace(/'/g, "\\'") + '\')">×</span></span>';
+  }).join('');
+  document.getElementById('kw-pills').innerHTML = html;
+}
+
+renderSilos();
+</script>
