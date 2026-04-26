@@ -47,7 +47,16 @@
 * [x] Vortex Studio Central: smoke visual em localhost:3000 concluído.
 * [x] Fix V6 init: localStorage trap + null guard no iframe — `node --check` OK.
 * [ ] PROXIMA SESSAO — Redesign Lente 1: implementar a partir de `Downloads/vortex_lente1_redesign_funcional.html`. Prioridade: (1) fix grid 283px; (2) silos colapsáveis sem auto-navegação; (3) keywords com input livre; (4) draft invalidado ao trocar silo; (5) export `startNewSpokeFromSilo`; (6) remover dropdown redundante de silo no briefing; (7) scroll interno no preview + toggle viewport.
+* [ ] PROXIMA SESSAO — Diagnóstico de Regressão - Vórtex Lente 1 (2026-04-26)
+* **Problema:** A Etapa 1 (Lente 1 - Contexto) está renderizando elementos legados e poluídos, em vez do briefing limpo e tri-columnar esperado para a V7.
+* **Evidências (via browser_subagent):**
+  - **Poluição Visual:** Sidebar de Silos (V6), Iframe de Preview e Chatbar (com botões "Refinar Hero", etc.) estão visíveis na Lente 1.
+  - **Layout Quebrado:** A coluna de briefing está comprimida, causando scroll horizontal e sobreposição.
+  - **Mojibake Persistente:** Caracteres corrompidos visíveis na interface (`VÃ³rtex`, `intenÃ§Ã£o`, `criaÃ§Ã£o`).
+  - **Causa Provável:** O sistema está renderizando um ramo legado da UI V6 como "Lente 1", em vez de isolar o novo Briefing V7.
+* **Ação Futura:** Reestruturar `vortex-studio.js` para que a Lente 1 oculte todos os elementos de IDE (preview, editor, chat) e exiba apenas o Briefing tri-columnar (Creative Nucleus, Abidos Architecture, Conversion & CTAs) em largura total.
 * [ ] PROXIMA SESSAO — Lente 2: edição manual contenteditable com toolbar flutuante (B, H1, Link, Cor, ✦ IA, X cancelar) + toggle Desktop/Tablet/Mobile no preview.
+
 ## 4. Update Sessao - V7.5.2 CONCLUÍDO (2026-04-26)
 * **Status:** Plano `vortex_v7_redesign_plano.md` ~95% concluído. Único item pendente: renderer sections_json → HTML no preview (requer integração Next.js).
 * **Implementado nesta sessão (continuação):**

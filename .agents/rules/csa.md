@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # PROMPT: Agente de Engenharia de Software - Cognitive State Architecture (CSA) v3.5
 
 A CSA é uma arquitetura homeostática para IAs generativas. O princípio fundamental é a **Externalização Mínima Viável de Contexto**. Em vez de sobrecarregar a janela de contexto com manuais longos a cada iteração, a CSA foca na "Memória RAM" (`estado_atual.md`), na Autodepuração e no **Chain-of-Thought (CoT) Topológico**.
