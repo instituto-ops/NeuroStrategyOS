@@ -213,7 +213,7 @@ function saveToHistory(newData) {
         // Merge de mÃƒÂ©tricas (mantÃƒÂ©m o que jÃƒÂ¡ tinha no dia, como PSI, e adiciona GA4)
         history[today] = { ...history[today], ...newData, last_update: new Date().toISOString() };
         fs.writeFileSync(ANALYTICS_HISTORY_FILE, JSON.stringify(history, null, 2));
-        console.log(`Ã°Å¸â€œÅ“ [HISTORY] InteligÃƒÂªncia de Dados: Registro consolidado para ${today}.`);
+        console.log(`📜 [HISTORY] Inteligência de Dados: Registro consolidado para ${today}.`);
     } catch (e) {
         console.error("Ã¢ÂÅ’ [HISTORY] Erro ao persistir histÃƒÂ³rico:", e.message);
     }
@@ -234,29 +234,29 @@ app.get('/api/marketing/audit', async (req, res) => {
         // 0. Verifica Cache (Persistence Mode)
         if (!force && fs.existsSync(ANALYTICS_CACHE_FILE)) {
             const cached = JSON.parse(fs.readFileSync(ANALYTICS_CACHE_FILE, 'utf8'));
-            console.log("Ã°Å¸â€™Â¾ [MARKETING] Carregando dados persistentes do Disco (Estado Anterior).");
+            console.log("💾 [MARKETING] Carregando dados persistentes do Disco (Estado Anterior).");
             return res.json(cached);
         }
 
         let data;
 
         if (!analyticsClient || !process.env.GA4_PROPERTY_ID) {
-            console.log(`Ã°Å¸â€œË† [MARKETING] Usando dados Mock (Analytics nÃƒÂ£o configurado no .env)`);
+            console.log(`📈 [MARKETING] Usando dados Mock (Analytics não configurado no .env)`);
             data = {
                 visitors: 842, 
                 leads: 31,
                 active_users: 3,
                 abidos_score: "92/100",
                 budget_utilization: "N/A",
-                top_performing_stag: "Hipnose ClÃƒÂ­nica GoiÃƒÂ¢nia",
+                top_performing_stag: "Hipnose Clínica Goiânia",
                 critica_loss: "0% (Silos Protegidos)",
                 recommendations: [
                     { type: "SEO", theme: "Configurar Credenciais GA4", reason: "Falta de arquivo JSON no .env" }
                 ],
-                insights: `O ecossistema estÃƒÂ¡ saudÃƒÂ¡vel, mas a ativaÃƒÂ§ÃƒÂ£o do GA4 real permitiria ao Dr. Victor visualizar o impacto direto de sua autoridade clÃƒÂ­nica nas conversÃƒÂµes de GoiÃƒÂ¢nia.`
+                insights: `O ecossistema está saudável, mas a ativação do GA4 real permitiria ao Dr. Victor visualizar o impacto direto de sua autoridade clínica nas conversões de Goiânia.`
             };
         } else {
-            console.log(`Ã°Å¸â€œÂ¡ [MARKETING] Buscando dados reais do GA4 (Property: ${process.env.GA4_PROPERTY_ID})...`);
+            console.log(`📡 [MARKETING] Buscando dados reais do GA4 (Property: ${process.env.GA4_PROPERTY_ID})...`);
 
             // 1. Busca VisÃƒÂ£o Geral e EstratÃƒÂ©gica (ÃƒÂºltimos 30 dias)
             const [response] = await analyticsClient.runReport({

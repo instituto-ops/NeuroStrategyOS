@@ -10,7 +10,7 @@ let ttsClient;
 try {
     ttsClient = new textToSpeech.TextToSpeechClient();
 } catch (err) {
-    console.warn("âš ï¸  [TTS] Falha ao inicializar TTS Client (sem credenciais):", err.message);
+    console.warn("⚠️ [TTS] Falha ao inicializar TTS Client (sem credenciais):", err.message);
 }
 const { BetaAnalyticsDataClient } = require('@google-analytics/data');
 require('dotenv').config({ path: '../.env' });
@@ -23,7 +23,7 @@ let analyticsClient;
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     try {
         analyticsClient = new BetaAnalyticsDataClient();
-        console.log("ðŸ“Š [ANALYTICS] Motor GA4 Inicializado com Sucesso.");
+        console.log("📊 [ANALYTICS] Motor GA4 Inicializado com Sucesso.");
     } catch (err) {
         console.warn("âš ï¸ [ANALYTICS] Falha ao inicializar motor GA4:", err.message);
     }
@@ -31,9 +31,9 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
 
 if (!process.env.GOOGLE_CLOUD_PROJECT && !process.env.GEMINI_API_KEY) {
     console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    console.error("!!! ERRO CRÃTICO: VariÃ¡veis de ambiente GOOGLE_CLOUD_PROJECT e GEMINI_API_KEY nÃ£o foram definidas.");
+    console.error("!!! ERRO CRÍTICO: Variáveis de ambiente GOOGLE_CLOUD_PROJECT e GEMINI_API_KEY não foram definidas.");
     console.error("!!! Por favor, adicione-as ao seu arquivo .env");
-    console.error("!!! O Antigravity Agent nÃ£o funcionarÃ¡ corretamente sem isso.");
+    console.error("!!! O Antigravity Agent não funcionará corretamente sem isso.");
     console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 }
 
@@ -48,7 +48,7 @@ const mammoth = require('mammoth');
 const app = express();
 const port = 3000;
 
-// MemÃ³ria temporÃ¡ria para Previews
+// Memória temporária para Previews
 const tempPreviews = {};
 
 app.use(cors());
@@ -79,11 +79,11 @@ app.get('/api/previews/get/:id', (req, res) => {
     if (preview) {
         res.json(preview);
     } else {
-        res.status(404).json({ error: "Preview expirado ou nÃ£o encontrado no servidor." });
+        res.status(404).json({ error: "Preview expirado ou não encontrado no servidor." });
     }
 });
 
-// 1. SERVIR ARQUIVOS ESTÃTICOS
+// 1. SERVIR ARQUIVOS ESTÁTICOS
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/templates', express.static(path.join(__dirname, '../templates')));
 
@@ -115,7 +115,7 @@ if (isCloudinaryActive) {
 let wss;
 
 /**
- * FunÃ§Ã£o global para reportar status dos agentes via WebSocket
+ * Função global para reportar status dos agentes via WebSocket
  */
 function reportAgentStatus(agent, status, reason = "", isDone = false) {
     if (wss && wss.clients) {
@@ -145,13 +145,13 @@ const draftsDb = []; // In-memory store for newly generated drafts (Vercel-ready
 // [FASE 3: SISTEMA DE RELATÓRIOS E AUTODIAGNÓSTICO]
 const REPORTS_DIR = path.join(__dirname, 'relatorios');
 
-// Rota de Salvamento de RelatÃ³rio Longitudinal
+// Rota de Salvamento de Relatório Longitudinal
 app.post('/api/system/report/save', (req, res) => {
     try {
         const report = req.body;
         const now = new Date();
         const year = now.getFullYear().toString();
-        const monthNames = ["Janeiro", "Fevereiro", "MarÃ§o", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const month = monthNames[now.getMonth()];
 
         // Criar estrutura de pastas: relatorios/ANO/MES
@@ -162,13 +162,13 @@ app.post('/api/system/report/save', (req, res) => {
         if (!fs.existsSync(yearDir)) fs.mkdirSync(yearDir, { recursive: true });
         if (!fs.existsSync(monthDir)) fs.mkdirSync(monthDir, { recursive: true });
 
-        // Nome: RelatÃ³rio_HH-mm_DD-MM-AA.json
-        const filename = `RelatÃ³rio_${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}_${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${year.slice(-2)}.json`;
+        // Nome: Relatório_HH-mm_DD-MM-AA.json
+        const filename = `Relatório_${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}_${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${year.slice(-2)}.json`;
         const filePath = path.join(monthDir, filename);
 
         fs.writeFileSync(filePath, JSON.stringify(report, null, 2));
 
-        // Atualizar o ponteiro de "Ãšltimo Alerta" para o Dashboard
+        // Atualizar o ponteiro de "Último Alerta" para o Dashboard
         const criticalModules = report.modules.filter(m => m.status.includes('âŒ'));
         const criticalApis = report.apis.filter(a => a.status.includes('âŒ'));
 
@@ -182,15 +182,15 @@ app.post('/api/system/report/save', (req, res) => {
 
         res.json({ success: true, path: filePath });
     } catch (e) {
-        console.error("âŒ Erro ao salvar relatÃ³rio:", e);
+        console.error("âŒ Erro ao salvar relatório:", e);
         res.status(500).json({ error: e.message });
     }
 });
 
-// [ABIDOS] PersistÃªncia do Ãšltimo RelatÃ³rio EstratÃ©gico
+// [ABIDOS] Persistência do Último Relatório Estratégico
 const ABIDOS_REPORT_FILE = path.join(REPORTS_DIR, 'abidos_report_latest.md');
 
-// Rota para recuperar o Ãºltimo relatÃ³rio Abidos + Base Universal
+// Rota para recuperar o último relatório Abidos + Base Universal
 app.get('/api/seo/abidos-report', (req, res) => {
     try {
         let response = { success: true };
@@ -209,14 +209,14 @@ app.get('/api/seo/abidos-report', (req, res) => {
         if (response.report || response.universalAudit) {
             res.json(response);
         } else {
-            res.status(404).json({ error: "Nenhum relatÃ³rio Abidos encontrado." });
+            res.status(404).json({ error: "Nenhum relatório Abidos encontrado." });
         }
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-// Rota para salvar relatÃ³rio Abidos (Markdown + Universal JSON)
+// Rota para salvar relatório Abidos (Markdown + Universal JSON)
 app.post('/api/seo/abidos-report', (req, res) => {
     try {
         const { report, universalAudit } = req.body;
@@ -224,7 +224,7 @@ app.post('/api/seo/abidos-report', (req, res) => {
 
         fs.writeFileSync(ABIDOS_REPORT_FILE, report);
 
-        // TambÃ©m salvar a base universal em JSON para persistÃªncia servidor se necessÃ¡rio
+        // Também salvar a base universal em JSON para persistência servidor se necessário
         const universalJsonPath = path.join(REPORTS_DIR, 'abidos_universal_latest.json');
         fs.writeFileSync(universalJsonPath, JSON.stringify(universalAudit || {}, null, 2));
 
@@ -234,7 +234,7 @@ app.post('/api/seo/abidos-report', (req, res) => {
     }
 });
 
-// Rota para pegar o Ãºltimo status para o Dashboard
+// Rota para pegar o último status para o Dashboard
 app.get('/api/system/report/latest', (req, res) => {
     try {
         const latestFile = path.join(REPORTS_DIR, 'latest_status.json');
@@ -242,14 +242,14 @@ app.get('/api/system/report/latest', (req, res) => {
             const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
             res.json(data);
         } else {
-            res.json({ critical_alerts: 0, summary: "Nenhum relatÃ³rio pendente." });
+            res.json({ critical_alerts: 0, summary: "Nenhum relatório pendente." });
         }
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-// Rota para pegar o histÃ³rico completo para a anÃ¡lise longitudinal
+// Rota para pegar o histórico completo para a análise longitudinal
 app.get('/api/system/report/history', (req, res) => {
     try {
         const year = new Date().getFullYear().toString();
@@ -277,7 +277,7 @@ app.get('/api/system/report/history', (req, res) => {
     }
 });
 
-// [FASE 6: DIAGNÃ“STICO E BACKUP VISUAL]
+// [FASE 6: DIAGNÓSTICO E BACKUP VISUAL]
 const PRINTS_DIR = path.join(__dirname, '../docs/prints');
 
 app.post('/api/dev/screenshot', (req, res) => {
@@ -323,35 +323,35 @@ app.get('/api/media/health', (req, res) => {
     }
 });
 
-// [FASE 5] MÃ³dulo Neuro-Training: MemÃ³ria de Estilo do Dr. Victor
+// [FASE 5] Módulo Neuro-Training: Memória de Estilo do Dr. Victor
 const MEMORY_FILE_PATH = path.join(__dirname, 'estilo_victor.json');
 
 
 const PROMPT_TREINAMENTO_ISOLADO = `[SISTEMA DE CLONAGEM DE SINTAXE - MODO DIGITAL TWIN]
-MissÃ£o: Extrair as REGRAS ESTRUTURAIS da fala do Dr. Victor Lawrence (P2).
-ProibiÃ§Ã£o Absoluta: NÃ£o comente, nÃ£o resuma e nÃ£o extraia regras sobre CONTEÃšDO (sentimentos, grÃ¡vidas, prazos, trabalho, psiquiatria).
+Missão: Extrair as REGRAS ESTRUTURAIS da fala do Dr. Victor Lawrence (P2).
+Proibição Absoluta: Não comente, não resuma e não extraia regras sobre CONTEÚDO (sentimentos, grávidas, prazos, trabalho, psiquiatria).
 
 [DIRETRIZES DE RECONHECIMENTO]
 1. Identifique o Falante Alvo: P2 (Profissional). Ignore P1 (Paciente).
-2. ProibiÃ§Ã£o SemÃ¢ntica: Se a regra contiver palavras do texto original que nÃ£o sejam termos linguÃ­sticos, ela estÃ¡ ERRADA.
-3. Foco Estrutural: Analise como as frases sÃ£o unidas. (Ex: "Usa o 'Pacing' repetindo a Ãºltima palavra do interlocutor antes de uma pergunta socrÃ¡tica").
+2. Proibição Semântica: Se a regra contiver palavras do texto original que não sejam termos linguísticos, ela está ERRADA.
+3. Foco Estrutural: Analise como as frases são unidas. (Ex: "Usa o 'Pacing' repetindo a última palavra do interlocutor antes de uma pergunta socrática").
 
-[CATEGORIAS OBRIGATÃ“RIAS]
-- CadÃªncia (Ritmo e PontuaÃ§Ã£o)
+[CATEGORIAS OBRIGATÓRIAS]
+- Cadência (Ritmo e Pontuação)
 - Sintaxe (Estrutura de Frases e Conectivos)
-- VocabulÃ¡rio de Identidade (Palavras-Ã¢ncora estruturais)
-- Tonabilidade Estrutural (Acolhimento via forma, nÃ£o via palavras)
+- Vocabulário de Identidade (Palavras-âncora estruturais)
+- Tonabilidade Estrutural (Acolhimento via forma, não via palavras)
 
-FORMATO OBRIGATÃ“RIO (JSON):
+FORMATO OBLIGATÓRIO (JSON):
 {
   "regras_extraidas": [
     {
       "categoria": "[Categorias Acima]",
-      "titulo": "Nome LINGUÃSTICO (ex: Ancoragem de Sintaxe)",
-      "regra": "DescriÃ§Ã£o tÃ©cnica para o GÃªmeo Digital clonar."
+      "titulo": "Nome LINGUÍSTICO (ex: Ancoragem de Sintaxe)",
+      "regra": "Descrição técnica para o Gêmeo Digital clonar."
     }
   ],
-  "reply": "REPORTE TÃ‰CNICO: Mapeei o padrÃ£o [TÃTULO] do Dr. Victor. Ele agora faz parte do nÃºcleo de identidade verbal."
+  "reply": "REPORTE TÉCNICO: Mapeei o padrão [TÍTULO] do Dr. Victor. Ele agora faz parte do núcleo de identidade verbal."
 }`;
 
 const getVictorStyle = () => {
@@ -368,58 +368,58 @@ const getVictorStyle = () => {
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// [AI STUDIO NEXT-GEN] CatÃ¡logo de Templates EstratÃ©gicas
+// [AI STUDIO NEXT-GEN] Catálogo de Templates Estratégicas
 const TEMPLATE_CATALOG = [
-    { id: "01", filename: "master_template_01_dark_glass.html", name: "01 â€” Dark Glass: Autoridade ClÃ­nica e ServiÃ§os", type: "landing", designSummary: "Dark Glass, Teal-Glow, Luxo ClÃ­nico", fonts: "Inter", palette: "Black + Teal + Cream" },
-    { id: "02", filename: "master_template_02_artigo_editorial.html", name: "02 â€” Artigo Editorial: Post de Blog PadrÃ£o", type: "artigo", designSummary: "Editorial Clean, Tipografia Serif, Foco em Leitura", fonts: "Inter + Lora", palette: "Slate + Teal Brand" },
-    { id: "03", filename: "master_template_03_editorial_premium.html", name: "03 â€” Editorial Premium: Artigo de Capa / Editorial", type: "artigo", designSummary: "Premium, Warm Cream, Drop Cap Lora", fonts: "Inter + Lora", palette: "Warm Cream + Teal Brand" },
-    { id: "04", filename: "master_template_04_artigo_imersivo.html", name: "04 â€” Artigo Imersivo: Relatos e ReflexÃµes Imersivas", type: "artigo", designSummary: "Hero Parallax, Forest Theme, Narrativa Visual", fonts: "DM Sans + Playfair", palette: "Forest + Cream + Sage" },
-    { id: "05", filename: "master_template_05_techeditorial.html", name: "05 â€” Tech Editorial: LanÃ§amentos e Tecnologia", type: "artigo", designSummary: "Tech-Modern, Fundo Escuro, Estilo DocumentaÃ§Ã£o", fonts: "Mono + Sans", palette: "Dark Tech" },
-    { id: "06", filename: "master_template_06_artigo_organico.html", name: "06 â€” Artigo OrgÃ¢nico: Bem-estar e SaÃºde Mental", type: "artigo", designSummary: "Tons Terrosos, Design Natural, Legibilidade", fonts: "Editorial Serif", palette: "OrgÃ¢nico / Earth" },
-    { id: "07", filename: "master_template_07_ensaio_vintage.html", name: "07 â€” Ensaio Vintage: Ensaio AcadÃªmico / Denso", type: "artigo", designSummary: "Vintage Editorial, Grain, EstÃ©tica JornalÃ­stica", fonts: "Fraunces + Manrope", palette: "Ink + Paper + Rust" },
-    { id: "08", filename: "master_template_08_ethereal_glass.html", name: "08 â€” Ethereal Glass: Criatividade e Potencial", type: "artigo", designSummary: "Glassmorphism EtÃ©reo, Cristalino, Futurista", fonts: "Plus Jakarta", palette: "Ethereal / White" },
-    { id: "09", filename: "master_template_09_luxury_dark.html", name: "09 â€” Luxury Dark: Mentoria e Consultoria Premium", type: "artigo", designSummary: "Luxuoso Escuro, Dourado/Champagne, Tipografia Elite", fonts: "Premium Serif", palette: "Black + Gold" },
-    { id: "10", filename: "master_template_10_tech_focus.html", name: "10 â€” Tech Focus: DocumentaÃ§Ã£o e Whitepapers", type: "artigo", designSummary: "Minimalismo Tech, Foco em Dados, Blue/Slate", fonts: "Geometric Sans", palette: "Blue Tech" },
-    { id: "11", filename: "master_template_11_landing_abidos.html", name: "11 â€” Landing Abidos: Landing Page de ConversÃ£o (Ads)", type: "landing", designSummary: "SaaS Moderno, Clean White, BotÃµes 3D", fonts: "Plus Jakarta", palette: "White + Indigo" }
+    { id: "01", filename: "master_template_01_dark_glass.html", name: "01 — Dark Glass: Autoridade Clínica e Serviços", type: "landing", designSummary: "Dark Glass, Teal-Glow, Luxo Clínico", fonts: "Inter", palette: "Black + Teal + Cream" },
+    { id: "02", filename: "master_template_02_artigo_editorial.html", name: "02 — Artigo Editorial: Post de Blog Padrão", type: "artigo", designSummary: "Editorial Clean, Tipografia Serif, Foco em Leitura", fonts: "Inter + Lora", palette: "Slate + Teal Brand" },
+    { id: "03", filename: "master_template_03_editorial_premium.html", name: "03 — Editorial Premium: Artigo de Capa / Editorial", type: "artigo", designSummary: "Premium, Warm Cream, Drop Cap Lora", fonts: "Inter + Lora", palette: "Warm Cream + Teal Brand" },
+    { id: "04", filename: "master_template_04_artigo_imersivo.html", name: "04 — Artigo Imersivo: Relatos e Reflexões Imersivas", type: "artigo", designSummary: "Hero Parallax, Forest Theme, Narrativa Visual", fonts: "DM Sans + Playfair", palette: "Forest + Cream + Sage" },
+    { id: "05", filename: "master_template_05_techeditorial.html", name: "05 — Tech Editorial: Lançamentos e Tecnologia", type: "artigo", designSummary: "Tech-Modern, Fundo Escuro, Estilo Documentação", fonts: "Mono + Sans", palette: "Dark Tech" },
+    { id: "06", filename: "master_template_06_artigo_organico.html", name: "06 — Artigo Orgânico: Bem-estar e Saúde Mental", type: "artigo", designSummary: "Tons Terrosos, Design Natural, Legibilidade", fonts: "Editorial Serif", palette: "Orgânico / Earth" },
+    { id: "07", filename: "master_template_07_ensaio_vintage.html", name: "07 — Ensaio Vintage: Ensaio Acadêmico / Denso", type: "artigo", designSummary: "Vintage Editorial, Grain, Estética Jornalística", fonts: "Fraunces + Manrope", palette: "Ink + Paper + Rust" },
+    { id: "08", filename: "master_template_08_ethereal_glass.html", name: "08 — Ethereal Glass: Criatividade e Potencial", type: "artigo", designSummary: "Glassmorphism Etéreo, Cristalino, Futurista", fonts: "Plus Jakarta", palette: "Ethereal / White" },
+    { id: "09", filename: "master_template_09_luxury_dark.html", name: "09 — Luxury Dark: Mentoria e Consultoria Premium", type: "artigo", designSummary: "Luxuoso Escuro, Dourado/Champagne, Tipografia Elite", fonts: "Premium Serif", palette: "Black + Gold" },
+    { id: "10", filename: "master_template_10_tech_focus.html", name: "10 — Tech Focus: Documentação e Whitepapers", type: "artigo", designSummary: "Minimalismo Tech, Foco em Dados, Blue/Slate", fonts: "Geometric Sans", palette: "Blue Tech" },
+    { id: "11", filename: "master_template_11_landing_abidos.html", name: "11 — Landing Abidos: Landing Page de Conversão (Ads)", type: "landing", designSummary: "SaaS Moderno, Clean White, Botões 3D", fonts: "Plus Jakarta", palette: "White + Indigo" }
 ];
 
-// Helper: Tenta agrupar variÃ¡veis em mÃ³dulos semÃ¢nticos (LÃ³gica do Studio Next)
+// Helper: Tenta agrupar variáveis em módulos semânticos (Lógica do Studio Next)
 function getModuleForVar(varName) {
     const modules = {
-        seo: { order: 0, title: "FundaÃ§Ã£o SEO & Meta" },
-        ui_titulo: { order: 1, title: "Hero / TÃ­tulo Visual" },
-        hero: { order: 1, title: "Hero / TÃ­tulo Visual" },
-        nav: { order: 1, title: "NavegaÃ§Ã£o" },
-        link: { order: 1, title: "Hero / TÃ­tulo Visual" }, // Links de agendamento agora no Hero
-        dor: { order: 2, title: "IdentificaÃ§Ã£o da Dor" },
-        beneficios: { order: 3, title: "BenefÃ­cios & MÃ©todo" },
+        seo: { order: 0, title: "Fundação SEO & Meta" },
+        ui_titulo: { order: 1, title: "Hero / Título Visual" },
+        hero: { order: 1, title: "Hero / Título Visual" },
+        nav: { order: 1, title: "Navegação" },
+        link: { order: 1, title: "Hero / Título Visual" }, // Links de agendamento agora no Hero
+        dor: { order: 2, title: "Identificação da Dor" },
+        beneficios: { order: 3, title: "Benefícios & Método" },
         autoridade: { order: 4, title: "Autoridade (E-E-A-T)" },
         faq: { order: 5, title: "FAQ" },
         silo: { order: 5, title: "Silos & Links" },
-        cta: { order: 6, title: "CTA & ConversÃ£o" },
-        whatsapp: { order: 6, title: "WhatsApp & Contato" }, // WhatsApp agora Ã© um mÃ³dulo claro
+        cta: { order: 6, title: "CTA & Conversão" },
+        whatsapp: { order: 6, title: "WhatsApp & Contato" }, // WhatsApp agora é um módulo claro
         ambiente: { order: 4, title: "Autoridade (E-E-A-T)" },
         autor: { order: 7, title: "Autor & Dados" },
         artigo: { order: 2, title: "Corpo do Artigo" },
-        secao: { order: 3, title: "SeÃ§Ãµes do Artigo" }
+        secao: { order: 3, title: "Seções do Artigo" }
     };
     const parts = varName.split("_");
     for (let i = parts.length; i >= 1; i--) {
         const prefix = parts.slice(0, i).join("_");
         if (modules[prefix]) return modules[prefix];
     }
-    return { order: 99, title: "Outras VariÃ¡veis" };
+    return { order: 99, title: "Outras Variáveis" };
 }
 
-// [API] Listar CatÃ¡logo
+// [API] Listar Catálogo
 app.get('/api/templates', (req, res) => {
     res.json({ templates: TEMPLATE_CATALOG });
 });
 
-// [API] Detalhes e VariÃ¡veis da Template
+// [API] Detalhes e Variáveis da Template
 app.get('/api/templates/:id', async (req, res) => {
     const entry = TEMPLATE_CATALOG.find(t => t.id === req.params.id);
-    if (!entry) return res.status(404).json({ error: "Template nÃ£o encontrada" });
+    if (!entry) return res.status(404).json({ error: "Template não encontrada" });
 
     try {
         const filePath = path.join(__dirname, '../templates', entry.filename);
@@ -445,7 +445,7 @@ app.get('/api/templates/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Gerar Preview Final (Processador de VariÃ¡veis)
+// [API] Gerar Preview Final (Processador de Variáveis)
 function generateTOC(htmlContent) {
     const regex = /<h2[^>]*>(.*?)<\/h2>/gi;
     let match;
@@ -471,13 +471,13 @@ function generateTOC(htmlContent) {
 app.post('/api/templates/preview', async (req, res) => {
     const { templateId, values, menuId } = req.body;
     const entry = TEMPLATE_CATALOG.find(t => t.id === templateId);
-    if (!entry) return res.status(404).json({ error: "Template nÃ£o encontrada" });
+    if (!entry) return res.status(404).json({ error: "Template não encontrada" });
 
     try {
         const filePath = path.join(__dirname, '../templates', entry.filename);
         let html = fs.readFileSync(filePath, "utf-8");
 
-        // 1. Injetar VariÃ¡veis (exceto o menu dinÃ¢mico que tem lÃ³gica prÃ³pria)
+        // 1. Injetar Variáveis (exceto o menu dinâmico que tem lógica própria)
         for (const [key, value] of Object.entries(values || {})) {
             if (key === 'nav_menu_dinamico') continue;
             const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
@@ -488,7 +488,7 @@ app.post('/api/templates/preview', async (req, res) => {
         const { modifiedHtml, tocItems } = generateTOC(html);
         html = modifiedHtml;
 
-        // 3. Injetar Menu DinÃ¢mico
+        // 3. Injetar Menu Dinâmico
         let menuHtml = '';
         if (menuId && typeof generateMenuHtmlForTemplate === 'function') {
             menuHtml = generateMenuHtmlForTemplate(menuId, templateId, { slug: "preview", title: values.SEO_TITLE || '' });
@@ -497,7 +497,7 @@ app.post('/api/templates/preview', async (req, res) => {
             if (tocItems.length > 0 && (templateId === '02' || templateId === '03' || templateId === '04' || templateId === '05' || templateId === '06' || templateId === '07' || templateId === '10')) {
                 const tocMenuHtml = `
                     <div class="fixed bottom-4 left-4 z-50 glass-panel lg:hidden p-3 rounded-2xl max-w-[200px]">
-                        <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ TÃ³picos Neste Artigo</div>
+                        <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ Tópicos Neste Artigo</div>
                         <ul class="flex flex-col gap-1">
                             ${tocItems.map(i => `<li><a href="${i.url}" class="text-xs text-slate-500 hover:text-[#14b8a6] line-clamp-1">${i.label}</a></li>`).join('')}
                         </ul>

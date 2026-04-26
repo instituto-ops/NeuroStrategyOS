@@ -11,10 +11,10 @@ module.exports = function(app, deps) {
 
 // [OBSOLETO] Removido para evitar conflito com motor V5 em /api/seo/analyze-silos no final do arquivo.
 
-// [PULSO DO SISTEMA] Monitoramento de LatÃªncia Real-time
+// [PULSO DO SISTEMA] Monitoramento de Latência Real-time
 app.get('/api/health/ping', (req, res) => res.status(200).send('pong'));
 
-// [FASE 2] HEALTH CHECK: Monitoramento MulticritÃ©rio
+// [FASE 2] HEALTH CHECK: Monitoramento Multicritério
 app.get('/api/health/check', async (req, res) => {
     const health = {
         status: 'online',
@@ -44,9 +44,9 @@ app.get('/api/health/check', async (req, res) => {
 
 app.get('/api/health/lighthouse', async (req, res) => {
     try {
-        console.log(`ðŸ”¦ [LIGHTHOUSE] Iniciando Auditoria de Performance ProfilÃ¡tica...`);
+        console.log(`🔦 [LIGHTHOUSE] Iniciando Auditoria de Performance Profilática...`);
         
-        // SimulaÃ§Ã£o de Auditoria (Em um sistema real, chamaria a Lighthouse CLI)
+        // Simulação de Auditoria (Em um sistema real, chamaria a Lighthouse CLI)
         const metrics = {
             performance: Math.floor(Math.random() * (100 - 85) + 85),
             accessibility: 98,

@@ -18,7 +18,9 @@
 * **Edicao manual Vortex:** campos `data-vortex-field` agora ativam `contenteditable`, mini-toolbar, painel de campo com contagem/historico local, toggle `Direto / IA` e snapshots sem gasto de token.
 * **Validacao atual:** `node --check` passou em `frontend/public/js/seo-engine.js`, `frontend/public/js/vortex-studio.js` e `frontend/routes/operations.js`; servidor respondeu `200` em `/`, `/js/seo-engine.js`, `/js/vortex-studio.js` e `/api/seo/silos`.
 * **Vortex Studio Central - CONCLUIDO (pendente smoke visual):** CSS das novas classes de Briefing/Template adicionado em `frontend/public/css/vortex.css`; exports publicos dos handlers de briefing/template/keywords adicionados ao modulo `vortex-studio.js`; todos os 4 `node --check` passaram (`vortex-studio.js`, `seo-engine.js`, `operations.js`, `vortex.js`). Checklist em `docs/05_Relatórios/Planos de execução/vortex_studio_central_execucao.md` sincronizado.
-* **Pendente unico:** smoke visual em `localhost:3000` para confirmar UI do Briefing Criativo e Template Shelf no modo Visual V6.
+* **Validação Visual V6 (2026-04-26):** Smoke test em `localhost:3000` via `browser_subagent` CONFIRMADO. Backdrop blur, shelf de templates integrada e modo visual V6 funcionando perfeitamente.
+* **Correção Mojibake (2026-04-26):** Resolvido o problema de caracteres corrompidos (ex: `estÃ¡`) no dashboard. Corrigidas strings hardcoded em `routes/operations.js`, limpados emojis no `server.js` e forçada a regeneração do `analytics_cache.json` em UTF-8.
+* **Pendente:** limpeza fina de logs remanescentes em `health-marketing.js` e `server.js` (baixa prioridade).
 
 ## 2. Constraints (Restricoes)
 * **Seguranca:** Chaves de API permanecem no `.env`; rotas `/api/vortex/*` seguem protegidas por `VORTEX_API_KEY`.
@@ -35,6 +37,5 @@
 * [x] V6: implementar fases 0-4 conforme `vortex_v6_plano_etapas.md`.
 * [ ] V6: executar smoke visual em navegador assim que o dev server puder ser iniciado; confirmar que a primeira tela nao parece IDE/admin.
 * [x] Strategy Studio v6: implementar lentes, Abidos acionavel, silos canonicos, Vortex hierarquico e edicao manual direta no preview.
-* [ ] Strategy Studio v6: smoke visual completo em navegador real; `agent-browser` nao estava instalado nesta sessao.
-* [x] Vortex Studio Central: Fases 0-4 completas, CSS e exports finalizados, 4x node --check OK.
-* [ ] Vortex Studio Central: smoke visual em localhost:3000 (unico item restante).
+* [x] Strategy Studio v6: smoke visual completo em navegador real via `browser_subagent`.
+* [x] Vortex Studio Central: smoke visual em localhost:3000 concluído.

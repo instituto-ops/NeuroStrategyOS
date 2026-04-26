@@ -233,10 +233,10 @@ window.vortexStudio = (() => {
             } else {
                 const defaultVersion = localStorage.getItem(VISUAL_DEFAULT_VERSION_KEY);
                 const stored = localStorage.getItem(VISUAL_MODE_STORAGE_KEY);
-                if (defaultVersion !== 'v6.5-default-on') {
+                if (defaultVersion !== 'v6.6-default-on') {
                     state.visual.enabled = true;
                     localStorage.setItem(VISUAL_MODE_STORAGE_KEY, 'true');
-                    localStorage.setItem(VISUAL_DEFAULT_VERSION_KEY, 'v6.5-default-on');
+                    localStorage.setItem(VISUAL_DEFAULT_VERSION_KEY, 'v6.6-default-on');
                 } else {
                     state.visual.enabled = stored === null ? true : stored !== 'false';
                 }
@@ -2836,6 +2836,8 @@ function renderFallbackPanel(errorMsg) {
     }
 
     function toggleVisualMode(force) {
+        const willDisable = typeof force === 'boolean' ? !force : state.visual.enabled;
+        if (willDisable && !window.confirm('Sair do modo Visual V6 e entrar no modo técnico (V5)?')) return;
         state.visual.enabled = typeof force === 'boolean' ? force : !state.visual.enabled;
         persistVisualSession();
         applyVisualModeState();
@@ -2867,6 +2869,7 @@ function renderFallbackPanel(errorMsg) {
                 <div class="vortex-v6-panel-title">Silos</div>
                 <div id="vortex-v6-silo-hub" class="vortex-v6-silo-hub"></div>
                 <div id="vortex-v6-briefing" class="vortex-v6-briefing"></div>
+                <section id="vortex-v6-template-shelf" class="vortex-v6-template-shelf" aria-label="Biblioteca de templates"></section>
                 <div id="vortex-v6-strategy-summary" class="vortex-v6-summary">
                     <div class="vortex-v6-shimmer"></div>
                     <span>Carregando contexto...</span>
@@ -2881,7 +2884,6 @@ function renderFallbackPanel(errorMsg) {
             </aside>
 
             <section id="vortex-v6-proposal" class="vortex-v6-proposal" aria-live="polite"></section>
-            <section id="vortex-v6-template-shelf" class="vortex-v6-template-shelf" aria-label="Biblioteca de templates"></section>
 
             <div id="vortex-v6-prompt" class="vortex-v6-prompt">
                 <div class="vortex-v6-pills">
@@ -4004,7 +4006,7 @@ function renderFallbackPanel(errorMsg) {
     function installPreviewInteractionTools() {
         const frame = document.getElementById('vortex-preview-frame');
         const doc = frame?.contentDocument;
-        if (!doc || doc.__vortexMicroInstalled) return;
+        if (!doc || !doc.head || doc.__vortexMicroInstalled) return;
         doc.__vortexMicroInstalled = true;
 
         const style = doc.createElement('style');

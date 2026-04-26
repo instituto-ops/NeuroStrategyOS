@@ -1771,6 +1771,32 @@
     border-color: rgba(196, 181, 253, 0.42);
 }
 
+/* Raio-X: visual claramente secundário em modo visual */
+#vortex-studio.vortex-visual-mode .vortex-xray-btn {
+    opacity: .45;
+    font-size: 11px;
+    padding: 4px 7px;
+}
+#vortex-studio.vortex-visual-mode .vortex-xray-btn:hover {
+    opacity: 1;
+}
+
+/* Publish backdrop — overlay sólido sobre o preview */
+.vortex-v6-publish-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 3, 18, 0.78);
+    backdrop-filter: blur(4px);
+    pointer-events: auto;
+    z-index: 2;
+}
+.vortex-v6-publish-backdrop[hidden] {
+    display: none !important;
+}
+.vortex-v6-publish-card {
+    z-index: 3;
+}
+
 .vortex-v6-lenses {
     position: absolute;
     top: 60px;
