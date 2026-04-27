@@ -1,266 +1,429 @@
-# Plano de Execução: Vórtex V7.5.2 — Estado Atual e Caminho Completo
+# Plano de Execução: Vórtex V7.5.2 — Definitivo
 
-> **Fonte de verdade:** este documento. O CSA histórico (V5/V6) é registro — não instrução de execução.
+> **Fonte de verdade:** este documento. Tudo anterior é registro histórico.
 > **Diretriz técnica:** "Abidos governa. Vórtex executa. Cloudinary provê. CMS preserva. Review protege. Oficina constrói."
-> **Regra de ouro:** uma microetapa de cada vez. Critério de aceite verificado antes de avançar.
-
-## Ordem de prioridade agora:
-
-1. Smoke visual do que já existe
-2. Fechar AbidosRenderer Preview = Produção
-3. Implementar generateMetadata
-4. Implementar notFound e slugs reservados
-5. Só depois iniciar a Oficina Visual Híbrida
-
-Observação: “IMPLEMENTADA / PENDENTE SMOKE VISUAL” significa que o código existe, mas ainda precisa validação no browser.
+> **Estratégia arquitetural:** **Data-driven first.** Toda página é dado versionado renderizado por rota dinâmica única. Code-driven (gerar arquivos `.tsx` em repo) fica documentado no backlog, ativado apenas quando houver caso de uso real fora do schema do AbidosRenderer.
+> **Regra de ouro:** uma microetapa de cada vez. Critério de aceite verificado antes de avançar. Sem expansão de escopo durante implementação.
 
 ---
 
-## 🏗️ Fase 1: Infraestrutura CMS & Cloudinary DAM — IMPLEMENTADA / PENDENTE SMOKE VISUAL
+## Sumário Executivo
 
-- [x] **1.1** Persistência transacional Postgres/Neon. Schema real com `slug`, `snapshot_json`, `current_revision_id`.
-- [x] **1.2** Cloudinary DAM. 11 assets indexados em `vortex_assets` + `neuro_asset_metadata`.
-- [x] **1.3** Repositório de Prova Social Curada (`abidos_social_proof`) com GET/POST/PATCH de aprovação.
-- [x] **1.4** Schema editorial versionado: `vortex_drafts`, `vortex_published_pages`, `vortex_revisions` (com `path` + `title`).
+O V7.5.2 está com infraestrutura backend sólida (Postgres/Neon, Cloudinary DAM, Abidos Engine, Review Gate, schema editorial versionado) mas com três pendências estruturais que destravam tudo o resto:
 
----
+1. **Renderer único** (AbidosRenderer compartilhado entre preview admin e rota pública)
+2. **Camada de dados segura** (DAL `server-only` + rota `[[...slug]]` + generateMetadata + notFound)
+3. **Contratos formais de Page Ops** (6 tool calls que o chat IA usa para operar páginas)
 
-## 🧠 Fase 1.5: Motor Abidos & Governança Multinível — IMPLEMENTADA / PENDENTE SMOKE VISUAL
-
-- [x] **1.5.1** Abidos-Native Engine. `POST /api/vortex/generate-sections` com schema Abidos + validação Zod.
-- [x] **1.5.2** Abidos Review Gate com severidade: `approved` / `warning` / `blocked`. Regras CFP, CRP, H1, nofollow, CTA, SEO.
-- [x] **1.5.3** Traceability Snapshot. `generation_context_snapshot_json` salvo em cada revisão.
+Após essas três fases, a Oficina Visual Híbrida (Fase 5) tem fundação sólida. Depois entram chat IA com tool calls reais (Fase 6), GERAR + Templates (Fase 7), Release & Observabilidade (Fase 8), Refinamento (Fase 9), Validação E2E (Fase 10).
 
 ---
 
-## 🎨 Fase 2: Etapa 1 Redesign & Assets — IMPLEMENTADA / PENDENTE SMOKE VISUAL
+## Estado Atual (não tocar — já implementado)
 
-- [x] **2.1** Briefing 3-Colunas implementado (Criativo / Arquitetura / Conversão).
-- [x] **2.2** Asset Picker modal integrado ao briefing, consumindo Cloudinary.
-- [x] **2.3** Modal de Gestão Editorial com abas [Rascunhos | Revisões | Publicados]. Frontend usa `slug` corretamente.
+### Backend V7.5.2 consolidado
 
----
+- [x] Persistência transacional Postgres/Neon. Schema com `slug`, `snapshot_json`, `current_revision_id`
+- [x] Cloudinary DAM. 11 assets indexados em `vortex_assets` + `neuro_asset_metadata`
+- [x] Repositório de Prova Social Curada (`abidos_social_proof`) com aprovação editorial
+- [x] Schema editorial versionado: `vortex_drafts`, `vortex_published_pages`, `vortex_revisions`
+- [x] Abidos-Native Engine. `POST /api/vortex/generate-sections` com Zod
+- [x] Abidos Review Gate (`approved` / `warning` / `blocked`). Regras CFP, CRP, H1, nofollow, CTA, SEO
+- [x] Traceability Snapshot. `generation_context_snapshot_json` em cada revisão
+- [x] Briefing 3-Colunas Etapa 1
+- [x] Asset Picker modal integrado ao briefing
+- [x] Modal Editorial com abas [Rascunhos | Revisões | Publicados]
+- [x] Publicação transacional (Snapshot → Ponteiro → Log → Transação → Cache ISR)
+- [x] Fluxo de revisão (`POST /api/vortex/revision-draft`)
+- [x] Rollback (`POST /api/vortex/rollback`)
+- [x] Limpeza de órfãos + slugs reservados
+- [x] Autenticação `checkVortexAuth` em `/api/vortex/*`
 
-## ⚡ Fase 3: Rota Dinâmica & Renderer Único — PARCIALMENTE IMPLEMENTADA / PENDENTE SMOKE VISUAL
+### Pendentes que não foram fechados
 
-> ⚠️ Esta fase não pode ser marcada como IMPLEMENTADA / PENDENTE SMOKE VISUAL. Existe contradição entre "Preview = Produção implementado" e a pendência real do renderer unificado. O ChatGPT identificou corretamente. A rota existe, mas preview e produção ainda usam HTML diferentes.
-
-- [x] **3.1a** Estrutura inicial da rota `/[...path]` criada.
-- [x] **3.2** Cache ISR via `revalidatePath` disparado após commit transacional.
-- [ ] **3.1b** Produção renderiza `sections_json` via AbidosRenderer (componente React compartilhado).
-- [ ] **3.1c** Preview administrativo usa **exatamente** o mesmo AbidosRenderer — não HTML paralelo gerado localmente.
-- [ ] **3.1d** `generateMetadata` em `/[...path]/page.tsx` consumindo `seo_json` da revisão publicada.
-- [ ] **3.1e** `notFound()` para path inexistente no banco.
-- [ ] **3.1f** `notFound()` para página com status arquivado ou sem `current_revision_id`.
-- [ ] **3.1g** `notFound()` para slugs reservados acessados diretamente.
-
-### 3.1b — AbidosRenderer (componente compartilhado)
-
-- [ ] **3.1b.1** Localizar o AbidosRenderer já existente em `src/components/abidos/AbidosRenderer.tsx` ou equivalente. Reutilizar/adaptar esse componente como renderer único. Não criar um segundo AbidosRenderer duplicado sem necessidade.
-- [ ] **3.1b.2** Componente recebe `sections_json` e renderiza seção por seção usando componentes permitidos (não innerHTML bruto, não eval)
-- [ ] **3.1b.3** Cada tipo de seção/widget tem seu componente mapeado: Heading, Text, Image, Button, FAQ, AutorityBlock, SocialProof, etc.
-- [ ] **3.1b.4** Renderer aplica tokens visuais do template selecionado (via CSS variables)
-- [ ] **3.1b.5** Renderer injeta CTAs reais (WhatsApp, email, agendamento, Doctoralia)
-- [ ] **3.1b.6** Renderer aplica menu dinâmico via `menuId`
-
-**Critério de aceite:** dado o mesmo `sections_json`, o resultado visual no preview e na rota pública é idêntico. Zero HTML paralelo.
-
-### 3.1c — Preview administrativo usando AbidosRenderer
-
-- [ ] **3.1c.1** Remover geração de HTML local no preview
-- [ ] **3.1c.2** Preview do canvas carrega `sections_json` do rascunho ativo e passa para `AbidosRenderer`
-- [ ] **3.1c.3** Mudanças no canvas (via edição manual ou IA) mutam `sections_json` e re-renderizam via mesmo componente
-- [ ] **3.1c.4** Preview amplo (fullscreen) também usa AbidosRenderer
-
-**Critério de aceite:** editar qualquer campo no canvas → muta `sections_json` → re-renderiza via AbidosRenderer → resultado visual idêntico ao que vai para produção.
-
-### 3.1d — generateMetadata
-
-- [ ] **3.1d.1** Implementar `generateMetadata` em `/[...path]/page.tsx`
-- [ ] **3.1d.2** Consumir `seo_json` da revisão publicada correspondente ao path
-- [ ] **3.1d.3** Gerar `<title>`, `<meta description>`, Open Graph, Twitter Card
-- [ ] **3.1d.4** Fallback gracioso quando `seo_json` incompleto
-
-**Critério de aceite:** acessar página publicada e inspecionar `<head>` — tags SEO corretas presentes.
-
-### 3.1e–g — notFound e rotas seguras
-
-- [ ] **3.1e.1** `notFound()` para path não encontrado em `vortex_published_pages`
-- [ ] **3.1f.1** `notFound()` para `status !== 'live'` ou `current_revision_id IS NULL`
-- [ ] **3.1g.1** Carregar lista de slugs reservados em `reserved_slugs.json` na inicialização da rota
-- [ ] **3.1g.2** `notFound()` quando path bater em slug reservado
-
-**Critério de aceite:** acessar `/slug-inexistente` → 404. Acessar `/admin` → 404. Acessar página arquivada → 404.
+- [ ] Smoke visual no browser confirmando que o sistema integrado funciona
+- [ ] AbidosRenderer compartilhado preview = produção
+- [ ] DAL `server-only`
+- [ ] Rota `[[...slug]]` com generateMetadata + notFound
+- [ ] Contratos formais de Page Ops
+- [ ] Oficina Visual Híbrida (Etapa 2 do Vórtex)
+- [ ] Chat IA com tool calls reais
+- [ ] Hardening de segurança (CSP, remotePatterns, Workspace Trust)
+- [ ] Observabilidade (Web Analytics, Speed Insights)
+- [ ] Validação E2E
 
 ---
 
-## 🚀 Fase 4: Ciclo de Vida Editorial & Rollback — IMPLEMENTADA / PENDENTE SMOKE VISUAL
+## FASE 0 — Decisões Arquiteturais e Higiene
 
-- [x] **4.1** Publicação transacional: Snapshot → Ponteiro → Log → Transação → Cache.
-- [x] **4.2** Fluxo de revisão: editar publicado gera `revision_draft` via `POST /api/vortex/revision-draft`.
-- [x] **4.3** Rollback via `POST /api/vortex/rollback` com log em `vortex_publication_logs`.
-- [x] **4.4** Limpeza de rascunhos órfãos + gestão de slugs reservados.
-- [x] Todas as rotas corrigidas para usar schema V7 real: `save-draft`, `publish`, `revision-draft`, `rollback`, `list-drafts`, `published-pages`.
+> Antes de qualquer construção, registrar decisões e limpar configuração de ambiente.
+
+### 0.1 — ADR de estratégia data-driven first
+
+- [ ] **0.1.1** Criar `CSA/3_Engenharia_e_Arquitetura/ADR-001-data-driven-first.md`
+- [ ] **0.1.2** Documentar: páginas do Vórtex são dados versionados (`sections_json`) renderizados por rota dinâmica única; code-driven (gerar `.tsx` em repo) fica como exceção documentada no backlog
+- [ ] **0.1.3** Listar critérios para ativar trilha code-driven futuramente: necessidade de componente fora do schema do AbidosRenderer, animação custom irreproduzível, integração externa específica
+
+**Critério de aceite:** ADR escrito e versionado. Decisão clara para o resto do projeto.
+
+### 0.2 — Workspace Trust e configuração VS Code versionada
+
+- [ ] **0.2.1** Criar `.vscode/extensions.json` com extensões recomendadas: ESLint, Prettier, GitHub Actions, Playwright Test, EditorConfig, Tailwind IntelliSense, DotENV, Path Intellisense, GitLens
+- [ ] **0.2.2** Criar `.vscode/settings.json` versionado com formatOnSave, codeActionsOnSave, ESLint validate, defaultFormatter, security.workspace.trust.enabled true
+- [ ] **0.2.3** Adicionar `chat.tools.terminal.autoApprove` listando `git push`, `vercel --prod`, `vercel promote`, `pnpm db:push`, `rm`, `rmdir`, `del`, `curl`, `wget` como **não auto-aprovados**
+- [ ] **0.2.4** Habilitar `chat.useAgentsMdFile` e `chat.useNestedAgentsMdFiles` true
+
+**Critério de aceite:** ao abrir o projeto no VS Code, prompt de Workspace Trust aparece. Após confiar, lint/format funcionam automaticamente. Comandos destrutivos exigem confirmação explícita.
+
+### 0.3 — Agente vortex-page-ops em `.github/agents/`
+
+- [ ] **0.3.1** Criar `.github/agents/vortex-page-ops.agent.md` com persona, descrição, tools (search/codebase, search/usages, read/problems, edit, terminal, agent), sub-agents (plan, ask)
+- [ ] **0.3.2** Regras explícitas: prefere data-driven, gera code-driven só sob pedido explícito, nunca promove para produção, preserva revisão/rollback/auditoria, consulta documentação atual via Context7 ou Next.js DevTools MCP em dúvidas
+
+**Critério de aceite:** abrir o chat do Copilot/Claude Code, agente "vortex-page-ops" aparece como opção selecionável. Quando ativo, comporta-se conforme regras.
+
+### 0.4 — MCPs essenciais configurados no ambiente de desenvolvimento
+
+- [ ] **0.4.1** Configurar Context7 MCP (busca documentação atualizada Next.js 15+ / Vercel)
+- [ ] **0.4.2** Configurar Next.js DevTools MCP (diagnóstico do app local: `get_errors`, `get_logs`, `get_page_metadata`, `get_project_metadata`)
+- [ ] **0.4.3** Configurar Playwright MCP (smoke visual e validação E2E automatizada)
+- [ ] **0.4.4** (Opcional) Configurar Neon MCP em ambiente dev/teste apenas — nunca apontado para produção
+
+**Critério de aceite:** os 3 MCPs principais respondem queries no Claude Code. Context7 retorna docs atuais. Next.js DevTools lista páginas e erros. Playwright executa scripts de teste.
 
 ---
 
-## 🔥 Fase 4.5: Smoke Visual (Próximo Passo Imediato)
+## FASE 1 — Smoke Visual do Backend Existente
 
-> Antes de qualquer construção nova, validar que o sistema integrado funciona de ponta a ponta no browser.
+> Validar que tudo que está marcado como concluído realmente funciona no browser conectado ao Neon de produção.
 
-- [ ] **4.5.1** Subir dev server local
-- [ ] **4.5.2** Abrir Vórtex no browser — verificar que Etapa 1 carrega em 3 colunas, sem erros no console
-- [ ] **4.5.3** Criar rascunho, preencher briefing, clicar "Continuar para geração"
-- [ ] **4.5.4** Verificar que modal de rascunhos lista corretamente do Neon
-- [ ] **4.5.5** Testar Asset Picker — imagens Cloudinary aparecem
-- [ ] **4.5.6** Testar modal editorial — abas Rascunhos / Revisões / Publicados funcionam
-- [ ] **4.5.7** Testar `/api/vortex/generate-sections` — retorna `sections_json` válido
-- [ ] **4.5.8** Testar Review Gate — endpoint retorna compliance correto
-- [ ] **4.5.9** Verificar que console está limpo de erros críticos
+### 1.1 — Smoke da Etapa 1 (Briefing)
 
-**Critério de aceite:** sistema V7.5.2 integrado ao Neon funciona visualmente sem erros críticos. Print ou vídeo curto confirmando.
+- [ ] **1.1.1** Subir dev server local. Console limpo de erros críticos.
+- [ ] **1.1.2** Abrir Vórtex. Cair na Etapa 1 (não pular para Etapa 2).
+- [ ] **1.1.3** Etapa 1 renderiza 3 colunas: Núcleo Criativo / Arquitetura / Conversão.
+- [ ] **1.1.4** Selecionar modelo Gemini. Selecionar objetivo. Preencher tema.
+- [ ] **1.1.5** Asset Picker abre, mostra 11 imagens do Cloudinary, permite seleção de Hero.
+- [ ] **1.1.6** "Carregar rascunho" lista rascunhos do Neon corretamente.
+- [ ] **1.1.7** "Continuar para geração" só habilita com tema preenchido.
+
+**Critério de aceite:** vídeo curto ou print confirmando os 7 itens acima sem erros.
+
+### 1.2 — Smoke do Modal Editorial
+
+- [ ] **1.2.1** Abrir modal editorial pelo toolbar.
+- [ ] **1.2.2** Aba Rascunhos lista rascunhos com `slug`, data, status.
+- [ ] **1.2.3** Aba Revisões lista páginas em revisão.
+- [ ] **1.2.4** Aba Publicados lista `vortex_published_pages` com `current_revision_id`.
+- [ ] **1.2.5** "Criar Revisão" sobre página publicada gera novo `revision_draft`.
+
+**Critério de aceite:** três abas funcionais com dados reais do Neon.
+
+### 1.3 — Smoke das APIs Abidos
+
+- [ ] **1.3.1** Disparar `POST /api/vortex/generate-sections` com briefing simples. Retorna `sections_json` válido.
+- [ ] **1.3.2** Disparar `POST /api/vortex/abidos-review` com `sections_json`. Retorna severidade.
+- [ ] **1.3.3** Disparar `POST /api/vortex/save-draft`. Persiste no Neon.
+- [ ] **1.3.4** Disparar `POST /api/vortex/publish`. Cria revisão imutável + atualiza ponteiro + dispara revalidate.
+- [ ] **1.3.5** Disparar `POST /api/vortex/rollback`. Reverte ponteiro com log.
+
+**Critério de aceite:** todas as APIs respondem sem erros 500. Banco reflete operações.
 
 ---
 
-## 🎛️ Fase 5: Etapa 2 — Oficina Visual Híbrida
+## FASE 2 — Fundação do Renderer (DAL + Rota Pública + AbidosRenderer)
 
-> Esta fase só começa depois que a Fase 3 (renderer unificado) e a Fase 4.5 (smoke visual) estiverem verdes. Construir a oficina sobre renderer ainda ambíguo cria problemas impossíveis de rastrear.
+> Resolve as três pendências críticas que destravam tudo. Esta fase é a mais importante do plano.
+
+### 2.1 — Data Access Layer `server-only`
+
+- [ ] **2.1.1** Criar `src/lib/vortex-dal.ts` com `import 'server-only'` no topo
+- [ ] **2.1.2** Função `getPublishedPageByPath(path: string)` consulta `vortex_published_pages` join `vortex_revisions` retornando snapshot completo
+- [ ] **2.1.3** Função `normalizeSlugPath(segments?: string[])` converte `["servicos","tea-adultos"]` em `"/servicos/tea-adultos"`
+- [ ] **2.1.4** Função `isReservedSlug(path: string)` consulta `reserved_slugs.json`
+- [ ] **2.1.5** Função `getDraftById(id: string)` para leitura administrativa
+- [ ] **2.1.6** Todas as queries retornam DTOs mínimos (não vazam colunas internas)
+- [ ] **2.1.7** Validação Zod em todas as entradas
+
+**Critério de aceite:** tentativa de importar `vortex-dal.ts` em arquivo do cliente falha em build. Queries funcionam corretamente em rota servidor.
+
+### 2.2 — Rota Dinâmica `app/[[...slug]]/page.tsx`
+
+- [ ] **2.2.1** Criar arquivo `src/app/[[...slug]]/page.tsx`
+- [ ] **2.2.2** Implementar `generateMetadata` lendo `seo_json` da página: title, description, keywords, alternates.canonical, robots, openGraph, twitter
+- [ ] **2.2.3** Fallback gracioso quando `seo_json` incompleto (returns `{}`)
+- [ ] **2.2.4** Função `getPage` com `cache()` para deduplicar leitura entre `generateMetadata` e o componente
+- [ ] **2.2.5** `notFound()` para path inexistente em `vortex_published_pages`
+- [ ] **2.2.6** `notFound()` para `status !== 'published'` ou `is_archived === true`
+- [ ] **2.2.7** `notFound()` para slug reservado acessado diretamente
+- [ ] **2.2.8** Componente passa `sections`, `assets`, `preview: false` para AbidosRenderer
+- [ ] **2.2.9** Atributos `data-page-id` e `data-revision-id` no `<main>` para auditoria
+
+**Critério de aceite:** acessar URL publicada renderiza página. `<head>` tem SEO correto. URL inexistente → 404. URL arquivada → 404. URL reservada → 404.
+
+### 2.3 — Estrutura `not-found.tsx` e `global-not-found.tsx`
+
+- [ ] **2.3.1** Criar `src/app/not-found.tsx` com layout consistente do site (header, footer, mensagem clínica acolhedora)
+- [ ] **2.3.2** Criar `src/app/global-not-found.tsx` para erros fora do layout principal
+- [ ] **2.3.3** Página de erro inclui CTA para WhatsApp/Agendamento (não deixa o lead perdido)
+
+**Critério de aceite:** URL inexistente mostra 404 dentro do layout do Dr. Victor, não tela branca do Next.js.
+
+### 2.4 — AbidosRenderer compartilhado
+
+- [ ] **2.4.1** Localizar AbidosRenderer existente. Consolidar como componente único em `src/components/abidos/AbidosRenderer.tsx`
+- [ ] **2.4.2** Componente recebe props: `sections: SectionJson[]`, `assets: AssetJson[]`, `preview: boolean`
+- [ ] **2.4.3** Mapear cada tipo de seção/widget para componente React permitido (zero `innerHTML`, zero `eval`)
+- [ ] **2.4.4** Widgets cobertos: Heading, Text, Image, Button, Divider, Spacer, Video, FAQ, Author Block, Social Proof, Methodology, Clinical Evidence, Doctoralia
+- [ ] **2.4.5** Aplicar tokens visuais do template via CSS variables
+- [ ] **2.4.6** Injetar CTAs reais (WhatsApp, email, agendamento, Doctoralia) do briefing
+- [ ] **2.4.7** Aplicar menu dinâmico via `menuId`
+- [ ] **2.4.8** Modo `preview: true` adiciona `data-vortex-section`, `data-vortex-widget`, `data-vortex-id` para o sistema de seleção
+- [ ] **2.4.9** Modo `preview: false` (produção) sem atributos administrativos
+- [ ] **2.4.10** Validação Zod do `sections_json` antes de renderizar (sanitização defensiva)
+
+**Critério de aceite:** mesmo `sections_json` produz HTML idêntico em preview e produção. Atributos administrativos aparecem só em preview. Zero HTML paralelo gerado.
+
+### 2.5 — Preview administrativo usando AbidosRenderer
+
+- [ ] **2.5.1** Remover qualquer geração de HTML local no preview do Vórtex
+- [ ] **2.5.2** Canvas central da Etapa 2 carrega `sections_json` do rascunho ativo e passa para `AbidosRenderer` com `preview: true`
+- [ ] **2.5.3** Mutações no canvas alteram `sections_json` e re-renderizam via mesmo componente
+- [ ] **2.5.4** Preview Amplo (fullscreen) usa AbidosRenderer
+
+**Critério de aceite:** editar campo no canvas → muta `sections_json` → re-renderiza via AbidosRenderer → resultado idêntico ao que vai para produção.
+
+---
+
+## FASE 3 — Hardening de Segurança e Performance
+
+> Configurações de Next.js e Vercel que protegem o sistema antes de adicionar superfície de IA.
+
+### 3.1 — `next.config.ts` endurecido
+
+- [ ] **3.1.1** Habilitar `experimental.taint: true`
+- [ ] **3.1.2** `images.remotePatterns` específico para `res.cloudinary.com`, com `pathname: '/**'` e `search: ''`
+- [ ] **3.1.3** Headers de segurança em todas as rotas: Content-Security-Policy, Referrer-Policy, X-Content-Type-Options, X-Frame-Options, Permissions-Policy
+- [ ] **3.1.4** CSP estrita: `default-src 'self'`, `script-src 'self' 'unsafe-inline' 'unsafe-eval' https:`, `img-src 'self' data: blob: https:`, `frame-ancestors 'self'`, `form-action 'self'`
+
+**Critério de aceite:** inspetor mostra headers corretos. Imagens só do Cloudinary funcionam. CSP bloqueia scripts externos não autorizados.
+
+### 3.2 — `vercel.json`
+
+- [ ] **3.2.1** Criar `vercel.json` com `$schema`, `framework: "nextjs"`, `regions: ["gru1"]` (proximidade ao Neon sa-east-1)
+- [ ] **3.2.2** Headers redundantes (defesa em profundidade): Referrer-Policy, X-Content-Type-Options, X-Frame-Options, Permissions-Policy
+
+**Critério de aceite:** Vercel respeita configuração. Build na região correta.
+
+### 3.3 — Variáveis de ambiente e secrets
+
+- [ ] **3.3.1** Criar `.env.example` listando todas variáveis necessárias (sem valores)
+- [ ] **3.3.2** Apenas variáveis prefixadas `NEXT_PUBLIC_` no cliente
+- [ ] **3.3.3** Segredos (`DATABASE_URL`, `CLOUDINARY_API_SECRET`, `GEMINI_API_KEY`, `VORTEX_API_KEY`) acessados apenas via DAL ou rotas server-only
+- [ ] **3.3.4** Configurar Vercel Environment Variables para Preview e Production separadamente
+
+**Critério de aceite:** auditoria de bundle não expõe segredos. `.env.example` permite onboarding limpo.
+
+---
+
+## FASE 4 — Page Ops Contracts (Tool Calls do Chat IA)
+
+> Os 6 contratos formais que o chat IA usa para operar páginas. Definidos antes da Oficina Visual porque ela depende deles. Esta é a fase que dá ao Vórtex a fluidez do Antigravity.
+
+### 4.1 — Contrato `readDraft`
+
+- [ ] **4.1.1** Definir schema Zod do retorno: `{ id, slug, sections_json, seo_json, creationBrief, generation_context_snapshot_json, status, created_at, updated_at }`
+- [ ] **4.1.2** Implementar `src/lib/vortex/page-ops/readDraft.ts` consumindo DAL
+- [ ] **4.1.3** Expor como tool call para Gemini: nome, descrição, parameter `draftId: string`
+- [ ] **4.1.4** Cache de 5s para evitar reads repetidos no mesmo turno
+
+**Critério de aceite:** chat IA consegue invocar `readDraft(draftId)` e receber objeto completo do rascunho.
+
+### 4.2 — Contrato `mutateSections`
+
+- [ ] **4.2.1** Definir schema Zod do payload: `{ draftId: string, patches: JsonPatch[] }` (RFC 6902)
+- [ ] **4.2.2** Operações suportadas: `replace_text`, `change_style`, `add_widget`, `remove_widget`, `reorder`, `change_section_layout`
+- [ ] **4.2.3** Implementar mutação atômica do `sections_json` em memória
+- [ ] **4.2.4** Validação Zod do `sections_json` resultante antes de aceitar
+- [ ] **4.2.5** Persistência via `saveDraft` automática
+- [ ] **4.2.6** Retorna `sections_json` atualizado
+
+**Critério de aceite:** chat IA consegue aplicar patch específico. Patch inválido é rejeitado com mensagem clara. `sections_json` final passa validação.
+
+### 4.3 — Contrato `runAbidosReview`
+
+- [ ] **4.3.1** Wrapper sobre `/api/vortex/abidos-review` existente
+- [ ] **4.3.2** Schema retorno: `{ status: 'approved'|'warning'|'blocked', score: number, violations: Violation[] }`
+- [ ] **4.3.3** Cada violation com `rule`, `severity`, `message`, `path` (apontando para nó do `sections_json`)
+- [ ] **4.3.4** Tool call disponível para o chat IA invocar antes de aplicar mudanças críticas
+
+**Critério de aceite:** chat IA pode validar `sections_json` proposto antes de persistir. Bloqueios retornam explicação.
+
+### 4.4 — Contrato `saveDraft`
+
+- [ ] **4.4.1** Wrapper sobre `/api/vortex/save-draft` existente
+- [ ] **4.4.2** Schema payload: `{ draftId, sections_json, seo_json?, generation_context_snapshot_json? }`
+- [ ] **4.4.3** Retorno com `revision_id` e `updated_at`
+- [ ] **4.4.4** Indicador de autosave atualizado na UI quando esta tool call dispara
+
+**Critério de aceite:** chat IA persiste mudanças após mutações. Indicador "Salvo agora" aparece no rodapé.
+
+### 4.5 — Contrato `listAssets`
+
+- [ ] **4.5.1** Wrapper sobre `/api/vortex/assets` existente
+- [ ] **4.5.2** Schema payload: `{ filter: { category?, semanticRole?, tags? } }`
+- [ ] **4.5.3** Retorna array de assets com URL Cloudinary, metadados, dimensões
+- [ ] **4.5.4** Tool call permite ao chat IA buscar imagem apropriada sem o usuário precisar abrir Asset Picker
+
+**Critério de aceite:** "troque a imagem do hero por algo mais acolhedor" → chat IA chama `listAssets({filter: {semanticRole: 'hero', tags: ['empatia']}})` → escolhe → aplica via `mutateSections`.
+
+### 4.6 — Contrato `requestPublish`
+
+- [ ] **4.6.1** **Nunca publica diretamente.** Apenas prepara payload e dispara confirmação humana
+- [ ] **4.6.2** Roda `runAbidosReview` final automaticamente
+- [ ] **4.6.3** Se `blocked`, retorna explicação clara, não chama publish
+- [ ] **4.6.4** Se `approved`/`warning`, mostra modal de confirmação ao humano com resumo das mudanças
+- [ ] **4.6.5** Apenas após confirmação humana explícita, chama `/api/vortex/publish`
+
+**Critério de aceite:** chat IA nunca publica sozinho. Modal de confirmação aparece. Bloqueios Abidos param o fluxo com mensagem clara.
+
+### 4.7 — System prompt CSA-Vórtex
+
+- [ ] **4.7.1** Criar prompt em `src/lib/vortex/agent/system-prompt.ts` baseado no CSA v3.5
+- [ ] **4.7.2** Adaptar pipeline 1-5 para domínio do Vórtex: Diálogo → Diagnóstico (via `readDraft`) → Plano → Execução (via `mutateSections`) → Validação (via `runAbidosReview`)
+- [ ] **4.7.3** Regras de autonomia: age livre em `mutateSections` e `saveDraft`. Para e pede confirmação em `requestPublish` e em exclusão de seção inteira.
+- [ ] **4.7.4** Anti-alucinação: se Review Gate bloquear duas vezes a mesma ação, para e explica em vez de tentar contornar.
+- [ ] **4.7.5** Comunicação direta: "Fez. Reportou. Perguntou o próximo passo." Sem "vou fazer isso para você."
+
+**Critério de aceite:** prompt configurado. Chat IA segue padrão de comunicação direta, não monólogos explicativos.
+
+---
+
+## FASE 5 — Etapa 2: Oficina Visual Híbrida — Shell e Canvas
+
+> Construção da interface visual da Etapa 2. Sobre fundação sólida da Fase 2 e contratos da Fase 4.
 
 ### 5.1 — Shell de 3 colunas
 
 - [ ] **5.1.1** Grid `grid-template-columns: 280px 1fr 320px`
-- [ ] **5.1.2** Coluna esquerda: container "Oficina" com rodapé de ícones (placeholder)
+- [ ] **5.1.2** Coluna esquerda: container "Oficina" com rodapé de ícones
 - [ ] **5.1.3** Coluna central: container "Canvas" preparado para AbidosRenderer
-- [ ] **5.1.4** Coluna direita: container "Vórtex IA" com header + área de mensagens + input
+- [ ] **5.1.4** Coluna direita: container "Vórtex IA" com header + mensagens + input
 
-**Critério de aceite:** Etapa 2 renderiza shell. Colunas visíveis. Placeholders mostram alerts "em construção".
+**Critério de aceite:** Etapa 2 renderiza shell. Placeholders mostram "em construção".
 
 ### 5.2 — Header da Etapa 2
 
 - [ ] **5.2.1** Breadcrumb dinâmico: `Página > [seção] > [widget]`
-- [ ] **5.2.2** Viewport switcher Desktop/Tablet/Mobile (funcional: CSS max-width no canvas)
-- [ ] **5.2.3** Dropdown de Template (lista os templates existentes)
-- [ ] **5.2.4** Botão GERAR (primary, destacado)
+- [ ] **5.2.2** Viewport switcher (Desktop/Tablet/Mobile) funcional
+- [ ] **5.2.3** Dropdown de Template
+- [ ] **5.2.4** Botão GERAR
 - [ ] **5.2.5** Botão `</>` (inspetor técnico)
 - [ ] **5.2.6** Botão "Preview Amplo" (fullscreen)
 
-**Critério de aceite:** header completo. Viewport switcher funciona. Demais são placeholders.
+**Critério de aceite:** header completo. Viewport switcher redimensiona canvas.
 
 ### 5.3 — Footer da Etapa 2
 
-- [ ] **5.3.1** Undo/redo (placeholders inicialmente)
-- [ ] **5.3.2** Indicador autosave
+- [ ] **5.3.1** Undo/redo
+- [ ] **5.3.2** Indicador autosave (Salvando… / Salvo há Xs / Erro)
 - [ ] **5.3.3** Botão "Próximo: Performance →"
 
-### 5.4 — Canvas com AbidosRenderer
+### 5.4 — Canvas com AbidosRenderer (modo preview)
 
-- [ ] **5.4.1** Carregar `sections_json` do rascunho ativo do Neon
-- [ ] **5.4.2** Renderizar via AbidosRenderer dentro do canvas
-- [ ] **5.4.3** Viewport switcher aplica CSS max-width no container do canvas
+- [ ] **5.4.1** Carregar `sections_json` do rascunho ativo via `readDraft`
+- [ ] **5.4.2** Renderizar via AbidosRenderer com `preview: true`
+- [ ] **5.4.3** Viewport switcher aplica CSS max-width no container
 - [ ] **5.4.4** Estado vazio: card "Pronto para gerar — clique em GERAR ou arraste widgets"
 
-**Critério de aceite:** rascunho com sections_json populado → página visível no canvas via AbidosRenderer. Rascunho vazio → placeholder claro.
+**Critério de aceite:** rascunho com `sections_json` populado → página visível idêntica à produção. Vazio → placeholder claro.
 
 ### 5.5 — Inspetor técnico `</>`
 
-- [ ] **5.5.1** `</>` abre painel (coluna direita ou modal)
+- [ ] **5.5.1** Abre painel substituindo coluna direita
 - [ ] **5.5.2** Tabs: `sections_json` / `seo_json` / `abidos_compliance_json` / `generation_context_snapshot_json` / Diagnóstico
 - [ ] **5.5.3** JSON colorizado, somente leitura
 - [ ] **5.5.4** Tab Diagnóstico lista warnings do último Review Gate
 - [ ] **5.5.5** "Voltar para Visual" restaura chat IA
 
-**Critério de aceite:** posso ver toda a estrutura técnica. Voltar para visual não perde estado.
+**Critério de aceite:** inspeção técnica acessível. Voltar para visual não perde estado.
 
 ### 5.6 — Sistema de seleção no canvas
 
-- [ ] **5.6.1** AbidosRenderer injeta `data-vortex-section`, `data-vortex-widget`, `data-vortex-id` em cada elemento
-- [ ] **5.6.2** Listener de clique identifica elemento e armazena em `state.selection`
-- [ ] **5.6.3** Overlay visual: borda azul para widget, roxa para seção
-- [ ] **5.6.4** Hierarquia de clique: clicar texto → widget. Segundo clique → seção. Terceiro → página
-- [ ] **5.6.5** ESC desseleciona. Clicar fora do canvas desseleciona
+- [ ] **5.6.1** Listener de clique identifica elemento via `data-vortex-*`
+- [ ] **5.6.2** Estado `state.selection` armazena `{type, id, path}`
+- [ ] **5.6.3** Overlay visual: borda azul (widget), roxa (seção)
+- [ ] **5.6.4** Hierarquia: clicar texto → widget. Segundo clique → seção. Terceiro → página
+- [ ] **5.6.5** ESC desseleciona. Clicar fora desseleciona
 
-**Critério de aceite:** clicar em qualquer elemento destaca com borda. Hierarquia funciona. ESC limpa.
+**Critério de aceite:** clicar destaca elemento. Hierarquia funciona. ESC limpa.
 
 ### 5.7 — Breadcrumb de seleção
 
 - [ ] **5.7.1** Header atualiza em tempo real: `Página > Hero > Heading`
 - [ ] **5.7.2** Cada nível clicável seleciona aquele nível
-- [ ] **5.7.3** Sem seleção: mostra apenas título da página
 
 ### 5.8 — Barra contextual flutuante
 
 - [ ] **5.8.1** Widget selecionado: 5 botões (✕, ✎ Manual, ✨ IA, ⧉ Duplicar, 🗑 Excluir)
-- [ ] **5.8.2** Seção selecionada: labels adaptados (Editar seção, IA na seção, etc.)
-- [ ] **5.8.3** Barra acompanha o elemento (position absolute relativa ao elemento)
-- [ ] **5.8.4** Excluir widget: confirmação rápida + undo disponível
+- [ ] **5.8.2** Seção selecionada: labels adaptados
+- [ ] **5.8.3** Barra acompanha elemento (position absolute)
+- [ ] **5.8.4** Excluir widget: confirmação rápida + undo
 - [ ] **5.8.5** Excluir seção: modal com aviso "Esta seção contém X widgets"
-
-**Critério de aceite:** barra aparece ao selecionar. Duplicar funciona. Excluir com confirmação funciona.
 
 ### 5.9 — Botões `+` para adicionar seção
 
 - [ ] **5.9.1** Seção selecionada mostra `+` acima e abaixo
-- [ ] **5.9.2** Clicar `+` insere nova seção vazia no `sections_json` + persiste via save-draft
-- [ ] **5.9.3** Seção vazia: placeholder "Arraste widgets aqui ou peça ao Vórtex para criar esta seção"
-- [ ] **5.9.4** Nova seção fica selecionada automaticamente
-
-**Critério de aceite:** adicionar seção funciona. Persiste no Neon via save-draft.
+- [ ] **5.9.2** Clicar `+` chama `mutateSections` com patch `add_section`
+- [ ] **5.9.3** Seção vazia: placeholder "Arraste widgets aqui ou peça ao Vórtex"
+- [ ] **5.9.4** Nova seção fica selecionada
 
 ### 5.10 — Undo/redo
 
-- [ ] **5.10.1** Stack de comandos para cada ação modificadora
-- [ ] **5.10.2** Cmd/Ctrl+Z / Shift+Z
-- [ ] **5.10.3** Botões no footer com disabled correto
-- [ ] **5.10.4** Limite de 50 ações
-- [ ] **5.10.5** Cada undo/redo persiste via save-draft
-
-**Critério de aceite:** desfazer/refazer funciona em todas as ações implementadas até aqui.
+- [ ] **5.10.1** Stack de comandos para cada ação
+- [ ] **5.10.2** Cmd/Ctrl+Z e Shift+Z
+- [ ] **5.10.3** Botões disabled corretos
+- [ ] **5.10.4** Limite 50 ações
+- [ ] **5.10.5** Cada undo/redo persiste via `saveDraft`
 
 ### 5.11 — Autosave real
 
-- [ ] **5.11.1** Indicador: "Salvando…" / "Salvo há 5s" / "Erro ao salvar"
-- [ ] **5.11.2** Debounce 2s após última modificação
-- [ ] **5.11.3** Persistência via `POST /api/vortex/save-draft` (já existe)
-- [ ] **5.11.4** Em caso de erro, retry manual disponível
-
-**Critério de aceite:** modificações persistem no Neon. Recarregar recupera estado.
+- [ ] **5.11.1** Indicador no footer
+- [ ] **5.11.2** Debounce 2s
+- [ ] **5.11.3** Persistência via `saveDraft` (Fase 4)
 
 ---
 
-## 🔧 Fase 6: Coluna Esquerda — Oficina Manual
+## FASE 6 — Coluna Esquerda: Oficina Manual
 
 ### 6.1 — Footer de ícones
 
 - [ ] **6.1.1** Ícones: Widgets / Estrutura / Propriedades / Assets / Histórico
-- [ ] **6.1.2** Sem texto, com tooltip on-hover
+- [ ] **6.1.2** Sem texto, tooltip on-hover
 - [ ] **6.1.3** Estado ativo destacado
 - [ ] **6.1.4** Automático: nada selecionado → Widgets. Algo selecionado → Propriedades
 
 ### 6.2 — Aba Widgets
 
 - [ ] **6.2.1** Categorias colapsáveis: Texto, Mídia, Interação, Clínico
-- [ ] **6.2.2** Widgets clínicos prioritários: Bloco Autoridade CRP, Prova Social Ética (de `abidos_social_proof`), Metodologia, Evidência Clínica, Doctoralia, FAQ Estruturado
-- [ ] **6.2.3** Cards arrastáveis com ícone + nome + hover com descrição
-- [ ] **6.2.4** Campo de busca em tempo real
+- [ ] **6.2.2** Widgets clínicos (foco do produto): Bloco Autoridade CRP, Prova Social Ética (de `abidos_social_proof`), Metodologia, Evidência Clínica, Doctoralia, FAQ Estruturado
+- [ ] **6.2.3** Cards arrastáveis com ícone + nome + hover description
+- [ ] **6.2.4** Busca em tempo real
 
-**Critério de aceite:** lista organizada, busca funciona, widgets clínicos visíveis.
-
-### 6.3 — Drag & drop de widget para canvas
+### 6.3 — Drag & drop
 
 - [ ] **6.3.1** Preview semi-transparente seguindo cursor
-- [ ] **6.3.2** Áreas de drop válidas destacam durante drag
-- [ ] **6.3.3** Linha azul indica posição exata de inserção
-- [ ] **6.3.4** Soltar em área válida: insere no `sections_json`, persiste, seleciona automaticamente
-- [ ] **6.3.5** Soltar inválido: cancela com animação de retorno
-
-**Critério de aceite:** arrastar Heading para seção vazia funciona. Persiste no Neon.
+- [ ] **6.3.2** Áreas de drop válidas destacam
+- [ ] **6.3.3** Linha azul indica posição
+- [ ] **6.3.4** Soltar → `mutateSections` com `add_widget` → seleciona automaticamente
+- [ ] **6.3.5** Soltar inválido cancela
 
 ### 6.4 — Aba Estrutura (árvore)
 
 - [ ] **6.4.1** Hierarquia: Página > Seção > Widget
-- [ ] **6.4.2** Ícone de tipo + nome + botões on-hover (visibilidade, duplicar, excluir)
+- [ ] **6.4.2** Ícone + nome + botões on-hover
 - [ ] **6.4.3** Sincronia bidirecional canvas ↔ árvore
-- [ ] **6.4.4** Drag & drop dentro da árvore para reordenar
+- [ ] **6.4.4** Drag & drop reordena
 - [ ] **6.4.5** Itens colapsáveis
 
 ### 6.5 — Aba Propriedades — Widget
@@ -268,253 +431,372 @@ Observação: “IMPLEMENTADA / PENDENTE SMOKE VISUAL” significa que o código
 - [ ] **6.5.1** Tabs: Conteúdo / Estilo / Espaçamento / Responsivo / Avançado
 
 **Camada 1 (essenciais):**
-- [ ] **6.5.2** Conteúdo: campos editáveis específicos do widget (texto, link, alt text)
+- [ ] **6.5.2** Conteúdo: campos editáveis específicos
 - [ ] **6.5.3** Estilo: cor, tipografia, fundo
 - [ ] **6.5.4** Espaçamento: padding/margin com controle visual
 - [ ] **6.5.5** Responsivo: visibilidade por viewport
 
 **Camada 2 (avançadas):**
-- [ ] **6.5.6** Padding/margin por lado individualmente
+- [ ] **6.5.6** Padding/margin por lado
 - [ ] **6.5.7** Border (largura/estilo/cor/radius por canto)
 - [ ] **6.5.8** Sombra (offset/blur/spread/cor)
 - [ ] **6.5.9** Gradient backgrounds
 - [ ] **6.5.10** Opacidade, espaçamento de letra, altura de linha
 - [ ] **6.5.11** Ordem responsiva
 
-- [ ] **6.5.12** Toda mudança: re-renderiza via AbidosRenderer + persiste via save-draft
-
-**Critério de aceite:** modificar cor do Heading aplica no canvas em tempo real. Persiste.
+- [ ] **6.5.12** Toda mudança via `mutateSections`
 
 ### 6.6 — Aba Propriedades — Seção
 
-- [ ] **6.6.1** Layout: colunas (1-6), gap, alinhamento vertical/horizontal
-- [ ] **6.6.2** Estilo: background (cor/gradiente/imagem do Cloudinary), borda, sombra
-- [ ] **6.6.3** Dimensões: largura (full/contained), altura mínima, padding
-- [ ] **6.6.4** Responsivo: empilhar/ocultar/reordenar em mobile
-
-**Critério de aceite:** mudar colunas de 1 para 2 redistribui widgets. Background aplica. Persiste.
+- [ ] **6.6.1** Layout: colunas (1-6), gap, alinhamento
+- [ ] **6.6.2** Estilo: background, borda, sombra
+- [ ] **6.6.3** Dimensões: largura, altura mínima, padding
+- [ ] **6.6.4** Responsivo
 
 ### 6.7 — Aba Assets
 
-- [ ] **6.7.1** Reaproveitar Asset Picker (já existe no V7.5.2)
+- [ ] **6.7.1** Reaproveitar Asset Picker existente
 - [ ] **6.7.2** Filtros por categoria/tag/papel SEO
-- [ ] **6.7.3** Drag & drop de asset para widget de imagem
-- [ ] **6.7.4** Imagens usadas no rascunho atual destacadas
+- [ ] **6.7.3** Drag & drop para widget de imagem
+- [ ] **6.7.4** Imagens usadas no rascunho destacadas
 
 ### 6.8 — Aba Histórico
 
-- [ ] **6.8.1** Listar revisões do rascunho atual de `vortex_revisions` (Neon)
-- [ ] **6.8.2** Cada item: timestamp, descrição
-- [ ] **6.8.3** Clicar carrega aquela versão (com confirmação)
-- [ ] **6.8.4** Diff visual básico entre versão atual e selecionada
+- [ ] **6.8.1** Listar revisões de `vortex_revisions`
+- [ ] **6.8.2** Timestamp, descrição
+- [ ] **6.8.3** Clicar carrega versão (com confirmação)
+- [ ] **6.8.4** Diff visual básico
 
 ---
 
-## 💬 Fase 7: Coluna Direita — Chat IA Contextual
+## FASE 7 — Coluna Direita: Chat IA com Tool Calls Reais
 
-> Único lugar de comando IA. Centralização total.
-
-### 7.1 — Estrutura básica do chat
+### 7.1 — Estrutura básica
 
 - [ ] **7.1.1** Header "Vórtex IA" + modelo ativo
 - [ ] **7.1.2** Área de mensagens com scroll
-- [ ] **7.1.3** Input com placeholder dinâmico por escopo
-- [ ] **7.1.4** Mensagem boas-vindas: "Estou aqui. O que vamos criar agora?"
+- [ ] **7.1.3** Input com placeholder dinâmico
+- [ ] **7.1.4** Mensagem de boas-vindas
 
 ### 7.2 — Sistema de escopo ativo
 
-- [ ] **7.2.1** Chip acima do input: "Página inteira" / "Seção: Hero" / "Widget: Heading do Hero"
-- [ ] **7.2.2** Chip atualiza automaticamente com seleção do canvas
-- [ ] **7.2.3** Botão `×` no chip limpa seleção (volta para "Página inteira")
-- [ ] **7.2.4** Cor do chip: azul (página), roxo (seção), verde (widget)
-- [ ] **7.2.5** 4 atalhos acima do input: Página / Seção atual / Widget atual / Cancelar
+- [ ] **7.2.1** Chip acima do input: "Página inteira" / "Seção: X" / "Widget: Y"
+- [ ] **7.2.2** Atualiza com seleção do canvas
+- [ ] **7.2.3** Botão `×` limpa seleção
+- [ ] **7.2.4** Cor: azul (página), roxo (seção), verde (widget)
+- [ ] **7.2.5** 4 atalhos: Página / Seção / Widget / Cancelar
 
 ### 7.3 — Confirmação inteligente sem seleção
 
-- [ ] **7.3.1** Comando sem seleção → IA pergunta com 3 botões: "Aplicar globalmente" / "Selecionar seção" / "Cancelar"
-- [ ] **7.3.2** "Selecionar seção" entra em modo highlight no canvas
+- [ ] **7.3.1** Comando sem seleção → IA pergunta com 3 botões
+- [ ] **7.3.2** "Selecionar seção" entra em modo highlight
 - [ ] **7.3.3** "Cancelar" descarta
 
 ### 7.4 — Comandos com escopo selecionado
 
-- [ ] **7.4.1** Com seleção, IA executa no escopo sem perguntar
-- [ ] **7.4.2** Resposta mostra preview da mudança antes de aplicar
+- [ ] **7.4.1** Com seleção, IA executa via tool calls
+- [ ] **7.4.2** Resposta mostra preview da mudança
 - [ ] **7.4.3** Botões: Aplicar / Refinar / Descartar
-- [ ] **7.4.4** Aplicar: muta `sections_json`, re-renderiza via AbidosRenderer, persiste, entra no histórico
-- [ ] **7.4.5** Toda ação passa por Review Gate antes de aplicar
+- [ ] **7.4.4** Aplicar → `mutateSections` → re-renderiza → entra no histórico
+- [ ] **7.4.5** Toda ação passa por `runAbidosReview`
 
-**Critério de aceite:** pedir "encurte este título" com heading selecionado → IA propõe → Aplicar → canvas atualiza → Abidos valida.
+### 7.5 — Botão "Editar com IA" como âncora
 
-### 7.5 — Botão "Editar com IA" como âncora pura
+- [ ] **7.5.1** Clicar ✨ foca input do chat com escopo carregado
+- [ ] **7.5.2** Placeholder muda contextualmente
+- [ ] **7.5.3** Zero balão flutuante
 
-- [ ] **7.5.1** Clicar ✨ na barra contextual: foca input do chat, chip já carrega aquele elemento
-- [ ] **7.5.2** Placeholder muda: "O que mudar neste título?"
-- [ ] **7.5.3** Zero balão flutuante, zero modal separado — só o chat
+### 7.6 — Streaming Gemini real
 
-### 7.6 — Integração Gemini real (streaming)
+- [ ] **7.6.1** Endpoint Gemini com streaming
+- [ ] **7.6.2** Resposta letra por letra
+- [ ] **7.6.3** "IA pensando…" antes da primeira resposta
+- [ ] **7.6.4** Botão "Parar geração"
+- [ ] **7.6.5** Modelo de `state.creationBrief.model`
 
-- [ ] **7.6.1** Chat conectado ao endpoint Gemini via streaming
-- [ ] **7.6.2** Resposta aparece letra por letra
-- [ ] **7.6.3** "IA pensando…" durante espera
-- [ ] **7.6.4** Botão "Parar geração" durante streaming
-- [ ] **7.6.5** Modelo vem de `state.creationBrief.model` (definido na Etapa 1)
+### 7.7 — Aplicação de mudanças via tool calls
 
-### 7.7 — Aplicação de mudanças via IA
+- [ ] **7.7.1** IA chama tool calls reais (não retorna HTML bruto)
+- [ ] **7.7.2** Tool calls disponíveis: `readDraft`, `mutateSections`, `runAbidosReview`, `saveDraft`, `listAssets`, `requestPublish`
+- [ ] **7.7.3** Cada chamada renderizada como bloco discreto na conversa (igual Antigravity)
+- [ ] **7.7.4** Falha de Abidos retorna explicação no chat, não aplica
 
-- [ ] **7.7.1** IA retorna ações estruturadas JSON (não HTML bruto, não eval)
-- [ ] **7.7.2** Ações: replace_text, change_style, add_widget, remove_widget, reorder
-- [ ] **7.7.3** Cada ação aplicada via mutação controlada no `sections_json`
-- [ ] **7.7.4** Validação Abidos antes de aplicar
-- [ ] **7.7.5** Falha Abidos → explicação no chat, não aplica
+**Critério de aceite (essa fase é a alma do projeto):** o chat tem fluidez do Antigravity. "Reescreve hero com tom mais acolhedor" → IA chama `readDraft` → propõe novo texto → roda `runAbidosReview` → chama `mutateSections` → reporta "Hero reescrito. Aprovado pelo Review Gate (94/100). Posso seguir para o CTA?".
+
+### 7.8 — Pretext nas bolhas do chat
+
+- [ ] **7.8.1** Instalar `@chenglou/pretext`
+- [ ] **7.8.2** Bolhas do chat usam `prepare()` + `layout()` para calcular altura sem `getBoundingClientRect`
+- [ ] **7.8.3** Durante streaming, cada chunk novo é apenas `layout()` sobre cache
+- [ ] **7.8.4** Auto-scroll suave sem reflow
+
+**Critério de aceite:** chat com 50+ mensagens e streaming ativo permanece responsivo (interações < 100ms).
 
 ---
 
-## ⚡ Fase 8: Botão GERAR & Templates
+## FASE 8 — Botão GERAR e Templates
 
 ### 8.1 — Botão GERAR
 
-- [ ] **8.1.1** Sempre atua sobre a página inteira do rascunho atual
-- [ ] **8.1.2** Sempre subordinado ao briefing da Etapa 1
-- [ ] **8.1.3** Página vazia → gera diretamente
+- [ ] **8.1.1** Sempre atua sobre página inteira
+- [ ] **8.1.2** Subordinado ao briefing da Etapa 1
+- [ ] **8.1.3** Página vazia → gera direto via `/api/vortex/generate-sections`
 - [ ] **8.1.4** Página com conteúdo → modal com 4 opções:
   - Salvar versão atual e gerar nova
   - Regenerar preservando estrutura
   - Substituir tudo
   - Cancelar
-- [ ] **8.1.5** "Salvar versão atual" cria revisão antes de regenerar
+- [ ] **8.1.5** "Salvar versão" cria revisão antes
 - [ ] **8.1.6** "Regenerar preservando estrutura" mantém seções, reescreve conteúdo
-- [ ] **8.1.7** Loading state com botão cancelar
-- [ ] **8.1.8** Review Gate roda automaticamente após geração
+- [ ] **8.1.7** Loading state com cancelar
+- [ ] **8.1.8** `runAbidosReview` automático após geração
 
-### 8.2 — Templates
+### 8.2 — Template Registry formal
 
-- [ ] **8.2.1** Dropdown no header lista templates existentes
-- [ ] **8.2.2** Selecionar template **não modifica** a página
-- [ ] **8.2.3** Template aplicado **apenas** ao clicar GERAR
-- [ ] **8.2.4** Template fornece tokens visuais + estrutura sugerida via AbidosRenderer
-- [ ] **8.2.5** Pós-geração: página editável manualmente e via IA
+- [ ] **8.2.1** Criar `src/lib/vortex/templates/registry.ts`
+- [ ] **8.2.2** Cada template define: id, nome, descrição, schema esperado de `sections_json`, componentes permitidos, variantes de layout, política de mídias, contratos de SEO, hooks de publicação
+- [ ] **8.2.3** Migrar os 11 templates atuais para esse formato
+- [ ] **8.2.4** Validação Zod do template ao carregar
 
-**Critério de aceite:** selecionar template + GERAR → página com estética do template e conteúdo do briefing. Sem template → gera livre.
+**Critério de aceite:** templates formalizados como registro escalável. Adicionar novo template é declarativo, não imperativo.
 
-### 8.3 — Geração via Abidos Engine
+### 8.3 — Templates aplicados só no GERAR
 
-- [ ] **8.3.1** GERAR chama `/api/vortex/generate-sections` (já existe)
-- [ ] **8.3.2** Briefing completo passado como contexto
-- [ ] **8.3.3** Template entra como direção visual
-- [ ] **8.3.4** `sections_json` retornado aplicado no canvas via AbidosRenderer
-- [ ] **8.3.5** Snapshot do contexto salvo em `generation_context_snapshot_json`
+- [ ] **8.3.1** Dropdown no header lista templates do registry
+- [ ] **8.3.2** Selecionar template **não modifica** página
+- [ ] **8.3.3** Aplicado **apenas** ao clicar GERAR
+- [ ] **8.3.4** Pós-geração: edição livre
 
----
+### 8.4 — Geração via Abidos Engine
 
-## ✨ Fase 9: Refinamento Premium
-
-### 9.1 — Microanimações
-
-- [ ] **9.1.1** Hover states em todos os elementos clicáveis
-- [ ] **9.1.2** Transições suaves (200-300ms)
-- [ ] **9.1.3** Loading skeletons durante carregamentos
-- [ ] **9.1.4** Toasts de feedback para ações importantes
-
-### 9.2 — Tipografia e respiro
-
-- [ ] **9.2.1** Hierarquia tipográfica revisada em toda Etapa 2
-- [ ] **9.2.2** Spacing consistente (8px base grid)
-- [ ] **9.2.3** Contraste WCAG AA mínimo
-
-### 9.3 — Atalhos de teclado
-
-- [ ] **9.3.1** Cmd/Ctrl+S → salvar rascunho
-- [ ] **9.3.2** Cmd/Ctrl+Z/Shift+Z → undo/redo
-- [ ] **9.3.3** Cmd/Ctrl+Enter → enviar comando do chat
-- [ ] **9.3.4** Cmd/Ctrl+D → duplicar elemento selecionado
-- [ ] **9.3.5** Delete/Backspace → excluir (com confirmação)
-- [ ] **9.3.6** ESC → desselecionar/fechar modais
-- [ ] **9.3.7** Cmd/Ctrl+/ → cheatsheet de atalhos
-
-### 9.4 — Camada 3 de Propriedades (profissional)
-
-- [ ] **9.4.1** Animações de entrada por widget (fade, slide)
-- [ ] **9.4.2** Hover effects configuráveis
-- [ ] **9.4.3** Classes CSS customizadas por elemento
-- [ ] **9.4.4** Atributos HTML customizados (data-attributes)
-- [ ] **9.4.5** CSS personalizado por elemento (escape hatch)
-- [ ] **9.4.6** Responsividade fina por breakpoint
-
-### 9.5 — Tratamento de erros
-
-- [ ] **9.5.1** Mensagens humanas, sem stacktraces expostos
-- [ ] **9.5.2** Tela de "algo deu errado" com caminho de recuperação
-- [ ] **9.5.3** Recovery automático de rascunho em caso de crash
-- [ ] **9.5.4** Indicador offline
-
-### 9.6 — Performance
-
-- [ ] **9.6.1** Lazy loading de Assets
-- [ ] **9.6.2** Virtual scroll na árvore para páginas grandes
-- [ ] **9.6.3** Debounce de validação Abidos (não rodar em cada keystroke)
-- [ ] **9.6.4** Memoização de componentes pesados do AbidosRenderer
+- [ ] **8.4.1** GERAR chama `/api/vortex/generate-sections` com briefing + template
+- [ ] **8.4.2** `sections_json` aplicado no canvas via AbidosRenderer
+- [ ] **8.4.3** Snapshot salvo em `generation_context_snapshot_json`
 
 ---
 
-## 🧪 Fase 10: Validação E2E Final
+## FASE 9 — Release & Observabilidade
 
-### 10.1 — Cenário: Geração total com IA
+> Configuração de pipeline de deploy e monitoramento. Acontece em paralelo às fases anteriores quando precisar publicar para validação real.
 
-- [ ] **10.1.1** Etapa 1: Novo Rascunho, Gemini Pro, Landing Page, tema "hipnose clínica para TEA", template "Landing Abidos"
-- [ ] **10.1.2** Continuar → Etapa 2 → GERAR
-- [ ] **10.1.3** Página gerada, texto coerente, estrutura clínica
-- [ ] **10.1.4** Review Gate: aprovado
-- [ ] **10.1.5** Publicar → rota pública renderiza via AbidosRenderer (idêntica ao preview)
-- [ ] **10.1.6** SEO tags corretas no `<head>`
+### 9.1 — Git integration Vercel
 
-### 10.2 — Cenário: Edição manual total
+- [ ] **9.1.1** Conectar repositório à Vercel
+- [ ] **9.1.2** Configurar Preview Deployments por branch/PR
+- [ ] **9.1.3** Configurar produção apontando para `main`
+- [ ] **9.1.4** Variáveis de ambiente separadas (Preview / Production)
 
-- [ ] **10.2.1** Novo Rascunho sem template → Etapa 2 vazia
-- [ ] **10.2.2** Adicionar seções com `+`, arrastar widgets, editar textos
-- [ ] **10.2.3** Configurar propriedades, CTAs, cores
-- [ ] **10.2.4** Publicar. Rota pública funciona.
+**Critério de aceite:** push em branch gera Preview URL automática.
 
-### 10.3 — Cenário: Híbrido
+### 9.2 — Deployment Protection + Bypass para automação
 
-- [ ] **10.3.1** Gerar com IA → ajustar Hero manualmente → pedir IA reescrever seção → adicionar widget manual → pedir IA mudar tom geral → salvar versão → rollback → comparar
-- [ ] **10.3.2** Todo o fluxo sem perda de estado ou conflitos
+- [ ] **9.2.1** Habilitar Deployment Protection em Previews (proteção por SSO ou senha)
+- [ ] **9.2.2** Configurar `VERCEL_AUTOMATION_BYPASS_SECRET` para Playwright
+- [ ] **9.2.3** Header `x-vercel-protection-bypass` em scripts E2E
 
-### 10.4 — Cenário: Governança
+### 9.3 — GitHub Actions: CI básico
 
-- [ ] **10.4.1** Tentar publicar com promessa de cura → bloqueado pelo Review Gate
-- [ ] **10.4.2** Tentar publicar sem CRP → bloqueado
-- [ ] **10.4.3** Warning SEO incompleto → permite com badge
-- [ ] **10.4.4** Rollback após publicação funciona
-- [ ] **10.4.5** Histórico imutável preservado em `vortex_revisions`
+- [ ] **9.3.1** Criar `.github/workflows/ci.yml`
+- [ ] **9.3.2** Triggers: PR para main, push em main
+- [ ] **9.3.3** Filtros de path (src/**, package.json, configs)
+- [ ] **9.3.4** Concurrency cancelando jobs antigos
+- [ ] **9.3.5** Jobs: lint, typecheck, unit tests, build
+- [ ] **9.3.6** Node 22 + cache pnpm
 
-### 10.5 — Cenário: Stress
+**Critério de aceite:** PR dispara CI. Falha bloqueia merge.
 
-- [ ] **10.5.1** Página com 10+ seções, 30+ widgets
-- [ ] **10.5.2** Performance responsiva (interações < 100ms)
-- [ ] **10.5.3** Undo/redo em ações complexas
-- [ ] **10.5.4** Persistência ao recarregar
+### 9.4 — Deployment Checks da Vercel
+
+- [ ] **9.4.1** Configurar Deployment Checks integrados ao GitHub Actions
+- [ ] **9.4.2** Promoção para produção bloqueada se CI falhar
+
+### 9.5 — Playwright E2E em Preview
+
+- [ ] **9.5.1** Configurar `playwright.config.ts` com bypass header
+- [ ] **9.5.2** Suite mínima: smoke da Etapa 1, smoke da Etapa 2, publicação completa
+- [ ] **9.5.3** Workflow GitHub Actions executando Playwright contra Preview URL após deploy
+- [ ] **9.5.4** HTML reporter + traces
+
+### 9.6 — Web Analytics + Speed Insights
+
+- [ ] **9.6.1** Habilitar Vercel Web Analytics no projeto
+- [ ] **9.6.2** Habilitar Vercel Speed Insights
+- [ ] **9.6.3** Coleta em Preview e Production
+- [ ] **9.6.4** Dashboard configurado mostrando LCP, INP, CLS, TTFB
+
+### 9.7 — Métricas operacionais customizadas
+
+- [ ] **9.7.1** Métrica: taxa de sucesso de publicação (`/api/vortex/publish`)
+- [ ] **9.7.2** Métrica: tempo de ciclo rascunho → preview → produção
+- [ ] **9.7.3** Métrica: falhas de rollback
+- [ ] **9.7.4** Métrica: taxa de 404, slugs reservados órfãos, assets quebrados
+- [ ] **9.7.5** Página interna `/admin/health` consolidando métricas
+
+**Critério de aceite:** dashboard interno mostra saúde do sistema em tempo real.
+
+### 9.8 — Pretext em widgets densos do AbidosRenderer
+
+- [ ] **9.8.1** Aplicar Pretext em widgets de texto longo (FAQ, Text, Author Block)
+- [ ] **9.8.2** Benchmark antes/depois com 30+ widgets na mesma página
+- [ ] **9.8.3** Confirmar ganho de performance (target: < 16ms layout time)
 
 ---
 
-## Sequência de execução agora
+## FASE 10 — Refinamento Premium
+
+### 10.1 — Microanimações e feedback
+
+- [ ] **10.1.1** Hover states em todos elementos clicáveis
+- [ ] **10.1.2** Transições suaves (200-300ms)
+- [ ] **10.1.3** Loading skeletons
+- [ ] **10.1.4** Toasts de feedback
+
+### 10.2 — Tipografia e respiro
+
+- [ ] **10.2.1** Hierarquia tipográfica revisada
+- [ ] **10.2.2** Spacing consistente (8px base grid)
+- [ ] **10.2.3** Contraste WCAG AA mínimo
+
+### 10.3 — Atalhos de teclado
+
+- [ ] **10.3.1** Cmd/Ctrl+S salva rascunho
+- [ ] **10.3.2** Cmd/Ctrl+Z/Shift+Z undo/redo
+- [ ] **10.3.3** Cmd/Ctrl+Enter envia comando do chat
+- [ ] **10.3.4** Cmd/Ctrl+D duplica selecionado
+- [ ] **10.3.5** Delete/Backspace exclui (com confirmação)
+- [ ] **10.3.6** ESC desseleciona / fecha modais
+- [ ] **10.3.7** Cmd/Ctrl+/ cheatsheet
+
+### 10.4 — Camada 3 de Propriedades (profissional)
+
+- [ ] **10.4.1** Animações de entrada por widget
+- [ ] **10.4.2** Hover effects configuráveis
+- [ ] **10.4.3** Classes CSS customizadas
+- [ ] **10.4.4** Atributos HTML customizados
+- [ ] **10.4.5** CSS personalizado por elemento (escape hatch)
+- [ ] **10.4.6** Responsividade fina por breakpoint
+
+### 10.5 — Tratamento de erros
+
+- [ ] **10.5.1** Mensagens humanas, sem stacktraces
+- [ ] **10.5.2** Tela de "algo deu errado" com recuperação
+- [ ] **10.5.3** Recovery automático em crash
+- [ ] **10.5.4** Indicador offline
+
+### 10.6 — Performance final
+
+- [ ] **10.6.1** Lazy loading de Assets
+- [ ] **10.6.2** Virtual scroll na árvore para páginas grandes
+- [ ] **10.6.3** Debounce de validação Abidos
+- [ ] **10.6.4** Memoização de componentes pesados
+- [ ] **10.6.5** Bundle analysis com `@next/bundle-analyzer`
+
+---
+
+## FASE 11 — Validação E2E Final
+
+### 11.1 — Cenário: Geração total com IA
+
+- [ ] **11.1.1** Etapa 1: briefing completo (Pro, Landing, tema clínico, template Landing Abidos)
+- [ ] **11.1.2** Continuar → Etapa 2 → GERAR
+- [ ] **11.1.3** Página gerada, texto coerente
+- [ ] **11.1.4** Review Gate: aprovado
+- [ ] **11.1.5** Publicar → rota pública renderiza idêntica ao preview
+- [ ] **11.1.6** SEO tags corretas no `<head>`
+- [ ] **11.1.7** Web Analytics registra acesso
+
+### 11.2 — Cenário: Edição manual total
+
+- [ ] **11.2.1** Novo Rascunho sem template
+- [ ] **11.2.2** Adicionar seções com `+`, arrastar widgets, editar textos
+- [ ] **11.2.3** Configurar propriedades, CTAs, cores
+- [ ] **11.2.4** Publicar. Página viva.
+
+### 11.3 — Cenário: Híbrido
+
+- [ ] **11.3.1** Gerar com IA → ajustar Hero manualmente → IA reescreve seção → adicionar widget manual → IA muda tom global → salvar versão → rollback → comparar
+
+### 11.4 — Cenário: Governança
+
+- [ ] **11.4.1** Promessa de cura → Review Gate bloqueia
+- [ ] **11.4.2** Sem CRP → bloqueia
+- [ ] **11.4.3** SEO incompleto → warning, permite com badge
+- [ ] **11.4.4** Rollback após publicação funciona
+- [ ] **11.4.5** Histórico imutável em `vortex_revisions`
+
+### 11.5 — Cenário: Stress
+
+- [ ] **11.5.1** Página com 10+ seções, 30+ widgets
+- [ ] **11.5.2** Performance responsiva (< 100ms)
+- [ ] **11.5.3** Undo/redo em ações complexas
+- [ ] **11.5.4** Persistência ao recarregar
+- [ ] **11.5.5** Chat IA com 100+ mensagens permanece fluido (graças ao Pretext)
+
+### 11.6 — Cenário: Segurança
+
+- [ ] **11.6.1** Tentar acessar `/admin` (slug reservado) → 404
+- [ ] **11.6.2** Tentar acessar página arquivada → 404
+- [ ] **11.6.3** Tentar XSS via `mutateSections` → bloqueado por Zod e CSP
+- [ ] **11.6.4** Bundle não expõe segredos
+- [ ] **11.6.5** Imagem de domínio não autorizado → bloqueada por `remotePatterns`
+
+---
+
+## Sequência canônica de execução
 
 ```
-1. Fase 4.5 — Smoke visual (hoje, valida o que já existe)
-2. Fase 3.1b — AbidosRenderer (unifica preview e produção)
-3. Fase 3.1c — Preview usa AbidosRenderer
-4. Fase 3.1d — generateMetadata
-5. Fase 3.1e–g — notFound e rotas seguras
-6. Fase 5 — Shell da Etapa 2
-7. Fases 6, 7, 8 — Oficina (em paralelo por componente)
-8. Fase 9 — Refinamento
-9. Fase 10 — Validação E2E
+0. Higiene + ADR + Workspace Trust + MCPs    → 2-3 sessões
+1. Smoke visual do backend existente          → 1-2 sessões
+2. DAL + Rota [[...slug]] + AbidosRenderer    → 4-5 sessões  ← FUNDAÇÃO CRÍTICA
+3. Hardening de segurança                      → 2 sessões
+4. Page Ops Contracts (6 tool calls + CSA)     → 4-5 sessões  ← ALMA DO PROJETO
+5. Etapa 2 Shell + Canvas                      → 4-5 sessões
+6. Coluna Esquerda Oficina                     → 6-8 sessões
+7. Coluna Direita Chat IA                      → 4-5 sessões
+8. GERAR + Templates                           → 3-4 sessões
+9. Release & Observabilidade                   → 4-5 sessões
+10. Refinamento Premium                        → 3-4 sessões
+11. Validação E2E                              → 2-3 sessões
+
+Total estimado: 39-49 sessões focadas
 ```
+
+Em horizonte de calendário com Claude Code implementando + você revisando + ChatGPT consultando: **3-5 meses de trabalho disciplinado.** Não é pouco. Mas é o que separa "funciona pra mostrar" de "funciona pra vender como produto premium".
+
+---
+
+## Backlog Pós-V7.5.2 (registrado, não executar agora)
+
+Decisões e capacidades que ficaram fora do plano por escopo, mas que valem documentação para futuro:
+
+- **Trilha code-driven** para páginas excepcionais (gerar `.tsx` em branch, abrir PR, Vercel Preview, Deployment Checks). Ativar quando aparecer caso real fora do schema do AbidosRenderer.
+- **Extensão VS Code do NeuroEngine** publicada no Marketplace (painel de rascunhos, comando de publicação, visualizador Abidos inline).
+- **MCPs adicionais**: Memory MCP (Verbal Profile persistente), Sequential Thinking, Sentry, Grafana, Tinybird.
+- **OpenTelemetry** para tracing distribuído quando houver dezenas de clientes.
+- **GitHub Actions com environments e protection rules** para fluxo de aprovação multi-pessoa.
+- **Strategy Studio v6** com lentes Silos/Abidos/Autoridade/Pauta.
+- **Templates avançados** separados em "estrutural" vs "theme visual".
+- **i18n** para clínicas internacionais.
+- **Multi-tenant** quando comercializar para outras clínicas.
+- **CRM/Stripe/HubSpot** integração para conversão B2B.
+
+---
 
 ## Regras de execução
 
-1. Uma microetapa de cada vez. Próxima só com critério de aceite verde.
-2. Não regredir para V5/V6. Toda implementação parte do V7.5.2.
-3. Não tocar no que está marcado como concluído sem necessidade explícita.
-4. Sem expansão de escopo durante implementação — ideias novas vão para backlog.
-5. Quando travar: dividir a microetapa em sub-microetapas menores.
-6. Smoke visual obrigatório a cada fase IMPLEMENTADA / PENDENTE SMOKE VISUAL (print ou vídeo curto).
+1. **Uma microetapa de cada vez.** Próxima só com critério de aceite verde.
+2. **Critério de aceite verbal.** Cada checklist marcado precisa demonstração (vídeo curto ou print).
+3. **Sem expansão de escopo.** Ideias novas vão para backlog separado.
+4. **Não regredir para V5/V6.** Toda implementação parte do V7.5.2 consolidado.
+5. **Não tocar no que já está marcado como concluído** sem necessidade explícita.
+6. **Quando travar:** dividir microetapa em sub-microetapas menores.
+7. **Smoke visual obrigatório** ao fechar cada fase (print ou vídeo).
+8. **Validação por terceiro** (ChatGPT ou outra instância de Claude) antes de marcar fase inteira como verde.
+
+---
+
+## Diretriz Técnica Final
+
+> "Abidos governa. Vórtex executa. Cloudinary provê. CMS preserva. Review protege. **Oficina constrói. Renderer unifica. Contratos disciplinam.**"
+
+A Etapa 2 só funciona porque a fundação é sólida: renderer único, DAL segura, contratos formais. Sem isso, qualquer Oficina Visual vira castelo de cartas. Com isso, o Vórtex se torna o que sempre foi pra ser: um sistema operacional clínico premium, comercializável, governado e fluido.

@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = function(app, deps) {
 const { SITE_REPO_PATH, TEMPLATE_CATALOG } = deps;
 // ==============================================================================
-// GESTÃƒÆ’O DE ACERVO (LOCAL CMS)
+// GESTÃO DE ACERVO (LOCAL CMS)
 // ==============================================================================
 
 
@@ -19,8 +19,8 @@ app.get('/api/menus', (req, res) => {
         const content = fs.readFileSync(MENUS_FILE, 'utf8');
         res.json(JSON.parse(content || '[]'));
     } catch (e) {
-        console.error("Ã¢ÂÅ’ Erro CrÃƒÂ­tico GET /api/menus:", e);
-        res.status(500).json({ error: "Falha na persistÃƒÂªncia de menus", details: e.message });
+        console.error("âÂÅ’ Erro Crítico GET /api/menus:", e);
+        res.status(500).json({ error: "Falha na persistência de menus", details: e.message });
     }
 });
 
@@ -29,24 +29,24 @@ app.post('/api/menus', (req, res) => {
     try {
         const menusData = req.body;
         if (!Array.isArray(menusData)) {
-            throw new Error("Payload invÃƒÂ¡lido: esperado um array de menus.");
+            throw new Error("Payload inválido: esperado um array de menus.");
         }
         fs.writeFileSync(MENUS_FILE, JSON.stringify(menusData, null, 2));
         res.status(200).json({ success: true, message: "Menus persistidos com sucesso!" });
     } catch (e) {
-        console.error("Ã¢ÂÅ’ Erro CrÃƒÂ­tico POST /api/menus:", e);
+        console.error("âÂÅ’ Erro Crítico POST /api/menus:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
 
 // ==============================================================================
-// GESTÃƒÆ’O DE RASCUNHOS (DRAFTS PERSISTENCE)
+// GESTÃO DE RASCUNHOS (DRAFTS PERSISTENCE)
 // ==============================================================================
 const DRAFTS_FILE = path.join(__dirname, 'drafts.json');
 
 app.get('/api/drafts', async (req, res) => {
     try {
-        console.log("Ã°Å¸â€œâ€š [DRAFTS] Consolidando rascunhos (File JSON + Physical Folder)...");
+        console.log("📂 [DRAFTS] Consolidando rascunhos (File JSON + Physical Folder)...");
         let allDrafts = [];
         
         // 1. Carrega do drafts.json (AI Studio)
@@ -55,7 +55,7 @@ app.get('/api/drafts', async (req, res) => {
             if (Array.isArray(dataJSON)) allDrafts = [...dataJSON];
         }
 
-        // 2. Carrega da pasta fÃƒÂ­sica (Auditores/LangGraph)
+        // 2. Carrega da pasta física (Auditores/LangGraph)
         const draftsFolder = path.join(__dirname, '../drafts');
         if (fs.existsSync(draftsFolder)) {
             const files = fs.readdirSync(draftsFolder).filter(f => f.endsWith('.json') || f.endsWith('.html'));
@@ -66,7 +66,7 @@ app.get('/api/drafts', async (req, res) => {
                     draft_id: `PHYS-${file}`,
                     name: file,
                     tema_foco: file.replace('.json', '').replace('.html', ''),
-                    values: {}, // Vazio para rascunhos fÃƒÂ­sicos
+                    values: {}, // Vazio para rascunhos físicos
                     validacoes_automatizadas: {
                         pesquisa_clinica: true,
                         metodo_abidos: true,
@@ -81,7 +81,7 @@ app.get('/api/drafts', async (req, res) => {
 
         res.json(allDrafts);
     } catch (e) { 
-        console.error("Ã¢ÂÅ’ [DRAFTS ERROR]", e.message);
+        console.error("âÂÅ’ [DRAFTS ERROR]", e.message);
         res.status(500).json({ error: e.message }); 
     }
 });
@@ -151,10 +151,10 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
 
     let html = '';
     const waNumber = "5562991545295";
-    const waText = encodeURIComponent("OlÃƒÂ¡ Dr. Victor, vi seu site e gostaria de saber mais sobre a Hipnose ClÃƒÂ­nica e como marcar uma primeira sessÃƒÂ£o.");
+    const waText = encodeURIComponent("Olá Dr. Victor, vi seu site e gostaria de saber mais sobre a Hipnose Clínica e como marcar uma primeira sessão.");
     const waLink = `https://wa.me/${waNumber}?text=${waText}`;
 
-    // --- RENDERIZAÃƒâ€¡ÃƒÆ’O POR DESIGN SYSTEM ---
+    // --- RENDERIZAÇÃO POR DESIGN SYSTEM ---
 
     if (templateId === '01' || templateId === '08') { // GLASS SYSTEMS
         const isEthereal = templateId === '08';
@@ -167,7 +167,7 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
         if (isEthereal) {
             html += `<div class="w-10 h-10 bg-white/50 rounded-full flex items-center justify-center shrink-0"><i data-lucide="${brand}" class="w-4 h-4 text-slate-700"></i></div>`;
         } else {
-            // Removido ÃƒÂ­cone redundante para evitar "blobs" no topo
+            // Removido ícone redundante para evitar "blobs" no topo
             html += `<div class="font-bold text-white tracking-widest uppercase text-[10px] ml-2">Dr. Victor</div>`;
         }
 
@@ -231,7 +231,7 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
     } else if (templateId === '10' || templateId === '04' || templateId === '05') { // TECH / MINIMALIST
         html += `<nav class="fixed top-0 w-full z-50 p-6 flex flex-col gap-4 transition-opacity duration-500">`;
         html += `<div class="max-w-7xl mx-auto w-full glass-card rounded-2xl px-6 py-4 flex items-center justify-between shadow-2xl backdrop-blur-xl border border-white/5">`;
-        html += `<div class="flex items-center gap-3"><div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white"><i data-lucide="zap" class="w-5 h-5"></i></div><span class="font-bold text-white tracking-tighter uppercase text-xs">Acesso RÃƒÂ¡pido</span></div>`;
+        html += `<div class="flex items-center gap-3"><div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white"><i data-lucide="zap" class="w-5 h-5"></i></div><span class="font-bold text-white tracking-tighter uppercase text-xs">Acesso Rápido</span></div>`;
         html += `<ul class="hidden md:flex items-center gap-8">`;
         validItems.forEach(item => {
             const activeClass = item.active ? 'text-orange-500 font-bold' : 'text-mist/40 hover:text-white';
@@ -254,7 +254,7 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
         html += `</header>`;
     }
 
-    // GeraÃƒÂ§ÃƒÂ£o do Schema.org para SEO TÃƒÂ©cnico
+    // Geração do Schema.org para SEO Técnico
     const schemaOrg = {
         "@context": "https://schema.org",
         "@type": "SiteNavigationElement",
@@ -267,7 +267,7 @@ function generateMenuHtmlForTemplate(menuId, templateId, pageContext = {}) {
     return html;
 }
 
-// Ã°Å¸â€œâ€“ AUTO-TOC GENERATOR (SumÃƒÂ¡rio AutomÃƒÂ¡tico das tags H2)
+// Ã°Å¸â€œâ€“ AUTO-TOC GENERATOR (Sumário Automático das tags H2)
 function generateTOC(htmlContent) {
     const regex = /<h2[^>]*>(.*?)<\/h2>/gi;
     let match;
@@ -275,15 +275,15 @@ function generateTOC(htmlContent) {
     let modifiedHtml = htmlContent;
     let index = 1;
 
-    // Acha os H2, cria o link ÃƒÂ¢ncora e modifica o HTML original para colocar o id
+    // Acha os H2, cria o link âncora e modifica o HTML original para colocar o id
     while ((match = regex.exec(htmlContent)) !== null) {
-        // match[1] contÃƒÂ©m o innerHTML do h2. Vamos limpar tags e quebras.
+        // match[1] contém o innerHTML do h2. Vamos limpar tags e quebras.
         const cleanTitle = match[1].replace(/<[^>]+>/g, '').trim();
         if (cleanTitle && cleanTitle.length > 5 && !cleanTitle.includes('{{')) {
             const anchorId = `secao-${index}-${cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
             tocItems.push({ label: cleanTitle, url: `#${anchorId}` });
             
-            // Substitui o <h2> exacto pela versÃƒÂ£o com ID
+            // Substitui o <h2> exacto pela versão com ID
             const originalH2 = match[0];
             const newH2 = originalH2.replace('<h2', `<h2 id="${anchorId}"`);
             modifiedHtml = modifiedHtml.replace(originalH2, newH2);
@@ -295,7 +295,7 @@ function generateTOC(htmlContent) {
 }
 
 // ==============================================================================
-// Ã°Å¸Å¡â‚¬ [API] SALVAR E LANÃƒâ€¡AR PÃƒÂGINA (ORQUESTRAÃƒâ€¡ÃƒÆ’O FINAL)
+// 🚀 [API] SALVAR E LANÇAR PÃƒÂGINA (ORQUESTRAÇÃO FINAL)
 // ==============================================================================
 app.post('/api/acervo/salvar-pagina', async (req, res) => {
     const { caminhoFisico, values, templateId, menuId, menuHtml: incomingMenuHtml, menuSchema: incomingMenuSchema } = req.body;
@@ -309,16 +309,16 @@ app.post('/api/acervo/salvar-pagina', async (req, res) => {
                 .replace(/-+/g, '-');
             
             targetPath = path.join(SITE_REPO_PATH, slug, 'page.tsx');
-            console.log(`Ã¢Å“Â¨ [AUTO-PATH] Gerando novo destino: ${targetPath}`);
+            console.log(`âÅ“Â¨ [AUTO-PATH] Gerando novo destino: ${targetPath}`);
             
             const dir = path.dirname(targetPath);
             if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
         }
 
-        if (!fs.existsSync(path.dirname(targetPath))) throw new Error("DiretÃƒÂ³rio de destino invÃƒÂ¡lido.");
+        if (!fs.existsSync(path.dirname(targetPath))) throw new Error("Diretório de destino inválido.");
 
         const entry = TEMPLATE_CATALOG.find(t => t.id === templateId);
-        if (!templateId || !entry) throw new Error("Template selecionada nÃƒÂ£o existe no catÃƒÂ¡logo.");
+        if (!templateId || !entry) throw new Error("Template selecionada não existe no catálogo.");
 
         const templatePath = path.join(__dirname, '../templates', entry.filename);
         let htmlSource = fs.readFileSync(templatePath, 'utf8');
@@ -345,18 +345,18 @@ app.post('/api/acervo/salvar-pagina', async (req, res) => {
             htmlSource = menuSchema + htmlSource;
         }
 
-        // --- INJEÃƒâ€¡ÃƒÆ’O GOOGLE TAG MANAGER (GTM) - DINÃƒâ€šMICA ---
+        // --- INJEÇÃO GOOGLE TAG MANAGER (GTM) - DINÃƒâ€šMICA ---
         const googleTag = getGoogleTagSnippet();
         const googleTagNoscript = getGoogleTagNoscript();
         
-        // 1. Script no <head> (O mais alto possÃƒÂ­vel)
+        // 1. Script no <head> (O mais alto possível)
         if (htmlSource.match(/<head[^>]*>/i)) {
             htmlSource = htmlSource.replace(/<head[^>]*>/i, `$&\n${googleTag}`);
         } else {
             htmlSource = googleTag + htmlSource;
         }
 
-        // 2. Noscript apÃƒÂ³s <body>
+        // 2. Noscript após <body>
         if (htmlSource.includes('<body>')) {
             htmlSource = htmlSource.replace('<body>', `<body>\n${googleTagNoscript}`);
         } else if (htmlSource.match(/<body[^>]*>/)) {
@@ -366,7 +366,7 @@ app.post('/api/acervo/salvar-pagina', async (req, res) => {
         if (tocItems.length > 0 && ['02', '03', '04', '05', '06', '07', '10'].includes(templateId)) {
             const tocMenuHtml = `
                     <div class="fixed bottom-4 left-4 z-50 glass-panel lg:hidden p-3 rounded-2xl max-w-[200px]">
-                        <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ TÃƒÂ³picos Neste Artigo</div>
+                        <div class="text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">+ Tópicos Neste Artigo</div>
                         <ul class="flex flex-col gap-1">
                             ${tocItems.map(i => `<li><a href="${i.url}" class="text-xs text-slate-500 hover:text-[#14b8a6] line-clamp-1">${i.label}</a></li>`).join('')}
                         </ul>
@@ -408,9 +408,9 @@ export const neuroEngineData = ${JSON.stringify({ ...values, template: templateI
             console.warn("Git push ignorado ou falhou:", gitErr.message); 
         }
 
-        res.json({ success: true, message: "PÃƒÂ¡gina orquestrada e lanÃƒÂ§ada com sucesso no repositÃƒÂ³rio Next.js!" });
+        res.json({ success: true, message: "Página orquestrada e lançada com sucesso no repositório Next.js!" });
     } catch (e) {
-        console.error("Erro ao salvar pÃƒÂ¡gina:", e);
+        console.error("Erro ao salvar página:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -423,7 +423,7 @@ app.get('/api/acervo/listar', (req, res) => {
     try {
         const pages = [];
 
-        // FunÃƒÂ§ÃƒÂ£o recursiva para ler subpastas (ex: /blog/ansiedade)
+        // Função recursiva para ler subpastas (ex: /blog/ansiedade)
         function scanDirectory(directory) {
             if (!fs.existsSync(directory)) return;
             const files = fs.readdirSync(directory);
@@ -433,7 +433,7 @@ app.get('/api/acervo/listar', (req, res) => {
                 const stat = fs.statSync(fullPath);
 
                 if (stat.isDirectory()) {
-                    // Ignora pastas de sistema do Next.js ou rascunhos se necessÃƒÂ¡rio
+                    // Ignora pastas de sistema do Next.js ou rascunhos se necessário
                     if (file.startsWith('.') || file === 'api' || file === 'components') continue;
                     scanDirectory(fullPath); 
                 } else if (file === 'page.tsx') {
@@ -441,15 +441,15 @@ app.get('/api/acervo/listar', (req, res) => {
                     if (!slug) slug = '/';
                     slug = slug.replace(/\\/g, '/');
 
-                    // Tenta extrair o tÃƒÂ­tulo do neuroEngineData
-                    let title = "Sem TÃƒÂ­tulo";
+                    // Tenta extrair o título do neuroEngineData
+                    let title = "Sem Título";
                     let status = "PUBLICADO"; // Default
                     try {
                         const content = fs.readFileSync(fullPath, 'utf8');
                         const dnaMatch = content.match(/export const neuroEngineData = (\{[\s\S]*?\});/);
                         if (dnaMatch) {
                             const dna = JSON.parse(dnaMatch[1]);
-                            title = dna.SEO_TITLE || dna.H1 || dna.THEME || "PÃƒÂ¡gina Abidos";
+                            title = dna.SEO_TITLE || dna.H1 || dna.THEME || "Página Abidos";
                             status = dna.STATUS || "PUBLICADO";
                         }
                     } catch (e) {
@@ -496,21 +496,21 @@ app.post('/api/media/create-folder', (req, res) => {
     try {
         const { id, name, icon } = req.body;
         const data = JSON.parse(fs.readFileSync(ACERVO_MEDIA_FILE, 'utf8'));
-        if (data.folders.find(f => f.id === id)) return res.json({ success: false, error: 'ID jÃƒÂ¡ existe.' });
+        if (data.folders.find(f => f.id === id)) return res.json({ success: false, error: 'ID já existe.' });
         
-        data.folders.push({ id, name, description: `ÃƒÂlbum criado pelo usuÃƒÂ¡rio: ${name}`, icon: icon || 'Ã°Å¸â€œâ€š' });
+        data.folders.push({ id, name, description: `ÃƒÂlbum criado pelo usuário: ${name}`, icon: icon || '📂' });
         fs.writeFileSync(ACERVO_MEDIA_FILE, JSON.stringify(data, null, 2));
         res.json({ success: true, folders: data.folders });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Atualizar Item de MÃƒÂ­dia (Mudar pasta, tÃƒÂ­tulo, etc)
+// [API] Atualizar Item de Mídia (Mudar pasta, título, etc)
 app.post('/api/media/update-item', (req, res) => {
     try {
         const { itemId, folder, title, alt } = req.body;
         const data = JSON.parse(fs.readFileSync(ACERVO_MEDIA_FILE, 'utf8'));
         const item = data.items.find(i => i.id === itemId);
-        if (!item) return res.status(404).json({ success: false, error: 'Item nÃƒÂ£o encontrado.' });
+        if (!item) return res.status(404).json({ success: false, error: 'Item não encontrado.' });
         
         if (folder) item.folder = folder;
         if (title) item.title = title;
@@ -521,7 +521,7 @@ app.post('/api/media/update-item', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Alterar Slug (URL) de uma PÃƒÂ¡gina Existente
+// [API] Alterar Slug (URL) de uma Página Existente
 app.post('/api/acervo/alterar-slug', async (req, res) => {
     try {
         const { caminhoFisico, novoSlug } = req.body;
@@ -531,7 +531,7 @@ app.post('/api/acervo/alterar-slug', async (req, res) => {
         const oldPath = path.dirname(caminhoFisico);
         const newPath = path.join(SITE_REPO_PATH, cleanSlug);
 
-        if (fs.existsSync(newPath)) throw new Error("Essa URL (Slug) jÃƒÂ¡ existe.");
+        if (fs.existsSync(newPath)) throw new Error("Essa URL (Slug) já existe.");
 
         fs.renameSync(oldPath, newPath);
         res.json({ success: true, novoCaminho: path.join(newPath, 'page.tsx'), novoSlug: '/' + cleanSlug });
@@ -542,7 +542,7 @@ app.post('/api/acervo/alterar-slug', async (req, res) => {
     }
 });
 
-// [API] Alterar TÃƒÂ­tulo AmigÃƒÂ¡vel de uma PÃƒÂ¡gina Existente (E-E-A-T)
+// [API] Alterar Título Amigável de uma Página Existente (E-E-A-T)
 app.post('/api/acervo/alterar-titulo', async (req, res) => {
     try {
         const { caminhoFisico, novoTitulo } = req.body;
@@ -554,7 +554,7 @@ app.post('/api/acervo/alterar-titulo', async (req, res) => {
         if (dnaMatch) {
             let dna = JSON.parse(dnaMatch[1]);
             dna.THEME = novoTitulo;
-            dna.H1 = novoTitulo; // Sincroniza H1 por padrÃƒÂ£o para SEO
+            dna.H1 = novoTitulo; // Sincroniza H1 por padrão para SEO
             const newDNAString = `export const neuroEngineData = ${JSON.stringify(dna, null, 2)};`;
             const newContent = content.replace(/export const neuroEngineData = \{[\s\S]*?\};/, newDNAString);
             fs.writeFileSync(caminhoFisico, newContent);
@@ -563,7 +563,7 @@ app.post('/api/acervo/alterar-titulo', async (req, res) => {
         res.json({ success: true, novoTitulo });
 
     } catch (e) {
-        console.error("Erro ao alterar tÃƒÂ­tulo:", e);
+        console.error("Erro ao alterar título:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -572,31 +572,31 @@ app.post('/api/acervo/alterar-titulo', async (req, res) => {
 app.post('/api/acervo/definir-home', async (req, res) => {
     try {
         const { caminhoFisico } = req.body;
-        if(!caminhoFisico) throw new Error("Caminho fÃƒÂ­sico nÃƒÂ£o informado.");
+        if(!caminhoFisico) throw new Error("Caminho físico não informado.");
 
         // Usa SITE_REPO_PATH unificado em vez de fallback para site-nextjs
         const targetPath = path.join(SITE_REPO_PATH, 'page.tsx');
         
         console.log(`Ã°Å¸ÂÂ  [HOME] Definindo nova homepage: ${caminhoFisico} -> ${targetPath}`);
 
-        if (!fs.existsSync(caminhoFisico)) throw new Error("Arquivo de origem nÃƒÂ£o encontrado.");
+        if (!fs.existsSync(caminhoFisico)) throw new Error("Arquivo de origem não encontrado.");
         
-        // Simplesmente copia o conteÃƒÂºdo da pÃƒÂ¡gina selecionada para a raiz
+        // Simplesmente copia o conteúdo da página selecionada para a raiz
         fs.copyFileSync(caminhoFisico, targetPath);
 
-        res.json({ success: true, message: "PÃƒÂ¡gina inicial atualizada com sucesso no repositÃƒÂ³rio Next.js." });
+        res.json({ success: true, message: "Página inicial atualizada com sucesso no repositório Next.js." });
 
     } catch (e) {
-        console.error("Ã¢ÂÅ’ Erro ao definir home:", e);
+        console.error("âÂÅ’ Erro ao definir home:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
 
-// [API] Alterar Status (DRAFT/PUBLICADO) de uma PÃƒÂ¡gina
+// [API] Alterar Status (DRAFT/PUBLICADO) de uma Página
 app.post('/api/acervo/alterar-status', async (req, res) => {
     try {
         const { caminhoFisico, novoStatus } = req.body;
-        if(!caminhoFisico) throw new Error("Caminho fÃƒÂ­sico nÃƒÂ£o informado.");
+        if(!caminhoFisico) throw new Error("Caminho físico não informado.");
 
         const content = fs.readFileSync(caminhoFisico, 'utf8');
         const dnaMatch = content.match(/export const neuroEngineData = (\{[\s\S]*?\});/);
@@ -618,7 +618,7 @@ app.post('/api/acervo/alterar-status', async (req, res) => {
 });
 
 // ==============================================================================
-// Ã°Å¸ÂÂ·Ã¯Â¸Â GOOGLE TAG MANAGER - CONFIGURAÃƒâ€¡ÃƒÆ’O GLOBAL
+// Ã°Å¸ÂÂ·Ã¯Â¸Â GOOGLE TAG MANAGER - CONFIGURAÇÃO GLOBAL
 // ==============================================================================
 const GOOGLE_TAG_FILE = path.join(__dirname, 'google_tag_config.json');
 
@@ -628,7 +628,7 @@ const getGoogleTagConfig = () => {
             return JSON.parse(fs.readFileSync(GOOGLE_TAG_FILE, 'utf8'));
         }
     } catch (e) {
-        console.error("Ã¢ÂÅ’ Erro ao ler google_tag_config.json:", e);
+        console.error("âÂÅ’ Erro ao ler google_tag_config.json:", e);
     }
     return { tagId: 'GTM-5H4RLHC3', active: true };
 };
@@ -669,13 +669,13 @@ app.post('/api/config/google-tag', (req, res) => {
         const { tagId, active } = req.body;
         const config = { tagId: tagId || '', active: active !== false, lastUpdate: new Date().toISOString() };
         fs.writeFileSync(GOOGLE_TAG_FILE, JSON.stringify(config, null, 2));
-        console.log(`Ã°Å¸ÂÂ·Ã¯Â¸Â [GOOGLE TAG] ConfiguraÃƒÂ§ÃƒÂ£o atualizada: ${config.tagId} (${config.active ? 'ATIVO' : 'INATIVO'})`);
+        console.log(`Ã°Å¸ÂÂ·Ã¯Â¸Â [GOOGLE TAG] Configuração atualizada: ${config.tagId} (${config.active ? 'ATIVO' : 'INATIVO'})`);
         res.json({ success: true, config });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ==============================================================================
-// Ã°Å¸â€œÂ¥ IMPORTAÃƒâ€¡ÃƒÆ’O MANUAL DE HTML (PÃƒÂGINAS CUSTOMIZADAS)
+// Ã°Å¸â€œÂ¥ IMPORTAÇÃO MANUAL DE HTML (PÃƒÂGINAS CUSTOMIZADAS)
 // ==============================================================================
 const MANUAL_PAGES_FILE = path.join(__dirname, 'manual_pages.json');
 
@@ -684,7 +684,7 @@ const getManualPages = () => {
         if (fs.existsSync(MANUAL_PAGES_FILE)) {
             return JSON.parse(fs.readFileSync(MANUAL_PAGES_FILE, 'utf8'));
         }
-    } catch (e) { console.error("Ã¢ÂÅ’ Erro ao ler manual_pages.json:", e); }
+    } catch (e) { console.error("âÂÅ’ Erro ao ler manual_pages.json:", e); }
     return [];
 };
 
@@ -692,14 +692,14 @@ const saveManualPages = (pages) => {
     fs.writeFileSync(MANUAL_PAGES_FILE, JSON.stringify(pages, null, 2));
 };
 
-// [API] Listar pÃƒÂ¡ginas manuais
+// [API] Listar páginas manuais
 app.get('/api/acervo/manual', (req, res) => {
     try {
         res.json({ success: true, pages: getManualPages() });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Criar/Atualizar pÃƒÂ¡gina manual (metadados)
+// [API] Criar/Atualizar página manual (metadados)
 app.post('/api/acervo/manual', (req, res) => {
     try {
         const { id, title, slug, silo, menuId, status } = req.body;
@@ -716,7 +716,7 @@ app.post('/api/acervo/manual', (req, res) => {
                 pages[idx].status = status || pages[idx].status;
                 pages[idx].lastUpdate = new Date().toISOString();
 
-                // Se houver arquivo fÃƒÂ­sico e status foi alterado, atualiza o arquivo tambÃƒÂ©m
+                // Se houver arquivo físico e status foi alterado, atualiza o arquivo também
                 if (pages[idx].caminhoFisico && status && fs.existsSync(pages[idx].caminhoFisico)) {
                     try {
                         let content = fs.readFileSync(pages[idx].caminhoFisico, 'utf8');
@@ -726,16 +726,16 @@ app.post('/api/acervo/manual', (req, res) => {
                             dna.STATUS = status;
                             content = content.replace(/export const neuroEngineData = \{[\s\S]*?\};/, `export const neuroEngineData = ${JSON.stringify(dna, null, 2)};`);
                             fs.writeFileSync(pages[idx].caminhoFisico, content);
-                            console.log(`Ã¢Å“â€¦ [STATUS] Arquivo fÃƒÂ­sico atualizado: ${pages[idx].caminhoFisico}`);
+                            console.log(`âÅ“â€¦ [STATUS] Arquivo físico atualizado: ${pages[idx].caminhoFisico}`);
                         }
-                    } catch (e) { console.warn("Falha ao atualizar arquivo fÃƒÂ­sico no status manual:", e); }
+                    } catch (e) { console.warn("Falha ao atualizar arquivo físico no status manual:", e); }
                 }
             }
         } else {
             // Criar nova
             const newPage = {
                 id: 'MANUAL-' + Date.now(),
-                title: title || 'PÃƒÂ¡gina Manual',
+                title: title || 'Página Manual',
                 slug: slug || '/nova-pagina-' + Date.now(),
                 silo: silo || '',
                 menuId: menuId || '',
@@ -756,32 +756,32 @@ app.post('/api/acervo/manual', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Importar/Salvar HTML customizado para uma pÃƒÂ¡gina manual
+// [API] Importar/Salvar HTML customizado para uma página manual
 app.post('/api/acervo/manual/import-html', (req, res) => {
     try {
         const { pageId, htmlContent, useShell, seoFields } = req.body;
-        if (!pageId) throw new Error("pageId ÃƒÂ© obrigatÃƒÂ³rio.");
+        if (!pageId) throw new Error("pageId é obrigatório.");
 
         let pages = getManualPages();
         const idx = pages.findIndex(p => p.id === pageId);
-        if (idx < 0) throw new Error("PÃƒÂ¡gina manual nÃƒÂ£o encontrada.");
+        if (idx < 0) throw new Error("Página manual não encontrada.");
 
         // Parse inteligente: Extrai apenas o <body> se HTML completo for colado
         let cleanHtml = htmlContent || '';
         const bodyMatch = cleanHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
         if (bodyMatch) {
             cleanHtml = bodyMatch[1].trim();
-            console.log(`Ã°Å¸â€œÂ¥ [MANUAL] Parse inteligente: ExtraÃƒÂ­do conteÃƒÂºdo do <body> (${cleanHtml.length} chars)`);
+            console.log(`Ã°Å¸â€œÂ¥ [MANUAL] Parse inteligente: Extraído conteúdo do <body> (${cleanHtml.length} chars)`);
         }
 
-        // Salvar versÃƒÂ£o anterior
+        // Salvar versão anterior
         if (pages[idx].htmlContent && pages[idx].htmlContent.length > 0) {
             if (!pages[idx].versions) pages[idx].versions = [];
             pages[idx].versions.push({
                 html: pages[idx].htmlContent,
                 timestamp: pages[idx].lastUpdate || new Date().toISOString()
             });
-            // Manter apenas as ÃƒÂºltimas 5 versÃƒÂµes
+            // Manter apenas as últimas 5 versões
             if (pages[idx].versions.length > 5) pages[idx].versions.shift();
         }
 
@@ -796,35 +796,35 @@ app.post('/api/acervo/manual/import-html', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Ler HTML de uma pÃƒÂ¡gina manual
+// [API] Ler HTML de uma página manual
 app.post('/api/acervo/manual/read-html', (req, res) => {
     try {
         const { pageId } = req.body;
         const pages = getManualPages();
         const page = pages.find(p => p.id === pageId);
-        if (!page) throw new Error("PÃƒÂ¡gina nÃƒÂ£o encontrada.");
+        if (!page) throw new Error("Página não encontrada.");
         res.json({ success: true, page });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Gerar Preview de uma pÃƒÂ¡gina manual (renderiza com Template 00)
+// [API] Gerar Preview de uma página manual (renderiza com Template 00)
 app.post('/api/acervo/manual/preview', (req, res) => {
     try {
         const { pageId } = req.body;
         const pages = getManualPages();
         const page = pages.find(p => p.id === pageId);
-        if (!page) throw new Error("PÃƒÂ¡gina nÃƒÂ£o encontrada.");
+        if (!page) throw new Error("Página não encontrada.");
 
-        let finalHtml = page.htmlContent || '<p>Nenhum conteÃƒÂºdo HTML importado ainda.</p>';
+        let finalHtml = page.htmlContent || '<p>Nenhum conteúdo HTML importado ainda.</p>';
 
         if (page.useShell) {
             // Carrega Template 00
             const shellPath = path.join(__dirname, '../templates/master_template_00_blank.html');
             let shell = fs.readFileSync(shellPath, 'utf8');
 
-            // Injeta variÃƒÂ¡veis
+            // Injeta variáveis
             shell = shell.replace(/\{\{corpo_customizado\}\}/g, finalHtml);
-            shell = shell.replace(/\{\{seo_title\}\}/g, page.title || 'PÃƒÂ¡gina');
+            shell = shell.replace(/\{\{seo_title\}\}/g, page.title || 'Página');
             shell = shell.replace(/\{\{seo_h1_tecnico\}\}/g, page.seoFields?.h1 || page.title || '');
             shell = shell.replace(/\{\{seo_resumo_indexacao\}\}/g, page.seoFields?.resumo || '');
             
@@ -835,7 +835,7 @@ app.post('/api/acervo/manual/preview', (req, res) => {
             }
 
             // Injeta Google Tag Manager (head + body)
-            // Injeta Google Tag Manager (head + body) conforme solicitaÃƒÂ§ÃƒÂ£o do usuÃƒÂ¡rio
+            // Injeta Google Tag Manager (head + body) conforme solicitação do usuário
             const googleTag = getGoogleTagSnippet();
             const googleTagNoscript = getGoogleTagNoscript();
 
@@ -846,7 +846,7 @@ app.post('/api/acervo/manual/preview', (req, res) => {
                 shell = googleTag + shell;
             }
 
-            // 2. Imediatamente apÃƒÂ³s o <body>
+            // 2. Imediatamente após o <body>
             if (shell.match(/<body[^>]*>/i)) {
                 shell = shell.replace(/<body[^>]*>/i, `$&\n${googleTagNoscript}`);
             } else {
@@ -872,13 +872,13 @@ app.post('/api/acervo/manual/preview', (req, res) => {
     }
 });
 
-// [API] Publicar pÃƒÂ¡gina manual no repositÃƒÂ³rio Next.js
+// [API] Publicar página manual no repositório Next.js
 app.post('/api/acervo/manual/publicar', async (req, res) => {
     try {
         const { pageId } = req.body;
         const pages = getManualPages();
         const page = pages.find(p => p.id === pageId);
-        if (!page) throw new Error("PÃƒÂ¡gina nÃƒÂ£o encontrada.");
+        if (!page) throw new Error("Página não encontrada.");
         if (!page.htmlContent) throw new Error("Nenhum HTML importado para publicar.");
 
         let finalHtml = page.htmlContent;
@@ -888,7 +888,7 @@ app.post('/api/acervo/manual/publicar', async (req, res) => {
             let shell = fs.readFileSync(shellPath, 'utf8');
 
             shell = shell.replace(/\{\{corpo_customizado\}\}/g, finalHtml);
-            shell = shell.replace(/\{\{seo_title\}\}/g, page.title || 'PÃƒÂ¡gina');
+            shell = shell.replace(/\{\{seo_title\}\}/g, page.title || 'Página');
             shell = shell.replace(/\{\{seo_h1_tecnico\}\}/g, page.seoFields?.h1 || page.title || '');
             shell = shell.replace(/\{\{seo_resumo_indexacao\}\}/g, page.seoFields?.resumo || '');
             
@@ -907,7 +907,7 @@ app.post('/api/acervo/manual/publicar', async (req, res) => {
                 shell = googleTag + shell;
             }
 
-            // 2. Imediatamente apÃƒÂ³s o <body>
+            // 2. Imediatamente após o <body>
             if (shell.match(/<body[^>]*>/i)) {
                 shell = shell.replace(/<body[^>]*>/i, `$&\n${googleTagNoscript}`);
             } else {
@@ -960,7 +960,7 @@ export const neuroEngineData = ${JSON.stringify({
 
         fs.writeFileSync(targetPath, finalPageCode);
 
-        // Atualiza status da pÃƒÂ¡gina manual
+        // Atualiza status da página manual
         const idx = pages.findIndex(p => p.id === pageId);
         pages[idx].status = 'DRAFT';
         pages[idx].caminhoFisico = targetPath;
@@ -976,14 +976,14 @@ export const neuroEngineData = ${JSON.stringify({
             console.warn("Git push ignorado ou falhou:", gitErr.message);
         }
 
-        res.json({ success: true, message: `PÃƒÂ¡gina manual salva como rascunho em /${cleanSlug}`, targetPath });
+        res.json({ success: true, message: `Página manual salva como rascunho em /${cleanSlug}`, targetPath });
     } catch (e) {
-        console.error("Erro ao publicar pÃƒÂ¡gina manual:", e);
+        console.error("Erro ao publicar página manual:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
 
-// [API] Deletar pÃƒÂ¡gina manual
+// [API] Deletar página manual
 app.delete('/api/acervo/manual/:id', (req, res) => {
     try {
         let pages = getManualPages();
@@ -993,7 +993,7 @@ app.delete('/api/acervo/manual/:id', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// [API] Pick Intelligent: O Agente solicita uma imagem estratÃƒÂ©gica para um bloco
+// [API] Pick Intelligent: O Agente solicita uma imagem estratégica para um bloco
 app.get('/api/media/pick-intelligent', (req, res) => {
     const { category } = req.query; // ex: ambiente, psicologo
     try {
@@ -1001,7 +1001,7 @@ app.get('/api/media/pick-intelligent', (req, res) => {
         const filtered = data.items.filter(i => i.folder === category || category === 'any');
         
         if (filtered.length === 0) {
-            // Fallback para ÃƒÂ­cones se nÃƒÂ£o houver fotos reais
+            // Fallback para ícones se não houver fotos reais
             const icons = data.items.filter(i => i.folder === 'icones');
             return res.json(icons.length > 0 ? icons[Math.floor(Math.random() * icons.length)] : null);
         }
@@ -1012,13 +1012,13 @@ app.get('/api/media/pick-intelligent', (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// O motor "Watchdog" de sincronizaÃƒÂ§ÃƒÂ£o passiva (Simulado para nÃƒÂ£o estourar recursos em loop)
+// O motor "Watchdog" de sincronização passiva (Simulado para não estourar recursos em loop)
 const runWatchdog = async () => {
     try {
         const files = fs.readdirSync(LOCAL_WATCH_FOLDER).filter(f => f.match(/\.(jpg|jpeg|png|webp|svg)$/i));
         if (files.length === 0) return;
 
-        console.log(`Ã°Å¸â€œÂ¡ [WATCHDOG] Detectadas ${files.length} novas mÃƒÂ­dias em midia_local...`);
+        console.log(`Ã°Å¸â€œÂ¡ [WATCHDOG] Detectadas ${files.length} novas mídias em midia_local...`);
         const db = JSON.parse(fs.readFileSync(ACERVO_MEDIA_FILE, 'utf8'));
 
         for (const file of files) {
@@ -1035,7 +1035,7 @@ const runWatchdog = async () => {
             // [NUVEM] Se Cloudinary estiver ativo, enviamos para o CDN
             if (isCloudinaryActive) {
                 try {
-                    console.log(`Ã¢ËœÂÃ¯Â¸Â [CLOUDINARY] Enviando ${file} para a nuvem...`);
+                    console.log(`âËœÂÃ¯Â¸Â [CLOUDINARY] Enviando ${file} para a nuvem...`);
                     const result = await cloudinary.uploader.upload(oldPath, {
                         public_id: baseName,
                         folder: "neuroengine-v5",
@@ -1043,9 +1043,9 @@ const runWatchdog = async () => {
                         resource_type: "auto"
                     });
                     finalUrl = result.secure_url;
-                    console.log(`Ã¢Å“â€¦ [CLOUDINARY] Sucesso: ${finalUrl}`);
+                    console.log(`âÅ“â€¦ [CLOUDINARY] Sucesso: ${finalUrl}`);
                 } catch (cloudErr) {
-                    console.error("Ã¢ÂÅ’ [CLOUDINARY ERROR]:", cloudErr.message);
+                    console.error("âÂÅ’ [CLOUDINARY ERROR]:", cloudErr.message);
                     // Fallback para local se o upload falhar
                     fs.renameSync(oldPath, newPath);
                 }
@@ -1056,67 +1056,67 @@ const runWatchdog = async () => {
 
             db.items.push({
                 id: `media_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-                folder: "ambiente", // Categoria padrÃƒÂ£o (pode ser mudada no painel)
+                folder: "ambiente", // Categoria padrão (pode ser mudada no painel)
                 url: finalUrl,
-                title: "Asset EstratÃƒÂ©gico Abidos",
-                alt: "ConsultÃƒÂ³rio Dr. Victor Lawrence - Hipnose ClÃƒÂ­nica e Psicologia em GoiÃƒÂ¢nia"
+                title: "Asset Estratégico Abidos",
+                alt: "Consultório Dr. Victor Lawrence - Hipnose Clínica e Psicologia em Goiânia"
             });
-            console.log(`Ã¢Å“â€¦ [WATCHDOG] Item registrado no acervo.`);
+            console.log(`âÅ“â€¦ [WATCHDOG] Item registrado no acervo.`);
         }
 
         db.last_sync = new Date().toISOString();
         fs.writeFileSync(ACERVO_MEDIA_FILE, JSON.stringify(db, null, 2));
-    } catch (e) { console.error("Ã¢ÂÅ’ [WATCHDOG ERROR]:", e.message); }
+    } catch (e) { console.error("âÂÅ’ [WATCHDOG ERROR]:", e.message); }
 };
 
-// Ativa o Watchdog a cada 60 segundos (MÃƒÂ­nima intervenÃƒÂ§ÃƒÂ£o)
+// Ativa o Watchdog a cada 60 segundos (Mínima intervenção)
 setInterval(runWatchdog, 60000);
 
-// [API] Listar MÃƒÂ­dia (Alias para Acervo na TransiÃƒÂ§ÃƒÂ£o Headless)
+// [API] Listar Mídia (Alias para Acervo na Transição Headless)
 app.get('/api/acervo/list-media', (req, res) => {
-    // Redireciona para o listar padrÃƒÂ£o que jÃƒÂ¡ mapeia as pÃƒÂ¡ginas
+    // Redireciona para o listar padrão que já mapeia as páginas
     // No futuro, isso varreria a pasta de assets/public
     res.json([]); 
 });
 
 /**
- * Ã°Å¸â€œâ€“ ROTA 2: Carregar os Dados de uma PÃƒÂ¡gina para o Studio
- * LÃƒÂª o arquivo .tsx e extrai o JSON do neuroEngineData
+ * Ã°Å¸â€œâ€“ ROTA 2: Carregar os Dados de uma Página para o Studio
+ * Lê o arquivo .tsx e extrai o JSON do neuroEngineData
  */
 app.post('/api/acervo/ler-pagina', (req, res) => {
     const { caminhoFisico } = req.body;
 
     try {
         if (!fs.existsSync(caminhoFisico)) {
-            return res.status(404).json({ success: false, error: 'Arquivo nÃƒÂ£o encontrado' });
+            return res.status(404).json({ success: false, error: 'Arquivo não encontrado' });
         }
 
         const conteudoTsx = fs.readFileSync(caminhoFisico, 'utf-8');
 
-        // Regex cirÃƒÂºrgico para extrair apenas o bloco JSON do neuroEngineData
+        // Regex cirúrgico para extrair apenas o bloco JSON do neuroEngineData
         const regexData = /export const neuroEngineData = ({[\s\S]*?});/;
         const match = conteudoTsx.match(regexData);
 
         if (match && match[1]) {
-            // Converte o texto extraÃƒÂ­do de volta para um Objeto JavaScript
+            // Converte o texto extraído de volta para um Objeto JavaScript
             const dadosRecuperados = JSON.parse(match[1]);
             
             res.json({ success: true, data: dadosRecuperados });
         } else {
-            // Fallback para PÃƒÂ¡ginas Legadas (Sem DNA)
+            // Fallback para Páginas Legadas (Sem DNA)
             const h1Match = conteudoTsx.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
             const titleMatch = conteudoTsx.match(/title:\s*["']([^"']+)["']/i);
             
             const legacyData = {
-                template: "", // Permite ao usuÃƒÂ¡rio escolher o novo template
+                template: "", // Permite ao usuário escolher o novo template
                 SEO_TITLE: titleMatch ? titleMatch[1] : "",
-                SEO_H1_TECNICO: h1Match ? h1Match[1].replace(/<[^>]+>/g, '').trim() : "TÃƒÂ­tulo da PÃƒÂ¡gina"
+                SEO_H1_TECNICO: h1Match ? h1Match[1].replace(/<[^>]+>/g, '').trim() : "Título da Página"
             };
 
             res.json({ 
                 success: true, 
                 data: legacyData,
-                warning: 'Esta pÃƒÂ¡gina nÃƒÂ£o possuÃƒÂ­a o DNA do NeuroEngine. Os dados foram inferidos. Por favor, selecione um template para atualizÃƒÂ¡-la.' 
+                warning: 'Esta página não possuía o DNA do NeuroEngine. Os dados foram inferidos. Por favor, selecione um template para atualizá-la.' 
             });
         }
 

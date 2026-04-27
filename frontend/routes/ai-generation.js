@@ -13,15 +13,15 @@ app.post('/api/ai/generate', async (req, res) => {
     try {
         const { prompt, modelType } = req.body;
         
-        // Mapeamento dinÃ¢mico de modelos Abidos Next (v5)
+        // Mapeamento dinâmico de modelos Abidos Next (v5)
         const model = getAIModel(modelType, "text/plain");
 
-        console.log(`ðŸ§  [AI PROXY] Gerando conteÃºdo via Protocolo 2.5...`);
+        console.log(`🧠 [AI PROXY] Gerando conteúdo via Protocolo 2.5...`);
         
         const result = await model.generateContent(prompt);
         trackUsage(result.response.usageMetadata);
         const text = result.response.text();
-        console.log(`ðŸ¤– [AI RESULT] JSON Gerado com Sucesso via motor ${targetModel}.`);
+        console.log(`🤖 [AI RESULT] JSON Gerado com Sucesso via motor ${targetModel}.`);
         
         res.json({ text });
     } catch (e) { 
@@ -33,22 +33,22 @@ app.post('/api/ai/generate', async (req, res) => {
 app.post('/api/ai/describe-image', async (req, res) => {
     try {
         const { image, context } = req.body;
-        if (!image) return res.status(400).json({ error: "Imagem obrigatÃ³ria." });
+        if (!image) return res.status(400).json({ error: "Imagem obrigatória." });
 
-        console.log("ðŸ“¸ [DESCRIBE-IMAGE] Analisando imagem para gerar ALT text automÃ¡tico...");
+        console.log("📸 [DESCRIBE-IMAGE] Analisando imagem para gerar ALT text automático...");
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         
         const base64Data = image.split(',')[1] || image;
         const prompt = `
         Analise esta imagem e gere um ALT TEXT (texto alternativo) para SEO.
-        CONTEXTO DO SITE: Psicologia ClÃ­nica, Hipnose Ericksoniana e TEA Adulto (Dr. Victor Lawrence, GoiÃ¢nia).
+        CONTEXTO DO SITE: Psicologia Clínica, Hipnose Ericksoniana e TEA Adulto (Dr. Victor Lawrence, Goiânia).
         
         DIRETRIZES:
         - Seja descritivo e direto.
-        - Combine o que estÃ¡ na foto com a autoridade clÃ­nica do Dr. Victor Lawrence.
-        - Inclua termos como 'ConsultÃ³rio de Psicologia em GoiÃ¢nia' ou 'Atendimento ClÃ­nico Especializado' se a imagem sugerir um ambiente profissional.
-        - Se for uma pessoa, descreva a expressÃ£o (ex: acolhedora, focada).
-        - Retorne APENAS o texto do ALT, sem aspas, mÃ¡ximo 120 caracteres.
+        - Combine o que está na foto com a autoridade clínica do Dr. Victor Lawrence.
+        - Inclua termos como 'Consultório de Psicologia em Goiânia' ou 'Atendimento Clínico Especializado' se a imagem sugerir um ambiente profissional.
+        - Se for uma pessoa, descreva a expressão (ex: acolhedora, focada).
+        - Retorne APENAS o texto do ALT, sem aspas, máximo 120 caracteres.
         
         CONTEXTO ADICIONAL DA VARIÃVEL: ${context || 'Geral'}
         `;
@@ -67,33 +67,33 @@ app.post('/api/ai/describe-image', async (req, res) => {
 });
 
 const DOCTORALIA_REVIEWS = `
-- Carla (TEA): "DiagnÃ³stico tardio possÃ­vel pela tÃ©cnica adequada... melhora significativa na qualidade de vida."
-- Y. (Autista): "Acompanhamento fez enorme diferenÃ§a... hipnose e PNL com empatia e respeito."
-- A. M. (SÃ¡bio): "Estrutura da minha vida, alguÃ©m sÃ¡bio que me fez enxergar eu mesma."
-- R. A. (Ansiedade): "Problema de ansiedade resolvido em algumas sessÃµes. Muito profissional."
+- Carla (TEA): "Diagnóstico tardio possível pela técnica adequada... melhora significativa na qualidade de vida."
+- Y. (Autista): "Acompanhamento fez enorme diferença... hipnose e PNL com empatia e respeito."
+- A. M. (Sábio): "Estrutura da minha vida, alguém sábio que me fez enxergar eu mesma."
+- R. A. (Ansiedade): "Problema de ansiedade resolvido em algumas sessões. Muito profissional."
 `;
 
 const VICTOR_IDENTIDADE = `
 [IDENTIDADE OFICIAL â€” DR. VICTOR LAWRENCE]
 - Nome: Victor Lawrence Bernardes Santana
-- Registro Profissional: PsicÃ³logo | CRP 09/012681
-- FormaÃ§Ã£o: MESTRANDO em Psicologia pela Universidade Federal de UberlÃ¢ndia (UFU) â€” ConclusÃ£o prevista em 2028.
-- Especialidades: Hipnoterapia ClÃ­nica Ericksoniana, TEA Adulto (Asperger), Neuropsicologia.
-- LocalizaÃ§Ã£o: GoiÃ¢nia (GO) e UberlÃ¢ndia (MG).
-- [ALERTA CRÃTICO]: JAMAIS refira-se ao Dr. Victor como Psicanalista. Ele Ã© PsicÃ³logo ClÃ­nico e Mestrando na UFU. Ã‰ um erro grave de identidade chamÃ¡-lo de psicanalista.
+- Registro Profissional: Psicólogo | CRP 09/012681
+- Formação: MESTRANDO em Psicologia pela Universidade Federal de Uberlândia (UFU) â€” Conclusão prevista em 2028.
+- Especialidades: Hipnoterapia Clínica Ericksoniana, TEA Adulto (Asperger), Neuropsicologia.
+- Localização: Goiânia (GO) e Uberlândia (MG).
+- [ALERTA CRÃTICO]: JAMAIS refira-se ao Dr. Victor como Psicanalista. Ele é Psicólogo Clínico e Mestrando na UFU. Ã‰ um erro grave de identidade chamá-lo de psicanalista.
 - TÃTULO ACADÃŠMICO: Mestrando em Psicologia (UFU).
 `;
 
 const REAL_ASSETS = `
 VERDADE ABSOLUTA: PROIBIDO INVENTAR LINKS OU DADOS FALSOS. USE APENAS OS SEGUINTES LINKS REAIS:
 
-LINKS DE SERVIÃ‡OS E PÃGINAS (SILOS E HUB):
+LINKS DE SERVIÇOS E PÃGINAS (SILOS E HUB):
 - Agendamento: https://hipnolawrence.com/agendamento/
 - Ansiedade/Estresse: https://hipnolawrence.com/terapia-para-ansiedade-e-estresse-em-goiania/
-- Contato/CurrÃ­culo: https://hipnolawrence.com/contato/
-- DepressÃ£o: https://hipnolawrence.com/tratamento-para-depressao-em-goiania/
-- Desempenho PsicolÃ³gico: https://hipnolawrence.com/terapia-para-desempenho-psicologico-em-goiania/
-- Hipnose ClÃ­nica: https://hipnolawrence.com/hipnose-clinica-em-goiania/
+- Contato/Currículo: https://hipnolawrence.com/contato/
+- Depressão: https://hipnolawrence.com/tratamento-para-depressao-em-goiania/
+- Desempenho Psicológico: https://hipnolawrence.com/terapia-para-desempenho-psicologico-em-goiania/
+- Hipnose Clínica: https://hipnolawrence.com/hipnose-clinica-em-goiania/
 - Relacionamento: https://hipnolawrence.com/terapia-de-relacionamento-em-goiania/
 - Terapia Geral: https://hipnolawrence.com/terapia-em-goiania/
 - Sobre: https://hipnolawrence.com/sobre/
@@ -108,7 +108,7 @@ IMAGENS DO DR. VICTOR LAWRENCE:
 - https://hipnolawrence.com/wp-content/uploads/2026/03/IMG_4875.jpg
 - https://hipnolawrence.com/wp-content/uploads/2026/03/IMG_2046.jpg
 
-DEMONSTRAÃ‡ÃƒO DE HIPNOSE / EVENTOS:
+DEMONSTRAÇÃƒO DE HIPNOSE / EVENTOS:
 - https://hipnolawrence.com/wp-content/uploads/2026/03/5b6b7fbf-d665-4d68-96b0-aa8d2889a0bc.jpg
 - Palestra IFG: https://hipnolawrence.com/wp-content/uploads/2026/03/palestra-IFG2.jpeg
 - Congresso Autismo (2015): https://hipnolawrence.com/wp-content/uploads/2026/03/11148819_865048126899579_5754455918839697297_o.jpg
@@ -125,21 +125,21 @@ AMBIENTE CONSULTÃ“RIO:
 `;
 
 // ============================================================================
-// Ã‰TICA ABIDOS â€” ProibiÃ§Ãµes absolutas injetadas em TODOS os prompts de geraÃ§Ã£o
+// Ã‰TICA ABIDOS â€” Proibições absolutas injetadas em TODOS os prompts de geração
 // ============================================================================
 const ETICA_ABIDOS = `
-[DIRETRIZES Ã‰TICAS ABSOLUTAS â€” PROIBIÃ‡Ã•ES SEM EXCEÃ‡ÃƒO]
-- PROIBIDO oferecer, mencionar ou sugerir SESSÃƒO GRATUITA ou AVALIAÃ‡ÃƒO GRATUITA.
+[DIRETRIZES Ã‰TICAS ABSOLUTAS â€” PROIBIÇÃ•ES SEM EXCEÇÃƒO]
+- PROIBIDO oferecer, mencionar ou sugerir SESSÃƒO GRATUITA ou AVALIAÇÃƒO GRATUITA.
 - PROIBIDO prometer cura ou garantia de resultado.
-- PROIBIDO jargÃ£o de marketing agressivo (Copywriting SÃ³brio e AcadÃªmico).
-- PROIBIDO criar variÃ¡veis como {{area_dinamica_extra}} â€” Redundante.
-- O WhatsApp e Contatos devem ser preenchidos EXCLUSIVAMENTE nas variÃ¡veis globais, nÃ£o gere novos campos para isso se jÃ¡ existirem.
+- PROIBIDO jargão de marketing agressivo (Copywriting Sóbrio e Acadêmico).
+- PROIBIDO criar variáveis como {{area_dinamica_extra}} â€” Redundante.
+- O WhatsApp e Contatos devem ser preenchidos EXCLUSIVAMENTE nas variáveis globais, não gere novos campos para isso se já existirem.
 - O CTA de agendamento DEVE levar ao link: https://hipnolawrence.com/agendamento/
 `;
 
 const CLIMAS_CLINICOS = {
   "1_introspeccao_profunda": {
-    "nome_amigavel": "IntrospecÃ§Ã£o Profunda (Ultra-Dark)",
+    "nome_amigavel": "Introspecção Profunda (Ultra-Dark)",
     "fundo_principal": "!bg-[#05080f]",
     "texto_principal": "!text-slate-300",
     "texto_destaque": "!text-white",
@@ -160,20 +160,20 @@ const CLIMAS_CLINICOS = {
     "texto_principal": "!text-slate-400",
     "texto_destaque": "!text-slate-200",
     "cor_acao": "!bg-[#14b8a6]",
-    "efeitos_obrigatorios": "Cores apaziguadoras. ZERO contrastes extremos (nunca usar branco puro ou preto puro). Glassmorphism com desfoque subtil para nÃ£o causar distraÃ§Ãµes."
+    "efeitos_obrigatorios": "Cores apaziguadoras. ZERO contrastes extremos (nunca usar branco puro ou preto puro). Glassmorphism com desfoque subtil para não causar distrações."
   },
   "4_autoridade_academica": {
-    "nome_amigavel": "Autoridade AcadÃ©mica (Minimalista)",
+    "nome_amigavel": "Autoridade Académica (Minimalista)",
     "fundo_principal": "!bg-white",
     "texto_principal": "!text-gray-600",
     "texto_destaque": "!text-gray-900",
     "cor_acao": "!bg-[#0f172a]",
-    "efeitos_obrigatorios": "Design limpo, acadÃ©mico e sem distracÃ§Ãµes. Uso de linhas finas divisorias (!border-gray-200). ZERO efeitos de luz ou desfoque extremo."
+    "efeitos_obrigatorios": "Design limpo, académico e sem distracções. Uso de linhas finas divisorias (!border-gray-200). ZERO efeitos de luz ou desfoque extremo."
   }
 };
 
 const ABIDOS_TEMPLATE_MINIMO = `
-<!-- CONFIGURAÃ‡ÃƒO TAILWIND -->
+<!-- CONFIGURAÇÃƒO TAILWIND -->
 <script>
     tailwind = {
         config: {
@@ -220,7 +220,7 @@ const ABIDOS_TEMPLATE_MINIMO = `
         text-decoration: none !important;
     }
 
-    /* Vidros SÃ³brios (Glassmorphism de Alto PadrÃ£o) */
+    /* Vidros Sóbrios (Glassmorphism de Alto Padrão) */
     .abidos-glass-dark {
         background: rgba(250, 249, 246, 0.02) !important;
         backdrop-filter: blur(24px) !important;
@@ -236,14 +236,14 @@ const ABIDOS_TEMPLATE_MINIMO = `
         box-shadow: 0 30px 60px rgba(11, 18, 33, 0.03) !important;
     }
 
-    /* Efeito Visual (Luz HipnÃ³tica) */
+    /* Efeito Visual (Luz Hipnótica) */
     .orb-glow { animation: slowPulse 8s infinite alternate ease-in-out; }
     @keyframes slowPulse {
         0% { transform: scale(0.8) translate(-5%, -5%); opacity: 0.15; }
         100% { transform: scale(1.1) translate(5%, 5%); opacity: 0.4; }
     }
 
-    /* AnimaÃ§Ãµes FluÃ­das de Scroll */
+    /* Animações Fluídas de Scroll */
     .reveal {
         opacity: 0;
         transform: translateY(30px);
@@ -254,7 +254,7 @@ const ABIDOS_TEMPLATE_MINIMO = `
     .delay-200 { transition-delay: 200ms; }
     .delay-300 { transition-delay: 300ms; }
 
-    /* FORÃ‡A VISIBILIDADE NO EDITOR ELEMENTOR */
+    /* FORÇA VISIBILIDADE NO EDITOR ELEMENTOR */
     body.elementor-editor-active .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
 
     .chart-container { position: relative; width: 100%; height: 220px; }
@@ -299,7 +299,7 @@ const ABIDOS_TEMPLATE_MINIMO = `
 
 <!-- ABIDOS WRAPPER -->
 <div class="abidos-wrapper">
-    <!-- ESTRUTURA SEÃ‡Ã•ES AQUI -->
+    <!-- ESTRUTURA SEÇÃ•ES AQUI -->
 </div>
 
 <script>
@@ -331,37 +331,37 @@ const ABIDOS_TEMPLATE_MINIMO = `
 
 // Estado do Perfil de Voz (Clone de Voz / Reverse Prompting)
 let voiceProfile = {
-    learned_style: "Direto, clÃ­nico, porÃ©m empÃ¡tico. Foco em autoridade tÃ©cnica e resultados prÃ¡ticos (GoiÃ¢nia).",
-    vocabulary: ["GoiÃ¢nia", "Neuropsicologia", "TEA", "ClÃ­nica", "AvaliaÃ§Ã£o"],
+    learned_style: "Direto, clínico, porém empático. Foco em autoridade técnica e resultados práticos (Goiânia).",
+    vocabulary: ["Goiânia", "Neuropsicologia", "TEA", "Clínica", "Avaliação"],
     prohibited_terms: ["cura milagrosa", "garantido", "mudar sua vida para sempre"],
-    rhythm: "SentenÃ§as curtas e estruturadas por bullet points.",
+    rhythm: "Sentenças curtas e estruturadas por bullet points.",
     last_updated: new Date().toISOString()
 };
 
 // Eliminado duplicata de /api/drafts (Consolidado acima)
 
-// Orquestrador LangGraph (SimulaÃ§Ã£o de Multi-Agent Node Pipeline)
+// Orquestrador LangGraph (Simulação de Multi-Agent Node Pipeline)
 app.post('/api/agents/generate-pipeline', async (req, res) => {
     try {
         const { topic } = req.body;
-        if (!topic) throw new Error("TÃ³pico (STAG) nÃ£o fornecido.");
+        if (!topic) throw new Error("Tópico (STAG) não fornecido.");
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
 
-        console.log(`ðŸ¤– [LANGGRAPH PIPELINE] Iniciando fluxo para: ${topic}`);
+        console.log(`🤖 [LANGGRAPH PIPELINE] Iniciando fluxo para: ${topic}`);
 
         // NÃ“ 1: Agente Gerador (RAG & Pesquisa + Personalidade Aprendida)
         console.log(`ðŸ“¡ [NÃ“ 1] Agente de Pesquisa (Voz Dr. Victor)...`);
         const dnaInjetadoPipeline = getDnaContext();
         const moodPipeline = CLIMAS_CLINICOS['1_introspeccao_profunda'];
         const pGerador = `
-VocÃª Ã© o Arquiteto Visual SÃªnior do Protocolo Abidos. Gere uma Landing Page HTML PREMIUM sobre "${topic}".
+Você é o Arquiteto Visual Sênior do Protocolo Abidos. Gere uma Landing Page HTML PREMIUM sobre "${topic}".
 
 [ESTRUTURA DE DESIGN ABIDOS (OBRIGATÃ“RIO)]
 Use EXATAMENTE este Wrapper e estas classes:
 1. WRAPPER GERAL: <div class="abidos-wrapper antialiased px-4 py-8 md:px-12 lg:px-24 bg-[#05080f] min-h-screen font-inter text-slate-300">
-2. SEÃ‡Ã•ES: <section class="py-16 md:py-32 relative overflow-hidden" data-bloco="nome_do_bloco">
+2. SEÇÃ•ES: <section class="py-16 md:py-32 relative overflow-hidden" data-bloco="nome_do_bloco">
 3. CARDS: "bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 md:p-10 shadow-2xl hover:border-teal-500/50 transition-all"
-4. H2 (TÃTULO DE SEÃ‡ÃƒO): "font-outfit font-bold text-3xl md:text-5xl leading-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500 mb-6"
+4. H2 (TÃTULO DE SEÇÃƒO): "font-outfit font-bold text-3xl md:text-5xl leading-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500 mb-6"
 5. TEXTO: "text-lg text-slate-400 leading-relaxed mb-8"
 6. CTA WHATSAPP: "inline-flex items-center gap-3 px-8 py-4 bg-teal-500 hover:bg-teal-400 text-[#05080f] font-bold rounded-full transition-all hover:scale-105 shadow-[0_0_25px_rgba(45,212,191,0.35)]"
 
@@ -379,16 +379,16 @@ Gere o HTML modular. Feche o wrapper </div> ao final. Sem markdown.
         trackUsage(resGerador.response.usageMetadata);
         const rascunhoPrimario = resGerador.response.text();
 
-        // NÃ“ 2, 3 e 4: Loop de ValidaÃ§Ã£o (Abidos, CrÃ­tico e Compliance)
-        console.log(`âš–ï¸ [NÃ“S DE VALIDAÃ‡ÃƒO] Auditoria de Compliance, Abidos e Factual...`);
+        // NÃ“ 2, 3 e 4: Loop de Validação (Abidos, Crítico e Compliance)
+        console.log(`âš–ï¸ [NÃ“S DE VALIDAÇÃƒO] Auditoria de Compliance, Abidos e Factual...`);
         const pAuditoria = `
         Analise rigorosamente o Rascunho HTML abaixo.
-        Sua missÃ£o Ã© corrigir erros de compliance e garantir o Design Abidos.
+        Sua missão é corrigir erros de compliance e garantir o Design Abidos.
         
         REGRAS DE OURO:
         1. MANTENHA O WRAPPER GERAL <div class="abidos-wrapper...">.
-        2. Certifique-se de que nÃ£o hÃ¡ tags <h1>.
-        3. Se o texto for puramente clÃ­nico, transforme em copywriting persuasivo usando o MÃ©todo Abidos.
+        2. Certifique-se de que não há tags <h1>.
+        3. Se o texto for puramente clínico, transforme em copywriting persuasivo usando o Método Abidos.
         
         Retorne APENAS um JSON: {"aprovado": boolean, "abidos_score": number, "compliance_pass": boolean, "med_f1": number, "correcoes": "MANTENHA O HTML COMPLETO COM WRAPPER AQUI"}
         Rascunho: """${rascunhoPrimario}"""
@@ -398,10 +398,10 @@ Gere o HTML modular. Feche o wrapper </div> ao final. Sem markdown.
         const jsonStr = resAuditoria.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
         const auditoria = JSON.parse(jsonStr);
 
-        // Se falhar no compliance, faria um loop de re-geraÃ§Ã£o no LangGraph real. Aqui simulamos a correÃ§Ã£o automÃ¡tica:
+        // Se falhar no compliance, faria um loop de re-geração no LangGraph real. Aqui simulamos a correção automática:
         const conteudoFinal = auditoria.correcoes || rascunhoPrimario;
 
-        // PersistÃªncia de Estado
+        // Persistência de Estado
         const newDraft = {
             draft_id: `RASC-2026-${Math.floor(Math.random() * 900) + 100}`,
             tema_foco: topic,
@@ -421,7 +421,7 @@ Gere o HTML modular. Feche o wrapper </div> ao final. Sem markdown.
         };
 
         draftsDb.unshift(newDraft); // Adiciona ao topo da lista
-        console.log(`âœ… [PIPELINE CONCLUÃDA] Human-in-the-loop aguardando.`);
+        console.log(`✅ [PIPELINE CONCLUÃDA] Human-in-the-loop aguardando.`);
         
         res.json({ success: true, draft: newDraft });
     } catch (e) {
@@ -437,24 +437,24 @@ app.post('/api/agents/audit', async (req, res) => {
         console.log(`ðŸ” [AGENTE ABIDOS] Auditing draft...`);
         
         const prompt = `
-        VocÃª Ã© o "Agente Abidos", um Arquiteto de Sistemas e Auditor SÃªnior ImplacÃ¡vel.
+        Você é o "Agente Abidos", um Arquiteto de Sistemas e Auditor Sênior Implacável.
         
-        SUA MISSÃƒO: Realizar uma auditoria de nÃ­vel clÃ­nico no rascunho abaixo.
+        SUA MISSÃƒO: Realizar uma auditoria de nível clínico no rascunho abaixo.
         
         MÃ‰TODO DE AUDITORIA (FACTSCORE):
-        1. DecomposiÃ§Ã£o AtÃ´mica: Quebre o texto em afirmaÃ§Ãµes individuais.
-        2. ValidaÃ§Ã£o Factual: Verifique se hÃ¡ "alucinaÃ§Ãµes" ou promessas de cura (Proibido pelo CFP).
-        3. MED-F1 (ExtraÃ§Ã£o de Entidades): Liste termos tÃ©cnicos (ex: TEA, TDAH, ISRS) e verifique se o contexto estÃ¡ correto.
-        4. Hierarquia Abidos: Cheque se NÃƒO hÃ¡ H1 (proibido) e se hÃ¡ H2 estratÃ©gico com palavra-chave e localizaÃ§Ã£o (GoiÃ¢nia).
-        5. GOOGLE TAG: Verifique se a etiqueta Google (G-B0DM24E5FS) estÃ¡ presente no cÃ³digo. Se nÃ£o estiver, gere um alerta crÃ­tico.
+        1. Decomposição Atômica: Quebre o texto em afirmações individuais.
+        2. Validação Factual: Verifique se há "alucinações" ou promessas de cura (Proibido pelo CFP).
+        3. MED-F1 (Extração de Entidades): Liste termos técnicos (ex: TEA, TDAH, ISRS) e verifique se o contexto está correto.
+        4. Hierarquia Abidos: Cheque se NÃƒO há H1 (proibido) e se há H2 estratégico com palavra-chave e localização (Goiânia).
+        5. GOOGLE TAG: Verifique se a etiqueta Google (G-B0DM24E5FS) está presente no código. Se não estiver, gere um alerta crítico.
         
         Rascunho a auditar:
         """${content}"""
         
         RETORNE UM RELATÃ“RIO FORMATADO EM HTML (usando tags span, strong, br) COM:
-        - âœ… PONTOS POSITIVOS
+        - ✅ PONTOS POSITIVOS
         - âš ï¸ ALERTAS DE RISCO (CFP/LGPD/GOOGLE TAG)
-        - ðŸ“Š PONTUAÃ‡ÃƒO FACTSCORE (0-100%)
+        - 📊 PONTUAÇÃƒO FACTSCORE (0-100%)
         - ðŸ“ SUGESTÃ•ES DE REESCRITA
         `;
 
@@ -474,22 +474,22 @@ app.post('/api/agents/audit', async (req, res) => {
 app.post('/api/agents/learn-style', async (req, res) => {
     try {
         const { texts } = req.body;
-        if (!texts || !Array.isArray(texts)) throw new Error("Textos para anÃ¡lise nÃ£o fornecidos.");
+        if (!texts || !Array.isArray(texts)) throw new Error("Textos para análise não fornecidos.");
 
-        console.log(`ðŸ§  [ESTILO] Iniciando Reverse Prompting de ${texts.length} textos...`);
+        console.log(`🧠 [ESTILO] Iniciando Reverse Prompting de ${texts.length} textos...`);
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
 
         const prompt = `
-        Aja como um Linguista Forense e Especialista em Copywriting de ConversÃ£o.
-        Analise os textos abaixo (autÃªnticos do autor Victor Lawrence) e extraia o DNA da escrita.
+        Aja como um Linguista Forense e Especialista em Copywriting de Conversão.
+        Analise os textos abaixo (autênticos do autor Victor Lawrence) e extraia o DNA da escrita.
         
         Textos:
         """${texts.join('\n\n')}"""
         
-        Sua tarefa Ã© codificar esse estilo em um JSON com os campos:
-        - rhythm: (DescriÃ§Ã£o da cadÃªncia das frases)
-        - vocabulary: (Lista de palavras recorrentes e jargÃµes favoritos)
-        - learned_style: (Resumo tÃ©cnico da "voz" do autor)
+        Sua tarefa é codificar esse estilo em um JSON com os campos:
+        - rhythm: (Descrição da cadência das frases)
+        - vocabulary: (Lista de palavras recorrentes e jargões favoritos)
+        - learned_style: (Resumo técnico da "voz" do autor)
         - prohibited_terms: (Palavras que ele parece evitar ou que seriam artificiais para ele)
         
         Retorne APENAS o JSON.
@@ -517,13 +517,13 @@ app.post('/api/agents/analyze-diff', async (req, res) => {
     try {
         const { original, edited } = req.body;
 
-        console.log(`ðŸ“ [DIFF] Analisando ediÃ§Ãµes do usuÃ¡rio para ajuste fino de tom...`);
+        console.log(`ðŸ“ [DIFF] Analisando edições do usuário para ajuste fino de tom...`);
         const model = genAI.getGenerativeModel({ model: VISION_MODEL });
 
         const prompt = `
-        Analise a diferenÃ§a entre o rascunho da IA e a versÃ£o editada pelo Dr. Victor.
+        Analise a diferença entre o rascunho da IA e a versão editada pelo Dr. Victor.
         Rascunho IA: """${original}"""
-        VersÃ£o Final: """${edited}"""
+        Versão Final: """${edited}"""
         
         O que mudou no tom? O que ele removeu? O que ele adicionou?
         Atualize o perfil de voz atual: ${JSON.stringify(voiceProfile)}

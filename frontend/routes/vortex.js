@@ -128,6 +128,7 @@ module.exports = function setupVortexRoutes(app, { SITE_REPO_PATH }) {
 
     // Servir Preview (VFS Simulator)
     app.get('/vortex-preview', (req, res) => {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.send(`
             <!DOCTYPE html>
             <html lang="pt-br">

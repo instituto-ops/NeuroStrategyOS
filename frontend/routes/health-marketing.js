@@ -81,16 +81,16 @@ app.post('/api/health/design-audit', async (req, res) => {
         CONTEXTO: ${context}.
 
         Analise a captura de tela anexada da interface administrativa do sistema (rodando em Desktop).
-        Sua missÃ£o:
-        1. Avaliar a Legibilidade (Tamanho da fonte, contraste, espaÃ§amento dos selos e cards).
-        2. Avaliar a EstÃ©tica da Interface (O sistema parece premium e limpo ou estÃ¡ com excesso de informaÃ§Ã£o?).
-        3. Identificar HeurÃ­sticas de Usabilidade violadas.
-        4. Identificar inconsistÃªncias visuais (Cores fora do paleta, desalinhamentos).
+        Sua missão:
+        1. Avaliar a Legibilidade (Tamanho da fonte, contraste, espaçamento dos selos e cards).
+        2. Avaliar a Estética da Interface (O sistema parece premium e limpo ou está com excesso de informação?).
+        3. Identificar Heurísticas de Usabilidade violadas.
+        4. Identificar inconsistências visuais (Cores fora do paleta, desalinhamentos).
 
         [DIRETRIZES DE RELATÃ“RIO]:
-        - Seja direto, tÃ©cnico e use termos como "Hierarquia Visual", "AfixaÃ§Ã£o", "Contraste WCAG".
-        - Liste 3 pontos positivos e 3 pontos de melhoria prioritÃ¡ria.
-        - Se o design estiver nota 10, elogie de forma sÃ³bria.
+        - Seja direto, técnico e use termos como "Hierarquia Visual", "Afixação", "Contraste WCAG".
+        - Liste 3 pontos positivos e 3 pontos de melhoria prioritária.
+        - Se o design estiver nota 10, elogie de forma sóbria.
 
         Retorne a resposta diretamente em texto (Markdown).
         `;
@@ -112,7 +112,7 @@ app.post('/api/health/design-audit', async (req, res) => {
 app.post('/api/reputation/analyze', async (req, res) => {
     try {
         const { platform, content } = req.body;
-        console.log(`ðŸ›¡ï¸ [REPUTAÃ‡ÃƒO] Analisando impacto de feedback em ${platform}...`);
+        console.log(`ðŸ›¡ï¸ [REPUTAÇÃƒO] Analisando impacto de feedback em ${platform}...`);
 
         const model = genAI.getGenerativeModel({ model: MAIN_MODEL });
         const prompt = `
@@ -120,10 +120,10 @@ app.post('/api/reputation/analyze', async (req, res) => {
         """${content}"""
         
         Sua tarefa:
-        1. Classificar Sentimento (Positivo / Neutro / Alerta CrÃ­tico).
+        1. Classificar Sentimento (Positivo / Neutro / Alerta Crítico).
         2. Identificar Riscos Ã‰ticos (Baseado nas normas do CFP).
-        3. Gerar "Resposta Sugerida" (EmpÃ¡tica, respeitando sigilo, sem promessas).
-        4. Sugerir Melhoria Interna na ClÃ­nica.
+        3. Gerar "Resposta Sugerida" (Empática, respeitando sigilo, sem promessas).
+        4. Sugerir Melhoria Interna na Clínica.
         
         Retorne em JSON.
         `;

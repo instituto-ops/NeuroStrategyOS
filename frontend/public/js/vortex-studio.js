@@ -1,11 +1,11 @@
 /**
- * ðŸŒ€ VÃ“RTEX AI STUDIO â€” MÃ³dulo Core
- * NeuroEngine OS | Fase 1: FundaÃ§Ã£o
+ * 🌀 VÓRTEX AI STUDIO — Módulo Core
+ * NeuroEngine OS | Fase 1: Fundação
  * 
  * Responsabilidades:
  * - VFS (Virtual File System) via Dexie.js
  * - Monaco Editor bootstrap
- * - Chat com Gemini 2.5 (geraÃ§Ã£o de cÃ³digo)
+ * - Chat com Gemini 2.5 (geração de código)
  * - Preview iframe
  * - Abidos Compliance Toggles
  */
@@ -34,53 +34,53 @@ window.vortexStudio = (() => {
     const TIER_1_KEYWORDS = [
         {
             id: 'hipnose-tea-adultos',
-            keyword: 'hipnose clÃ­nica para TEA em adultos',
+            keyword: 'hipnose clínica para TEA em adultos',
             objective: 'landing_page',
-            hub: 'Hipnose ClÃ­nica',
-            spoke: 'Hipnose ClÃ­nica para TEA em Adultos',
+            hub: 'Hipnose Clínica',
+            spoke: 'Hipnose Clínica para TEA em Adultos',
             generationMode: 'hybrid',
             templateHint: 'landing',
-            context: 'Landing page premium para adultos com suspeita ou diagnÃ³stico de TEA que buscam hipnose clÃ­nica Ã©tica, segura e especializada. Foco em acolhimento, autoridade clÃ­nica, triagem e CTA para conversa inicial.'
+            context: 'Landing page premium para adultos com suspeita ou diagnóstico de TEA que buscam hipnose clínica ética, segura e especializada. Foco em acolhimento, autoridade clínica, triagem e CTA para conversa inicial.'
         },
         {
             id: 'autismo-feminino-adultas',
-            keyword: 'psicÃ³logo online especializado em autismo feminino em adultas',
+            keyword: 'psicólogo online especializado em autismo feminino em adultas',
             objective: 'landing_page',
             hub: 'Autismo Adulto',
             spoke: 'Autismo Feminino em Adultas',
             generationMode: 'structured',
             templateHint: 'landing',
-            context: 'PÃ¡gina de conversÃ£o para mulheres adultas com suspeita de autismo, diagnÃ³stico tardio, masking e exaustÃ£o social. Tom clÃ­nico, acolhedor, sem promessa de cura.'
+            context: 'Página de conversão para mulheres adultas com suspeita de autismo, diagnóstico tardio, masking e exaustão social. Tom clínico, acolhedor, sem promessa de cura.'
         },
         {
             id: 'suspeita-tea-sem-diagnostico',
-            keyword: 'psicÃ³logo para adultos com suspeita de TEA que nÃ£o fecham diagnÃ³stico',
+            keyword: 'psicólogo para adultos com suspeita de TEA que não fecham diagnóstico',
             objective: 'content_page',
             hub: 'Autismo Adulto',
-            spoke: 'Suspeita de TEA sem DiagnÃ³stico',
+            spoke: 'Suspeita de TEA sem Diagnóstico',
             generationMode: 'hybrid',
             templateHint: 'artigo',
-            context: 'ConteÃºdo educativo e conversivo para adultos que jÃ¡ pesquisaram TEA, tÃªm dÃºvidas persistentes e precisam de orientaÃ§Ã£o clÃ­nica para prÃ³ximos passos sem linguagem alarmista.'
+            context: 'Conteúdo educativo e conversivo para adultos que já pesquisaram TEA, têm dúvidas persistentes e precisam de orientação clínica para próximos passos sem linguagem alarmista.'
         },
         {
             id: 'autismo-tardio-adultos',
             keyword: 'terapia para adulto que descobriu autismo tarde',
             objective: 'content_page',
             hub: 'Autismo Adulto',
-            spoke: 'Terapia apÃ³s DiagnÃ³stico Tardio',
+            spoke: 'Terapia após Diagnóstico Tardio',
             generationMode: 'hybrid',
             templateHint: 'artigo',
-            context: 'PÃ¡gina de autoridade sobre reorganizaÃ§Ã£o de vida, identidade, relaÃ§Ãµes e energia apÃ³s diagnÃ³stico tardio de autismo em adultos.'
+            context: 'Página de autoridade sobre reorganização de vida, identidade, relações e energia após diagnóstico tardio de autismo em adultos.'
         },
         {
             id: 'alto-funcionamento-adultos',
-            keyword: 'psicÃ³logo especialista em autismo de alto funcionamento em adultos',
+            keyword: 'psicólogo especialista em autismo de alto funcionamento em adultos',
             objective: 'landing_page',
             hub: 'Autismo Adulto',
-            spoke: 'Autismo NÃ­vel 1 em Adultos',
+            spoke: 'Autismo Nível 1 em Adultos',
             generationMode: 'structured',
             templateHint: 'landing',
-            context: 'Landing page para adultos com autismo nÃ­vel 1 ou alto funcionamento que buscam atendimento especializado, clareza clÃ­nica e acolhimento sem infantilizaÃ§Ã£o.'
+            context: 'Landing page para adultos com autismo nível 1 ou alto funcionamento que buscam atendimento especializado, clareza clínica e acolhimento sem infantilização.'
         }
     ];
 
@@ -302,7 +302,7 @@ window.vortexStudio = (() => {
     }
 
     // =========================================================================
-    // UTILS: SANITIZAÃ‡ÃƒO E LIMPEZA (ANTI-HALLUCINATION)
+    // UTILS: SANITIZAÇÃƒO E LIMPEZA (ANTI-HALLUCINATION)
     // =========================================================================
     function escapeHtml(value) {
         return String(value ?? '')
@@ -328,7 +328,7 @@ window.vortexStudio = (() => {
         clean = clean.replace(/```[a-z]*\n?/gi, '');
         clean = clean.replace(/```/g, '');
 
-        // 2. Remover tags estruturais do VÃ³rtex (se vazarem para o editor)
+        // 2. Remover tags estruturais do Vórtex (se vazarem para o editor)
         clean = clean.replace(/<file[^>]*>/gi, '');
         clean = clean.replace(/<\/file>/gi, '');
         clean = clean.replace(/<preview[^>]*>/gi, '');
@@ -354,7 +354,7 @@ window.vortexStudio = (() => {
             if (window.LightningFS) {
                 state.fs = new LightningFS('VortexGitFS');
                 state.pfs = state.fs.promises;
-                console.log('ðŸŒ€ [VORTEX GIT] LightningFS initialized.');
+                console.log('🌀 [VORTEX GIT] LightningFS initialized.');
             }
 
             state.db = new Dexie('VortexVFS');
@@ -366,12 +366,12 @@ window.vortexStudio = (() => {
             });
 
             await state.db.open();
-            console.log('ðŸŒ€ [VORTEX VFS] IndexedDB initialized successfully.');
+            console.log('🌀 [VORTEX VFS] IndexedDB initialized successfully.');
             
             // Request persistent storage
             if (navigator.storage && navigator.storage.persist) {
                 const persisted = await navigator.storage.persist();
-                console.log(`ðŸŒ€ [VORTEX VFS] Persistent storage: ${persisted ? 'GRANTED' : 'DENIED'}`);
+                console.log(`🌀 [VORTEX VFS] Persistent storage: ${persisted ? 'GRANTED' : 'DENIED'}`);
             }
 
             // [1.4] Ingestion Pipeline
@@ -387,7 +387,7 @@ window.vortexStudio = (() => {
     async function checkAndIngestFiles() {
         const fileCount = await state.db.files.count();
         if (fileCount === 0) {
-            console.log('ðŸŒ€ [VORTEX VFS] Database empty. Ingesting physical repository starting now...');
+            console.log('🌀 [VORTEX VFS] Database empty. Ingesting physical repository starting now...');
             try {
                 const res = await fetch('/api/vortex/ingest', {
                     headers: { 'Authorization': `Bearer ${VORTEX_API_KEY}` }
@@ -420,7 +420,7 @@ window.vortexStudio = (() => {
                             }
                         }
                     });
-                    console.log(`ðŸŒ€ [VORTEX VFS] Ingested ${data.files.length} physical files.`);
+                    console.log(`🌀 [VORTEX VFS] Ingested ${data.files.length} physical files.`);
                 }
             } catch(e) {
                 console.error('âŒ [VORTEX INGEST]', e);
@@ -503,7 +503,7 @@ window.vortexStudio = (() => {
         });
 
         state.editor = monaco.editor.create(container, {
-            value: '// ðŸŒ€ VÃ³rtex AI Studio\n// Envie um prompt no chat para gerar cÃ³digo Next.js\n',
+            value: '// 🌀 Vórtex AI Studio\n// Envie um prompt no chat para gerar código Next.js\n',
             language: 'typescriptreact',
             theme: 'vortex-dark',
             fontSize: 13,
@@ -551,9 +551,9 @@ window.vortexStudio = (() => {
         resizeObserver.observe(container);
 
         state.monacoReady = true;
-        console.log('ðŸŒ€ [VORTEX MONACO] Editor initialized.');
+        console.log('🌀 [VORTEX MONACO] Editor initialized.');
 
-        // [1.1] Resumo da SessÃ£o / Auto-load last file or page.tsx
+        // [1.1] Resumo da Sessão / Auto-load last file or page.tsx
         await loadInitialFile();
     }
 
@@ -567,7 +567,7 @@ window.vortexStudio = (() => {
                 openFile(initialFile.name);
             }
         } catch(e) {
-            console.warn('ðŸŒ€ [VORTEX VFS] Could not load initial file.');
+            console.warn('🌀 [VORTEX VFS] Could not load initial file.');
         }
     }
 
@@ -652,7 +652,7 @@ window.vortexStudio = (() => {
             
             if (data.success) {
                 state.contextHubEnabled = true;
-                addMessage('system', `ðŸ§  **Context Hub Activates!**\nO projeto atual (\`${files.length} arquivos\`) foi embutido no Gemini Caching.\n**${data.cachedTokens || 0} tokens armazenados.**\nO Context Caching reduz as requisiÃ§Ãµes em atÃ© 90% via cache de prompt e permite respostas baseadas no Design System holÃ­stico.`);
+                addMessage('system', `🧠 **Context Hub Activates!**\nO projeto atual (\`${files.length} arquivos\`) foi embutido no Gemini Caching.\n**${data.cachedTokens || 0} tokens armazenados.**\nO Context Caching reduz as requisições em até 90% via cache de prompt e permite respostas baseadas no Design System holístico.`);
                 if (btn) btn.innerHTML = '<i data-lucide="database" style="color:var(--color-success)"></i> HUB ON';
                 if (window.lucide) window.lucide.createIcons();
             } else {
@@ -661,7 +661,7 @@ window.vortexStudio = (() => {
 
         } catch (e) {
             console.error('âŒ [VORTEX HUB]', e);
-            addMessage('system', `âš ï¸ Falha ao sincronizar o Context Hub: ${e.message}`);
+            addMessage('system', `⚠️ Falha ao sincronizar o Context Hub: ${e.message}`);
             state.contextHubEnabled = false;
             const btn = document.getElementById('vortex-hub-btn');
             if (btn) {
@@ -701,7 +701,7 @@ window.vortexStudio = (() => {
                             <span class="vortex-vision-text">VISION LINK ESTABLISHED</span>
                         </div>
                         <img id="vortex-image-preview" src="${uploadedImageBase64}" class="vortex-vision-thumb">
-                        <button onclick="vortexStudio.removeImage()" class="vortex-vision-close">Ã—</button>
+                        <button onclick="vortexStudio.removeImage()" class="vortex-vision-close">×</button>
                     </div>
                 `;
                 previewContainer.style.display = 'block';
@@ -732,8 +732,8 @@ window.vortexStudio = (() => {
         const input = document.getElementById('vortex-chat-input');
         if (input) {
             input.placeholder = state.operationMode === 'template'
-                ? 'PeÃ§a ajustes nas variÃ¡veis da Master Template...'
-                : 'Descreva a pÃ¡gina ou anexe um print...';
+                ? 'Peça ajustes nas variáveis da Master Template...'
+                : 'Descreva a página ou anexe um print...';
         }
     }
 
@@ -813,14 +813,14 @@ window.vortexStudio = (() => {
             const model = document.getElementById('vortex-model-select')?.value || 'gemini-2.5-flash';
             const abidosContext = buildAbidosContext();
             const currentCode = getEditorContent();
-            const defaultCode = '// ðŸŒ€ VÃ³rtex AI Studio\n// Envie um prompt no chat para gerar cÃ³digo Next.js\n';
+            const defaultCode = '// 🌀 Vórtex AI Studio\n// Envie um prompt no chat para gerar código Next.js\n';
 
             if (state.operationMode === 'template' && state.template.selectedId) {
                 await sendTemplatePrompt(prompt, model, abidosContext);
                 return;
             }
 
-            // [PHASE 2.2] Snapshot antes de cada geraÃ§Ã£o
+            // [PHASE 2.2] Snapshot antes de cada geração
             await createSnapshot(prompt);
 
             // [PHASE 2.3] Contexto seletivo (arquivo ativo + imports)
@@ -847,19 +847,19 @@ window.vortexStudio = (() => {
             try {
                 await sendPromptStream(payload);
             } catch (streamErr) {
-                console.warn('âš ï¸ [VORTEX] Stream falhou, usando fallback sÃ­ncrono:', streamErr.message);
+                console.warn('⚠️ [VORTEX] Stream falhou, usando fallback síncrono:', streamErr.message);
                 await sendPromptSync(payload);
             }
 
         } catch (err) {
             console.error('âŒ [VORTEX] Generation error:', err);
-            addMessage('system', `âš ï¸ Erro na geraÃ§Ã£o: ${err.message}`);
+            addMessage('system', `⚠️ Erro na geração: ${err.message}`);
         } finally {
             setGenerating(false);
         }
     }
 
-    // [PHASE 5.3] Streaming SSE Consumer â€” Vibecoding Real
+    // [PHASE 5.3] Streaming SSE Consumer — Vibecoding Real
     async function sendPromptStream(payload) {
         const response = await fetch('/api/vortex/generate-stream', {
             method: 'POST',
@@ -871,7 +871,7 @@ window.vortexStudio = (() => {
         });
 
         if (!response.ok) throw new Error(`Stream Error: ${response.status}`);
-        if (!response.body) throw new Error('ReadableStream nÃ£o suportado');
+        if (!response.body) throw new Error('ReadableStream não suportado');
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -880,7 +880,7 @@ window.vortexStudio = (() => {
         let codeStarted = false;
 
         // Limpar o editor para receber o stream
-        setEditorContent('// ðŸŒ€ Streaming...\n', 'typescriptreact');
+        setEditorContent('// 🌀 Streaming...\n', 'typescriptreact');
 
         while (true) {
             const { done, value } = await reader.read();
@@ -888,7 +888,7 @@ window.vortexStudio = (() => {
 
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
-            buffer = lines.pop() || ''; // Manter a Ãºltima linha incompleta
+            buffer = lines.pop() || ''; // Manter a última linha incompleta
 
             for (const line of lines) {
                 if (!line.startsWith('data: ')) continue;
@@ -898,7 +898,7 @@ window.vortexStudio = (() => {
 
                     switch (event.type) {
                         case 'start':
-                            addMessage('system', `ðŸŒ€ Streaming via **${event.model}**...`);
+                            addMessage('system', `🌀 Streaming via **${event.model}**...`);
                             break;
 
                         case 'delta':
@@ -908,21 +908,21 @@ window.vortexStudio = (() => {
                                 codeStarted = true;
                             }
                             if (codeStarted) {
-                                // Extrair o conteÃºdo parcial do bloco <file>
+                                // Extrair o conteúdo parcial do bloco <file>
                                 const partialMatch = fullStreamText.match(/<file[^>]*>([\s\S]*?)(?:<\/file>|$)/);
                                 if (partialMatch) {
                                     let codeToStream = partialMatch[1].trimStart();
-                                    // [3.2] Se estivermos em modo de continuaÃ§Ã£o, emendamos visualmente
+                                    // [3.2] Se estivermos em modo de continuação, emendamos visualmente
                                     if (state.isContinuing) {
                                         const currentPosLocal = state.editor.getModel().getLineCount();
-                                        // Apenas mostramos no editor o que estÃ¡ chegando novo + o que jÃ¡ tÃ­nhamos
+                                        // Apenas mostramos no editor o que está chegando novo + o que já tínhamos
                                         setEditorContent(state.preContinuationCode + sanitizeAIContent(codeToStream), 'typescriptreact');
                                     } else {
                                         setEditorContent(sanitizeAIContent(codeToStream), 'typescriptreact');
                                     }
                                 }
                             } else {
-                                // Ainda nÃ£o chegou no bloco <file>, mostrar texto bruto (limpo)
+                                // Ainda não chegou no bloco <file>, mostrar texto bruto (limpo)
                                 setEditorContent(sanitizeAIContent(fullStreamText), 'typescriptreact');
                             }
                             break;
@@ -930,16 +930,16 @@ window.vortexStudio = (() => {
                         case 'complete':
                             state.isTruncated = event.isTruncated || false;
                             
-                            // Metadados finais com cÃ³digo limpo
+                            // Metadados finais com código limpo
                             if (event.code) {
                                 const audit = auditCode(event.code);
                                 const oldCode = getEditorContent();
 
-                                // [PHASE 4.1] Show Diff Review se havia cÃ³digo anterior
-                                const isDefaultCode = oldCode.startsWith('// ðŸŒ€');
+                                // [PHASE 4.1] Show Diff Review se havia código anterior
+                                const isDefaultCode = oldCode.startsWith('// 🌀');
                                 const cleanNewCode = sanitizeAIContent(event.code);
                                 
-                                // [3.2] CÃ¡lculo do CÃ³digo Final (Emendado ou Novo)
+                                // [3.2] Cálculo do Código Final (Emendado ou Novo)
                                 const finalCleanCode = state.isContinuing ? state.preContinuationCode + cleanNewCode : cleanNewCode;
                                 const finalRawCode = state.isContinuing ? state.preContinuationCode + event.code : event.code;
 
@@ -962,7 +962,7 @@ window.vortexStudio = (() => {
                                 setCachedGeneration(payload.prompt, finalRawCode);
 
                                 if (!audit.passes && !state.isTruncated) {
-                                    addMessage('system', 'âš ï¸ CÃ³digo gerado mas possui falhas de conformidade.');
+                                    addMessage('system', '⚠️ Código gerado mas possui falhas de conformidade.');
                                 }
                             }
                             if (event.explanation) {
@@ -979,19 +979,19 @@ window.vortexStudio = (() => {
                                 state.isTruncated = true;
                                 if (state.continuationCount < state.MAX_CONTINUATIONS) {
                                     state.continuationCount++;
-                                    addMessage('system', `ðŸ”„ **RecuperaÃ§Ã£o AutomÃ¡tica (${state.continuationCount}/${state.MAX_CONTINUATIONS})**...\nO cÃ³digo anterior foi truncado. VÃ³rtex estÃ¡ sincronizando os fragmentos.`);
+                                    addMessage('system', `🔄 **Recuperação Automática (${state.continuationCount}/${state.MAX_CONTINUATIONS})**...\nO código anterior foi truncado. Vórtex está sincronizando os fragmentos.`);
                                     continueGeneration();
                                 } else {
-                                    addMessage('system', `âš ï¸ **Limite de Continuidade Atingido.**\nO cÃ³digo permanece instÃ¡vel apÃ³s ${state.MAX_CONTINUATIONS} tentativas. Por favor, revise o prompt ou finalize manualmente.`);
+                                    addMessage('system', `⚠️ **Limite de Continuidade Atingido.**\nO código permanece instável após ${state.MAX_CONTINUATIONS} tentativas. Por favor, revise o prompt ou finalize manualmente.`);
                                     notifyTruncated();
                                 }
                             } else {
                                 state.continuationCount = 0; // Sucesso absoluto
-                                // [FIX] Se 'complete' nÃ£o veio com event.code, forÃ§ar preview do conteÃºdo do editor
+                                // [FIX] Se 'complete' não veio com event.code, forçar preview do conteúdo do editor
                                 const editorCode = getEditorContent();
-                                if (editorCode && editorCode.trim().length > 20 && !editorCode.startsWith('// ðŸŒ€')) {
+                                if (editorCode && editorCode.trim().length > 20 && !editorCode.startsWith('// 🌀')) {
                                     updatePreview(sanitizeAIContent(editorCode));
-                                    addAuditLog('info', 'âœ… Preview atualizado automaticamente via evento done.');
+                                    addAuditLog('info', '✅ Preview atualizado automaticamente via evento done.');
                                 }
                             }
                             state.isContinuing = false; // Reset ao finalizar
@@ -1004,19 +1004,19 @@ window.vortexStudio = (() => {
             }
         }
 
-        // Se nÃ£o recebemos um evento 'complete', tentar parsear do texto bruto
+        // Se não recebemos um evento 'complete', tentar parsear do texto bruto
         if (!fullStreamText.includes('</file>')) {
             const fallbackCode = sanitizeAIContent(fullStreamText);
             setEditorContent(fallbackCode, 'typescriptreact');
-            addMessage('ai', 'âœ… CÃ³digo gerado via streaming.');
-            // [FIX] TambÃ©m atualizar o preview com o cÃ³digo bruto
+            addMessage('ai', '✅ Código gerado via streaming.');
+            // [FIX] Também atualizar o preview com o código bruto
             if (fallbackCode.trim().length > 20) {
                 updatePreview(fallbackCode);
             }
         }
     }
 
-    // Fallback sÃ­ncrono (mÃ©todo original)
+    // Fallback síncrono (método original)
     async function sendPromptSync(payload) {
         const response = await fetch('/api/vortex/generate', {
             method: 'POST',
@@ -1045,14 +1045,14 @@ window.vortexStudio = (() => {
             }
 
             if (!audit.passes) {
-                addMessage('system', 'âš ï¸ CÃ³digo gerado mas possui falhas de conformidade.');
+                addMessage('system', '⚠️ Código gerado mas possui falhas de conformidade.');
             }
         }
 
         if (data.explanation) {
             addMessage('ai', data.explanation);
         } else {
-            addMessage('ai', 'âœ… CÃ³digo gerado com sucesso.');
+            addMessage('ai', '✅ Código gerado com sucesso.');
         }
     }
 
@@ -1265,7 +1265,7 @@ window.vortexStudio = (() => {
             ? `${hubLabel} â€º ${state.metadata.spokeTitle}`
             : (hubLabel || 'Sem Silo');
         const menuLabel = menu ? (menu.name || menu.label || menu.title || state.metadata.menuId) : 'Sem Menu';
-        const syncLabel = state.metadata.syncStatus ? ` Â· ${state.metadata.syncStatus.replace('nao_sincronizado', 'nÃ£o sincronizado')}` : '';
+        const syncLabel = state.metadata.syncStatus ? ` Â· ${state.metadata.syncStatus.replace('nao_sincronizado', 'não sincronizado')}` : '';
         status.innerHTML = `<strong>${siloLabel}</strong><span>${menuLabel}${syncLabel}</span>`;
     }
 
@@ -1561,10 +1561,10 @@ window.vortexStudio = (() => {
 
     function buildAbidosContext() {
         const rules = [];
-        if (state.abidosRules.singleH1) rules.push('Apenas UM <h1> por pÃ¡gina. Use hierarquia semÃ¢ntica (h2, h3).');
-        if (state.abidosRules.altTags) rules.push('Todas as <img> DEVEM ter alt descritivo orientado a SEO local (UberlÃ¢ndia/Minas Gerais/Brasil).');
-        if (state.abidosRules.cfpTerms) rules.push('PROIBIDO usar: "cura", "garantido", "melhor", "Ãºnico". Siga as diretrizes do CFP.');
-        if (state.abidosRules.whatsappCTA) rules.push('Incluir botÃ£o flutuante de WhatsApp com link direto.');
+        if (state.abidosRules.singleH1) rules.push('Apenas UM <h1> por página. Use hierarquia semântica (h2, h3).');
+        if (state.abidosRules.altTags) rules.push('Todas as <img> DEVEM ter alt descritivo orientado a SEO local (Uberlândia/Minas Gerais/Brasil).');
+        if (state.abidosRules.cfpTerms) rules.push('PROIBIDO usar: "cura", "garantido", "melhor", "único". Siga as diretrizes do CFP.');
+        if (state.abidosRules.whatsappCTA) rules.push('Incluir botão flutuante de WhatsApp com link direto.');
         const templateContext = buildTemplateContext();
         const voiceProfileContext = buildVoiceProfileContext();
         return [rules.join('\n'), templateContext, voiceProfileContext].filter(Boolean).join('\n\n');
@@ -1584,30 +1584,30 @@ window.vortexStudio = (() => {
         const h1Count = (code.match(/<h1/gi) || []).length;
         if (h1Count > 1 && state.abidosRules.singleH1) {
             results.passes = false;
-            results.errors.push(`ðŸš« SEO CRITICAL: MÃºltiplas tags <h1> detectadas (${h1Count}). O limite Abidos Ã© 1.`);
+            results.errors.push(`ðŸš« SEO CRITICAL: Múltiplas tags <h1> detectadas (${h1Count}). O limite Abidos é 1.`);
         }
 
         // 2. Check for Alt Tags
         if (state.abidosRules.altTags) {
             const hasImgWithoutAlt = /<img(?![^>]*\balt\b)[^>]*>/gi.test(code);
             if (hasImgWithoutAlt) {
-                results.warnings.push('âš ï¸ SEO WARNING: Imagem detectada sem tag "alt". Isso penaliza o trÃ¡fego orgÃ¢nico.');
+                results.warnings.push('⚠️ SEO WARNING: Imagem detectada sem tag "alt". Isso penaliza o tráfego orgânico.');
             }
         }
 
         // [PHASE 2.6] Check for CFP Forbidden Terms (Word Boundaries)
         if (state.abidosRules.cfpTerms) {
             const forbidden = [
-                { term: 'cura', regex: /\bcura\b/gi, except: ['curadoria', 'procuradoria', 'curaÃ§ao'] },
+                { term: 'cura', regex: /\bcura\b/gi, except: ['curadoria', 'procuradoria', 'curaçao'] },
                 { term: 'curar', regex: /\bcurar\b/gi },
                 { term: 'garantido', regex: /\bgarantido\b/gi },
                 { term: 'garantia de resultado', regex: /\bgarantia de resultado/gi },
                 { term: 'melhor profissional', regex: /\bmelhor profissional\b/gi },
-                { term: 'o Ãºnico', regex: /\bo Ãºnico\b/gi },
-                { term: 'soluÃ§Ã£o definitiva', regex: /\bsoluÃ§Ã£o definitiva\b/gi },
+                { term: 'o único', regex: /\bo único\b/gi },
+                { term: 'solução definitiva', regex: /\bsolução definitiva\b/gi },
                 { term: 'milagroso', regex: /\bmilagros[oa]\b/gi },
                 { term: 'comprovado cientificamente', regex: /\bcomprovado cientificamente\b/gi },
-                { term: 'tratamento infalÃ­vel', regex: /\btratamento infalÃ­vel\b/gi }
+                { term: 'tratamento infalível', regex: /\btratamento infalível\b/gi }
             ];
             forbidden.forEach(({ term, regex, except }) => {
                 const matches = code.match(regex);
@@ -1629,7 +1629,7 @@ window.vortexStudio = (() => {
         // Update UI + Bottom Drawer Audit Log
         updateAuditUI(results);
         if (results.passes) {
-            addAuditLog('success', `âœ… Auditoria aprovada. ${results.warnings.length} avisos.`);
+            addAuditLog('success', `✅ Auditoria aprovada. ${results.warnings.length} avisos.`);
         } else {
             addAuditLog('error', `ðŸ”´ Auditoria REPROVADA: ${results.errors.length} erros.`);
             results.errors.forEach(e => addAuditLog('error', `  â†’ ${e}`));
@@ -1652,7 +1652,7 @@ window.vortexStudio = (() => {
                 timestamp: new Date().toISOString()
             });
             state.snapshotId++;
-            addAuditLog('info', `ðŸ“¸ Snapshot #${state.snapshotId} salvo (${state.currentFile.split('/').pop()})`);
+            addAuditLog('info', `📂¸ Snapshot #${state.snapshotId} salvo (${state.currentFile.split('/').pop()})`);
             const allSnapshots = await state.db.snapshots.orderBy('timestamp').toArray();
             if (allSnapshots.length > 20) {
                 const overflow = allSnapshots.slice(0, allSnapshots.length - 20);
@@ -1702,8 +1702,8 @@ window.vortexStudio = (() => {
     }
 
     // =========================================================================
-    // [PHASE 2.5] SEMANTIC AUDIT â€” REMOVED (VÃ³rtex 3.1 Purge)
-    // A auditoria semÃ¢ntica foi removida para eliminar overhead de tokens.
+    // [PHASE 2.5] SEMANTIC AUDIT — REMOVED (Vórtex 3.1 Purge)
+    // A auditoria semântica foi removida para eliminar overhead de tokens.
     // A compliance Abidos (auditCode) permanece ativa como gate de commit.
     // =========================================================================
 
@@ -1715,7 +1715,7 @@ window.vortexStudio = (() => {
             errorDiv.style.background = 'rgba(239, 68, 68, 0.1)';
             errorDiv.style.borderColor = 'rgba(239, 68, 68, 0.3)';
             errorDiv.innerHTML = `
-                <div style="color: #ef4444; font-weight: 800; margin-bottom: 8px;">ðŸ›¡ï¸ GUARDIÃƒO BLOQUEOU A GERAÃ‡ÃƒO</div>
+                <div style="color: #ef4444; font-weight: 800; margin-bottom: 8px;">ðŸ›¡ï¸ GUARDIÃƒO BLOQUEOU A GERAÇÃƒO</div>
                 <div style="font-size: 11px; line-height: 1.5;">${results.errors.join('<br>')}</div>
                 <button class="vortex-btn-repair" onclick="vortexStudio.repairCode()">AI AUTO-REPAIR</button>
             `;
@@ -1745,12 +1745,12 @@ window.vortexStudio = (() => {
     }
 
     // =========================================================================
-    // VÃ“RTEX REACT COMPILER (Zero-Token Preview Strategy)
+    // VÓRTEX REACT COMPILER (Zero-Token Preview Strategy)
     // =========================================================================
     function isReactCode(code) {
-        // [VÃ“RTEX 3.1] Scanner SintÃ¡tico EmpÃ­rico (AST Trial-and-Error)
-        // Cria a Ã¡rvore AST do DOM via engine. Se for cÃ³digo React "Nu", a engine 
-        // vazarÃ¡ as declaraÃ§Ãµes sintÃ¡ticas de JS (imports, functions) para os nodos de texto cru.
+        // [VÓRTEX 3.1] Scanner Sintático Empírico (AST Trial-and-Error)
+        // Cria a árvore AST do DOM via engine. Se for código React "Nu", a engine 
+        // vazará as declarações sintáticas de JS (imports, functions) para os nodos de texto cru.
         try {
             // Fail-fast para Documentos HTML perfeitos
             if (/^\s*(<!DOCTYPE|<html|<body|<head)/i.test(code)) {
@@ -1775,26 +1775,26 @@ window.vortexStudio = (() => {
                         console.warn('[VORTEX] React-like code failed Babel parser check:', parseErr.message);
                     }
                 }
-                return true; // Engine capturou anomalias lÃ³gicas no fluxo estÃ¡tico = Ã‰ React JSX
+                return true; // Engine capturou anomalias lógicas no fluxo estático = Ã‰ React JSX
             }
 
-            // HeurÃ­stica secundÃ¡ria de propriedades JSX vs HTML
+            // Heurística secundária de propriedades JSX vs HTML
             if (code.includes('className=') || code.includes('onClick={') || /<[A-Z][A-Za-z0-9]*\b/.test(code)) {
                 return true;
             }
 
-            return false; // HTML estÃ¡tico validado nativamente
+            return false; // HTML estático validado nativamente
         } catch (e) {
             // Caso syntax falhe nativamente catastroficamente:
-            // Atua em HTML EstÃ¡tico de forma determinÃ­stica (Graceful Degradation)
+            // Atua em HTML Estático de forma determinística (Graceful Degradation)
             return false;
         }
     }
 
     // =========================================================================
-    // [VÃ“RTEX 3.1] NAKED COMPONENT STRIPPER
-    // Remove imports do cÃ³digo para injeÃ§Ã£o no Preview Shell isolado.
-    // O Shell jÃ¡ possui React, Framer Motion, Lucide e Mocks no escopo global.
+    // [VÓRTEX 3.1] NAKED COMPONENT STRIPPER
+    // Remove imports do código para injeção no Preview Shell isolado.
+    // O Shell já possui React, Framer Motion, Lucide e Mocks no escopo global.
     // =========================================================================
     function buildPreviewImportPrelude(code) {
         const bindings = [];
@@ -1818,19 +1818,19 @@ window.vortexStudio = (() => {
 
     function stripForPreview(code) {
         let stripped = code;
-        // [Etapa 3.3] MinificaÃ§Ã£o Expressa: Remover comentÃ¡rios da IA (OtimizaÃ§Ã£o de Payload)
-        // 1. Remover comentÃ¡rios multilinhas /* ... */
+        // [Etapa 3.3] Minificação Expressa: Remover comentários da IA (Otimização de Payload)
+        // 1. Remover comentários multilinhas /* ... */
         stripped = stripped.replace(/\/\*[\s\S]*?\*\//g, '');
-        // 2. Remover comentÃ¡rios de linha Ãºnica // (Exceto em URLs)
+        // 2. Remover comentários de linha única // (Exceto em URLs)
         stripped = stripped.replace(/(^|[^\:])\/\/.*$/gm, '$1');
 
-        // Remove todos os imports (o Shell jÃ¡ tem tudo no escopo global)
+        // Remove todos os imports (o Shell já tem tudo no escopo global)
         const importPrelude = buildPreviewImportPrelude(stripped);
         stripped = stripped.replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"];?\s*\n?/g, '');
         stripped = stripped.replace(/import\s+['"][^'"]+['"];?\s*\n?/g, '');
         // Remove 'use client' directive
         stripped = stripped.replace(/['"]use client['"];?\s*\n?/g, '');
-        // Remove export default â€” o Shell procura por Component ou App
+        // Remove export default — o Shell procura por Component ou App
         stripped = stripped.replace(/export\s+default\s+function\s+/, 'function ');
         stripped = stripped.replace(/export\s+default\s+/, '');
         
@@ -1851,9 +1851,9 @@ window.vortexStudio = (() => {
     }
 
     // =========================================================================
-    // [VÃ“RTEX 3.1] PREVIEW â€” Shell Isolado via postMessage
-    // React: Usa preview-shell.html com injeÃ§Ã£o via postMessage
-    // HTML:  Fallback para srcdoc (conteÃºdo estÃ¡tico)
+    // [VÓRTEX 3.1] PREVIEW — Shell Isolado via postMessage
+    // React: Usa preview-shell.html com injeção via postMessage
+    // HTML:  Fallback para srcdoc (conteúdo estático)
     // =========================================================================
     let shellReady = false;
     let pendingCode = null;
@@ -1864,41 +1864,41 @@ window.vortexStudio = (() => {
             if (!frame) return;
             state.lastPreviewCode = htmlContent || '';
 
-            // SanitizaÃ§Ã£o Anti-Hallucination
+            // Sanitização Anti-Hallucination
             let processedHtml = htmlContent;
             processedHtml = processedHtml.replace(/src=["'](?:%22|\\"")+(https:\/\/unpkg\.com\/lucide[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
             processedHtml = processedHtml.replace(/src=["'](?:%22|\\"")+(https:\/\/cdn\.tailwindcss\.com[^"']?.*?)(?:%22|\\")+["']/g, 'src="$1"');
 
             if (isReactCode(processedHtml)) {
                 // ============================================================
-                // [VÃ“RTEX 3.1] React â†’ Preview Shell + postMessage
+                // [VÓRTEX 3.1] React â†’ Preview Shell + postMessage
                 // ============================================================
                 const strippedCode = stripForPreview(processedHtml);
                 const componentName = getComponentName(processedHtml);
                 const componentAlias = (componentName === 'App' || componentName === 'Component') ? '' : `\nconst App = ${componentName};`;
 
-                // Adiciona a variÃ¡vel Component para o Shell encontrar
+                // Adiciona a variável Component para o Shell encontrar
                 const injectableCode = strippedCode + componentAlias;
 
-                // Carrega o shell se ainda nÃ£o estiver ativo
+                // Carrega o shell se ainda não estiver ativo
                 const currentSrc = frame.getAttribute('src');
                 if (!currentSrc || !currentSrc.includes('preview-shell.html')) {
                     shellReady = false;
                     pendingCode = injectableCode;
                     frame.src = '/preview-shell.html';
                 } else if (shellReady) {
-                    // Shell jÃ¡ carregado â€” injetar diretamente
+                    // Shell já carregado — injetar diretamente
                     frame.contentWindow.postMessage({
                         type: 'vortex-inject-component',
                         code: injectableCode
                     }, '*');
                 } else {
-                    // Shell carregando â€” guardar cÃ³digo pendente
+                    // Shell carregando — guardar código pendente
                     pendingCode = injectableCode;
                 }
             } else {
                 // ============================================================
-                // HTML EstÃ¡tico â€” Fallback via srcdoc (sem React)
+                // HTML Estático — Fallback via srcdoc (sem React)
                 // ============================================================
                 const telemetryScript = `
                     <script type="module">
@@ -1954,7 +1954,7 @@ window.vortexStudio = (() => {
                 }, 120);
             }
         } catch (err) {
-            console.error('ðŸŒ€ [VORTEX] Fallback Triggered via Catch:', err);
+            console.error('🌀 [VORTEX] Fallback Triggered via Catch:', err);
             renderFallbackPanel(err.message);
         }
     }
@@ -2000,10 +2000,10 @@ function renderFallbackPanel(errorMsg) {
         </head>
         <body>
             <div class="glass">
-                <div class="icon">âš ï¸</div>
-                <h2 class="text-xl font-bold mb-2">Erro de RenderizaÃ§Ã£o</h2>
+                <div class="icon">⚠️</div>
+                <h2 class="text-xl font-bold mb-2">Erro de Renderização</h2>
                 <p class="text-sm text-gray-400 mb-4">
-                    O VÃ³rtex detectou uma falha sintÃ¡tica ou de execuÃ§Ã£o que impediu a visualizaÃ§Ã£o do componente.
+                    O Vórtex detectou uma falha sintática ou de execução que impediu a visualização do componente.
                 </p>
                 <div class="bg-black/50 p-3 rounded text-xs font-mono text-red-400 mb-6 break-words">
                     ${errorMsg}
@@ -2020,15 +2020,15 @@ function renderFallbackPanel(errorMsg) {
     frame.srcdoc = fallbackHtml;
 }
 
-    // [VÃ“RTEX 3.1] Listener para comunicaÃ§Ã£o host â†” iframe
+    // [VÓRTEX 3.1] Listener para comunicação host â†” iframe
     window.addEventListener('message', (event) => {
         if (!event.data || !event.data.type) return;
 
         switch (event.data.type) {
-            // Shell pronto â€” injetar cÃ³digo pendente
+            // Shell pronto — injetar código pendente
             case 'vortex-shell-ready':
                 shellReady = true;
-                console.log('ðŸŒ€ [VÃ“RTEX 3.1] Preview Shell carregado com sucesso.');
+                console.log('🌀 [VÓRTEX 3.1] Preview Shell carregado com sucesso.');
                 if (pendingCode) {
                     const frame = document.getElementById('vortex-preview-frame');
                     if (frame && frame.contentWindow) {
@@ -2041,9 +2041,9 @@ function renderFallbackPanel(errorMsg) {
                 }
                 break;
 
-            // RenderizaÃ§Ã£o bem-sucedida
+            // Renderização bem-sucedida
             case 'vortex-render-success':
-                addAuditLog('success', 'âœ… Preview renderizado com sucesso.');
+                addAuditLog('success', '✅ Preview renderizado com sucesso.');
                 setTimeout(() => {
                     installPreviewInteractionTools();
                     installV6PreviewFieldTools();
@@ -2051,9 +2051,9 @@ function renderFallbackPanel(errorMsg) {
                 }, 80);
                 break;
 
-            // Erro de renderizaÃ§Ã£o no shell
+            // Erro de renderização no shell
             case 'vortex-render-error':
-                console.error('[VÃ“RTEX 3.1] Render Error:', event.data.message);
+                console.error('[VÓRTEX 3.1] Render Error:', event.data.message);
                 addAuditLog('error', `âŒ Preview Error: ${event.data.message}`);
                 renderFallbackPanel(event.data.message);
                 break;
@@ -2081,8 +2081,8 @@ function renderFallbackPanel(errorMsg) {
     // =========================================================================
     function refreshPreview() {
         const code = getEditorContent();
-        if (!code || code.trim().length < 10 || code.startsWith('// ðŸŒ€')) {
-            addMessage('system', 'âš ï¸ Editor vazio ou sem cÃ³digo renderizÃ¡vel. Gere ou cole cÃ³digo antes de atualizar.');
+        if (!code || code.trim().length < 10 || code.startsWith('// 🌀')) {
+            addMessage('system', '⚠️ Editor vazio ou sem código renderizável. Gere ou cole código antes de atualizar.');
             return;
         }
 
@@ -2093,7 +2093,7 @@ function renderFallbackPanel(errorMsg) {
             setTimeout(() => btn.classList.remove('spinning'), 800);
         }
 
-        // [FIX] ForÃ§ar reset do shell para garantir que o preview-shell.html seja carregado
+        // [FIX] Forçar reset do shell para garantir que o preview-shell.html seja carregado
         const frame = document.getElementById('vortex-preview-frame');
         if (frame) {
             shellReady = false;
@@ -2103,7 +2103,7 @@ function renderFallbackPanel(errorMsg) {
         // Sanitize and render
         const cleanCode = sanitizeAIContent(code);
         updatePreview(cleanCode);
-        addAuditLog('info', 'ðŸ”„ Preview atualizado manualmente a partir do editor.');
+        addAuditLog('info', '🔄 Preview atualizado manualmente a partir do editor.');
     }
 
     function setPreviewDevice(device) {
@@ -2130,11 +2130,11 @@ function renderFallbackPanel(errorMsg) {
         const ext = filename.split('.').pop().toLowerCase();
         const icons = {
             tsx: 'âš›ï¸', jsx: 'âš›ï¸', ts: 'ðŸ”·', js: 'ðŸŸ¡',
-            css: 'ðŸŽ¨', scss: 'ðŸŽ¨', html: 'ðŸŒ', json: 'ðŸ“‹',
-            md: 'ðŸ“', svg: 'ðŸ–¼ï¸', png: 'ðŸ–¼ï¸', jpg: 'ðŸ–¼ï¸',
-            env: 'ðŸ”’', gitignore: 'ðŸš«', txt: 'ðŸ“„'
+            css: 'ðŸŽ¨', scss: 'ðŸŽ¨', html: 'ðŸŒ', json: '📂‹',
+            md: '📂', svg: 'ðŸ–¼ï¸', png: 'ðŸ–¼ï¸', jpg: 'ðŸ–¼ï¸',
+            env: 'ðŸ”’', gitignore: 'ðŸš«', txt: '📂„'
         };
-        return icons[ext] || 'ðŸ“„';
+        return icons[ext] || '📂„';
     }
 
     function getLanguageFromExt(filename) {
@@ -2155,7 +2155,7 @@ function renderFallbackPanel(errorMsg) {
         if (files.length === 0) {
             container.innerHTML = `
                 <div class="vortex-tree-empty">
-                    <span>ðŸ“‚</span>
+                    <span>📂‚</span>
                     <small>Nenhum arquivo no VFS.<br>Envie um prompt para gerar.</small>
                 </div>`;
             return;
@@ -2201,7 +2201,7 @@ function renderFallbackPanel(errorMsg) {
                     html += `<div class="vortex-tree-dir" style="padding-left:${pad + 4}px" 
                                   onclick="this.classList.toggle('collapsed'); this.nextElementSibling.classList.toggle('hidden')">
                                 <span class="vortex-tree-arrow">â–¼</span>
-                                <span class="vortex-tree-icon">ðŸ“</span>
+                                <span class="vortex-tree-icon">📂</span>
                                 <span class="vortex-tree-name">${name}</span>
                             </div>`;
                     html += `<div class="vortex-tree-children">${renderNode(value, depth + 1)}</div>`;
@@ -2299,13 +2299,13 @@ function renderFallbackPanel(errorMsg) {
             });
         }
 
-        // [VÃ³rtex 3.1] Preview parser removido â€” preview agora Ã© via Shell isolado.
+        // [Vórtex 3.1] Preview parser removido — preview agora é via Shell isolado.
         const explanationMatch = text.match(/<explanation>([\s\S]*?)<\/explanation>/);
 
         return {
             files,
-            preview: '', // [VÃ³rtex 3.1] Preview via Shell â€” nÃ£o extrair do response da IA
-            explanation: explanationMatch ? explanationMatch[1].trim() : 'CÃ³digo gerado.'
+            preview: '', // [Vórtex 3.1] Preview via Shell — não extrair do response da IA
+            explanation: explanationMatch ? explanationMatch[1].trim() : 'Código gerado.'
         };
     }
 
@@ -2349,7 +2349,7 @@ function renderFallbackPanel(errorMsg) {
         }
         await renderFileTree();
 
-        addMessage('ai', `${parsed.explanation}\n\nðŸ“¦ **${parsed.files.length} arquivo(s) gerado(s):** ${parsed.files.map(f => '`' + f.path.split('/').pop() + '`').join(', ')}`);
+        addMessage('ai', `${parsed.explanation}\n\n📂¦ **${parsed.files.length} arquivo(s) gerado(s):** ${parsed.files.map(f => '`' + f.path.split('/').pop() + '`').join(', ')}`);
     }
 
     // =========================================================================
@@ -2518,7 +2518,7 @@ function renderFallbackPanel(errorMsg) {
                 <div class="vortex-toolbar-left">
                     <div class="vortex-brand">
                         <div class="brand-icon"><i data-lucide="tornado"></i></div>
-                        VÃ³rtex <span>AI Studio</span>
+                        Vórtex <span>AI Studio</span>
                     </div>
                     <div class="vortex-status-badge online">
                         <div class="vortex-status-dot"></div>
@@ -2528,7 +2528,7 @@ function renderFallbackPanel(errorMsg) {
                 <div class="vortex-toolbar-center">
                     <select id="vortex-model-select" class="vortex-model-select">
                         <option value="gemini-2.5-flash">âš¡ GEMINI 2.5 FLASH</option>
-                        <option value="gemini-2.5-pro">ðŸ§  GEMINI 2.5 PRO</option>
+                        <option value="gemini-2.5-pro">🧠 GEMINI 2.5 PRO</option>
                         <option value="gemini-2.5-flash-lite">ðŸ’¡ FLASH LITE</option>
                     </select>
                     <div class="vortex-mode-switch" role="tablist" aria-label="Modo de operacao">
@@ -2549,7 +2549,7 @@ function renderFallbackPanel(errorMsg) {
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.saveToVFS()">
                         <i data-lucide="save"></i> SALVAR
                     </button>
-                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.downloadCode()" title="Baixar CÃ³digo Next.js (Hidratado)">
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.downloadCode()" title="Baixar Código Next.js (Hidratado)">
                         <i data-lucide="code-2"></i>
                     </button>
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.saveAsDraft(true)" title="Salvar rascunho Vortex">
@@ -2558,7 +2558,7 @@ function renderFallbackPanel(errorMsg) {
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.openEditorialModal()" title="Gestão Editorial — Rascunhos, Revisões, Publicados">
                         <i data-lucide="layers"></i> Gerenciar
                     </button>
-                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.exportHTML()" title="Exportar HTML EstÃ¡tico (Preview)">
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.exportHTML()" title="Exportar HTML Estático (Preview)">
                         <i data-lucide="download"></i>
                     </button>
                     <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.generateSEOCluster()" title="Silos SEO">
@@ -2579,7 +2579,7 @@ function renderFallbackPanel(errorMsg) {
                     <button class="vortex-btn vortex-btn-success" onclick="vortexStudio.commitAndPush()">
                         <i data-lucide="git-branch"></i> COMMIT & PUSH
                     </button>
-                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.toggleZenMode()" title="Modo Zen â€” Foco no Editor">
+                    <button class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.toggleZenMode()" title="Modo Zen — Foco no Editor">
                         <i data-lucide="maximize-2"></i>
                     </button>
                     <button class="vortex-btn vortex-btn-secondary" onclick="app.showSection('dashboard')">
@@ -2654,7 +2654,7 @@ function renderFallbackPanel(errorMsg) {
                     </div>
                     <div id="vortex-chat-messages" class="vortex-chat-messages vortex-panel-body">
                         <div class="vortex-msg vortex-msg-system">
-                            ðŸŒ€ VÃ³rtex AI Studio inicializado. Descreva a pÃ¡gina que deseja criar.
+                            🌀 Vórtex AI Studio inicializado. Descreva a página que deseja criar.
                         </div>
                     </div>
                     <div id="vortex-generating" class="vortex-generating" style="display: none;">
@@ -2695,7 +2695,7 @@ function renderFallbackPanel(errorMsg) {
                          ondrop="event.preventDefault(); this.style.background='transparent'; vortexStudio.handleDrop(event);">
                         <div id="vortex-image-preview-container" style="display: none; position: relative; margin-bottom: 12px;">
                            <img id="vortex-image-preview" src="" style="max-height: 80px; border-radius: 6px; border: 1px solid #3c3c3c;">
-                           <button onclick="vortexStudio.removeImage()" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;">Ã—</button>
+                           <button onclick="vortexStudio.removeImage()" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;">×</button>
                         </div>
                         <div class="vortex-chat-input-wrapper">
                             <button title="Anexar Design (Print/Mockup)" onclick="document.getElementById('vortex-file-upload').click()" style="background:none; border:none; color:#a1a1aa; cursor:pointer; padding:8px;">
@@ -2703,7 +2703,7 @@ function renderFallbackPanel(errorMsg) {
                             </button>
                             <input type="file" id="vortex-file-upload" accept="image/*" style="display:none" onchange="vortexStudio.handleImageUpload(event)">
                             
-                            <textarea id="vortex-chat-input" class="vortex-chat-input" placeholder="Descreva a pÃ¡gina ou anexe um print..." rows="1"
+                            <textarea id="vortex-chat-input" class="vortex-chat-input" placeholder="Descreva a página ou anexe um print..." rows="1"
                                 onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();vortexStudio.send();}"></textarea>
                             <button id="vortex-send-btn" class="vortex-chat-send" onclick="vortexStudio.send()">
                                 <i data-lucide="send"></i>
@@ -2721,7 +2721,7 @@ function renderFallbackPanel(errorMsg) {
                         <div id="vortex-file-tabs" class="vortex-file-tabs">
                             <button class="vortex-file-tab active" data-file="page.tsx">
                                 <span class="dot"></span><span class="tab-icon">âš›ï¸</span>page.tsx
-                                <span class="tab-close" onclick="event.stopPropagation(); vortexStudio.closeTab('page.tsx')">Ã—</span>
+                                <span class="tab-close" onclick="event.stopPropagation(); vortexStudio.closeTab('page.tsx')">×</span>
                             </button>
                         </div>
                         <div class="vortex-panel-title" style="color: #6a737d;">
@@ -2778,15 +2778,15 @@ function renderFallbackPanel(errorMsg) {
                         <div id="vortex-snapshot-timeline" class="vortex-snapshot-timeline"></div>
                         <div class="vortex-vital-metric">
                             <span class="vortex-vital-label">LCP</span>
-                            <span class="vortex-vital-value good" id="vortex-lcp">â€”</span>
+                            <span class="vortex-vital-value good" id="vortex-lcp">—</span>
                         </div>
                         <div class="vortex-vital-metric">
                             <span class="vortex-vital-label">CLS</span>
-                            <span class="vortex-vital-value good" id="vortex-cls">â€”</span>
+                            <span class="vortex-vital-value good" id="vortex-cls">—</span>
                         </div>
                         <div class="vortex-vital-metric">
                             <span class="vortex-vital-label">INP</span>
-                            <span class="vortex-vital-value good" id="vortex-inp">â€”</span>
+                            <span class="vortex-vital-value good" id="vortex-inp">—</span>
                         </div>
                     </div>
                 </div>
@@ -2808,7 +2808,7 @@ function renderFallbackPanel(errorMsg) {
                 <div class="vortex-drawer-content">
                     <div id="vortex-drawer-audit" class="vortex-drawer-pane active">
                         <div class="vortex-audit-log" id="vortex-audit-log">
-                            <div class="vortex-audit-entry info">ðŸŒ€ VÃ³rtex Auditoria inicializada. Logs do Abidos aparecerÃ£o aqui.</div>
+                            <div class="vortex-audit-entry info">🌀 Vórtex Auditoria inicializada. Logs do Abidos aparecerão aqui.</div>
                         </div>
                     </div>
                     <div id="vortex-drawer-terminal" class="vortex-drawer-pane">
@@ -2852,7 +2852,7 @@ function renderFallbackPanel(errorMsg) {
 
     function toggleVisualMode(force) {
         const willDisable = typeof force === 'boolean' ? !force : state.visual.enabled;
-        if (willDisable && !window.confirm('Sair do modo Visual V6 e entrar no modo tÃ©cnico (V5)?')) return;
+        if (willDisable && !window.confirm('Sair do modo Visual V6 e entrar no modo técnico (V5)?')) return;
         state.visual.enabled = typeof force === 'boolean' ? force : !state.visual.enabled;
         persistVisualSession();
         applyVisualModeState();
@@ -2919,7 +2919,7 @@ function renderFallbackPanel(errorMsg) {
                     <button onclick="vortexStudio.runVisualPrompt('Otimizar Mobile')">Otimizar Mobile</button>
                 </div>
                 <div class="vortex-v6-input-row">
-                    <textarea id="vortex-v6-input" rows="1" placeholder="Digite direto no preview. Ou use IA para melhorar a intenÃ§Ã£o..." onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();vortexStudio.runVisualPrompt();}"></textarea>
+                    <textarea id="vortex-v6-input" rows="1" placeholder="Digite direto no preview. Ou use IA para melhorar a intenção..." onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();vortexStudio.runVisualPrompt();}"></textarea>
                     <button id="vortex-v6-send" onclick="vortexStudio.runVisualPrompt()" title="Enviar"><i data-lucide="send"></i></button>
                     <button id="vortex-v6-ai-mode" onclick="vortexStudio.toggleVisualAIMode()" title="Alternar mock/IA">Mock</button>
                 </div>
@@ -2929,11 +2929,11 @@ function renderFallbackPanel(errorMsg) {
             <div id="vortex-v6-publish-backdrop" class="vortex-v6-publish-backdrop" hidden></div>
             <div id="vortex-v6-publish-card" class="vortex-v6-publish-card" hidden>
                 <h3>Pronto para publicar?</h3>
-                <p id="vortex-v6-publish-summary">VocÃª melhorou o tÃ­tulo, ajustou a intenÃ§Ã£o e preservou o preview.</p>
+                <p id="vortex-v6-publish-summary">Você melhorou o título, ajustou a intenção e preservou o preview.</p>
                 <div class="vortex-v6-publish-score"><span id="vortex-v6-publish-score-value">81</span>/100</div>
-                <small id="vortex-v6-version-label">Esta versÃ£o serÃ¡ salva como melhoria do Hero</small>
+                <small id="vortex-v6-version-label">Esta versão será salva como melhoria do Hero</small>
                 <div class="vortex-v6-publish-actions">
-                    <button onclick="vortexStudio.publishVisualVersion()">Publicar PÃ¡gina</button>
+                    <button onclick="vortexStudio.publishVisualVersion()">Publicar Página</button>
                     <button onclick="vortexStudio.setVisualLayer('edit')">Voltar e Refinar</button>
                 </div>
             </div>
@@ -3225,11 +3225,11 @@ function renderFallbackPanel(errorMsg) {
         `).join('');
         shelf.innerHTML = `
             <div class="vortex-v6-template-head">
-                <strong>CriaÃ§Ã£o</strong>
+                <strong>Criação</strong>
                 <div>
                     <button class="${brief.generationMode === 'structured' ? 'active' : ''}" onclick="vortexStudio.setGenerationMode('structured')">Estruturado</button>
                     <button class="${brief.generationMode === 'free' ? 'active' : ''}" onclick="vortexStudio.setGenerationMode('free')">Livre Premium</button>
-                    <button class="${brief.generationMode === 'hybrid' ? 'active' : ''}" onclick="vortexStudio.setGenerationMode('hybrid')">HÃ­brido</button>
+                    <button class="${brief.generationMode === 'hybrid' ? 'active' : ''}" onclick="vortexStudio.setGenerationMode('hybrid')">Híbrido</button>
                 </div>
             </div>
             <div class="vortex-v6-template-grid">
@@ -3327,8 +3327,8 @@ function renderFallbackPanel(errorMsg) {
         const modeLabel = {
             structured: 'Estruturado Abidos',
             free: 'Livre Premium',
-            hybrid: 'HÃ­brido'
-        }[brief.generationMode] || 'HÃ­brido';
+            hybrid: 'Híbrido'
+        }[brief.generationMode] || 'Híbrido';
         const sectionsContext = brief.sectionsJson
             ? `\n[ESTRUTURA ABIDOS PRÉ-GERADA — SIGA RIGOROSAMENTE]\n${JSON.stringify(brief.sectionsJson, null, 2).slice(0, 3000)}`
             : '';
@@ -3439,7 +3439,7 @@ function renderFallbackPanel(errorMsg) {
             if (label) label.textContent = state.visual.enabled ? 'Visual V6' : 'Visual V6';
         }
         const ai = document.getElementById('vortex-v6-ai-mode');
-        if (ai) ai.textContent = state.visual.aiMode === 'real' ? 'âœ¦ IA' : 'Mock';
+        if (ai) ai.textContent = state.visual.aiMode === 'real' ? '✦ IA' : 'Mock';
         renderV6Briefing();
         renderV6TemplateShelf();
         renderV6Proposal();
@@ -3667,7 +3667,7 @@ function renderFallbackPanel(errorMsg) {
             <button onclick="window.parent.vortexStudio.manualFieldCommand('h2')">H2</button>
             <button onclick="window.parent.vortexStudio.manualFieldCommand('copy')">Copiar</button>
             <button onclick="window.parent.vortexStudio.undoVisualEdit()">Desfazer</button>
-            <button onclick="window.parent.vortexStudio.focusVisualPromptForField()">âœ¦ IA</button>
+            <button onclick="window.parent.vortexStudio.focusVisualPromptForField()">✦ IA</button>
         `;
         toolbar.innerHTML = [
             `<button data-role="close" onclick="window.parent.vortexStudio.clearManualFieldSelection()">X</button>`,
@@ -4063,23 +4063,23 @@ function renderFallbackPanel(errorMsg) {
         renderV6Widgets();
         panel.innerHTML = `
             <div class="vortex-v6-proposal-head">
-                <strong>${proposal ? 'AlteraÃ§Ãµes propostas' : 'Campo selecionado'}</strong>
+                <strong>${proposal ? 'Alterações propostas' : 'Campo selecionado'}</strong>
                 <span>${escapeHtml(selected)}</span>
             </div>
-            ${proposal ? `<p>${escapeHtml(proposal.explanation || 'ConteÃºdo atualizado no preview.')}</p>` : '<p>Clique e digite direto no preview. Ou use IA pelo prompt.</p>'}
+            ${proposal ? `<p>${escapeHtml(proposal.explanation || 'Conteúdo atualizado no preview.')}</p>` : '<p>Clique e digite direto no preview. Ou use IA pelo prompt.</p>'}
             <div class="vortex-v6-field-panel">
                 <div class="vortex-v6-char-count ${charState}"><strong>${fieldText.length}</strong><span> caracteres</span></div>
                 <div class="vortex-v6-field-toggle">
                     <button class="${state.visual.manualMode === 'direct' ? 'active' : ''}" onclick="vortexStudio.setManualFieldMode('direct')">Direto</button>
-                    <button class="${state.visual.manualMode === 'ai' ? 'active' : ''}" onclick="vortexStudio.setManualFieldMode('ai')">âœ¦ IA</button>
+                    <button class="${state.visual.manualMode === 'ai' ? 'active' : ''}" onclick="vortexStudio.setManualFieldMode('ai')">✦ IA</button>
                 </div>
                 <div class="vortex-v6-field-actions">
-                    <button onclick="vortexStudio.formatManualField('title')">TÃ­tulo</button>
-                    <button onclick="vortexStudio.formatManualField('upper')">MAIÃšS</button>
-                    <button onclick="vortexStudio.formatManualField('lower')">minÃºs</button>
+                    <button onclick="vortexStudio.formatManualField('title')">Título</button>
+                    <button onclick="vortexStudio.formatManualField('upper')">MAIÚS</button>
+                    <button onclick="vortexStudio.formatManualField('lower')">minús</button>
                 </div>
                 <div class="vortex-v6-field-local-history">
-                    ${visibleFieldHistory.map(item => `<button onclick="vortexStudio.applyTargetedFieldEdit('${safeJsString(state.visual.selectedSection)}', '${safeJsString(state.visual.selectedField)}', '${safeJsString(item.value)}', 'restaurar edicao manual')">${new Date(item.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} Â· ${escapeHtml(String(item.value).slice(0, 34))}</button>`).join('') || '<small>Sem histÃ³rico manual neste campo.</small>'}
+                    ${visibleFieldHistory.map(item => `<button onclick="vortexStudio.applyTargetedFieldEdit('${safeJsString(state.visual.selectedSection)}', '${safeJsString(state.visual.selectedField)}', '${safeJsString(item.value)}', 'restaurar edicao manual')">${new Date(item.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} Â· ${escapeHtml(String(item.value).slice(0, 34))}</button>`).join('') || '<small>Sem histórico manual neste campo.</small>'}
                     ${hiddenFieldHistoryCount ? `<small>Ver mais (${hiddenFieldHistoryCount})</small>` : ''}
                 </div>
             </div>
@@ -4089,10 +4089,10 @@ function renderFallbackPanel(errorMsg) {
                 <button onclick="vortexStudio.toggleVisualCompare()">Comparar</button>
             </div>
             <div class="vortex-v6-history">
-                ${snapshots.map(s => `<button onclick="vortexStudio.restoreVisualSnapshot(${s.id})">${new Date(s.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} ${escapeHtml(`${s.section}.${s.field}`)}</button>`).join('') || '<small>Sem snapshots nesta sessÃ£o.</small>'}
+                ${snapshots.map(s => `<button onclick="vortexStudio.restoreVisualSnapshot(${s.id})">${new Date(s.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} ${escapeHtml(`${s.section}.${s.field}`)}</button>`).join('') || '<small>Sem snapshots nesta sessão.</small>'}
             </div>
             <div class="vortex-v6-versions">
-                <strong>HistÃ³rico</strong>
+                <strong>Histórico</strong>
                 ${visibleVersions.map(v => `
                     <div>
                         <span>${escapeHtml(v.title)}</span>
@@ -4100,7 +4100,7 @@ function renderFallbackPanel(errorMsg) {
                         <button onclick="vortexStudio.compareVisualVersion(${v.id})">Comparar</button>
                         <button onclick="vortexStudio.duplicateVisualVersion(${v.id})">Duplicar</button>
                     </div>
-                `).join('') || '<small>Nenhuma versÃ£o visual ainda.</small>'}
+                `).join('') || '<small>Nenhuma versão visual ainda.</small>'}
                 ${hiddenVersionsCount ? `<small>Ver mais (${hiddenVersionsCount})</small>` : ''}
             </div>
         `;
@@ -4118,12 +4118,12 @@ function renderFallbackPanel(errorMsg) {
                     <button class="${state.visual.manualMode === 'ai' ? 'active' : ''}" onclick="vortexStudio.setManualFieldMode('ai')">IA</button>
                 </div>
                 <div class="vortex-v6-field-actions">
-                    <button onclick="vortexStudio.formatManualField('title')">TÃ­tulo</button>
-                    <button onclick="vortexStudio.formatManualField('upper')">MAIÃšS</button>
-                    <button onclick="vortexStudio.formatManualField('lower')">minÃºs</button>
+                    <button onclick="vortexStudio.formatManualField('title')">Título</button>
+                    <button onclick="vortexStudio.formatManualField('upper')">MAIÚS</button>
+                    <button onclick="vortexStudio.formatManualField('lower')">minús</button>
                 </div>
                 <div class="vortex-v6-field-local-history">
-                    ${fieldHistory.map(item => `<button onclick="vortexStudio.applyTargetedFieldEdit('${state.visual.selectedSection}', '${state.visual.selectedField}', '${String(item.value).replace(/'/g, "\\'")}', 'restaurar edicao manual')">${new Date(item.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} Â· ${String(item.value).slice(0, 34)}</button>`).join('') || '<small>Sem histÃ³rico manual neste campo.</small>'}
+                    ${fieldHistory.map(item => `<button onclick="vortexStudio.applyTargetedFieldEdit('${state.visual.selectedSection}', '${state.visual.selectedField}', '${String(item.value).replace(/'/g, "\\'")}', 'restaurar edicao manual')">${new Date(item.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} Â· ${String(item.value).slice(0, 34)}</button>`).join('') || '<small>Sem histórico manual neste campo.</small>'}
                 </div>
             </div>
             <div class="vortex-v6-proposal-actions">
@@ -4239,7 +4239,7 @@ function renderFallbackPanel(errorMsg) {
             upgradesEl.innerHTML = score.upgrades.map(u => `
                 <div class="vortex-v6-upgrade-row">
                     <div><span>${escapeHtml(u.label)}</span><strong>+${u.delta}</strong></div>
-                    <button onclick="vortexStudio.applyPerformanceUpgrade('${safeJsString(u.label)}', ${Number(u.delta) || 0})">âœ¦ Aplicar</button>
+                    <button onclick="vortexStudio.applyPerformanceUpgrade('${safeJsString(u.label)}', ${Number(u.delta) || 0})">✦ Aplicar</button>
                 </div>
             `).join('');
         }
@@ -4269,9 +4269,9 @@ function renderFallbackPanel(errorMsg) {
         card.hidden = false;
         if (score) score.textContent = state.visual.score?.total || 81;
         if (summary) summary.textContent = state.visual.lastIntent
-            ? `VocÃª aplicou "${state.visual.lastIntent}" e preservou o histÃ³rico de sessÃ£o.`
-            : 'VocÃª revisou a pÃ¡gina, manteve snapshots e preparou uma versÃ£o publicÃ¡vel.';
-        if (version) version.textContent = `Esta versÃ£o serÃ¡ salva como v${state.visual.history.length + 1} - Melhoria do Hero`;
+            ? `Você aplicou "${state.visual.lastIntent}" e preservou o histórico de sessão.`
+            : 'Você revisou a página, manteve snapshots e preparou uma versão publicável.';
+        if (version) version.textContent = `Esta versão será salva como v${state.visual.history.length + 1} - Melhoria do Hero`;
     }
 
     async function publishVisualVersion() {
@@ -5034,14 +5034,14 @@ function renderFallbackPanel(errorMsg) {
         }
         let content = getEditorContent();
 
-        // [VÃ“RTEX 3.1] MaterializaÃ§Ã£o via HidrataÃ§Ã£o (Next.js Ready)
+        // [VÓRTEX 3.1] Materialização via Hidratação (Next.js Ready)
         if (typeof window.hydrate === 'function' && (state.currentFile.endsWith('.tsx') || state.currentFile.endsWith('.js'))) {
             try {
                 const hydrated = window.hydrate(content);
                 if (hydrated && hydrated !== content) {
                     content = hydrated;
-                    setEditorContent(content); // Sincroniza o editor com a versÃ£o hidratada
-                    addAuditLog('info', 'ðŸŒ€ CÃ³digo hidratado para produÃ§Ã£o (Next.js Materialized).');
+                    setEditorContent(content); // Sincroniza o editor com a versão hidratada
+                    addAuditLog('info', '🌀 Código hidratado para produção (Next.js Materialized).');
                 }
             } catch (e) {
                 console.error('âŒ [HYDRATION ERROR]', e);
@@ -5078,21 +5078,21 @@ function renderFallbackPanel(errorMsg) {
 
     async function commitAndPush() {
         const code = getEditorContent();
-        if (!code || code.length < 10) return addMessage('system', 'âš ï¸ CÃ³digo insuficiente para commit.');
+        if (!code || code.length < 10) return addMessage('system', '⚠️ Código insuficiente para commit.');
         
         // [PHASE 2.4] Gate: Bloquear commit se auditoria falhou
         const auditResult = auditCode(code);
         if (!auditResult.passes) {
-            addMessage('system', `ðŸ›¡ï¸ **COMMIT BLOQUEADO** â€” A auditoria Abidos detectou ${auditResult.errors.length} violaÃ§Ã£o(Ãµes).\nCorrija os erros ou use AI Auto-Repair antes de fazer deploy.`);
-            addAuditLog('error', `ðŸš« Commit bloqueado: ${auditResult.errors.length} violaÃ§Ãµes.`);
+            addMessage('system', `ðŸ›¡ï¸ **COMMIT BLOQUEADO** — A auditoria Abidos detectou ${auditResult.errors.length} violação(ões).\nCorrija os erros ou use AI Auto-Repair antes de fazer deploy.`);
+            addAuditLog('error', `ðŸš« Commit bloqueado: ${auditResult.errors.length} violações.`);
             return;
         }
 
-        // [VÃ³rtex 3.1] Auditoria SemÃ¢ntica removida â€” overhead de tokens eliminado.
+        // [Vórtex 3.1] Auditoria Semântica removida — overhead de tokens eliminado.
         // A compliance Abidos (auditCode acima) permanece como gate.
 
-        addMessage('system', 'ðŸš€ Preparando Deploy para Vercel...');
-        addAuditLog('info', 'ðŸš€ Commit iniciado...');
+        addMessage('system', '🚀 Preparando Deploy para Vercel...');
+        addAuditLog('info', '🚀 Commit iniciado...');
         
         // [PHASE 4.2] Mostrar barra de progresso
         showDeployProgress();  
@@ -5108,21 +5108,21 @@ function renderFallbackPanel(errorMsg) {
                 body: JSON.stringify({
                     filename,
                     content: code,
-                    message: `[VÃ³rtex] Auto-Deploy: Update ${filename} with Abidos V5 rules`
+                    message: `[Vórtex] Auto-Deploy: Update ${filename} with Abidos V5 rules`
                 })
             });
 
             const data = await response.json();
             if (data.success) {
                 const shortSha = data.sha ? data.sha.substring(0, 7) : 'N/A';
-                addMessage('ai', `âœ… **DEPLOY CONCLUÃDO!**\n\nA pÃ¡gina foi enviada para o GitHub e a Vercel iniciou o build.\n\nðŸ”— [Ver no GitHub](${data.url || '#'})\nðŸ“¦ Commit: \`${shortSha}\``);
-                addAuditLog('success', `âœ… Deploy: ${filename} â†’ ${shortSha}`);
+                addMessage('ai', `✅ **DEPLOY CONCLUÃDO!**\n\nA página foi enviada para o GitHub e a Vercel iniciou o build.\n\nðŸ”— [Ver no GitHub](${data.url || '#'})\n📂¦ Commit: \`${shortSha}\``);
+                addAuditLog('success', `✅ Deploy: ${filename} â†’ ${shortSha}`);
             } else {
                 throw new Error(data.error || 'Erro desconhecido no commit.');
             }
         } catch (e) {
             console.error('Commit error:', e);
-            addMessage('system', `âš ï¸ Falha no Deploy: ${e.message}`);
+            addMessage('system', `⚠️ Falha no Deploy: ${e.message}`);
             addAuditLog('error', `âŒ Deploy falhou: ${e.message}`);
         }
     }
@@ -5292,11 +5292,11 @@ function renderFallbackPanel(errorMsg) {
     // [PHASE 3.12] BIBLIOTECA DE TEMPLATES
     // =========================================================================
     const TEMPLATES_LIBRARY = [
-        { id: 'landing-clinic', name: 'Landing ClÃ­nica', icon: 'ðŸ¥', description: 'Landing page para profissional de saÃºde com hero, serviÃ§os e CTA WhatsApp.' },
-        { id: 'article-page', name: 'PÃ¡gina de Artigo', icon: 'ðŸ“°', description: 'Estrutura para artigos longos com Ã­ndice lateral e breadcrumbs SEO.' },
-        { id: 'service-page', name: 'PÃ¡gina de ServiÃ§o', icon: 'ðŸ’¼', description: 'PÃ¡gina focada em apresentar um serviÃ§o especÃ­fico com FAQ e schema.' },
-        { id: 'bio-page', name: 'Biografia/Sobre', icon: 'ðŸ‘¤', description: 'PÃ¡gina sobre o profissional com timeline, formaÃ§Ã£o e credenciais.' },
-        { id: 'contact-form', name: 'Contato + FormulÃ¡rio', icon: 'ðŸ“‹', description: 'PÃ¡gina de contato com formulÃ¡rio, mapa e informaÃ§Ãµes de atendimento.' }
+        { id: 'landing-clinic', name: 'Landing Clínica', icon: 'ðŸ¥', description: 'Landing page para profissional de saúde com hero, serviços e CTA WhatsApp.' },
+        { id: 'article-page', name: 'Página de Artigo', icon: '📂°', description: 'Estrutura para artigos longos com índice lateral e breadcrumbs SEO.' },
+        { id: 'service-page', name: 'Página de Serviço', icon: 'ðŸ’¼', description: 'Página focada em apresentar um serviço específico com FAQ e schema.' },
+        { id: 'bio-page', name: 'Biografia/Sobre', icon: 'ðŸ‘¤', description: 'Página sobre o profissional com timeline, formação e credenciais.' },
+        { id: 'contact-form', name: 'Contato + Formulário', icon: '📂‹', description: 'Página de contato com formulário, mapa e informações de atendimento.' }
     ];
 
     function showTemplateLibrary() {
@@ -5309,7 +5309,7 @@ function renderFallbackPanel(errorMsg) {
                 </div>
             </div>
         `).join('');
-        addMessage('ai', `ðŸ“¦ **Biblioteca de Templates**\\n\\nEscolha um template para comeÃ§ar:\\n\\n${html}`);
+        addMessage('ai', `📂¦ **Biblioteca de Templates**\\n\\nEscolha um template para começar:\\n\\n${html}`);
     }
 
     function useTemplate(templateId) {
@@ -5336,9 +5336,9 @@ function renderFallbackPanel(errorMsg) {
         overlay.innerHTML = `
             <div class="vortex-diff-modal">
                 <div class="vortex-diff-header">
-                    <span>ðŸ“ Diff Review: <strong>${filename || 'page.tsx'}</strong></span>
+                    <span>📂 Diff Review: <strong>${filename || 'page.tsx'}</strong></span>
                     <div class="vortex-diff-actions">
-                        <button class="vortex-btn vortex-btn-success" id="vortex-diff-accept">âœ… Aceitar AlteraÃ§Ãµes</button>
+                        <button class="vortex-btn vortex-btn-success" id="vortex-diff-accept">✅ Aceitar Alterações</button>
                         <button class="vortex-btn vortex-btn-secondary" id="vortex-diff-reject">âŒ Rejeitar</button>
                     </div>
                 </div>
@@ -5366,11 +5366,11 @@ function renderFallbackPanel(errorMsg) {
             const cleanCode = sanitizeAIContent(newCode);
             setEditorContent(cleanCode, 'typescriptreact');
             closeDiffReview();
-            addAuditLog('success', 'âœ… AlteraÃ§Ãµes aceitas via Diff Review.');
+            addAuditLog('success', '✅ Alterações aceitas via Diff Review.');
         };
         document.getElementById('vortex-diff-reject').onclick = () => {
             closeDiffReview();
-            addAuditLog('warn', 'âŒ AlteraÃ§Ãµes rejeitadas no Diff Review.');
+            addAuditLog('warn', 'âŒ Alterações rejeitadas no Diff Review.');
         };
     }
 
@@ -5394,7 +5394,7 @@ function renderFallbackPanel(errorMsg) {
             bar.className = 'vortex-deploy-progress';
             bar.innerHTML = `
                 <div class="deploy-progress-fill" id="vortex-deploy-fill"></div>
-                <span class="deploy-progress-text" id="vortex-deploy-text">ðŸš€ Enviando...</span>
+                <span class="deploy-progress-text" id="vortex-deploy-text">🚀 Enviando...</span>
             `;
             const toolbar = document.querySelector('.vortex-toolbar');
             if (toolbar) toolbar.after(bar);
@@ -5409,11 +5409,11 @@ function renderFallbackPanel(errorMsg) {
         if (!fill || !text) return;
 
         const stages = [
-            { pct: 20, msg: 'ðŸ“¦ Preparando arquivos...' },
-            { pct: 45, msg: 'ðŸš€ Enviando para GitHub...' },
-            { pct: 70, msg: 'ðŸ”„ Vercel build iniciado...' },
-            { pct: 90, msg: 'âœ… Quase lÃ¡...' },
-            { pct: 100, msg: 'ðŸŽ‰ Deploy concluÃ­do!' }
+            { pct: 20, msg: '📂¦ Preparando arquivos...' },
+            { pct: 45, msg: '🚀 Enviando para GitHub...' },
+            { pct: 70, msg: '🔄 Vercel build iniciado...' },
+            { pct: 90, msg: '✅ Quase lá...' },
+            { pct: 100, msg: 'ðŸŽ‰ Deploy concluído!' }
         ];
         let i = 0;
         const interval = setInterval(() => {
@@ -5434,20 +5434,20 @@ function renderFallbackPanel(errorMsg) {
     }
 
     // =========================================================================
-    // [PHASE 4.3] CLUSTERIZAÃ‡ÃƒO SEO (silos.json)
+    // [PHASE 4.3] CLUSTERIZAÇÃƒO SEO (silos.json)
     // =========================================================================
     async function generateSEOCluster() {
         try {
             addMessage('system', 'ðŸŒ Carregando estrutura de Silos...');
             const response = await fetch('/api/seo/silos');
             if (!response.ok) {
-                addMessage('system', 'âš ï¸ Arquivo silos.json nÃ£o encontrado. Crie em /data/silos.json');
+                addMessage('system', '⚠️ Arquivo silos.json não encontrado. Crie em /data/silos.json');
                 return;
             }
             const silos = await response.json();
 
             if (!silos.clusters || silos.clusters.length === 0) {
-                addMessage('system', 'âš ï¸ Nenhum cluster definido no silos.json.');
+                addMessage('system', '⚠️ Nenhum cluster definido no silos.json.');
                 return;
             }
 
@@ -5455,10 +5455,10 @@ function renderFallbackPanel(errorMsg) {
                 `â€¢ **${c.hub}** (Hub) â†’ ${c.spokes?.map(s => '`' + s + '`').join(', ') || 'sem spokes'}`
             ).join('\n');
 
-            addMessage('ai', `ðŸŒ **Estrutura de Silos Detectada:**\n\n${clusterList}\n\nDigite o nome do cluster para gerar todas as pÃ¡ginas.`);
+            addMessage('ai', `ðŸŒ **Estrutura de Silos Detectada:**\n\n${clusterList}\n\nDigite o nome do cluster para gerar todas as páginas.`);
             addAuditLog('info', `ðŸŒ ${silos.clusters.length} cluster(s) carregado(s).`);
         } catch(e) {
-            addMessage('system', `âš ï¸ Erro ao carregar silos: ${e.message}`);
+            addMessage('system', `⚠️ Erro ao carregar silos: ${e.message}`);
         }
     }
 
@@ -5536,7 +5536,7 @@ function renderFallbackPanel(errorMsg) {
     function exportHTML() {
         const frame = document.getElementById('vortex-preview-frame');
         if (!frame || !frame.srcdoc) {
-            addMessage('system', 'âš ï¸ Nenhum preview disponÃ­vel para exportar.');
+            addMessage('system', '⚠️ Nenhum preview disponível para exportar.');
             return;
         }
 
@@ -5550,18 +5550,18 @@ function renderFallbackPanel(errorMsg) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        addAuditLog('success', `ðŸ“¥ HTML exportado: ${a.download}`);
-        addMessage('system', `ðŸ“¥ Arquivo **${a.download}** baixado com sucesso.`);
+        addAuditLog('success', `📂¥ HTML exportado: ${a.download}`);
+        addMessage('system', `📂¥ Arquivo **${a.download}** baixado com sucesso.`);
     }
 
     /**
      * downloadCode()
-     * Exporta o cÃ³digo-fonte atual devidamente hidratado (Next.js Component).
+     * Exporta o código-fonte atual devidamente hidratado (Next.js Component).
      */
     function downloadCode() {
         let content = getEditorContent();
         
-        // Garante a hidrataÃ§Ã£o antes do download
+        // Garante a hidratação antes do download
         if (typeof window.hydrate === 'function') {
             content = window.hydrate(content);
         }
@@ -5577,12 +5577,12 @@ function renderFallbackPanel(errorMsg) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        addAuditLog('success', `ðŸ“‚ Fonte exportado: ${filename}`);
-        addMessage('system', `ðŸ“‚ CÃ³digo-fonte **${filename}** baixado com hidrataÃ§Ã£o Next.js.`);
+        addAuditLog('success', `📂‚ Fonte exportado: ${filename}`);
+        addMessage('system', `📂‚ Código-fonte **${filename}** baixado com hidratação Next.js.`);
     }
 
     // =========================================================================
-    // [PHASE 4.8] CACHE LOCAL DE GERAÃ‡Ã•ES
+    // [PHASE 4.8] CACHE LOCAL DE GERAÇÃ•ES
     // =========================================================================
     function hashPrompt(str) {
         let hash = 0;
@@ -5625,15 +5625,15 @@ function renderFallbackPanel(errorMsg) {
                     sourceType: "module",
                     plugins: ["jsx", "typescript"]
                 });
-                console.log('âœ… [VORTEX SYNTAX] AST Validated.');
+                console.log('✅ [VORTEX SYNTAX] AST Validated.');
                 return true; 
             } catch (e) {
-                // Se o erro indicar que o arquivo terminou inesperadamente, Ã© truncado
+                // Se o erro indicar que o arquivo terminou inesperadamente, é truncado
                 if (e.message.includes('Unexpected token') || e.message.includes('Unexpected EOF') || e.message.includes('Unterminated')) {
-                    console.warn('âš ï¸ [VORTEX SYNTAX] AST detected truncation:', e.message);
+                    console.warn('⚠️ [VORTEX SYNTAX] AST detected truncation:', e.message);
                     return false;
                 }
-                // Para outros erros (sintaxe quebrada no meio), tratamos conforme o fallback ou assumimos "fechado" se nÃ£o pudermos decidir
+                // Para outros erros (sintaxe quebrada no meio), tratamos conforme o fallback ou assumimos "fechado" se não pudermos decidir
             }
         }
 
@@ -5690,9 +5690,9 @@ function renderFallbackPanel(errorMsg) {
     }
 
     function notifyTruncated() {
-        const msg = addMessage('system', `âš ï¸ **GeraÃ§Ã£o Truncada** â€” O Gemini atingiu o limite de tokens ou o fluxo SSE foi interrompido.\n\nDeseja que eu continue de onde parei?`);
+        const msg = addMessage('system', `⚠️ **Geração Truncada** — O Gemini atingiu o limite de tokens ou o fluxo SSE foi interrompido.\n\nDeseja que eu continue de onde parei?`);
         
-        // Injetar botÃ£o de aÃ§Ã£o no container de mensagens
+        // Injetar botão de ação no container de mensagens
         setTimeout(() => {
             const container = document.getElementById('vortex-chat-messages');
             if (!container) return;
@@ -5702,7 +5702,7 @@ function renderFallbackPanel(errorMsg) {
                 btnArea.style.marginTop = '12px';
                 btnArea.innerHTML = `
                     <button onclick="vortexStudio.continueGeneration()" class="vortex-btn-primary" style="padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 8px;">
-                        <i data-lucide="play-circle" style="width:14px;"></i> Continuar GeraÃ§Ã£o
+                        <i data-lucide="play-circle" style="width:14px;"></i> Continuar Geração
                     </button>
                 `;
                 lastMsg.appendChild(btnArea);
@@ -5711,36 +5711,36 @@ function renderFallbackPanel(errorMsg) {
             }
         }, 100);
 
-        addAuditLog('warning', 'âš ï¸ Truncamento detectado. Motor de Continuidade pronto.');
+        addAuditLog('warning', '⚠️ Truncamento detectado. Motor de Continuidade pronto.');
     }
 
     async function continueGeneration() {
         if (state.isGenerating) return;
 
         const currentCode = getEditorContent();
-        const anchor = currentCode.slice(-200); // Pegar os Ãºltimos 200 caracteres para contexto
+        const anchor = currentCode.slice(-200); // Pegar os últimos 200 caracteres para contexto
         
         state.preContinuationCode = currentCode;
         state.isContinuing = true;
         state.isTruncated = false;
 
-        addMessage('user', 'Continuar geraÃ§Ã£o...');
+        addMessage('user', 'Continuar geração...');
         setGenerating(true);
 
         try {
             const model = document.getElementById('vortex-model-select')?.value || 'gemini-2.5-flash';
             const payload = {
-                prompt: `CONTINUE de onde vocÃª parou.
+                prompt: `CONTINUE de onde você parou.
                 
                 [ANCHOR TEXT (O ÃšLTIMO TRECHO GERADO)]
                 "${anchor}"
                 
                 [REGRAS]
-                - NÃ£o repita o cÃ³digo que jÃ¡ foi gerado.
-                - Comece exatamente apÃ³s o Ãºltimo caractere do Anchor Text.
+                - Não repita o código que já foi gerado.
+                - Comece exatamente após o último caractere do Anchor Text.
                 - Garanta que as tags </file> sejam fechadas corretamente ao final.`,
                 model,
-                currentCode: '', // NÃ£o enviamos o cÃ³digo inteiro para economizar tokens, o Anchor basta
+                currentCode: '', // Não enviamos o código inteiro para economizar tokens, o Anchor basta
                 abidosRules: state.abidosRules,
                 context: buildAbidosContext(),
                 isContinuation: true // Flag opcional para o log
@@ -5750,7 +5750,7 @@ function renderFallbackPanel(errorMsg) {
 
         } catch (err) {
             console.error('âŒ [VORTEX CONTINUE] Error:', err);
-            addMessage('system', `âš ï¸ Falha ao continuar: ${err.message}`);
+            addMessage('system', `⚠️ Falha ao continuar: ${err.message}`);
             state.isContinuing = false;
         } finally {
             setGenerating(false);
@@ -5774,7 +5774,7 @@ function renderFallbackPanel(errorMsg) {
     // INIT
     // =========================================================================
     async function init() {
-        console.log('ðŸŒ€ [VORTEX] Initializing AI Studio...');
+        console.log('🌀 [VORTEX] Initializing AI Studio...');
         
         loadVoiceProfilePreference();
         loadOperationModePreference();
@@ -5792,7 +5792,7 @@ function renderFallbackPanel(errorMsg) {
         await loadVortexMedia();
         updatePreview(`
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: #f8fafc; color: #64748b; text-align: center; padding: 40px;">
-                <div style="font-size: 48px; margin-bottom: 20px;">ðŸŒ€</div>
+                <div style="font-size: 48px; margin-bottom: 20px;">🌀</div>
                 <h2 style="font-size: 18px; font-weight: 800; color: #1e293b; margin: 0 0 10px;">Vortex Preview</h2>
                 <p style="font-size: 13px; max-width: 300px; line-height: 1.6;">Envie um prompt no chat para gerar sua pagina Next.js. O preview aparecera aqui em tempo real.</p>
             </div>
@@ -5800,7 +5800,7 @@ function renderFallbackPanel(errorMsg) {
 
         // 2. Init VFS and External Libs
         if (!window.Babel) {
-            console.log('ðŸŒ€ [VORTEX] Loading Babel for AST Sovereignty...');
+            console.log('🌀 [VORTEX] Loading Babel for AST Sovereignty...');
             loadScript('https://unpkg.com/@babel/standalone/babel.min.js').catch(e => console.error('Failed to load Babel:', e));
         }
         await initVFS();
@@ -5829,13 +5829,13 @@ function renderFallbackPanel(errorMsg) {
         // 9. Set initial preview
         updatePreview(`
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: #f8fafc; color: #64748b; text-align: center; padding: 40px;">
-                <div style="font-size: 48px; margin-bottom: 20px;">ðŸŒ€</div>
-                <h2 style="font-size: 18px; font-weight: 800; color: #1e293b; margin: 0 0 10px;">VÃ³rtex Preview</h2>
-                <p style="font-size: 13px; max-width: 300px; line-height: 1.6;">Envie um prompt no chat para gerar sua pÃ¡gina Next.js. O preview aparecerÃ¡ aqui em tempo real.</p>
+                <div style="font-size: 48px; margin-bottom: 20px;">🌀</div>
+                <h2 style="font-size: 18px; font-weight: 800; color: #1e293b; margin: 0 0 10px;">Vórtex Preview</h2>
+                <p style="font-size: 13px; max-width: 300px; line-height: 1.6;">Envie um prompt no chat para gerar sua página Next.js. O preview aparecerá aqui em tempo real.</p>
             </div>
         `);
 
-        console.log('ðŸŒ€ [VORTEX] Studio ready.');
+        console.log('🌀 [VORTEX] Studio ready.');
     }
 
     // =========================================================================
@@ -5864,7 +5864,7 @@ function renderFallbackPanel(errorMsg) {
         saveAsDraft,
         loadDraft,
         loadDraftById,
-        // auditSemantic â€” REMOVED (VÃ³rtex 3.1 Purge)
+        // auditSemantic — REMOVED (Vórtex 3.1 Purge)
         // Phase 3
         toggleZenMode,
         refreshPreview,
