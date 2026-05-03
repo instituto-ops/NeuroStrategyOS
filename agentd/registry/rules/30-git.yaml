@@ -1,0 +1,43 @@
+## Git rules
+rules:
+  # Review: push e merge exigem aprovação
+  - id: "review-git-push"
+    description: "git push exige aprovação humana"
+    priority: 10
+    decision: "review"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "terminal.run"
+      - field: "args.command"
+        op: "matches"
+        value: "git\\s+push"
+
+  # Review: merge para main
+  - id: "review-git-merge-main"
+    description: "git merge para main exige aprovação"
+    priority: 10
+    decision: "review"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "terminal.run"
+      - field: "args.command"
+        op: "matches"
+        value: "git\\s+merge.*main"
+
+  # Forbidden: force push
+  - id: "forbid-force-push"
+    description: "Force push é proibido"
+    priority: 3
+    decision: "forbidden"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "terminal.run"
+      - field: "args.command"
+        op: "matches"
+        value: "git\\s+push.*(-f|--force)"

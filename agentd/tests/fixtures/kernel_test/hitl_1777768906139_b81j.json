@@ -1,0 +1,24 @@
+{
+  "id": "hitl_1777768906139_b81j",
+  "toolCall": {
+    "toolId": "terminal.run",
+    "args": {
+      "command": "npm install"
+    }
+  },
+  "ctx": {
+    "sessionId": "s1",
+    "skill": "*",
+    "fsmState": "EXECUTING",
+    "timestamp": ""
+  },
+  "verdict": {
+    "decision": "review",
+    "toolId": "terminal.run",
+    "reason": "high risk",
+    "ctx": {},
+    "timestamp": ""
+  },
+  "createdAt": "2026-05-03T00:41:46.139Z",
+  "status": "approved"
+}

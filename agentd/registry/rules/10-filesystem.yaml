@@ -1,0 +1,43 @@
+## Filesystem rules
+rules:
+  # Allow: leitura de arquivos é segura
+  - id: "allow-filesystem-read"
+    description: "Leitura de arquivos é sempre permitida durante execução"
+    priority: 20
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "filesystem.read_file"
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING", "TESTING", "DIAGNOSIS", "PLANNING"]
+
+  # Allow: escrita de arquivos com risk moderate
+  - id: "allow-filesystem-write"
+    description: "Escrita de arquivos permitida durante execução"
+    priority: 25
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "filesystem.write_file"
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING"]
+
+  # Block: escrita em paths protegidos
+  - id: "block-write-system-paths"
+    description: "Bloqueia escrita em diretórios do sistema"
+    priority: 15
+    decision: "forbidden"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "filesystem.write_file"
+      - field: "args.path"
+        op: "matches"
+        value: "^(C:\\\\Windows|/etc|/usr|/sys|/proc)"

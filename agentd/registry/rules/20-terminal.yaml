@@ -1,0 +1,29 @@
+## Terminal rules
+rules:
+  # Review: execução de terminal sempre exige aprovação
+  - id: "review-terminal-run"
+    description: "Execução de comandos no terminal exige aprovação humana"
+    priority: 20
+    decision: "review"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "terminal.run"
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING"]
+
+  # Forbidden: comandos destrutivos
+  - id: "forbid-destructive-commands"
+    description: "Bloqueia comandos destrutivos conhecidos"
+    priority: 5
+    decision: "forbidden"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "terminal.run"
+      - field: "args.command"
+        op: "matches"
+        value: "(rm\\s+-rf\\s+/|format\\s+c:|mkfs|dd\\s+if=|:(){ :|\\|\\s*:)"

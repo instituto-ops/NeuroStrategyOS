@@ -8,6 +8,7 @@ import { config } from './config.js';
 import { logger } from './logger/logger.js';
 import { Machine } from './fsm/machine.js';
 import { ToolLoader } from './registry/loader.js';
+import { PermissionKernel } from './kernel/kernel.js';
 import { readEstadoAtual } from './state/estadoAtualReader.js';
 import { TaskQueue } from './queue/taskQueue.js';
 import { createIPCServer, listenIPC } from './ipc/transport.js';
@@ -18,6 +19,8 @@ import { registerCoreMethods } from './ipc/methods.js';
 export let machine: Machine | null = null;
 /** Tool Registry loader — acessível após boot */
 export let registry: ToolLoader | null = null;
+/** Permission Kernel — acessível após boot */
+export let kernel: PermissionKernel | null = null;
 
 export async function boot(): Promise<void> {
   logger.info({ version: config.daemon.version, platform: config.platform }, '🚀 agentd booting...');
@@ -46,6 +49,11 @@ export async function boot(): Promise<void> {
   registry = new ToolLoader(config.paths.tools);
   await registry.load();
   logger.info({ toolCount: registry.getAll().length }, '🛠️ Registry de tools carregado');
+
+  // Permission Kernel
+  kernel = new PermissionKernel(config.paths.rules);
+  await kernel.load();
+  logger.info({ ruleCount: kernel.loadedRules.length }, '🛡️ Permission Kernel carregado');
 
   // Registrar métodos IPC e iniciar servidor
   registerCoreMethods();

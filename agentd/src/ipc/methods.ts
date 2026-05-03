@@ -1,14 +1,18 @@
 /**
  * agentd/src/ipc/methods.ts
  * 
- * Métodos JSON-RPC — Fase 2 (agent.*) + Fase 3 (fsm.*)
+ * Métodos JSON-RPC — Fase 2 (agent.*) + Fase 3 (fsm.*) + Fase 4 (registry.*) + Fase 5 (kernel.*)
  */
 
 import { registerMethod } from './server.js';
 import { readEstadoAtual } from '../state/estadoAtualReader.js';
 import { config } from '../config.js';
-import { machine, registry } from '../boot.js';
+import { machine, registry, kernel } from '../boot.js';
 import { EventType } from '../fsm/states.js';
+import type { ToolCall, InvocationContext } from '../kernel/types.js';
+import { auditLog, verifyAuditChain } from '../kernel/audit.js';
+import { redactArgs } from '../kernel/redaction.js';
+import { createCheckpoint, listPendingCheckpoints, resolveCheckpoint } from '../kernel/hitl.js';
 
 const bootTime = Date.now();
 
@@ -98,5 +102,48 @@ export function registerCoreMethods(): void {
     if (!registry) throw new Error('Registry não inicializado');
     const skill = params.skill as string ?? '*';
     return registry.filterBySkill(skill);
+  });
+
+  // === Kernel (Fase 5) ===
+
+  registerMethod('kernel.decide', (params) => {
+    if (!kernel) throw new Error('Kernel não inicializado');
+    const toolCall: ToolCall = {
+      toolId: params.toolId as string,
+      args: (params.args as Record<string, unknown>) ?? {},
+    };
+    const ctx: InvocationContext = {
+      sessionId: machine?.current().sessionId ?? 'unknown',
+      skill: (params.skill as string) ?? '*',
+      fsmState: machine?.current().state ?? 'IDLE',
+      timestamp: new Date().toISOString(),
+    };
+    const toolMeta = registry?.getTool(toolCall.toolId);
+    const verdict = kernel.decide(toolCall, ctx, toolMeta);
+    // Redact args before audit
+    const redacted = { ...verdict, toolCall: { ...toolCall, args: redactArgs(toolCall.args) } };
+    auditLog(verdict);
+    return redacted;
+  });
+
+  registerMethod('kernel.rules', () => {
+    if (!kernel) throw new Error('Kernel não inicializado');
+    return kernel.loadedRules;
+  });
+
+  registerMethod('audit.verify', () => {
+    return verifyAuditChain();
+  });
+
+  registerMethod('hitl.list', () => {
+    return listPendingCheckpoints();
+  });
+
+  registerMethod('hitl.resolve', (params) => {
+    const id = params.id as string;
+    const approved = params.approved as boolean;
+    const result = resolveCheckpoint(id, approved);
+    if (!result) throw new Error(`Checkpoint não encontrado: ${id}`);
+    return result;
   });
 }
