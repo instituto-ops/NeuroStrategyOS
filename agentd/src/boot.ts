@@ -7,6 +7,7 @@ import { mkdirSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
 import { config } from './config.js';
 import { logger } from './logger/logger.js';
 import { Machine } from './fsm/machine.js';
+import { ToolLoader } from './registry/loader.js';
 import { readEstadoAtual } from './state/estadoAtualReader.js';
 import { TaskQueue } from './queue/taskQueue.js';
 import { createIPCServer, listenIPC } from './ipc/transport.js';
@@ -15,6 +16,8 @@ import { registerCoreMethods } from './ipc/methods.js';
 
 /** FSM instance — acessível após boot */
 export let machine: Machine | null = null;
+/** Tool Registry loader — acessível após boot */
+export let registry: ToolLoader | null = null;
 
 export async function boot(): Promise<void> {
   logger.info({ version: config.daemon.version, platform: config.platform }, '🚀 agentd booting...');
@@ -38,6 +41,11 @@ export async function boot(): Promise<void> {
   // FSM
   machine = new Machine();
   logger.info({ state: machine.current().state, sessionId: machine.current().sessionId }, '🔄 FSM inicializada');
+
+  // Tool Registry
+  registry = new ToolLoader(config.paths.tools);
+  await registry.load();
+  logger.info({ toolCount: registry.getAll().length }, '🛠️ Registry de tools carregado');
 
   // Registrar métodos IPC e iniciar servidor
   registerCoreMethods();

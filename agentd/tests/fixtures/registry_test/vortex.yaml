@@ -1,0 +1,8 @@
+
+id: "vortex.only"
+version: "1"
+description: "vortex"
+risk_level: "safe"
+applicable_skills: ["vortex"]
+input_schema: { type: "object" }
+    

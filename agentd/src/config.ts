@@ -41,6 +41,7 @@ export const config = {
     backups: join(NEUROENGINE_HOME, 'backups'),
     hitl: join(NEUROENGINE_HOME, 'hitl'),
     pidFile: join(NEUROENGINE_HOME, 'agentd.pid'),
+    tools: join(process.cwd(), 'registry', 'tools'),
     /** estado_atual.md — resolvido pela raiz do repo */
     estadoAtual: join(REPO_ROOT, 'estado_atual.md'),
   },

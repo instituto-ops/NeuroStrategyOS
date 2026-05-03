@@ -7,7 +7,7 @@
 import { registerMethod } from './server.js';
 import { readEstadoAtual } from '../state/estadoAtualReader.js';
 import { config } from '../config.js';
-import { machine } from '../boot.js';
+import { machine, registry } from '../boot.js';
 import { EventType } from '../fsm/states.js';
 
 const bootTime = Date.now();
@@ -77,5 +77,26 @@ export function registerCoreMethods(): void {
     if (!machine) throw new Error('FSM não inicializada');
     machine.reset();
     return machine.current();
+  });
+
+  // === Registry (Fase 4) ===
+
+  registerMethod('registry.list', () => {
+    if (!registry) throw new Error('Registry não inicializado');
+    return registry.getAll();
+  });
+
+  registerMethod('registry.get', (params) => {
+    if (!registry) throw new Error('Registry não inicializado');
+    const id = params.id as string;
+    const tool = registry.getTool(id);
+    if (!tool) throw new Error(`Tool não encontrada: ${id}`);
+    return tool;
+  });
+
+  registerMethod('registry.visible', (params) => {
+    if (!registry) throw new Error('Registry não inicializado');
+    const skill = params.skill as string ?? '*';
+    return registry.filterBySkill(skill);
   });
 }

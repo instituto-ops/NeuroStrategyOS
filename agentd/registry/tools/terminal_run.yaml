@@ -1,0 +1,24 @@
+id: "terminal.run"
+version: "1.0.0"
+description: "Executes a shell command on the local system."
+risk_level: "high"
+reversible: false
+requires_approval: true
+sandbox: false
+timeout_ms: 60000
+input_schema:
+  type: "object"
+  properties:
+    command:
+      type: "string"
+      description: "The command line to execute."
+    cwd:
+      type: "string"
+      description: "Current working directory for the command."
+  required: ["command"]
+applicable_skills: ["*"]
+examples:
+  - input:
+      command: "npm install"
+      cwd: "./"
+    explanation: "Installs dependencies in the current directory."

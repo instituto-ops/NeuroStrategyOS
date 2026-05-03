@@ -107,4 +107,20 @@ program
     }
   });
 
+program
+  .command('tools')
+  .description('Lista todas as tools carregadas no registry')
+  .option('-s, --skill <skill>', 'Filtrar por skill')
+  .action(async (options) => {
+    try {
+      const method = options.skill ? 'registry.visible' : 'registry.list';
+      const params = options.skill ? { skill: options.skill } : {};
+      const result = await rpcCall(method, params);
+      console.log(JSON.stringify(result, null, 2));
+    } catch (err) {
+      console.error('❌', err instanceof Error ? err.message : err);
+      process.exit(1);
+    }
+  });
+
 program.parse();

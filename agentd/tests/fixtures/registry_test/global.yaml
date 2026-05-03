@@ -1,0 +1,8 @@
+
+id: "global"
+version: "1"
+description: "global"
+risk_level: "safe"
+applicable_skills: ["*"]
+input_schema: { type: "object" }
+    

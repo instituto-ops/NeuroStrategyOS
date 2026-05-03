@@ -1,0 +1,24 @@
+id: "filesystem.write_file"
+version: "1.0.0"
+description: "Writes content to a file. Overwrites if it exists."
+risk_level: "moderate"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 10000
+input_schema:
+  type: "object"
+  properties:
+    path:
+      type: "string"
+      description: "Absolute path to the file."
+    content:
+      type: "string"
+      description: "Text content to write."
+  required: ["path", "content"]
+applicable_skills: ["*"]
+examples:
+  - input:
+      path: "/path/to/file.ts"
+      content: "console.log('hello');"
+    explanation: "Creates or overwrites file.ts with the provided code."
