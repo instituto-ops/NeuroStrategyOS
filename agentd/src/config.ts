@@ -1,6 +1,10 @@
 import { homedir, platform } from 'node:os';
 import { join, dirname } from 'node:path';
 import { existsSync } from 'node:fs';
+import dotenv from 'dotenv';
+
+// Carregar .env do diretório atual
+dotenv.config({ path: join(process.cwd(), '.env') });
 
 const IS_WINDOWS = platform() === 'win32';
 
@@ -59,6 +63,7 @@ export const config = {
   daemon: {
     name: 'agentd',
     version: '0.1.0',
+    apiKey: process.env.GOOGLE_GENAI_API_KEY || '',
   },
 } as const;
 

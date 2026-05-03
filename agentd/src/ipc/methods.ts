@@ -7,7 +7,7 @@
 import { registerMethod } from './server.js';
 import { readEstadoAtual } from '../state/estadoAtualReader.js';
 import { config } from '../config.js';
-import { machine, registry, kernel } from '../boot.js';
+import { machine, registry, kernel, memory } from '../boot.js';
 import { EventType } from '../fsm/states.js';
 import type { ToolCall, InvocationContext } from '../kernel/types.js';
 import { auditLog, verifyAuditChain } from '../kernel/audit.js';
@@ -163,5 +163,31 @@ export function registerCoreMethods(): void {
       timestamp: new Date().toISOString(),
     };
     return executeTool(toolCall, ctx, kernel, registry);
+  });
+
+  // === Memory (Fase 7) ===
+
+  registerMethod('memory.remember', async (params) => {
+    if (!memory) throw new Error('Memória RAG não inicializada (verifique API Key)');
+    const silo = params.silo as 'factual' | 'stylistic' | 'morgue';
+    const content = params.content as string;
+    const metadata = (params.metadata as Record<string, unknown>) || {};
+    await memory.remember(silo, content, metadata);
+    return { success: true };
+  });
+
+  registerMethod('memory.recall', async (params) => {
+    if (!memory) throw new Error('Memória RAG não inicializada');
+    const silo = params.silo as 'factual' | 'stylistic' | 'morgue';
+    const query = params.query as string;
+    const k = (params.k as number) || 5;
+    return await memory.recall(silo, query, k);
+  });
+
+  registerMethod('memory.search', async (params) => {
+    if (!memory) throw new Error('Memória RAG não inicializada');
+    const query = params.query as string;
+    const k = (params.k as number) || 3;
+    return await memory.search(query, k);
   });
 }

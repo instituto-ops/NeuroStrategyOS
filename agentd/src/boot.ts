@@ -9,6 +9,7 @@ import { logger } from './logger/logger.js';
 import { Machine } from './fsm/machine.js';
 import { ToolLoader } from './registry/loader.js';
 import { PermissionKernel } from './kernel/kernel.js';
+import { MemoryManager } from './memory/memoryManager.js';
 import { readEstadoAtual } from './state/estadoAtualReader.js';
 import { TaskQueue } from './queue/taskQueue.js';
 import { createIPCServer, listenIPC } from './ipc/transport.js';
@@ -21,6 +22,8 @@ export let machine: Machine | null = null;
 export let registry: ToolLoader | null = null;
 /** Permission Kernel — acessível após boot */
 export let kernel: PermissionKernel | null = null;
+/** Memory Manager — acessível após boot */
+export let memory: MemoryManager | null = null;
 
 export async function boot(): Promise<void> {
   logger.info({ version: config.daemon.version, platform: config.platform }, '🚀 agentd booting...');
@@ -54,6 +57,14 @@ export async function boot(): Promise<void> {
   kernel = new PermissionKernel(config.paths.rules);
   await kernel.load();
   logger.info({ ruleCount: kernel.loadedRules.length }, '🛡️ Permission Kernel carregado');
+
+  // Memory Manager
+  if (config.daemon.apiKey) {
+    memory = new MemoryManager(config.daemon.apiKey);
+    logger.info('🧠 Memory Manager carregado');
+  } else {
+    logger.warn('⚠️ GOOGLE_GENAI_API_KEY não encontrada — Memória RAG desativada');
+  }
 
   // MCP Handlers
   const { registerFilesystemHandlers } = await import('./mcp/filesystem.js');
