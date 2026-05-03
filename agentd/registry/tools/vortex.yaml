@@ -1,0 +1,53 @@
+# agentd/registry/tools/vortex.yaml
+# Definição de ferramentas para a Skill Vórtex
+
+- id: vortex.generate
+  name: "Gerar Conteúdo Vórtex"
+  description: "Gera ou atualiza uma seção de página usando o motor Vórtex AI."
+  parameters:
+    prompt:
+      type: string
+      description: "Instrução para a geração do conteúdo."
+    model:
+      type: string
+      description: "Modelo a ser usado (flash, pro)."
+    context:
+      type: string
+      description: "Regras Abidos ou contexto adicional."
+
+- id: vortex.audit
+  name: "Audit Ético e SEO"
+  description: "Valida se o conteúdo segue as regras do CFP (Ética) e boas práticas de SEO."
+  parameters:
+    code:
+      type: string
+      description: "O código ou conteúdo a ser auditado."
+
+- id: vortex.save_draft
+  name: "Salvar Rascunho"
+  description: "Salva o conteúdo atual no sistema de rascunhos local (drafts)."
+  parameters:
+    filename:
+      type: string
+    content:
+      type: string
+
+- id: vortex.publish
+  name: "Publicar em Produção"
+  description: "Realiza o commit do conteúdo aprovado para o repositório GitHub do site oficial."
+  parameters:
+    filename:
+      type: string
+    content:
+      type: string
+    message:
+      type: string
+      description: "Mensagem de commit (ex: 'feat: add hub autismo')."
+
+- id: vortex.list_media
+  name: "Listar Assets Visuais"
+  description: "Busca imagens e vídeos no acervo visual Abidos por categoria."
+  parameters:
+    category:
+      type: string
+      optional: true

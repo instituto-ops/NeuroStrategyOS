@@ -1,0 +1,31 @@
+# agentd/registry/rules/40-vortex.yaml
+# Governança para manipulação do Domínio Vórtex (Site/CMS)
+
+- id: vortex-read
+  name: "Permitir leitura de drafts e arquivos Vórtex"
+  description: "O agente pode ler o estado atual do CMS para análise"
+  selector: "tool.id == 'vortex.list_drafts' || tool.id == 'vortex.read_page'"
+  decision: "allow"
+  priority: 40
+
+- id: vortex-edit
+  name: "Edição de conteúdo rascunho"
+  description: "Edições em rascunhos são permitidas mas auditadas"
+  selector: "tool.id == 'vortex.generate' || tool.id == 'vortex.save_draft'"
+  decision: "allow"
+  priority: 41
+
+- id: vortex-publish-approval
+  name: "Publicação exige aprovação humana"
+  description: "Qualquer alteração em produção (commit GitHub) exige HITL"
+  selector: "tool.id == 'vortex.publish' || tool.id == 'vortex.commit'"
+  decision: "requires_approval"
+  reason: "Publicação em produção afeta o site ao vivo e SEO."
+  priority: 45
+
+- id: vortex-audit-enforcement
+  name: "Audit obrigatório para novos conteúdos"
+  description: "O agente deve rodar o auditor antes de sugerir publicação"
+  selector: "tool.id == 'vortex.audit'"
+  decision: "allow"
+  priority: 42

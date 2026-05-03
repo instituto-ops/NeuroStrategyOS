@@ -70,10 +70,13 @@ export async function boot(): Promise<void> {
   const { registerFilesystemHandlers } = await import('./mcp/filesystem.js');
   const { registerTerminalHandlers } = await import('./mcp/terminal.js');
   const { registerGitHandlers } = await import('./mcp/git.js');
+  const { registerVortexHandlers } = await import('./mcp/vortex.js');
+  
   registerFilesystemHandlers();
   registerTerminalHandlers();
   registerGitHandlers();
-  logger.info('⚙️ MCP handlers registrados (filesystem, terminal, git)');
+  registerVortexHandlers();
+  logger.info('⚙️ MCP handlers registrados (filesystem, terminal, git, vortex)');
 
   // Registrar métodos IPC e iniciar servidor
   registerCoreMethods();
