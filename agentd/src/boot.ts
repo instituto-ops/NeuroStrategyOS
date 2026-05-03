@@ -6,11 +6,15 @@
 import { mkdirSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
 import { config } from './config.js';
 import { logger } from './logger/logger.js';
+import { Machine } from './fsm/machine.js';
 import { readEstadoAtual } from './state/estadoAtualReader.js';
 import { TaskQueue } from './queue/taskQueue.js';
 import { createIPCServer, listenIPC } from './ipc/transport.js';
 import { handleConnection } from './ipc/server.js';
 import { registerCoreMethods } from './ipc/methods.js';
+
+/** FSM instance — acessível após boot */
+export let machine: Machine | null = null;
 
 export async function boot(): Promise<void> {
   logger.info({ version: config.daemon.version, platform: config.platform }, '🚀 agentd booting...');
@@ -30,6 +34,10 @@ export async function boot(): Promise<void> {
 
   // Task queue stub
   const _queue = new TaskQueue();
+
+  // FSM
+  machine = new Machine();
+  logger.info({ state: machine.current().state, sessionId: machine.current().sessionId }, '🔄 FSM inicializada');
 
   // Registrar métodos IPC e iniciar servidor
   registerCoreMethods();
