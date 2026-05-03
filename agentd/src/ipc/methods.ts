@@ -190,4 +190,35 @@ export function registerCoreMethods(): void {
     const k = (params.k as number) || 3;
     return await memory.search(query, k);
   });
+
+  registerMethod('memory.index_repo', async (params) => {
+    if (!memory) throw new Error('Memória RAG não inicializada');
+    const { RepoIndexer } = await import('../memory/indexer.js');
+    const indexer = new RepoIndexer(memory);
+    const path = (params.path as string) || config.paths.repoRoot || process.cwd();
+    return await indexer.indexDirectory(path);
+  });
+
+  registerMethod('memory.index_git', async (params) => {
+    if (!memory) throw new Error('Memória RAG não inicializada');
+    const { GitExtractor } = await import('../memory/gitExtractor.js');
+    const extractor = new GitExtractor(memory);
+    const path = (params.path as string) || config.paths.repoRoot || process.cwd();
+    const n = (params.n as number) || 50;
+    const count = await extractor.extractHistory(path, n);
+    return { count };
+  });
+
+  registerMethod('memory.log_decision', async (params) => {
+    if (!memory) throw new Error('Memória RAG não inicializada');
+    const { DecisionLogger } = await import('../memory/decisionLogger.js');
+    const logger = new DecisionLogger(memory);
+    const id = await logger.logDecision(
+      params.title as string,
+      params.context as string,
+      params.decision as string,
+      params.rationale as string
+    );
+    return { id };
+  });
 }
