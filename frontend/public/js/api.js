@@ -63,7 +63,39 @@ const neuroAPI = {
     }
 };
 
+/**
+ * Interface com o Agente Operacional (agentd)
+ */
+const agentAPI = {
+    async call(method, params = {}) {
+        try {
+            const res = await fetch('/api/agent/rpc', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ method, params })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+            return data.result;
+        } catch (e) {
+            console.error(`❌ [agentAPI] Erro em ${method}:`, e);
+            throw e;
+        }
+    },
+
+    async getStatus() {
+        try {
+            const res = await fetch('/api/agent/status');
+            return await res.json();
+        } catch (e) {
+            return { success: false, connected: false };
+        }
+    }
+};
+
 // Alias para manter compatibilidade com códigos legados
 const wpAPI = neuroAPI; 
 window.wpAPI = wpAPI;
 window.neuroAPI = neuroAPI;
+window.agentAPI = agentAPI;
+

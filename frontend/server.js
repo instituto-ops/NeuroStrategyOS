@@ -43,8 +43,12 @@ if (!process.env.GOOGLE_CLOUD_PROJECT && !process.env.GEMINI_API_KEY) {
     console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 }
 
+const { registerAgentRoutes } = require('./agent-bridge');
+
 const app = express();
 const port = 3000;
+
+registerAgentRoutes(app);
 
 // Memória temporária para Previews
 const tempPreviews = {};
