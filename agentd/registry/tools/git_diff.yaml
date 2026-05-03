@@ -1,0 +1,16 @@
+id: "git.diff"
+version: "1.0.0"
+description: "Shows git diff (staged or unstaged)."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+timeout_ms: 10000
+input_schema:
+  type: "object"
+  properties:
+    cwd:
+      type: "string"
+    staged:
+      type: "boolean"
+  required: ["cwd"]
+applicable_skills: ["*"]

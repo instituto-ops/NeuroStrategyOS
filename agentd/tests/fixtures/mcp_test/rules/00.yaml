@@ -1,0 +1,41 @@
+
+rules:
+  - id: "block-idle"
+    priority: 5
+    decision: "block"
+    match: "all"
+    predicates:
+      - field: "ctx.fsm_state"
+        op: "eq"
+        value: "IDLE"
+  - id: "allow-read"
+    priority: 20
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "filesystem.read_file"
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING"]
+  - id: "allow-write"
+    priority: 20
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "filesystem.write_file"
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING"]
+  - id: "allow-slow"
+    priority: 20
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "slow.tool"
+  

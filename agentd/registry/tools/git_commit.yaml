@@ -1,0 +1,16 @@
+id: "git.commit"
+version: "1.0.0"
+description: "Creates a git commit with a message."
+risk_level: "moderate"
+reversible: true
+requires_approval: false
+timeout_ms: 10000
+input_schema:
+  type: "object"
+  properties:
+    cwd:
+      type: "string"
+    message:
+      type: "string"
+  required: ["cwd", "message"]
+applicable_skills: ["*"]

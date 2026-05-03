@@ -1,0 +1,18 @@
+id: "filesystem.search"
+version: "1.0.0"
+description: "Searches for files matching a pattern recursively."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+timeout_ms: 10000
+input_schema:
+  type: "object"
+  properties:
+    path:
+      type: "string"
+      description: "Base directory to search."
+    pattern:
+      type: "string"
+      description: "Regex pattern to match filenames."
+  required: ["path", "pattern"]
+applicable_skills: ["*"]

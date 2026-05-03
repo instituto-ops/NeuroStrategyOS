@@ -1,0 +1,18 @@
+id: "git.add"
+version: "1.0.0"
+description: "Stages files for commit."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+timeout_ms: 10000
+input_schema:
+  type: "object"
+  properties:
+    cwd:
+      type: "string"
+    files:
+      type: "array"
+      items:
+        type: "string"
+  required: ["cwd"]
+applicable_skills: ["*"]

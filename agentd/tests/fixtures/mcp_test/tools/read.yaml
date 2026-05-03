@@ -1,0 +1,9 @@
+
+id: "filesystem.read_file"
+version: "1.0.0"
+description: "read"
+risk_level: "safe"
+input_schema: { type: "object" }
+timeout_ms: 5000
+applicable_skills: ["*"]
+  

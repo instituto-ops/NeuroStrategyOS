@@ -1,0 +1,9 @@
+
+id: "filesystem.write_file"
+version: "1.0.0"
+description: "write"
+risk_level: "moderate"
+input_schema: { type: "object" }
+timeout_ms: 5000
+applicable_skills: ["*"]
+  

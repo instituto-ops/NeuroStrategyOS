@@ -1,0 +1,1 @@
+{"verdict":{"decision":"allow","toolId":"slow.tool","reason":"Matched rule: allow-slow","matchedRule":"allow-slow","ctx":{"sessionId":"s1","skill":"*","fsmState":"EXECUTING","timestamp":""},"timestamp":"2026-05-03T00:52:15.213Z"},"prevHash":"e0ebfcd692823cdd3f97db1d0b96f0bcd6c768343eb35e0ed72a1db6bb9b62b1","hash":"45b347f1400e3e517eff972c8a86ea44d4169403d205d855f344d54ff7f1225d"}

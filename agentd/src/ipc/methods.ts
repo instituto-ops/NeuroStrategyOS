@@ -146,4 +146,22 @@ export function registerCoreMethods(): void {
     if (!result) throw new Error(`Checkpoint não encontrado: ${id}`);
     return result;
   });
+
+  // === MCPs (Fase 6) ===
+
+  registerMethod('tool.invoke', async (params) => {
+    if (!kernel || !registry) throw new Error('Kernel/Registry não inicializados');
+    const { executeTool } = await import('../mcp/runtime.js');
+    const toolCall: ToolCall = {
+      toolId: params.toolId as string,
+      args: (params.args as Record<string, unknown>) ?? {},
+    };
+    const ctx: InvocationContext = {
+      sessionId: machine?.current().sessionId ?? 'unknown',
+      skill: (params.skill as string) ?? '*',
+      fsmState: machine?.current().state ?? 'IDLE',
+      timestamp: new Date().toISOString(),
+    };
+    return executeTool(toolCall, ctx, kernel, registry);
+  });
 }

@@ -1,0 +1,9 @@
+
+id: "slow.tool"
+version: "1"
+description: "slow"
+risk_level: "safe"
+timeout_ms: 100
+input_schema: { type: "object" }
+applicable_skills: ["*"]
+    

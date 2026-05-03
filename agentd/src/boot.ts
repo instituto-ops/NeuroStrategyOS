@@ -55,6 +55,15 @@ export async function boot(): Promise<void> {
   await kernel.load();
   logger.info({ ruleCount: kernel.loadedRules.length }, '🛡️ Permission Kernel carregado');
 
+  // MCP Handlers
+  const { registerFilesystemHandlers } = await import('./mcp/filesystem.js');
+  const { registerTerminalHandlers } = await import('./mcp/terminal.js');
+  const { registerGitHandlers } = await import('./mcp/git.js');
+  registerFilesystemHandlers();
+  registerTerminalHandlers();
+  registerGitHandlers();
+  logger.info('⚙️ MCP handlers registrados (filesystem, terminal, git)');
+
   // Registrar métodos IPC e iniciar servidor
   registerCoreMethods();
   const server = createIPCServer(handleConnection);

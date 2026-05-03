@@ -41,3 +41,17 @@ rules:
       - field: "args.path"
         op: "matches"
         value: "^(C:\\\\Windows|/etc|/usr|/sys|/proc)"
+
+  # Allow: list_dir e search são safe
+  - id: "allow-filesystem-list-search"
+    description: "List e search de arquivos permitidos durante estados ativos"
+    priority: 20
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "in"
+        value: ["filesystem.list_dir", "filesystem.search"]
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING", "TESTING", "DIAGNOSIS", "PLANNING"]

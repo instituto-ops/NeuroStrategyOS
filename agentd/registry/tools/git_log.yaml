@@ -1,0 +1,16 @@
+id: "git.log"
+version: "1.0.0"
+description: "Shows recent git log entries."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+timeout_ms: 10000
+input_schema:
+  type: "object"
+  properties:
+    cwd:
+      type: "string"
+    n:
+      type: "number"
+  required: ["cwd"]
+applicable_skills: ["*"]

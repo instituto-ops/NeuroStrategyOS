@@ -1,43 +1,50 @@
-## Git rules
+## Git tool-level rules (read ops are safe, writes need context)
 rules:
-  # Review: push e merge exigem aprovação
-  - id: "review-git-push"
-    description: "git push exige aprovação humana"
-    priority: 10
+  - id: "allow-git-safe-ops"
+    description: "Git read operations (status, diff, log, branch) são seguras"
+    priority: 20
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "in"
+        value: ["git.status", "git.diff", "git.log", "git.branch"]
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING", "TESTING", "DIAGNOSIS", "PLANNING"]
+
+  - id: "allow-git-add"
+    description: "Git add é seguro durante execução"
+    priority: 22
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "git.add"
+      - field: "ctx.fsm_state"
+        op: "eq"
+        value: "EXECUTING"
+
+  - id: "allow-git-commit"
+    description: "Git commit permitido durante execução"
+    priority: 22
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "git.commit"
+      - field: "ctx.fsm_state"
+        op: "eq"
+        value: "EXECUTING"
+
+  - id: "review-git-checkout"
+    description: "Git checkout exige review"
+    priority: 22
     decision: "review"
     match: "all"
     predicates:
       - field: "tool.id"
         op: "eq"
-        value: "terminal.run"
-      - field: "args.command"
-        op: "matches"
-        value: "git\\s+push"
-
-  # Review: merge para main
-  - id: "review-git-merge-main"
-    description: "git merge para main exige aprovação"
-    priority: 10
-    decision: "review"
-    match: "all"
-    predicates:
-      - field: "tool.id"
-        op: "eq"
-        value: "terminal.run"
-      - field: "args.command"
-        op: "matches"
-        value: "git\\s+merge.*main"
-
-  # Forbidden: force push
-  - id: "forbid-force-push"
-    description: "Force push é proibido"
-    priority: 3
-    decision: "forbidden"
-    match: "all"
-    predicates:
-      - field: "tool.id"
-        op: "eq"
-        value: "terminal.run"
-      - field: "args.command"
-        op: "matches"
-        value: "git\\s+push.*(-f|--force)"
+        value: "git.checkout"
