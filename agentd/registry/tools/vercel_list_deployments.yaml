@@ -1,0 +1,13 @@
+id: "vercel.list_deployments"
+version: "1.0.0"
+description: "Lists recent deployments for a project on Vercel."
+risk_level: "safe"
+requires_approval: false
+input_schema:
+  type: "object"
+  properties:
+    projectId:
+      type: "string"
+      description: "Vercel project ID."
+  required: ["projectId"]
+applicable_skills: ["*"]

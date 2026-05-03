@@ -8,7 +8,7 @@
 const { genAI, getAIModel, wrapModel, extractJSON, trackUsage,
         LITE_MODEL, MAIN_MODEL, PRO_MODEL, GoogleAICacheManager,
         fs, path } = require('../shared');
-const { query } = require('../shared/db');
+const { query, pool } = require('../shared/db');
 const { z } = require('zod');
 const crypto = require('crypto');
 
@@ -201,6 +201,15 @@ module.exports = function setupVortexRoutes(app, { SITE_REPO_PATH }) {
             const visionPrompt = req.body.imageBase64 
                 ? `\n[MODO VISION ATIVO — ANALISE A IMAGEM ANEXADA]\n               1. DECODIFIQUE a hierarquia visual.\n               2. TRADUZA para o Design System OLED Black.\n               3. MAPIE textos para Micro-copy de conversão.\n               4. SEJA FIEL ao layout original.`
                 : "";
+            
+            const dataDrivenDirectives = req.body.vortexDataDriven
+                ? `\n[MODO DATA-DRIVEN ATIVO — GERAÇÃO SEMÂNTICA]
+               1. NÃO GERE CÓDIGO TSX/JSX DIRETAMENTE.
+               2. GERE UM JSON ESTRUTURADO seguindo o esquema de seções do Vórtex.
+               3. FORMATO DO JSON: { "sections": [ { "kind": "hero|content|cta|clinical_profile", "props": { ... } }, ... ] }
+               4. ENCAPSULE O JSON DENTRO DAS TAGS <file path="page.json">...</file>.
+               5. FOCO TOTAL NOS DADOS E NA SEMÂNTICA DO CONTEÚDO.`
+                : "";
 
             const csaDirectives = await getCSAContext();
             const stylePreferenceContext = buildStylePreferenceContext();
@@ -221,8 +230,9 @@ ${stylePreferenceContext}
 2. ZERO EXPORTS: Não use 'export default' ou 'export'. Escreva apenas a função do componente.
 3. SEM BOILERPLATE: Não inclua interfaces TypeScript redundantes se puder usar tipos inline ou omiti-los.
 4. NAMESPACES: Use 'Lucide.IconName' para ícones e 'motion.div' para animações.
-5. TAGS: Encapsule o código obrigatoriamente dentro de <file path="app/page.tsx">...</file>.
-6. FOCO: SEO Local (Uberlândia/MG) e Ética Clínica (CFP). No final, use obrigatoriamente a tag de fechamento </file>.`;
+5. TAGS: Encapsule o código obrigatoriamente dentro de <file path="${req.body.vortexDataDriven ? 'page.json' : 'app/page.tsx'}">...</file>.
+6. FOCO: SEO Local (Uberlândia/MG) e Ética Clínica (CFP). No final, use obrigatoriamente a tag de fechamento </file>.
+${dataDrivenDirectives}`;
 
             let aiModel;
             if (useCache && vortexActiveCache && vortexActiveCache.model === modelId) {
@@ -337,6 +347,14 @@ ${stylePreferenceContext}
             const visionPrompt = req.body.imageBase64 
                 ? `\n[MODO VISION ATIVO — ANALISE A IMAGEM ANEXADA]\n               1. DECODIFIQUE a hierarquia visual (Grids, Flexbox, Spacing).\n               2. TRADUZA os elementos visuais para o Design System OLED Black.\n               3. MAPIE os textos e botões para o padrão Abidos (Micro-copy de conversão).\n               4. SEJA FIEL ao layout original, mas atualize-o para estética Cinematográfica.`
                 : "";
+            
+            const dataDrivenDirectives = req.body.vortexDataDriven
+                ? `\n[MODO DATA-DRIVEN ATIVO — GERAÇÃO SEMÂNTICA]
+               1. NÃO GERE CÓDIGO TSX/JSX DIRETAMENTE.
+               2. GERE UM JSON ESTRUTURADO seguindo o esquema de seções do Vórtex.
+               3. FORMATO DO JSON: { "sections": [ { "kind": "hero|content|cta|clinical_profile", "props": { ... } }, ... ] }
+               4. ENCAPSULE O JSON NO CAMPO "code" DO JSON DE RESPOSTA (como uma string de JSON).`
+                : "";
 
             const csaDirectives = await getCSAContext();
             const stylePreferenceContext = buildStylePreferenceContext();
@@ -367,11 +385,13 @@ ${stylePreferenceContext}
 [FORMATO DE RESPOSTA - JSON ESTRITO]
 Retorne APENAS um bloco JSON (sem markdown fora dele):
 {
-  "code": "Código Naked completo e funcional (SEM IMPORTS OU EXPORTS)",
-  "language": "typescriptreact",
-  "filename": "page.tsx",
+  "code": "${req.body.vortexDataDriven ? 'String contendo o JSON das seções' : 'Código Naked completo e funcional'}",
+  "language": "${req.body.vortexDataDriven ? 'json' : 'typescriptreact'}",
+  "filename": "${req.body.vortexDataDriven ? 'page.json' : 'page.tsx'}",
   "explanation": "Resumo conciso (máx 2 frases)"
 }
+
+${dataDrivenDirectives}
 
 IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP). Use apenas a sintaxe funcional purista.`;
 
@@ -427,52 +447,96 @@ IMPORTANTE: Foco em SEO Local (Uberlândia/MG) e Ética Clínica (CFP). Use apen
         }
     });
 
-    // Commit & Push via Servidor
+    // Commit & Push via Servidor (Transactional Flow Phase 8.14)
     app.post('/api/vortex/commit', async (req, res) => {
+        const client = await pool.connect();
         try {
-            const { filename, content, message } = req.body;
+            const { filename, content, message, author } = req.body;
             if (!filename || !content) return res.status(400).json({ error: 'Filename e content são obrigatórios.' });
 
+            // 1. Iniciar Transação DB
+            await client.query('BEGIN');
+
+            // 2. Upsert na tabela vortex_pages (Estado Atual)
+            const pageRes = await client.query(`
+                INSERT INTO vortex_pages (filename, content, updated_at)
+                VALUES ($1, $2, NOW())
+                ON CONFLICT (filename) DO UPDATE SET
+                    content = EXCLUDED.content,
+                    updated_at = NOW()
+                RETURNING id
+            `, [filename, content]);
+            const pageId = pageRes.rows[0].id;
+
+            // 3. Registrar Revisão no Histórico
+            const revRes = await client.query(`
+                INSERT INTO vortex_revisions (page_id, content, author, change_summary)
+                VALUES ($1, $2, $3, $4)
+                RETURNING id
+            `, [pageId, content, author || 'Vórtex Studio', message]);
+            const revisionId = revRes.rows[0].id;
+
+            // 4. Logar Auditoria (Compliance Abidos)
+            await client.query(`
+                INSERT INTO vortex_audit_log (action, target_type, target_id, author, details)
+                VALUES ($1, $2, $3, $4, $5)
+            `, ['publish', 'page', filename, author || 'Vórtex Studio', JSON.stringify({ revision_id: revisionId })]);
+
+            // 5. Persistência no GitHub (Sincronização com o VFS Remoto)
             const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
             const repoOwner = process.env.GITHUB_REPO_OWNER || 'instituto-ops';
             const repoName = process.env.GITHUB_REPO_NAME || 'HipnoLawrence-Site';
             const branch = process.env.GITHUB_BRANCH || 'main';
 
-            if (!token) return res.status(400).json({ error: 'GITHUB_TOKEN não configurado no servidor.' });
+            let commitSha = null;
+            if (token) {
+                const filePath = `src/app/(pages)/${filename}`;
+                let sha = null;
+                try {
+                    const getRes = await axios.get(
+                        `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}?ref=${branch}`,
+                        { headers: { Authorization: `token ${token}` } }
+                    );
+                    sha = getRes.data.sha;
+                } catch (e) {}
 
-            const filePath = `src/app/(pages)/${filename}`;
-            
-            let sha = null;
-            try {
-                const getRes = await axios.get(
-                    `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}?ref=${branch}`,
+                const ghPayload = {
+                    message: message || `[Vórtex] Update ${filename}`,
+                    content: Buffer.from(content).toString('base64'),
+                    branch
+                };
+                if (sha) ghPayload.sha = sha;
+
+                const commitRes = await axios.put(
+                    `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`,
+                    ghPayload,
                     { headers: { Authorization: `token ${token}` } }
                 );
-                sha = getRes.data.sha;
-            } catch (e) {}
+                commitSha = commitRes.data.commit.sha;
 
-            const payload = {
-                message: message || `[Vórtex] Update ${filename}`,
-                content: Buffer.from(content).toString('base64'),
-                branch
-            };
-            if (sha) payload.sha = sha;
+                // Vincular o SHA do GitHub à revisão local
+                await client.query('UPDATE vortex_revisions SET commit_sha = $1 WHERE id = $2', [commitSha, revisionId]);
+                await client.query('UPDATE vortex_pages SET current_revision_id = $1 WHERE id = $2', [revisionId, pageId]);
+            }
 
-            const commitRes = await axios.put(
-                `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`,
-                payload,
-                { headers: { Authorization: `token ${token}` } }
-            );
+            // 6. Finalizar Transação
+            await client.query('COMMIT');
 
             res.json({
                 success: true,
-                sha: commitRes.data.content?.sha,
-                message: payload.message,
-                url: commitRes.data.content?.html_url
+                pageId,
+                revisionId,
+                commitSha,
+                message: message || `[Vórtex] Update ${filename}`,
+                url: commitSha ? `https://github.com/${repoOwner}/${repoName}/commit/${commitSha}` : null
             });
+
         } catch (e) {
-            console.error('❌ [VORTEX COMMIT]', e.message);
+            await client.query('ROLLBACK');
+            console.error('❌ [VORTEX COMMIT ERROR]', e.message);
             res.status(500).json({ error: e.message, success: false });
+        } finally {
+            client.release();
         }
     });
 

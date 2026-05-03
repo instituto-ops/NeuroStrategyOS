@@ -1,0 +1,580 @@
+/**
+ * agent-workspace.css
+ * Agent Workspace — Mission Control Shell
+ * NeuroEngine OS · Fase 8A
+ *
+ * Nomenclatura: prefixo #aw- em todos os IDs para evitar colisão com agent-ui.js legado.
+ * Variáveis CSS: herda de dashboard.css (:root).
+ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   LAYOUT PRINCIPAL — MISSION CONTROL 3 COLUNAS
+   Activity Bar (48px) | Central (flex) | Context Panel (280px)
+───────────────────────────────────────────────────────────────────────────── */
+
+#agent-workspace {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background: var(--color-bg);
+    overflow: hidden;
+}
+
+.aw-topbar {
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 20px;
+    background: rgba(10, 15, 28, 0.9);
+    border-bottom: 1px solid var(--glass-border);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--color-text-dim);
+    z-index: 10;
+}
+
+.aw-topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.aw-topbar-brand .aw-brand-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-success);
+    box-shadow: 0 0 6px var(--color-success);
+    transition: var(--transition);
+}
+
+.aw-topbar-brand .aw-brand-dot.offline  { background: var(--color-text-dim); box-shadow: none; }
+.aw-topbar-brand .aw-brand-dot.executing { background: var(--color-secondary); box-shadow: 0 0 8px var(--color-secondary); animation: aw-pulse 1.5s ease-in-out infinite; }
+.aw-topbar-brand .aw-brand-dot.awaiting  { background: var(--color-warning);   box-shadow: 0 0 8px var(--color-warning);   animation: aw-pulse 1s ease-in-out infinite; }
+.aw-topbar-brand .aw-brand-dot.error     { background: var(--color-error);      box-shadow: 0 0 8px var(--color-error); }
+
+.aw-topbar-fsm {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.03);
+}
+
+.aw-topbar-fsm .aw-fsm-label { color: var(--color-text-dim); }
+.aw-topbar-fsm .aw-fsm-state { color: var(--color-accent); font-weight: 900; }
+
+.aw-topbar-hitl-badge {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: var(--color-warning);
+    font-weight: 900;
+    animation: aw-pulse 1s ease-in-out infinite;
+    cursor: pointer;
+}
+
+.aw-topbar-hitl-badge.visible { display: flex; }
+
+.aw-topbar-session {
+    margin-left: auto;
+    color: var(--color-text-dim);
+    font-size: 10px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BODY — 3 COLUNAS
+───────────────────────────────────────────────────────────────────────────── */
+
+.aw-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ── ACTIVITY BAR ── */
+.aw-activity-bar {
+    width: 48px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 4px;
+    background: rgba(10, 15, 28, 0.95);
+    border-right: 1px solid var(--glass-border);
+}
+
+.aw-activity-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--color-text-dim);
+    transition: var(--transition);
+    position: relative;
+    border: 1px solid transparent;
+}
+
+.aw-activity-btn:hover {
+    background: rgba(255,255,255,0.07);
+    color: var(--color-text);
+}
+
+.aw-activity-btn.active {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: var(--color-primary);
+}
+
+.aw-activity-btn .aw-activity-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--color-warning);
+    color: #000;
+    font-size: 8px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: none;
+}
+
+.aw-activity-btn .aw-activity-badge.visible { display: flex; }
+
+/* Tooltip nos botões da activity bar */
+.aw-activity-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(10, 15, 28, 0.95);
+    border: 1px solid var(--glass-border);
+    color: var(--color-text);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+    letter-spacing: 0.5px;
+    text-transform: none;
+}
+
+.aw-activity-btn:hover::after { opacity: 1; }
+
+/* ── CENTRAL PANEL ── */
+.aw-central {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.aw-tab-panels {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.aw-panel {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    padding: 24px;
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.aw-panel.active { display: flex; }
+
+/* ── CONTEXT PANEL (direita) ── */
+.aw-context-panel {
+    width: 280px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: rgba(10, 15, 28, 0.8);
+    border-left: 1px solid var(--glass-border);
+    overflow-y: auto;
+}
+
+.aw-context-panel-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--glass-border);
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-text-dim);
+}
+
+.aw-context-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.aw-context-section h4 {
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--color-text-dim);
+    margin-bottom: 10px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   COMPONENTES COMPARTILHADOS
+───────────────────────────────────────────────────────────────────────────── */
+
+/* Cards */
+.aw-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 16px;
+    backdrop-filter: var(--glass-blur);
+}
+
+.aw-card-title {
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--color-text-dim);
+    margin-bottom: 12px;
+}
+
+/* Estado do FSM */
+.aw-fsm-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.aw-state-idle        { background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); }
+.aw-state-dialogue    { background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1px solid rgba(99,102,241,0.25); }
+.aw-state-diagnosis   { background: rgba(14, 165, 233, 0.12); color: #38bdf8; border: 1px solid rgba(14,165,233,0.25); }
+.aw-state-planning    { background: rgba(14, 165, 233, 0.12); color: #38bdf8; border: 1px solid rgba(14,165,233,0.25); }
+.aw-state-executing   { background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.35); animation: aw-pulse 2s infinite; }
+.aw-state-testing     { background: rgba(99, 102, 241, 0.12); color: #a78bfa; border: 1px solid rgba(99,102,241,0.25); }
+.aw-state-reporting   { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+.aw-state-awaiting    { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); animation: aw-pulse 1s infinite; }
+.aw-state-offline     { background: rgba(148, 163, 184, 0.08); color: #64748b; border: 1px solid rgba(148,163,184,0.15); }
+
+/* HITL Cards */
+.aw-hitl-card {
+    background: rgba(245, 158, 11, 0.06);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-left: 3px solid var(--color-warning);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+.aw-hitl-card-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--color-warning);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.aw-hitl-tool-call {
+    display: block;
+    background: rgba(0,0,0,0.4);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    color: #7ee787;
+    margin: 8px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.aw-hitl-reason {
+    font-size: 11px;
+    color: var(--color-text-dim);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.aw-hitl-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Artifacts */
+.aw-artifact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: var(--transition);
+    margin-bottom: 6px;
+}
+
+.aw-artifact-item:hover {
+    background: rgba(99, 102, 241, 0.08);
+    border-color: rgba(99, 102, 241, 0.2);
+}
+
+.aw-artifact-viewer {
+    display: none;
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--color-text-light);
+}
+
+.aw-artifact-viewer.visible { display: block; }
+
+/* Live Log */
+.aw-log-container {
+    flex: 1;
+    background: #000;
+    border-radius: 8px;
+    padding: 14px;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 11px;
+    overflow-y: auto;
+    min-height: 300px;
+    max-height: calc(100vh - 280px);
+}
+
+.aw-log-line {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+    line-height: 1.5;
+}
+
+.aw-log-time  { color: #475569; flex-shrink: 0; }
+.aw-log-fsm   { color: #818cf8; }
+.aw-log-tool  { color: #38bdf8; }
+.aw-log-hitl  { color: #fbbf24; font-weight: 700; }
+.aw-log-error { color: #f87171; font-weight: 700; }
+.aw-log-info  { color: #7ee787; }
+
+/* Command Chat */
+.aw-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 300px;
+    max-height: calc(100vh - 280px);
+}
+
+.aw-chat-msg {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.aw-chat-msg.user {
+    align-self: flex-end;
+    background: rgba(99, 102, 241, 0.18);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    color: var(--color-text);
+}
+
+.aw-chat-msg.ai {
+    align-self: flex-start;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--color-text-light);
+}
+
+.aw-chat-input-area {
+    padding: 16px;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    gap: 10px;
+    background: rgba(10, 15, 28, 0.6);
+}
+
+.aw-chat-input {
+    flex: 1;
+    background: rgba(30, 41, 59, 0.6) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    color: var(--color-text) !important;
+    font-size: 13px !important;
+    font-family: var(--font-family) !important;
+    outline: none;
+    transition: var(--transition);
+}
+
+.aw-chat-input:focus {
+    border-color: rgba(99, 102, 241, 0.4) !important;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+/* Memory Search */
+.aw-memory-result {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--glass-border);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.aw-memory-score { color: var(--color-secondary); font-weight: 700; font-size: 11px; margin-bottom: 4px; }
+.aw-memory-content { color: var(--color-text-light); }
+
+/* Botões */
+.aw-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    transition: var(--transition);
+    font-family: var(--font-family);
+    letter-spacing: 0.3px;
+}
+
+.aw-btn-primary  { background: var(--color-primary);  color: white; }
+.aw-btn-primary:hover  { background: #818cf8; }
+.aw-btn-success  { background: var(--color-success);  color: white; }
+.aw-btn-success:hover  { background: #34d399; }
+.aw-btn-danger   { background: transparent; color: var(--color-error); border: 1px solid rgba(239,68,68,0.3); }
+.aw-btn-danger:hover   { background: var(--color-error); color: white; }
+.aw-btn-ghost    { background: rgba(255,255,255,0.05); color: var(--color-text-dim); border: 1px solid var(--glass-border); }
+.aw-btn-ghost:hover    { background: rgba(255,255,255,0.08); color: var(--color-text); }
+.aw-btn-sm { padding: 5px 10px; font-size: 11px; }
+.aw-btn-full { width: 100%; }
+
+/* Input de busca */
+.aw-search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.aw-search-input {
+    flex: 1;
+    background: rgba(30, 41, 59, 0.6) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    color: var(--color-text) !important;
+    font-size: 12px !important;
+}
+
+/* Stat pills (Mission Control) */
+.aw-stats-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.aw-stat {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    min-width: 80px;
+}
+
+.aw-stat-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px; color: var(--color-text-dim); margin-bottom: 4px; }
+.aw-stat-value { font-size: 18px; font-weight: 800; color: var(--color-text); font-family: 'Fira Code', monospace; }
+
+/* Empty states */
+.aw-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--color-text-dim);
+    font-size: 13px;
+    gap: 8px;
+    text-align: center;
+}
+
+.aw-empty-icon { font-size: 32px; opacity: 0.4; }
+
+/* Scrollbar personalizada */
+.aw-panel::-webkit-scrollbar,
+.aw-log-container::-webkit-scrollbar,
+.aw-chat-messages::-webkit-scrollbar,
+.aw-context-panel::-webkit-scrollbar { width: 4px; }
+
+.aw-panel::-webkit-scrollbar-track,
+.aw-log-container::-webkit-scrollbar-track,
+.aw-chat-messages::-webkit-scrollbar-track,
+.aw-context-panel::-webkit-scrollbar-track { background: transparent; }
+
+.aw-panel::-webkit-scrollbar-thumb,
+.aw-log-container::-webkit-scrollbar-thumb,
+.aw-chat-messages::-webkit-scrollbar-thumb,
+.aw-context-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* Animações */
+@keyframes aw-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.55; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FEATURE FLAG — hidden por padrão, JS ativa quando flag=true
+───────────────────────────────────────────────────────────────────────────── */
+
+.aw-nav-item-hidden { display: none !important; }

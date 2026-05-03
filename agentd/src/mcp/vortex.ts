@@ -28,5 +28,17 @@ export function registerVortexHandlers(): void {
   registerHandler('vortex.list_media', async (args) => {
     return await vortexSkill.listMedia(args as any);
   });
-  
+
+  registerHandler('vortex.list_drafts', async (args) => {
+    return await vortexSkill.listDrafts(args as any);
+  });
+
+  registerHandler('vortex.list_published', async (args) => {
+    return await vortexSkill.listPublished(args as any);
+  });
+
+  registerHandler('vortex.micro_edit', async (args) => {
+    return await vortexSkill.microEdit(args as any);
+  });
+
 }

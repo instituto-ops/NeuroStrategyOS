@@ -1,0 +1,10 @@
+id: "vortex.list_drafts"
+version: "1.0.0"
+description: "Lista todos os rascunhos de páginas salvos localmente no VFS do Vórtex."
+risk_level: "safe"
+requires_approval: false
+input_schema:
+  type: "object"
+  properties: {}
+  required: []
+applicable_skills: ["*"]

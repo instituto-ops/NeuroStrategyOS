@@ -59,6 +59,30 @@ export class VortexSkill {
     const res = await this.client.get('/media', { params: args });
     return res.data;
   }
+
+  /**
+   * Lista rascunhos salvos no VFS local
+   */
+  async listDrafts(_args: Record<string, unknown> = {}) {
+    const res = await this.client.get('/drafts');
+    return res.data;
+  }
+
+  /**
+   * Lista páginas publicadas no repositório GitHub
+   */
+  async listPublished(_args: Record<string, unknown> = {}) {
+    const res = await this.client.get('/published-pages');
+    return res.data;
+  }
+
+  /**
+   * Edição cirúrgica de um arquivo existente no VFS
+   */
+  async microEdit(args: { filename: string; instruction: string; model?: string }) {
+    const res = await this.client.post('/micro-edit', args);
+    return res.data;
+  }
 }
 
 export const vortexSkill = new VortexSkill();

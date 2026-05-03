@@ -1,0 +1,13 @@
+id: "browser.open"
+version: "1.0.0"
+description: "Opens a URL in the controlled browser via Playwright."
+risk_level: "moderate"
+requires_approval: false
+input_schema:
+  type: "object"
+  properties:
+    url:
+      type: "string"
+      description: "The full URL to navigate to."
+  required: ["url"]
+applicable_skills: ["*"]

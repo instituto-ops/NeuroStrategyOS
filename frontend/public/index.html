@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/dashboard.css?v=8">
     <link rel="stylesheet" href="css/notifications.css?v=1">
     <link rel="stylesheet" href="css/vortex.css?v=1">
+    <link rel="stylesheet" href="css/agent-workspace.css?v=1">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
@@ -164,6 +165,18 @@
                     NeuroEngine <span style="font-weight: 400; opacity: 0.6; font-size: 0.8rem; margin-left: 2px;">OS</span>
                 </div>
                 <nav class="os-nav">
+                    <!-- AGENTE OPERACIONAL (Feature Flag: aw-nav-gate) -->
+                    <div class="nav-item aw-nav-gate aw-nav-item-hidden">
+                        <div class="nav-link">🤖 Agente <i data-lucide="chevron-down" style="width: 10px; height: 10px; margin-left: 4px;"></i></div>
+                        <div class="nav-dropdown">
+                            <div class="dropdown-item" onclick="app.showSection('agent-workspace')"><i data-lucide="layout-dashboard"></i> Mission Control</div>
+                            <div class="dropdown-item" onclick="app.showSection('agent-workspace'); agentWorkspace.switchTab('hitl')" style="color: #fbbf24;"><i data-lucide="alert-triangle"></i> HITL / Aprovações</div>
+                            <div class="dropdown-item" onclick="app.showSection('agent-workspace'); agentWorkspace.switchTab('artifacts')"><i data-lucide="file-text"></i> Artifacts</div>
+                            <div class="dropdown-item" onclick="app.showSection('agent-workspace'); agentWorkspace.switchTab('logs')"><i data-lucide="radio"></i> Live Log</div>
+                            <div class="dropdown-item" onclick="app.showSection('agent-workspace'); agentWorkspace.switchTab('memory')"><i data-lucide="brain"></i> Memória Semântica</div>
+                            <div class="dropdown-item" onclick="app.showSection('agent-workspace'); agentWorkspace.switchTab('command')" style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4px; padding-top: 8px;"><i data-lucide="message-square"></i> Command Chat</div>
+                        </div>
+                    </div>
                     <!-- ESTRATÉGIA -->
                     <div class="nav-item">
                         <div class="nav-link">🧠 Estratégia <i data-lucide="chevron-down" style="width: 10px; height: 10px; margin-left: 4px;"></i></div>
@@ -1735,6 +1748,12 @@
                 </div>
             </section>
 
+            <!-- Section: Agent Workspace — Mission Control (Fase 8A) -->
+            <!-- Feature flag: visível quando AGENT_WORKSPACE_UI=true via agentWorkspace.enable() -->
+            <section id="agent-workspace" class="content-section" style="padding: 0;">
+                <!-- Renderizado por agent-workspace.js via agentWorkspace._renderSection() -->
+            </section>
+
             <!-- Section: Vórtex AI Studio (IDE) -->
             <section id="vortex-studio" class="content-section" style="padding: 0;">
                 <!-- Rendered dynamically by vortex-studio.js -->
@@ -1763,7 +1782,12 @@
     <script src="js/neuro-training.js?v=18"></script>
     <script src="js/menu-manager.js?v=18"></script>
     <script src="js/manager-agent.js?v=18"></script>
+    <script src="js/vortex-renderer.js?v=18"></script>
     <script src="js/agent-ui.js?v=18"></script>
+    <!-- Fase 8A: Agent Workspace Shell (AGENT_WORKSPACE_UI feature flag) -->
+    <script src="js/agent-workspace.js?v=1"></script>
+    <!-- Fase 8B: Agent FAB universal (substitui toggle legado, 5 estados, badge HITL) -->
+    <script src="js/agent-fab.js?v=1"></script>
     <script src="js/app.js?v=18"></script>
     
     <!-- [MODAL] Media Picker (Removido ID duplicado) -->
@@ -1831,11 +1855,7 @@
             <button class="btn" style="padding:18px 40px; border-radius:50px; font-weight:800; background:#ef4444; color:white; border:none; font-size:14px; box-shadow: 0 10px 20px rgba(239,68,68,0.2);" onclick="window.neuroTraining.toggleMode('text')">ENCERRAR SESSÃO</button>
         </div>
     </div> <!-- Fecha Voice Overlay -->
-    <!-- ✨ CENTELHA: ORQUESTRADOR ONIPRESENTE -->
-    <button id="spark-trigger" class="spark-trigger" onclick="window.sparkEngine.togglePanel()" title="NeuroEngine Spark">
-        <i data-lucide="sparkles" class="spark-icon"></i>
-        <span id="spark-badge" class="spark-badge" style="display: none;"></span>
-    </button>
+    <!-- ✨ CENTELHA removida — substituída pelo Agent FAB (agent-fab.js, Fase 8B) -->
     
     <!-- TOAST NOTIFICATIONS (NEW) -->
     <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 999999;"></div>
@@ -1969,26 +1989,7 @@
         </div>
     </div>
 
-    <div id="spark-panel" class="spark-panel" style="display: none;">
-        <div class="spark-header">
-            <div class="spark-title">
-                <i data-lucide="sparkle" class="text-teal-400"></i> NeuroEngine OS <span class="badge" style="background: rgba(45, 212, 191, 0.2); color: #2dd4bf; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-left: 5px;">V5.30 ALPHA</span>
-            </div>
-            <button class="btn-close-spark" onclick="window.sparkEngine.togglePanel()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
-        </div>
-        <div class="spark-tabs">
-            <button id="tab-copilot" class="spark-tab active" onclick="window.sparkEngine.switchTab('copilot')">✨ Copilot</button>
-            <button id="tab-telemetry" class="spark-tab" onclick="window.sparkEngine.switchTab('telemetry')">📊 Telemetria</button>
-            <button id="tab-health" class="spark-tab" onclick="window.sparkEngine.switchTab('health')">🛡️ Saúde</button>
-        </div>
-        <div id="spark-content" class="spark-content">
-            <!-- Injetado via spark-engine.js -->
-            <div class="loading-spark">⌛ Sincronizando com o Núcleo Abidos...</div>
-        </div>
-        <div class="spark-footer" style="padding: 10px 20px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
-            <span style="font-size: 10px; color: rgba(255,255,255,0.3);">NeuroEngine OS — Orquestrador Onipresente</span>
-        </div>
-    </div>
+    <!-- spark-panel removido — funcionalidades migradas para #agent-workspace (Fase 8A/8B) -->
     <!-- SCRIPTS -->
     <!-- Git-in-Browser: Isomorphic-Git & LightningFS (Dexie adapter) -->
     <script src="https://unpkg.com/@isomorphic-git/lightning-fs"></script>
@@ -1996,7 +1997,7 @@
 
     <script src="js/vortex-config.js"></script>
     <script src="js/vortex-studio.js?v=1"></script>
-    <script src="js/spark-engine.js?v=5"></script>
+    <!-- spark-engine.js removido — substituído por agent-workspace.js + agent-fab.js -->
     <!-- [POPOVER GLOBAL] Auditoria Abidos -->
     <div id="abidos-analysis-popover" class="card" 
         style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 380px; z-index: 10001; padding: 25px; 

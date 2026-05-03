@@ -832,6 +832,7 @@ window.vortexStudio = (() => {
                 model,
                 currentCode: currentCode !== defaultCode ? currentCode : '',
                 abidosRules: state.abidosRules,
+                vortexDataDriven: localStorage.getItem('vortex_data_driven_renderer') === 'true',
                 context: [
                     abidosContext,
                     mediaCtx,
@@ -940,8 +941,22 @@ window.vortexStudio = (() => {
                                 const cleanNewCode = sanitizeAIContent(event.code);
                                 
                                 // [3.2] Cálculo do Código Final (Emendado ou Novo)
-                                const finalCleanCode = state.isContinuing ? state.preContinuationCode + cleanNewCode : cleanNewCode;
-                                const finalRawCode = state.isContinuing ? state.preContinuationCode + event.code : event.code;
+                                let finalCleanCode = state.isContinuing ? state.preContinuationCode + cleanNewCode : cleanNewCode;
+                                let finalRawCode = state.isContinuing ? state.preContinuationCode + event.code : event.code;
+
+                                // [8.9] Data-driven Renderer Integration
+                                if (app.modelConfig.flags.vortexDataDriven && finalCleanCode.trim().startsWith('{')) {
+                                    try {
+                                        const semanticData = JSON.parse(finalCleanCode);
+                                        if (semanticData.sections && Array.isArray(semanticData.sections)) {
+                                            console.log('🌀 [RENDERER] Aplicando renderização semântica...');
+                                            finalCleanCode = window.VortexRenderer.renderPage(semanticData);
+                                            // Mantemos o raw como JSON para referência, mas o editor recebe TSX
+                                        }
+                                    } catch (e) {
+                                        console.warn('⚠️ [RENDERER] Falha ao processar JSON semântico:', e.message);
+                                    }
+                                }
 
                                 if (!isDefaultCode && oldCode.length > 50 && !state.isContinuing) {
                                     showDiffReview(oldCode, finalCleanCode, event.filename || 'page.tsx');
@@ -1294,6 +1309,37 @@ window.vortexStudio = (() => {
         if (el) el.classList.toggle('active', state.voiceProfile.enabled);
         renderVoiceProfileStatus();
         addAuditLog('info', `Perfil Verbal ${state.voiceProfile.enabled ? 'ativado' : 'desativado'} no prompt.`);
+    }
+
+    function toggleDataDrivenRenderer() {
+        const current = localStorage.getItem('vortex_data_driven_renderer') === 'true';
+        const newVal = !current;
+        localStorage.setItem('vortex_data_driven_renderer', newVal);
+        addAuditLog('info', `Renderer Semântico ${newVal ? 'ativado' : 'desativado'}.`);
+        updateDataDrivenBadge();
+        
+        // Sincronizar com o app.modelConfig se disponível
+        if (window.app && window.app.modelConfig) {
+            window.app.modelConfig.vortexDataDriven = newVal;
+        }
+    }
+
+    function updateDataDrivenBadge() {
+        const btn = document.getElementById('vortex-data-driven-toggle');
+        if (!btn) return;
+        const active = localStorage.getItem('vortex_data_driven_renderer') === 'true';
+        btn.classList.toggle('active', active);
+        // Usar cores diferentes para destacar o modo semântico
+        if (active) {
+            btn.style.borderColor = 'var(--color-primary)';
+            btn.style.color = 'var(--color-primary)';
+            btn.innerHTML = '<i data-lucide="layers"></i> <span>SEMÂNTICO</span>';
+        } else {
+            btn.style.borderColor = '';
+            btn.style.color = '';
+            btn.innerHTML = '<i data-lucide="code"></i> <span>TÉCNICO</span>';
+        }
+        if (window.lucide) window.lucide.createIcons();
     }
 
     function renderVoiceProfileStatus(message) {
@@ -2535,6 +2581,9 @@ function renderFallbackPanel(errorMsg) {
                         <button data-vortex-mode="canvas" onclick="vortexStudio.setOperationMode('canvas')" title="Canvas Livre"><i data-lucide="palette"></i> Canvas</button>
                         <button data-vortex-mode="template" onclick="vortexStudio.setOperationMode('template')" title="Template Guiado"><i data-lucide="layout-template"></i> Template</button>
                     </div>
+                    <button id="vortex-data-driven-toggle" class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.toggleDataDrivenRenderer()" title="Alternar entre Geração de Código Bruto (Técnico) e Geração Semântica (JSON/Semântico)">
+                        <i data-lucide="code"></i> <span>TÉCNICO</span>
+                    </button>
                 </div>
                 <div class="vortex-toolbar-right">
                     <button id="vortex-v6-toggle" class="vortex-btn vortex-btn-secondary" onclick="vortexStudio.toggleVisualMode()" title="Alternar Vortex Visual v6">
@@ -5790,6 +5839,7 @@ function renderFallbackPanel(errorMsg) {
         await loadVoiceProfile();
         await loadStylePreferences();
         await loadVortexMedia();
+        updateDataDrivenBadge();
         updatePreview(`
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: #f8fafc; color: #64748b; text-align: center; padding: 40px;">
                 <div style="font-size: 48px; margin-bottom: 20px;">🌀</div>
@@ -5879,6 +5929,7 @@ function renderFallbackPanel(errorMsg) {
         importFromSilo,
         loadVoiceProfile,
         toggleVoiceProfile,
+        toggleDataDrivenRenderer,
         setOperationMode,
         toggleVisualMode,
         setVisualLayer,

@@ -79,8 +79,9 @@ function registerAgentRoutes(app) {
 
     app.get('/api/agent/status', async (req, res) => {
         try {
-            const status = await callAgent('fsm.status');
-            res.json({ success: true, status });
+            // agent.status retorna pid, uptime, fsm state, sessionId, etc.
+            const status = await callAgent('agent.status');
+            res.json({ success: true, status, connected: true });
         } catch (err) {
             res.json({ success: false, connected: false, error: err.message });
         }
@@ -88,9 +89,9 @@ function registerAgentRoutes(app) {
 
     app.get('/api/agent/artifacts', async (req, res) => {
         try {
-            const artifacts = await callAgent('tools.invoke', { 
-                toolId: 'filesystem.list_dir', 
-                args: { path: 'artifacts' } // Caminho relativo ao home
+            const artifacts = await callAgent('tool.invoke', {   // FIX: era 'tools.invoke'
+                toolId: 'filesystem.list_dir',
+                args: { path: path.join(require('os').homedir(), '.neuroengine', 'artifacts') }
             });
             res.json({ success: true, artifacts: artifacts.files || [] });
         } catch (err) {
@@ -100,9 +101,10 @@ function registerAgentRoutes(app) {
 
     app.get('/api/agent/artifacts/:name', async (req, res) => {
         try {
-            const content = await callAgent('tools.invoke', { 
-                toolId: 'filesystem.read', 
-                args: { path: `artifacts/${req.params.name}` }
+            const artifactPath = path.join(require('os').homedir(), '.neuroengine', 'artifacts', req.params.name);
+            const content = await callAgent('tool.invoke', {    // FIX: era 'tools.invoke'
+                toolId: 'filesystem.read_file',
+                args: { path: artifactPath }
             });
             res.json({ success: true, content: content.content });
         } catch (err) {
@@ -116,25 +118,61 @@ function registerAgentRoutes(app) {
         res.setHeader('Connection', 'keep-alive');
         res.flushHeaders();
 
-        const { fs } = require('./shared');
-        const eventsPath = path.join(require('os').homedir(), '.neuroengine', 'events');
-        
-        // Função para enviar evento
+        const fsNode = require('fs');
+        const os = require('os');
+        const eventsPath = path.join(os.homedir(), '.neuroengine', 'events');
+
         const sendEvent = (data) => {
             res.write(`data: ${JSON.stringify(data)}\n\n`);
         };
 
-        // Simples tail: observa o diretório de eventos
-        const watcher = fs.watch(eventsPath, (eventType, filename) => {
-            if (eventType === 'change') {
-                // Ao mudar, poderíamos ler as últimas linhas. 
-                // Por simplificação agora, enviamos um sinal de "update".
-                sendEvent({ type: 'log_update', filename });
+        // Heartbeat para manter conexão viva (30s)
+        const heartbeat = setInterval(() => {
+            res.write(': heartbeat\n\n');
+        }, 30000);
+
+        // Último arquivo processado — evita reprocessar o mesmo evento
+        let lastProcessed = '';
+
+        const tryReadLatestEvent = (filename) => {
+            if (!filename || filename === lastProcessed) return;
+            lastProcessed = filename;
+            try {
+                const fullPath = path.join(eventsPath, filename);
+                const raw = fsNode.readFileSync(fullPath, 'utf8');
+                // Eventos são JSONL — pegar última linha não vazia
+                const lines = raw.trim().split('\n').filter(Boolean);
+                const lastLine = lines[lines.length - 1];
+                if (!lastLine) return;
+                const event = JSON.parse(lastLine);
+                // Normalizar para formato esperado pelo agent-workspace.js
+                sendEvent({
+                    type:    event.type || 'info',
+                    message: event.message || event.msg || JSON.stringify(event),
+                    ts:      event.ts || event.timestamp || new Date().toISOString(),
+                    data:    event
+                });
+            } catch (_e) {
+                // Arquivo ainda sendo escrito ou inválido — ignorar
             }
-        });
+        };
+
+        // Observar diretório de eventos
+        let watcher;
+        try {
+            fsNode.mkdirSync(eventsPath, { recursive: true });
+            watcher = fsNode.watch(eventsPath, (eventType, filename) => {
+                if (eventType === 'rename' || eventType === 'change') {
+                    tryReadLatestEvent(filename);
+                }
+            });
+        } catch (_e) {
+            sendEvent({ type: 'info', message: 'Diretório de eventos não encontrado — aguardando agentd.', ts: new Date().toISOString() });
+        }
 
         req.on('close', () => {
-            watcher.close();
+            clearInterval(heartbeat);
+            watcher?.close();
         });
     });
 

@@ -1,0 +1,35 @@
+# agentd/registry/rules/50-browser.yaml
+# Governança para Automação de Browser
+
+rules:
+  - id: BROWSER_READ_ONLY
+    description: "Permite leitura e captura de tela automática"
+    tools:
+      - "browser.screenshot"
+      - "browser.get_content"
+    decision: auto
+
+  - id: BROWSER_NAVIGATION_APPROVAL
+    description: "Exige aprovação para navegação e interação ativa em domínios externos"
+    tools:
+      - "browser.open"
+      - "browser.click"
+      - "browser.type"
+    decision: requires_approval
+    # Por segurança, qualquer interação ativa fora do ecossistema local exige aprovação
+    condition:
+      not_in_whitelist: ["https://hipnolawrence.com", "http://localhost:3000"]
+
+  - id: BROWSER_TRUSTED_DOMAINS
+    description: "Permite navegação automática em domínios confiáveis do projeto"
+    tools:
+      - "browser.open"
+    decision: auto
+    condition:
+      in_whitelist: ["https://hipnolawrence.com", "http://localhost:3000"]
+
+  - id: BROWSER_CLOSE
+    description: "Permite fechar o browser sem restrições"
+    tools:
+      - "browser.close"
+    decision: auto

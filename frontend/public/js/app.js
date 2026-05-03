@@ -1,7 +1,10 @@
 const app = {
     modelConfig: {
         global: localStorage.getItem('neuroengine_global_model') || 'gemini-2.5-flash',
-        sections: JSON.parse(localStorage.getItem('neuroengine_local_models') || '{}')
+        sections: JSON.parse(localStorage.getItem('neuroengine_local_models') || '{}'),
+        flags: {
+            vortexDataDriven: localStorage.getItem('vortex_data_driven_renderer') === 'true'
+        }
     },
 
     init() {
@@ -15,6 +18,10 @@ const app = {
         if (window.managerAgent) window.managerAgent.init();
         if (window.aiStudioTemplate) window.aiStudioTemplate.init();
         if (window.vortexStudio) window.vortexStudio.init();
+        // Fase 8A: Agent Workspace Shell
+        if (window.agentWorkspace) window.agentWorkspace.init();
+        // Fase 8B: Agent FAB universal
+        if (window.agentFAB) window.agentFAB.init();
         this.loadSystemAlerts();
         
         // Pulso do Sistema (V5.1)
@@ -100,23 +107,36 @@ const app = {
     showSection(id) {
         if (!id) return;
         console.log(`🌐 [NAV] Mudando para seção: ${id}`);
-        
+
+        // Lifecycle: notificar seção anterior que está saindo
+        const prevSection = document.querySelector('.content-section.active');
+        if (prevSection) {
+            if (prevSection.id === 'agent-workspace' && window.agentWorkspace) {
+                window.agentWorkspace.onDeactivate();
+            }
+        }
+
         const sections = document.querySelectorAll('.content-section');
         sections.forEach(sec => {
             sec.classList.remove('active');
             sec.style.setProperty('display', 'none', 'important');
         });
-        
+
         const targetSec = document.getElementById(id);
         if (targetSec) {
             targetSec.classList.add('active');
-            // AI-Studio e Vórtex precisam de flex para o grid
-            const displayType = (id === 'ai-studio' || id === 'vortex-studio') ? 'flex' : 'block';
+            // AI-Studio, Vórtex e Agent Workspace precisam de flex para o grid
+            const displayType = (id === 'ai-studio' || id === 'vortex-studio' || id === 'agent-workspace') ? 'flex' : 'block';
             targetSec.style.setProperty('display', displayType, 'important');
-            
+
             // Re-render ícones Lucide
             if (window.lucide) setTimeout(() => window.lucide.createIcons(), 50);
-            
+
+            // Lifecycle: notificar nova seção que está ativando
+            if (id === 'agent-workspace' && window.agentWorkspace) {
+                window.agentWorkspace.onActivate();
+            }
+
             // Sincroniza dados da seção
             if (typeof this.loadSectionData === 'function') this.loadSectionData(id);
         } else {

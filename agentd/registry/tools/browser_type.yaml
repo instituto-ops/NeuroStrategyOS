@@ -1,0 +1,16 @@
+id: "browser.type"
+version: "1.0.0"
+description: "Types text into an input field identified by a selector."
+risk_level: "moderate"
+requires_approval: true
+input_schema:
+  type: "object"
+  properties:
+    selector:
+      type: "string"
+      description: "CSS selector of the input field."
+    text:
+      type: "string"
+      description: "Text to type."
+  required: ["selector", "text"]
+applicable_skills: ["*"]

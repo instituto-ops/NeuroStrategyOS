@@ -1,0 +1,19 @@
+id: "vortex.generate"
+version: "1.0.0"
+description: "Gera ou atualiza uma seção de página usando o motor Vórtex AI."
+risk_level: "moderate"
+requires_approval: false
+input_schema:
+  type: "object"
+  properties:
+    prompt:
+      type: "string"
+      description: "Instrução para a geração do conteúdo."
+    model:
+      type: "string"
+      description: "Modelo a ser usado (flash, pro)."
+    context:
+      type: "string"
+      description: "Regras Abidos ou contexto adicional."
+  required: ["prompt"]
+applicable_skills: ["*"]

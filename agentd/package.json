@@ -17,12 +17,16 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "axios": "^1.16.0",
     "better-sqlite3": "^12.9.0",
     "commander": "^13.1.0",
     "dotenv": "^17.4.2",
     "js-yaml": "^4.1.1",
+    "mammoth": "^1.12.0",
+    "pdf-parse": "^2.4.5",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
+    "playwright": "^1.59.1",
     "zod": "^3.24.0"
   },
   "devDependencies": {

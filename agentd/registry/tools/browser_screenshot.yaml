@@ -1,0 +1,13 @@
+id: "browser.screenshot"
+version: "1.0.0"
+description: "Captures the current browser view as a visual artifact."
+risk_level: "safe"
+requires_approval: false
+input_schema:
+  type: "object"
+  properties:
+    name:
+      type: "string"
+      description: "Optional base name for the screenshot file."
+  required: []
+applicable_skills: ["*"]

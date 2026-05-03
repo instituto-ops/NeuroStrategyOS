@@ -1,0 +1,13 @@
+id: "google.search"
+version: "1.0.0"
+description: "Performs a Google Search via SerpApi."
+risk_level: "safe"
+requires_approval: false
+input_schema:
+  type: "object"
+  properties:
+    query:
+      type: "string"
+      description: "Search query."
+  required: ["query"]
+applicable_skills: ["*"]

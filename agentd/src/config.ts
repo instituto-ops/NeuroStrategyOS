@@ -3,8 +3,24 @@ import { join, dirname } from 'node:path';
 import { existsSync } from 'node:fs';
 import dotenv from 'dotenv';
 
-// Carregar .env do diretório atual
-dotenv.config({ path: join(process.cwd(), '.env') });
+// Encontrar .env — tenta process.cwd(), depois sobe até achar estado_atual.md (raiz do repo)
+function findEnvFile(): string {
+  // 1. Tenta cwd/.env
+  const cwdEnv = join(process.cwd(), '.env');
+  if (existsSync(cwdEnv)) return cwdEnv;
+  // 2. Sobe até 5 níveis buscando estado_atual.md como âncora do repo root
+  let dir = process.cwd();
+  for (let i = 0; i < 5; i++) {
+    const candidate = join(dir, '.env');
+    if (existsSync(join(dir, 'estado_atual.md')) && existsSync(candidate)) return candidate;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return cwdEnv; // fallback silencioso
+}
+
+dotenv.config({ path: findEnvFile() });
 
 const IS_WINDOWS = platform() === 'win32';
 
@@ -63,7 +79,8 @@ export const config = {
   daemon: {
     name: 'agentd',
     version: '0.1.0',
-    apiKey: process.env.GOOGLE_GENAI_API_KEY || '',
+    // Aceita tanto GEMINI_API_KEY (nome no .env raiz) quanto GOOGLE_GENAI_API_KEY
+    apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || '',
   },
 } as const;
 

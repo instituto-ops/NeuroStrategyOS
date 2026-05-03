@@ -1,0 +1,17 @@
+id: "vortex.publish"
+version: "1.0.0"
+description: "Realiza o commit do conteúdo aprovado para o repositório GitHub do site oficial."
+risk_level: "high"
+requires_approval: true
+input_schema:
+  type: "object"
+  properties:
+    filename:
+      type: "string"
+    content:
+      type: "string"
+    message:
+      type: "string"
+      description: "Mensagem de commit."
+  required: ["filename", "content"]
+applicable_skills: ["*"]

@@ -1,0 +1,13 @@
+id: "documents.parse_pdf"
+version: "1.0.0"
+description: "Extracts text and metadata from PDF files."
+risk_level: "safe"
+requires_approval: false
+input_schema:
+  type: "object"
+  properties:
+    path:
+      type: "string"
+      description: "Absolute path to the PDF file."
+  required: ["path"]
+applicable_skills: ["*"]
