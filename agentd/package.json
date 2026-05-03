@@ -1,0 +1,33 @@
+{
+  "name": "@neuroengine/agentd",
+  "version": "0.1.0",
+  "description": "NeuroEngine Agent Daemon — local stateless daemon for the operational agent",
+  "type": "module",
+  "main": "dist/boot.js",
+  "bin": {
+    "agent": "./bin/agent.js"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "node dist/boot.js",
+    "agent": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "vitest": "^3.1.0",
+    "@types/node": "^22.10.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
