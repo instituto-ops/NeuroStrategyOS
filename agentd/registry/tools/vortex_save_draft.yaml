@@ -1,0 +1,33 @@
+id: "vortex.save_draft"
+version: "1.0.0"
+description: "Salva um arquivo localmente no VFS do Vórtex (não publica). Operação reversível."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 15000
+input_schema:
+  type: "object"
+  properties:
+    filename:
+      type: "string"
+      description: "Nome do arquivo a salvar (ex: index.html)"
+    content:
+      type: "string"
+      description: "Conteúdo HTML ou texto do rascunho"
+  required: ["filename", "content"]
+output_schema:
+  type: "object"
+  properties:
+    success:
+      type: "boolean"
+    path:
+      type: "string"
+effects:
+  - "Cria ou sobrescreve arquivo no VFS local do Vórtex"
+applicable_skills: ["vortex", "*"]
+examples:
+  - input:
+      filename: "sobre-nos.html"
+      content: "<h1>Sobre Nós</h1>"
+    explanation: "Salva rascunho de página sem publicar"

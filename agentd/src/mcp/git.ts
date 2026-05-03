@@ -67,5 +67,20 @@ export function registerGitHandlers(): void {
     return runGit(gitArgs, cwd);
   });
 
-  logger.debug('Git handlers registered');
+  registerHandler('git.push', async (args) => {
+    const cwd = args.cwd as string;
+    const remote = (args.remote as string) ?? 'origin';
+    const branch = args.branch as string;
+    const force = args.force as boolean ?? false;
+
+    // Dupla verificação de force push (o Kernel já bloqueia, mas defesa em profundidade)
+    if (force) {
+      throw new Error('Force push é proibido. Operação bloqueada por política de segurança.');
+    }
+
+    logger.info({ remote, branch, cwd }, 'git.push — operação irreversível aprovada via HITL');
+    return runGit(['push', remote, branch], cwd);
+  });
+
+  logger.debug('Git handlers registered (status, diff, add, commit, log, branch, checkout, push)');
 }

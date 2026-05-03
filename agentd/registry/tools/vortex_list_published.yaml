@@ -1,0 +1,24 @@
+id: "vortex.list_published"
+version: "1.0.0"
+description: "Lista as páginas já publicadas no repositório GitHub do site hipnolawrence.com."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 15000
+input_schema:
+  type: "object"
+  properties: {}
+  required: []
+output_schema:
+  type: "object"
+  properties:
+    pages:
+      type: "array"
+      items:
+        type: "object"
+effects: []
+applicable_skills: ["vortex", "*"]
+examples:
+  - input: {}
+    explanation: "Retorna lista de páginas publicadas no repositório GitHub"

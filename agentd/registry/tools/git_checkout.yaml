@@ -1,0 +1,37 @@
+id: "git.checkout"
+version: "1.0.0"
+description: "Faz checkout de uma branch existente ou cria uma nova branch no repositório Git."
+risk_level: "moderate"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 15000
+input_schema:
+  type: "object"
+  properties:
+    cwd:
+      type: "string"
+      description: "Diretório do repositório Git"
+    branch:
+      type: "string"
+      description: "Nome da branch para checkout"
+    create:
+      type: "boolean"
+      description: "Se true, cria a branch com -b"
+  required: ["cwd", "branch"]
+output_schema:
+  type: "object"
+  properties:
+    stdout:
+      type: "string"
+    exitCode:
+      type: "number"
+effects:
+  - "Muda o HEAD do repositório para a branch especificada"
+applicable_skills: ["*"]
+examples:
+  - input:
+      cwd: "."
+      branch: "feat/nova-feature"
+      create: true
+    explanation: "Cria e faz checkout de nova branch"

@@ -1,35 +1,53 @@
-# agentd/registry/rules/50-browser.yaml
-# Governança para Automação de Browser
-
+## Browser automation rules
+## Schema: rules wrapper + predicates/match/priority (kernel-compatible)
+## Decisions válidas: allow | review | block | forbidden
 rules:
-  - id: BROWSER_READ_ONLY
-    description: "Permite leitura e captura de tela automática"
-    tools:
-      - "browser.screenshot"
-      - "browser.get_content"
-    decision: auto
+  # Leitura passiva — sempre permitida em estados ativos
+  - id: "browser-read-safe"
+    description: "Screenshot e get_content são operações de leitura passiva"
+    priority: 50
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "in"
+        value: ["browser.screenshot", "browser.get_content"]
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING", "TESTING", "DIAGNOSIS", "PLANNING"]
 
-  - id: BROWSER_NAVIGATION_APPROVAL
-    description: "Exige aprovação para navegação e interação ativa em domínios externos"
-    tools:
-      - "browser.open"
-      - "browser.click"
-      - "browser.type"
-    decision: requires_approval
-    # Por segurança, qualquer interação ativa fora do ecossistema local exige aprovação
-    condition:
-      not_in_whitelist: ["https://hipnolawrence.com", "http://localhost:3000"]
+  # Fechar browser — sempre permitido
+  - id: "browser-close-safe"
+    description: "Fechar browser não tem efeitos colaterais"
+    priority: 50
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "browser.close"
 
-  - id: BROWSER_TRUSTED_DOMAINS
-    description: "Permite navegação automática em domínios confiáveis do projeto"
-    tools:
-      - "browser.open"
-    decision: auto
-    condition:
-      in_whitelist: ["https://hipnolawrence.com", "http://localhost:3000"]
+  # Navegação e interação ativa — permitida apenas em EXECUTING
+  - id: "browser-active-executing"
+    description: "Navegação, cliques e digitação permitidos apenas durante execução"
+    priority: 51
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "in"
+        value: ["browser.open", "browser.click", "browser.type"]
+      - field: "ctx.fsm_state"
+        op: "eq"
+        value: "EXECUTING"
 
-  - id: BROWSER_CLOSE
-    description: "Permite fechar o browser sem restrições"
-    tools:
-      - "browser.close"
-    decision: auto
+  # Bloquear browser.eval — execução arbitrária de JS nunca permitida
+  - id: "browser-eval-forbidden"
+    description: "Execução de JavaScript arbitrário via browser é proibida"
+    priority: 2
+    decision: "forbidden"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "browser.eval"

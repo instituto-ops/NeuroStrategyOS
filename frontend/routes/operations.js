@@ -914,7 +914,7 @@ app.post('/api/manager/chat', async (req, res) => {
         const silosRaw = fs.existsSync(path.join(__dirname, 'silos.json')) ? fs.readFileSync(path.join(__dirname, 'silos.json'), 'utf8') : '[]';
         const draftsRaw = fs.existsSync(path.join(__dirname, 'drafts.json')) ? fs.readFileSync(path.join(__dirname, 'drafts.json'), 'utf8') : '[]';
         const style = getVictorStyle();
-        const menusRaw = fs.existsSync(MENUS_FILE) ? fs.readFileSync(MENUS_FILE, 'utf8') : '[]';
+        const menusRaw = fs.existsSync(path.join(__dirname, 'menus.json')) ? fs.readFileSync(path.join(__dirname, 'menus.json'), 'utf8') : '[]';
         
         // 2. Montagem do Super-Prompt (Prompt System Contextual)
         const systemPrompt = `

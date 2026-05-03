@@ -1,0 +1,36 @@
+id: "vortex.micro_edit"
+version: "1.0.0"
+description: "Realiza edição cirúrgica em um arquivo existente no VFS do Vórtex via instrução em linguagem natural."
+risk_level: "moderate"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 60000
+input_schema:
+  type: "object"
+  properties:
+    filename:
+      type: "string"
+      description: "Nome do arquivo a editar no VFS"
+    instruction:
+      type: "string"
+      description: "Instrução de edição em linguagem natural (ex: 'mude o título para X')"
+    model:
+      type: "string"
+      description: "Modelo Gemini a usar (opcional, default: flash)"
+  required: ["filename", "instruction"]
+output_schema:
+  type: "object"
+  properties:
+    success:
+      type: "boolean"
+    diff:
+      type: "string"
+effects:
+  - "Sobrescreve arquivo existente no VFS (backup não garantido)"
+applicable_skills: ["vortex", "*"]
+examples:
+  - input:
+      filename: "index.html"
+      instruction: "Altere o telefone no rodapé para (11) 9999-0000"
+    explanation: "Edição pontual de elemento específico no arquivo"

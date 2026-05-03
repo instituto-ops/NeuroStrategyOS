@@ -1,0 +1,39 @@
+id: "git.push"
+version: "1.0.0"
+description: "Faz push de commits locais para o remote. Requer HITL obrigatório. Force push é proibido."
+risk_level: "high"
+reversible: false
+requires_approval: true
+sandbox: false
+timeout_ms: 60000
+input_schema:
+  type: "object"
+  properties:
+    cwd:
+      type: "string"
+      description: "Diretório do repositório Git"
+    remote:
+      type: "string"
+      description: "Nome do remote (default: origin)"
+    branch:
+      type: "string"
+      description: "Branch a fazer push"
+    force:
+      type: "boolean"
+      description: "Force push — PROIBIDO (sempre falha no Kernel)"
+  required: ["cwd", "branch"]
+output_schema:
+  type: "object"
+  properties:
+    stdout:
+      type: "string"
+    exitCode:
+      type: "number"
+effects:
+  - "Publica commits no repositório remoto (irreversível)"
+applicable_skills: ["*"]
+examples:
+  - input:
+      cwd: "."
+      branch: "feat/minha-feature"
+    explanation: "Push de feature branch para origin"

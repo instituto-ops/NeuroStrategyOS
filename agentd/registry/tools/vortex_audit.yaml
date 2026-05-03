@@ -1,0 +1,30 @@
+id: "vortex.audit"
+version: "1.0.0"
+description: "Valida conteúdo de um rascunho contra as regras do Protocolo Abidos e CFP. Retorna lista de problemas."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 30000
+input_schema:
+  type: "object"
+  properties:
+    code:
+      type: "string"
+      description: "Código HTML a auditar"
+  required: ["code"]
+output_schema:
+  type: "object"
+  properties:
+    passed:
+      type: "boolean"
+    issues:
+      type: "array"
+      items:
+        type: "string"
+effects: []
+applicable_skills: ["vortex", "*"]
+examples:
+  - input:
+      code: "<h1>Título</h1><p>Texto</p>"
+    explanation: "Audita HTML contra regras do protocolo Abidos"

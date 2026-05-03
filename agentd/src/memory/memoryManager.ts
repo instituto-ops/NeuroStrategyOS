@@ -6,7 +6,7 @@
  */
 
 import { SemanticStore, type MemoryEntry } from './store.js';
-import { GeminiEmbeddings } from '../embeddings/gemini.ts';
+import { GeminiEmbeddings } from '../embeddings/gemini.js';
 import { join } from 'node:path';
 import { config } from '../config.js';
 import { logger } from '../logger/logger.js';

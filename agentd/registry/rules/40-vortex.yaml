@@ -1,31 +1,49 @@
-# agentd/registry/rules/40-vortex.yaml
-# Governança para manipulação do Domínio Vórtex (Site/CMS)
+## Vórtex domain rules
+## Schema: rules wrapper + predicates/match/priority (kernel-compatible)
+rules:
+  # Leitura de estado do CMS — sempre permitida (safe tools)
+  - id: "vortex-read-safe"
+    description: "Leitura de drafts, publicados e mídia é sempre permitida"
+    priority: 40
+    decision: "allow"
+    match: "any"
+    predicates:
+      - field: "tool.id"
+        op: "in"
+        value: ["vortex.list_drafts", "vortex.list_published", "vortex.list_media"]
 
-- id: vortex-read
-  name: "Permitir leitura de drafts e arquivos Vórtex"
-  description: "O agente pode ler o estado atual do CMS para análise"
-  selector: "tool.id == 'vortex.list_drafts' || tool.id == 'vortex.list_published' || tool.id == 'vortex.list_media'"
-  decision: "allow"
-  priority: 40
+  # Auditoria de conteúdo — sempre permitida
+  - id: "vortex-audit-safe"
+    description: "Auditoria de rascunhos é operação safe"
+    priority: 40
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "vortex.audit"
 
-- id: vortex-edit
-  name: "Edição de conteúdo rascunho"
-  description: "Edições em rascunhos são permitidas mas auditadas"
-  selector: "tool.id == 'vortex.generate' || tool.id == 'vortex.save_draft' || tool.id == 'vortex.micro_edit'"
-  decision: "allow"
-  priority: 41
+  # Edição em rascunhos — permitida durante execução/planejamento
+  - id: "vortex-edit-executing"
+    description: "Geração, save_draft e micro_edit permitidos em EXECUTING ou PLANNING"
+    priority: 41
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "in"
+        value: ["vortex.generate", "vortex.save_draft", "vortex.micro_edit"]
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING", "PLANNING"]
 
-- id: vortex-publish-approval
-  name: "Publicação exige aprovação humana"
-  description: "Qualquer alteração em produção (commit GitHub) exige HITL"
-  selector: "tool.id == 'vortex.publish' || tool.id == 'vortex.commit'"
-  decision: "requires_approval"
-  reason: "Publicação em produção afeta o site ao vivo e SEO."
-  priority: 45
-
-- id: vortex-audit-enforcement
-  name: "Audit obrigatório para novos conteúdos"
-  description: "O agente deve rodar o auditor antes de sugerir publicação"
-  selector: "tool.id == 'vortex.audit'"
-  decision: "allow"
-  priority: 42
+  # Publicação — HITL obrigatório (ação irreversível: commit GitHub)
+  - id: "vortex-publish-hitl"
+    description: "Publicação em produção exige aprovação humana (HITL)"
+    priority: 39
+    decision: "review"
+    match: "any"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "vortex.publish"

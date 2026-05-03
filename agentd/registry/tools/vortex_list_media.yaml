@@ -1,0 +1,26 @@
+id: "vortex.list_media"
+version: "1.0.0"
+description: "Busca e lista itens de mídia (imagens, vídeos) disponíveis no banco Abidos do Vórtex."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 15000
+input_schema:
+  type: "object"
+  properties:
+    category:
+      type: "string"
+      description: "Filtro opcional por categoria de mídia"
+  required: []
+output_schema:
+  type: "object"
+  properties:
+    items:
+      type: "array"
+effects: []
+applicable_skills: ["vortex", "*"]
+examples:
+  - input:
+      category: "hero"
+    explanation: "Lista imagens da categoria hero disponíveis"

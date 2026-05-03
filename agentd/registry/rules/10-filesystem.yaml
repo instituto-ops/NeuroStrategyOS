@@ -43,6 +43,8 @@ rules:
         value: "^(C:\\\\Windows|/etc|/usr|/sys|/proc)"
 
   # Allow: list_dir e search são safe
+  # (Nota: safe tools já são cobertas por allow-safe-tools-always em 00-defaults.yaml)
+  # Esta regra é redundante mas explícita para documentação
   - id: "allow-filesystem-list-search"
     description: "List e search de arquivos permitidos durante estados ativos"
     priority: 20
@@ -55,3 +57,31 @@ rules:
       - field: "ctx.fsm_state"
         op: "in"
         value: ["EXECUTING", "TESTING", "DIAGNOSIS", "PLANNING"]
+
+  # Allow: patch_file durante execução (moderate, mas reversível — backup obrigatório)
+  - id: "allow-filesystem-patch"
+    description: "Patch de arquivo permitido durante execução (com backup automático)"
+    priority: 25
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "filesystem.patch_file"
+      - field: "ctx.fsm_state"
+        op: "eq"
+        value: "EXECUTING"
+
+  # Bloquear patch em paths do sistema
+  - id: "block-patch-system-paths"
+    description: "Bloqueia patch em diretórios do sistema operacional"
+    priority: 15
+    decision: "forbidden"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "filesystem.patch_file"
+      - field: "args.path"
+        op: "matches"
+        value: "^(C:\\\\Windows|/etc|/usr|/sys|/proc)"

@@ -1,0 +1,28 @@
+id: "git.branch"
+version: "1.0.0"
+description: "Lista as branches locais e remotas do repositório Git."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 10000
+input_schema:
+  type: "object"
+  properties:
+    cwd:
+      type: "string"
+      description: "Diretório do repositório Git"
+  required: ["cwd"]
+output_schema:
+  type: "object"
+  properties:
+    stdout:
+      type: "string"
+    exitCode:
+      type: "number"
+effects: []
+applicable_skills: ["*"]
+examples:
+  - input:
+      cwd: "C:/Users/artes/Documents/NeuroStrategy OS - VM/Nucleo de Marketing"
+    explanation: "Lista todas as branches do repo"

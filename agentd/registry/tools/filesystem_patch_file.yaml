@@ -1,0 +1,40 @@
+id: "filesystem.patch_file"
+version: "1.0.0"
+description: "Substitui uma string exata em um arquivo existente. Faz backup automático antes da edição. Reversível."
+risk_level: "moderate"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 10000
+input_schema:
+  type: "object"
+  properties:
+    path:
+      type: "string"
+      description: "Caminho absoluto do arquivo a editar"
+    search:
+      type: "string"
+      description: "String exata a ser substituída (deve existir no arquivo)"
+    replace:
+      type: "string"
+      description: "String que substituirá o valor encontrado"
+  required: ["path", "search", "replace"]
+output_schema:
+  type: "object"
+  properties:
+    success:
+      type: "boolean"
+    backupPath:
+      type: "string"
+    patchedPath:
+      type: "string"
+effects:
+  - "Sobrescreve o arquivo no path especificado"
+  - "Cria arquivo de backup com sufixo .bak.{timestamp}"
+applicable_skills: ["*"]
+examples:
+  - input:
+      path: "/repo/frontend/server.js"
+      search: "const PORT = 3000"
+      replace: "const PORT = process.env.PORT || 3000"
+    explanation: "Torna a porta configurável via variável de ambiente"

@@ -1,0 +1,24 @@
+id: "browser.get_content"
+version: "1.0.0"
+description: "Extrai o texto visível da página atual no browser (até 5000 chars). Operação de leitura passiva."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 15000
+input_schema:
+  type: "object"
+  properties: {}
+  required: []
+output_schema:
+  type: "object"
+  properties:
+    text:
+      type: "string"
+    url:
+      type: "string"
+effects: []
+applicable_skills: ["*"]
+examples:
+  - input: {}
+    explanation: "Lê o texto da página atualmente aberta no browser"

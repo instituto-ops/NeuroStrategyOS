@@ -1,0 +1,23 @@
+id: "browser.close"
+version: "1.0.0"
+description: "Fecha o browser Playwright e libera recursos. Pode ser chamado a qualquer momento."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 10000
+input_schema:
+  type: "object"
+  properties: {}
+  required: []
+output_schema:
+  type: "object"
+  properties:
+    status:
+      type: "string"
+effects:
+  - "Fecha o processo Chromium e libera memória"
+applicable_skills: ["*"]
+examples:
+  - input: {}
+    explanation: "Fecha o browser após concluir automação"

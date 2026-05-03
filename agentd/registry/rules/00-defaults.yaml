@@ -1,8 +1,8 @@
 ## Default Deny + base rules
 rules:
-  # Forbidden: nunca executar
+  # Forbidden: nunca executar — prioridade máxima
   - id: "deny-forbidden-tools"
-    description: "Tools com risk_level forbidden são proibidas"
+    description: "Tools com risk_level forbidden são proibidas sem exceção"
     priority: 1
     decision: "forbidden"
     match: "all"
@@ -11,9 +11,22 @@ rules:
         op: "eq"
         value: "forbidden"
 
-  # Block: não executar durante IDLE (nada deveria executar sem sessão ativa)
+  # Allow: tools safe sempre executam — mesmo em IDLE (leitura, list, search, audit)
+  # Prioridade 4 garante que passa ANTES do block-idle (prio 5)
+  - id: "allow-safe-tools-always"
+    description: "Tools marcadas como safe executam sem restrição de estado FSM"
+    priority: 4
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.risk_level"
+        op: "eq"
+        value: "safe"
+
+  # Block: não executar tools moderate/high/critical durante IDLE
+  # (safe tools já foram tratadas acima e não chegam aqui)
   - id: "block-idle-execution"
-    description: "Bloqueia execução de tools quando FSM está em IDLE"
+    description: "Bloqueia execução de tools com efeitos colaterais quando FSM está em IDLE"
     priority: 5
     decision: "block"
     match: "all"
@@ -24,7 +37,7 @@ rules:
 
   # Review: qualquer tool com risk_level high ou critical exige HITL
   - id: "review-high-risk"
-    description: "Tools de alto risco exigem aprovação humana"
+    description: "Tools de alto risco exigem aprovação humana (HITL)"
     priority: 10
     decision: "review"
     match: "any"

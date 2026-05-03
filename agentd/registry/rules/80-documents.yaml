@@ -1,0 +1,26 @@
+## Document parsing rules
+rules:
+  # Parsing de documentos — sempre safe (leitura de arquivo local)
+  - id: "allow-documents-parse"
+    description: "Parsing de PDF, DOCX, XLSX é operação de leitura local safe"
+    priority: 80
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "in"
+        value: ["documents.parse_pdf", "documents.parse_docx", "documents.parse_xlsx", "documents.parse_csv"]
+
+  # Parse e indexar na memória — safe (leitura + write em SQLite local)
+  - id: "allow-documents-parse-and-index"
+    description: "Parse de documento e indexação na memória RAG é safe"
+    priority: 80
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "documents.parse_and_index"
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING", "PLANNING", "DIAGNOSIS"]

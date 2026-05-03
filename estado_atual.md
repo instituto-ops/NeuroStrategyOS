@@ -1,75 +1,51 @@
 ## 🟢 Verdade Atual
-- Fases 1–9 do agentd concluídas (tag `agente-operacional-v1`).
-- **Fases 8A, 8B, 8C, 8D (código) completas** (2026-05-03 — sessão Cowork):
-  - Mission Control (`#agent-workspace`): 6 abas (Status/HITL/Artifacts/Logs/Memory/Command), smoke test aprovado via Kapture.
-  - Agent FAB (`agent-fab.js`): 5 estados visuais, badge HITL, long-press navega para #agent-workspace.
-  - SparkEngine V5.30 ALPHA removido: `#spark-trigger`, `#spark-panel`, `spark-engine.js` deletados de `index.html`.
-  - ADR-011 (`vortex_como_oficina`) e ADR-012 (`agent_workspace_separado`) congelados.
-  - Bridge Agent↔Vórtex: 4 bugs críticos corrigidos, 3 tools adicionadas, SSE com heartbeat 30s.
-- **Menu `🤖 Agente` ativo** no browser de Dr. Victor (localStorage flag `neuroengine_flags.agentWorkspace = true` persistida).
+- **Fase A (Correções Cirúrgicas) COMPLETA** (2026-05-03):
+  - 6 bugs críticos corrigidos (BUG-01 a BUG-06)
+  - Tool Registry: **31 tools** com YAMLs corretos
+  - Regras do Kernel: **9 arquivos** todos no schema correto
+  - `filesystem.patch_file` implementado (handler + YAML + regra)
+  - `git.push` implementado (handler + YAML + regra com HITL)
+  - `allow-safe-tools-always` (priority 4) — tools safe executam mesmo em IDLE
+  - Import `.ts` → `.js` corrigido em memoryManager.ts
+- **Branch `feat/agent-workspace-shell`** — inclui todas as correções da Fase A.
 
-## 📋 Arquivos Modificados (Fases 8A–8D)
+## 📋 Registry Atual (31 tools / 9 regras)
 
-| Arquivo | O que mudou |
-|---------|-------------|
-| `frontend/public/css/agent-workspace.css` | CRIADO — estilos Mission Control |
-| `frontend/public/js/agent-workspace.js` | CRIADO — 6 abas, polling, SSE, HITL, Artifacts, Command |
-| `frontend/public/js/agent-fab.js` | CRIADO — FAB universal 5 estados, badge, popover, long-press |
-| `frontend/public/js/app.js` | EDITADO — `agentFAB.init()` + `agentWorkspace` lifecycle |
-| `frontend/public/index.html` | EDITADO — seção #agent-workspace, menu Agente, scripts, SparkEngine removido |
-| `agentd/src/config.ts` | EDITADO — `findEnvFile()` ancora em `estado_atual.md`; aceita `GEMINI_API_KEY` |
-| `agentd/src/mcp/vortex.ts` | EDITADO — handlers: `vortex.list_drafts`, `vortex.list_published`, `vortex.micro_edit` |
-| `agentd/src/skills/vortex/vortexSkill.ts` | EDITADO — métodos: `listDrafts()`, `listPublished()`, `microEdit()` |
-| `agentd/registry/tools/vortex.yaml` | EDITADO — 3 tools adicionadas |
-| `agentd/registry/rules/40-vortex.yaml` | EDITADO — seletores corrigidos para tools reais |
-| `frontend/agent-bridge.js` | EDITADO — `agent.status`, `tool.invoke` (2x), SSE JSONL, heartbeat |
-| `CSA/1_Diretrizes_e_Memoria/ADRs/ADR-011_vortex_como_oficina.md` | CRIADO |
-| `CSA/1_Diretrizes_e_Memoria/ADRs/ADR-012_agent_workspace_separado.md` | CRIADO |
+| Domínio | Tools | Status |
+|---------|-------|--------|
+| filesystem | read_file, write_file, list_dir, search, patch_file | ✅ 5 tools |
+| terminal | run | ✅ 1 tool |
+| git | status, diff, add, commit, log, branch, checkout, push | ✅ 8 tools |
+| vortex | generate, publish, list_drafts, save_draft, audit, list_published, list_media, micro_edit | ✅ 8 tools |
+| browser | open, click, type, screenshot, get_content, close | ✅ 6 tools |
+| google | search, ga4_query | ✅ 2 tools (Drive/Sheets/Gmail na Fase F) |
+| vercel | list_deployments, get_deployment, trigger_deploy | ✅ 3 tools |
+| documents | parse_pdf, parse_docx | ✅ 2 tools |
 
-## 📋 Bugs Corrigidos (8D)
-- `config.ts` dotenv buscava `agentd/.env` (inexistente) → corrigido: `findEnvFile()` sobe diretórios ancorando em `estado_atual.md`
-- `config.ts` usava `GOOGLE_GENAI_API_KEY` → corrigido: aceita `GEMINI_API_KEY || GOOGLE_GENAI_API_KEY`
-- `agent-bridge.js` chamava `fsm.status` (não registrado) → corrigido: `agent.status`
-- `agent-bridge.js` chamava `tools.invoke` (typo em 2 lugares) → corrigido: `tool.invoke`
+## ⏭️ Próxima Fase: B — Brain / Loop LLM
 
-## 🔴 Pendentes (bloqueados por CLI/daemon)
+**O componente mais crítico**: loop de raciocínio que conecta instrução → Gemini → FSM → tools → resultado.
 
-### 8A.2 — Branch de feature (requer terminal Windows)
-```bash
-git checkout -b feat/agent-workspace-shell
+Arquivos a criar:
+```
+agentd/src/brain/
+├── gemini.ts          ← Wrapper Gemini com function calling
+├── prompt.ts          ← Template system prompt (contexto, tools, CSA, estilo)
+├── toolParser.ts      ← Tool[] → FunctionDeclaration[] do Gemini SDK
+├── sessionManager.ts  ← Ciclo de vida de sessões de trabalho
+└── brain.ts           ← O loop principal: think → act → observe
 ```
 
-### 8D.5 — Teste E2E (requer daemon ativo)
-```bash
-# Terminal 1 — iniciar daemon
-cd agentd && npm run dev
+IPC novo: `agent.run({ task, skill })` — inicia sessão autônoma e retorna sessionId.
 
-# Verificar: log "Named Pipe escutando em \\.\pipe\agentd"
-```
-Depois, no browser (http://localhost:3000), console DevTools:
-```javascript
-// Teste 1 — FSM deve retornar IDLE (não OFFLINE)
-agentAPI.getStatus().then(console.log)
+## 🔴 Ainda Pendente (não bloqueia Fase B)
+- **Fase C**: HITL Execution (aprovados não executam) — implementar após Brain
+- **Fase D**: Registry OK. ✅ Completo como parte da Fase A
+- **Fase E**: Console Web (App.tsx vazio)
+- **Fase F**: Google MCPs completos (Drive, Sheets, GA4, Calendar, Gmail)
+- **Fase G**: Browser isolado (Playwright como child process)
 
-// Teste 2 — Vórtex tool smoke
-agentAPI.call('tool.invoke', { toolId: 'vortex.list_drafts', args: {} }).then(console.log)
-
-// Teste 3 — HITL flow
-agentAPI.call('tool.invoke', {
-  toolId: 'vortex.publish',
-  args: { filename: 'test.html', content: '<h1>Teste</h1>', message: 'teste HITL' }
-}).then(console.log)
-// → deve aparecer card de aprovação na aba HITL do #agent-workspace
-```
-
-### 8D.5 — Commit final
-```bash
-git add -A
-git commit -m "feat: Agent Workspace 8A-8D — Mission Control, FAB, bridge Vórtex, 4 bugs, 3 tools"
-```
-
-## ⏭️ Próximo Passo Lógico (após 8D.5)
-- Se E2E passou: tag `agent-workspace-v1`, merge para main.
-- Fase 9 (Browser, MCPs extras, Web Console) já consta como concluída no plano — verificar se código existe ou se é aspiracional.
-  - Checar: `ls agentd/src/mcp/` — se existir `browser.ts`, `vercel.ts`, `google.ts`, `documents.ts` → já implementado.
-  - Checar: `ls console/` — se existir → Web Console já foi construído.
+## 🔴 Restrições Ativas
+- **AI**: 100% Gemini API — Zero modelos locais (ADR-005)
+- **Push**: HITL obrigatório (ADR-008) — agora com handler + regra
+- **HITL**: Checkpoints criados mas não re-executam após aprovação — BUG-03 (Fase C)

@@ -1,0 +1,26 @@
+id: "vercel.get_deployment"
+version: "1.0.0"
+description: "Retorna detalhes de um deployment Vercel específico por ID: URL, estado, logs de build."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 15000
+input_schema:
+  type: "object"
+  properties:
+    deploymentId:
+      type: "string"
+      description: "ID do deployment Vercel (ex: dpl_abc123)"
+  required: ["deploymentId"]
+output_schema:
+  type: "object"
+  properties:
+    deployment:
+      type: "object"
+effects: []
+applicable_skills: ["*"]
+examples:
+  - input:
+      deploymentId: "dpl_abc123"
+    explanation: "Verifica o estado de um deployment específico"

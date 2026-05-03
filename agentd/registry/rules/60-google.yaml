@@ -1,0 +1,106 @@
+## Google services rules
+rules:
+  # Busca web via SerpAPI — safe
+  - id: "allow-google-search"
+    description: "Busca no Google via SerpAPI é operação safe de leitura"
+    priority: 60
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "google.search"
+
+  # Google Drive leitura — safe
+  - id: "allow-google-drive-read"
+    description: "Leitura de arquivos do Google Drive é safe"
+    priority: 60
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "in"
+        value: ["google.drive_list", "google.drive_read"]
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING", "PLANNING", "DIAGNOSIS"]
+
+  # Google Sheets leitura — safe
+  - id: "allow-google-sheets-read"
+    description: "Leitura de planilhas Google Sheets é safe"
+    priority: 60
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "google.sheets_read"
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING", "PLANNING", "DIAGNOSIS"]
+
+  # Google Analytics GA4 — safe (apenas leitura de métricas)
+  - id: "allow-google-ga4-query"
+    description: "Consultas ao Google Analytics GA4 são somente leitura"
+    priority: 60
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "google.ga4_query"
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING", "PLANNING", "DIAGNOSIS"]
+
+  # Google Calendar leitura — safe
+  - id: "allow-google-calendar-read"
+    description: "Listagem do Google Calendar é safe"
+    priority: 60
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "google.calendar_list"
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING", "PLANNING", "DIAGNOSIS"]
+
+  # Google Sheets append, Calendar create, Drive upload — exige HITL
+  - id: "review-google-write-ops"
+    description: "Escrita no Google Workspace exige aprovação humana"
+    priority: 59
+    decision: "review"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "in"
+        value: ["google.sheets_append", "google.calendar_create", "google.drive_upload"]
+      - field: "ctx.fsm_state"
+        op: "eq"
+        value: "EXECUTING"
+
+  # Gmail — apenas draft, nunca send; send é forbidden
+  - id: "allow-gmail-draft"
+    description: "Criação de rascunho no Gmail é permitida"
+    priority: 60
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "google.gmail_create_draft"
+      - field: "ctx.fsm_state"
+        op: "eq"
+        value: "EXECUTING"
+
+  - id: "forbidden-gmail-send"
+    description: "Envio de email é estritamente proibido"
+    priority: 1
+    decision: "forbidden"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "google.gmail_send"

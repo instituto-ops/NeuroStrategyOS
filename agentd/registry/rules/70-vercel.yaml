@@ -1,0 +1,37 @@
+## Vercel deployment rules
+rules:
+  # Listagem e leitura de deployments — safe
+  - id: "allow-vercel-read"
+    description: "Listagem e detalhes de deployments são somente leitura"
+    priority: 70
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "in"
+        value: ["vercel.list_deployments", "vercel.get_deployment"]
+
+  # Trigger deploy — HITL obrigatório
+  - id: "review-vercel-deploy"
+    description: "Deploy no Vercel exige aprovação humana"
+    priority: 69
+    decision: "review"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "vercel.trigger_deploy"
+      - field: "ctx.fsm_state"
+        op: "eq"
+        value: "EXECUTING"
+
+  # Promote to production — sempre proibido via agente
+  - id: "forbidden-vercel-promote-production"
+    description: "Promoção para produção no Vercel é proibida via agente"
+    priority: 1
+    decision: "forbidden"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "vercel.promote_production"

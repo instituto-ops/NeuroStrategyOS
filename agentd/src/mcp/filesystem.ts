@@ -80,4 +80,28 @@ export function registerFilesystemHandlers(): void {
     walk(dir, 0);
     return { pattern, matches: results.slice(0, 100) };
   });
+
+  registerHandler('filesystem.patch_file', async (args) => {
+    const path = args.path as string;
+    const search = args.search as string;
+    const replace = args.replace as string;
+
+    if (!existsSync(path)) throw new Error(`Arquivo não encontrado: ${path}`);
+
+    // Backup obrigatório antes de qualquer patch
+    const backupPath = backupFile(path);
+    if (!backupPath) throw new Error(`Falha ao criar backup de: ${path}`);
+
+    const content = readFileSync(path, 'utf-8');
+    if (!content.includes(search)) {
+      throw new Error(`Pattern não encontrado no arquivo "${path}". Verifique a string de busca.`);
+    }
+
+    // Substitui apenas a primeira ocorrência (comportamento seguro e previsível)
+    const updated = content.replace(search, replace);
+    writeFileSync(path, updated, 'utf-8');
+
+    logger.info({ path, searchLen: search.length, replaceLen: replace.length }, 'filesystem.patch_file aplicado');
+    return { success: true, backupPath, patchedPath: path };
+  });
 }

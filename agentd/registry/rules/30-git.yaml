@@ -48,3 +48,41 @@ rules:
       - field: "tool.id"
         op: "eq"
         value: "git.checkout"
+
+  - id: "allow-git-branch"
+    description: "Git branch (listagem) é operação safe"
+    priority: 20
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "git.branch"
+
+  # git.push — HITL obrigatório (irreversível)
+  - id: "review-git-push"
+    description: "Git push exige aprovação humana — ação irreversível"
+    priority: 23
+    decision: "review"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "git.push"
+      - field: "ctx.fsm_state"
+        op: "in"
+        value: ["EXECUTING"]
+
+  # Force push — nunca permitido
+  - id: "forbidden-git-force-push"
+    description: "Force push é proibido sem exceção"
+    priority: 2
+    decision: "forbidden"
+    match: "all"
+    predicates:
+      - field: "tool.id"
+        op: "eq"
+        value: "git.push"
+      - field: "args.force"
+        op: "eq"
+        value: "true"

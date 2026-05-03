@@ -1,0 +1,29 @@
+id: "vercel.trigger_deploy"
+version: "1.0.0"
+description: "Dispara um novo deploy no Vercel. Requer aprovação humana. Deploys de produção são gerenciados via GitHub push."
+risk_level: "high"
+reversible: false
+requires_approval: true
+sandbox: false
+timeout_ms: 120000
+input_schema:
+  type: "object"
+  properties:
+    projectId:
+      type: "string"
+      description: "ID do projeto Vercel"
+  required: ["projectId"]
+output_schema:
+  type: "object"
+  properties:
+    status:
+      type: "string"
+    message:
+      type: "string"
+effects:
+  - "Inicia um novo processo de build e deploy no Vercel"
+applicable_skills: ["*"]
+examples:
+  - input:
+      projectId: "prj_abc123"
+    explanation: "Dispara novo deploy do projeto"

@@ -13,7 +13,8 @@ export function registerGoogleHandlers(): void {
     return await googleSkill.search(args as any);
   });
 
-  registerHandler('google.analytics', async (args) => {
+  // Stub: GA4 real implementado na Fase F (OAuth + Google Analytics Data API)
+  registerHandler('google.ga4_query', async (args) => {
     return await googleSkill.getAnalytics(args as any);
   });
   

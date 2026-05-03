@@ -1,0 +1,42 @@
+id: "google.ga4_query"
+version: "1.0.0"
+description: "Consulta métricas do Google Analytics 4 (GA4). Operação de leitura — não modifica dados."
+risk_level: "safe"
+reversible: true
+requires_approval: false
+sandbox: false
+timeout_ms: 30000
+input_schema:
+  type: "object"
+  properties:
+    propertyId:
+      type: "string"
+      description: "ID da propriedade GA4 (ex: 123456789)"
+    startDate:
+      type: "string"
+      description: "Data de início no formato YYYY-MM-DD ou '7daysAgo'"
+    endDate:
+      type: "string"
+      description: "Data de fim no formato YYYY-MM-DD ou 'today'"
+    metrics:
+      type: "array"
+      items:
+        type: "string"
+      description: "Lista de métricas GA4 (ex: ['sessions', 'activeUsers'])"
+  required: ["propertyId"]
+output_schema:
+  type: "object"
+  properties:
+    status:
+      type: "string"
+    rows:
+      type: "array"
+effects: []
+applicable_skills: ["*"]
+examples:
+  - input:
+      propertyId: "123456789"
+      startDate: "7daysAgo"
+      endDate: "today"
+      metrics: ["sessions", "activeUsers"]
+    explanation: "Consulta sessões e usuários ativos da última semana"
