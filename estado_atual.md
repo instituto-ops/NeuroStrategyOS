@@ -1,22 +1,18 @@
-# Estado Atual - Vórtex V7.5.5 — Asset Picker & Final UI Repair
+## 🟢 Verdade Atual
+- Infraestrutura backend (Neon/Postgres, Cloudinary, Abidos Engine) consolidada.
+- Vórtex Studio funcional: geração streaming, VFS, commit GitHub, preview, template guiado, micro-edit.
+- CSA v3.5 parcialmente estabelecida (pasta CSA/ com diretrizes, planos, registro de falhas).
+- Fase 1 (Fundação CSA) do Plano Agente Operacional v2 em execução.
 
-## 🎯 Objetivo Atual
-Concluir a Fase 1 (Saneamento e Smoke Tests) e preparar a base para o Renderer Data-Driven (Fase 2).
+## 🔴 Restrições Ativas
+- **Bloqueio Abidos 401**: Rota `/api/vortex/generate-sections` falha na autenticação (mismatch de variável de ambiente).
+- **Asset Picker**: Funcional, dependente de chaves Cloudinary no `.env`.
+- **Estratégia**: Data-driven first (AbidosRenderer unificado) é a diretriz absoluta.
+- **AI**: 100% via Gemini API (Flash/Pro/Embeddings). Zero modelos locais (ADR-005).
 
-## 📊 Status da Operação [2026-04-27]
-- **Fase 1.1 (Arquitetura Core)**: 100% Verificada (VFS, Monaco, Shadow Sync, Context Hub).
-- **Fase 1.2 (Smoke Editorial)**: 100% (Drafts carregando na "2 Edição").
-- **Fase 1.3 (Smoke Abidos)**: 50% (Botão "GERAR" funcional, mas retornando 401 Unauthorized).
-- **UI/Aesthetics**: Saneamento de Mojibake concluído via `mega_fix.js`.
+## 📋 Fila Ativa
+- Plano: `CSA/4_Execucao_e_Historico/Planos_de_Execucao/PLANO_AGENTE_OPERACIONAL_v2.md`
+- Próxima etapa: Fase 1.7 — Atualizar glossário e finalizar fundação CSA.
 
-## 🛠️ Descobertas e Bloqueios
-- **Bloqueio [Abidos 401]**: A chamada para `/api/vortex/generate-sections` retorna 401. `GEMINI_API_KEY` está no `.env`, mas pode haver incompatibilidade no nome da variável esperada pela rota em `frontend/routes/vortex.js`.
-- **Asset Picker**: Funcional, mas vazio (requer Cloudinary API Key ativa para listar assets).
-
-## ⏭️ Próximos Passos (Boot Seguinte)
-1. **Debug Abidos**: Corrigir erro 401 (Investigar `frontend/routes/vortex.js`).
-2. **ADR-001**: Documentar arquitetura do Renderer.
-3. **Fase 2.1**: Implementar DAL (Data Access Layer) no backend para alimentar o novo Renderer.
-
-## 🗃️ Registro de Git
-- **Último Commit**: Reparo de UI e verificação de fluxo Studio (Phase 1).
+## ⏭️ Próximo Passo Lógico
+Finalizar Fase 1 (commit + tag csa-foundation-v1) e iniciar Fase 2 (esqueleto agentd).
