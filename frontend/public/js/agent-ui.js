@@ -154,37 +154,120 @@ const AgentUI = {
                 </div>
                 <div id="agent-status-badge" class="agent-status-badge status-idle">Offline</div>
             </div>
+            
+            <div class="agent-tabs" style="display: flex; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <div class="agent-tab active" data-tab="status" onclick="AgentUI.switchTab('status')" style="flex: 1; text-align: center; padding: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent;">Status</div>
+                <div class="agent-tab" data-tab="artifacts" onclick="AgentUI.switchTab('artifacts')" style="flex: 1; text-align: center; padding: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent;">Artifacts</div>
+                <div class="agent-tab" data-tab="logs" onclick="AgentUI.switchTab('logs')" style="flex: 1; text-align: center; padding: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent;">Live Log</div>
+            </div>
+
             <div class="agent-body">
-                <div class="agent-section">
-                    <h3>FSM State</h3>
-                    <div id="agent-fsm-info" style="font-size: 14px; color: #c9d1d9;">Aguardando conexão...</div>
-                </div>
-                
-                <div id="hitl-section" class="agent-section" style="display: none;">
-                    <h3>Requisições Pendentes (HITL)</h3>
-                    <div id="hitl-list"></div>
+                <!-- ABA: STATUS -->
+                <div id="tab-status" class="tab-content active">
+                    <div class="agent-section">
+                        <h3>FSM State</h3>
+                        <div id="agent-fsm-info" style="font-size: 14px; color: #c9d1d9;">Aguardando conexão...</div>
+                    </div>
+                    
+                    <div id="hitl-section" class="agent-section" style="display: none;">
+                        <h3>Requisições Pendentes (HITL)</h3>
+                        <div id="hitl-list"></div>
+                    </div>
+
+                    <div class="agent-section">
+                        <h3>Memória Semântica</h3>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" id="memory-search-input" placeholder="Pesquisar fatos..." 
+                                   style="flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px; color: white;">
+                            <button onclick="AgentUI.searchMemory()" class="agent-btn btn-primary">🔍</button>
+                        </div>
+                        <div id="memory-results" style="font-size: 12px; color: #8b949e;"></div>
+                    </div>
                 </div>
 
-                <div class="agent-section">
-                    <h3>Memória Semântica</h3>
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <input type="text" id="memory-search-input" placeholder="Pesquisar fatos..." 
-                               style="flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px; color: white;">
-                        <button onclick="AgentUI.searchMemory()" class="agent-btn btn-primary">🔍</button>
+                <!-- ABA: ARTIFACTS -->
+                <div id="tab-artifacts" class="tab-content" style="display: none;">
+                    <div class="agent-section">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="margin: 0;">Arquivos Persistentes</h3>
+                            <button onclick="AgentUI.loadArtifacts()" class="agent-btn" style="padding: 2px 8px; font-size: 10px;">🔄</button>
+                        </div>
+                        <div id="artifacts-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                        <div id="artifact-viewer" style="display: none; margin-top: 20px; padding: 15px; background: #0d1117; border-radius: 8px; font-size: 13px; border: 1px solid #30363d;">
+                            <button onclick="document.getElementById('artifact-viewer').style.display='none'" class="agent-btn btn-danger" style="float: right; margin-bottom: 10px;">Fechar</button>
+                            <div id="artifact-content" class="markdown-body" style="color: #c9d1d9;"></div>
+                        </div>
                     </div>
-                    <div id="memory-results" style="font-size: 12px; color: #8b949e;"></div>
                 </div>
 
-                <div class="agent-section">
-                    <h3>Ações</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <button onclick="AgentUI.bootAgent()" class="agent-btn btn-primary">Boot</button>
-                        <button onclick="AgentUI.indexRepo()" class="agent-btn btn-primary">Index Repo</button>
+                <!-- ABA: LOGS -->
+                <div id="tab-logs" class="tab-content" style="display: none;">
+                    <div class="agent-section" style="height: calc(100vh - 200px); display: flex; flex-direction: column;">
+                        <h3 style="margin-bottom: 10px;">Eventos do Sistema</h3>
+                        <div id="live-log-container" style="flex: 1; background: #000; border-radius: 6px; padding: 15px; font-family: 'Fira Code', monospace; font-size: 11px; color: #7ee787; overflow-y: auto; white-space: pre-wrap;"></div>
                     </div>
+                </div>
+            </div>
+
+            <div class="agent-footer" style="padding: 20px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.1);">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button onclick="AgentUI.bootAgent()" class="agent-btn btn-primary">🔥 Boot</button>
+                    <button onclick="AgentUI.indexRepo()" class="agent-btn" style="border: 1px solid rgba(255,255,255,0.1); color: white;">Index Repo</button>
                 </div>
             </div>
         `;
         document.body.appendChild(this.panel);
+    },
+
+    switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        document.getElementById(`tab-${tabId}`).style.display = 'block';
+        
+        document.querySelectorAll('.agent-tab').forEach(el => el.classList.remove('active'));
+        document.querySelector(`.agent-tab[data-tab="${tabId}"]`).classList.add('active');
+        
+        if (tabId === 'artifacts') this.loadArtifacts();
+    },
+
+    async loadArtifacts() {
+        try {
+            const res = await fetch('/api/agent/artifacts');
+            const data = await res.json();
+            const list = document.getElementById('artifacts-list');
+            
+            list.innerHTML = data.artifacts.map(f => `
+                <div onclick="AgentUI.viewArtifact('${f.name}')" style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); font-size: 12px; display: flex; align-items: center; gap: 10px;">
+                    <span>📄</span>
+                    <span>${f.name}</span>
+                </div>
+            `).join('');
+        } catch (e) {}
+    },
+
+    async viewArtifact(name) {
+        try {
+            const res = await fetch(`/api/agent/artifacts/${name}`);
+            const data = await res.json();
+            const viewer = document.getElementById('artifact-viewer');
+            const content = document.getElementById('artifact-content');
+            
+            viewer.style.display = 'block';
+            content.innerHTML = window.marked.parse(data.content);
+        } catch (e) {}
+    },
+
+    setupLiveLogging() {
+        const eventSource = new EventSource('/api/agent/events');
+        const container = document.getElementById('live-log-container');
+        
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const line = document.createElement('div');
+            line.style.marginBottom = '5px';
+            line.innerHTML = `<span style="color: #8b949e;">[${new Date().toLocaleTimeString()}]</span> ${JSON.stringify(data)}`;
+            container.appendChild(line);
+            container.scrollTop = container.scrollHeight;
+        };
     },
 
     renderToggle() {
@@ -193,6 +276,7 @@ const AgentUI = {
         toggle.innerHTML = '🤖';
         toggle.onclick = () => this.panel.classList.toggle('open');
         document.body.appendChild(toggle);
+        this.setupLiveLogging();
     },
 
     async startStatusPolling() {

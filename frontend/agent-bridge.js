@@ -86,6 +86,58 @@ function registerAgentRoutes(app) {
         }
     });
 
+    app.get('/api/agent/artifacts', async (req, res) => {
+        try {
+            const artifacts = await callAgent('tools.invoke', { 
+                toolId: 'filesystem.list_dir', 
+                args: { path: 'artifacts' } // Caminho relativo ao home
+            });
+            res.json({ success: true, artifacts: artifacts.files || [] });
+        } catch (err) {
+            res.status(500).json({ success: false, error: err.message });
+        }
+    });
+
+    app.get('/api/agent/artifacts/:name', async (req, res) => {
+        try {
+            const content = await callAgent('tools.invoke', { 
+                toolId: 'filesystem.read', 
+                args: { path: `artifacts/${req.params.name}` }
+            });
+            res.json({ success: true, content: content.content });
+        } catch (err) {
+            res.status(500).json({ success: false, error: err.message });
+        }
+    });
+
+    app.get('/api/agent/events', (req, res) => {
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.flushHeaders();
+
+        const { fs } = require('./shared');
+        const eventsPath = path.join(require('os').homedir(), '.neuroengine', 'events');
+        
+        // Função para enviar evento
+        const sendEvent = (data) => {
+            res.write(`data: ${JSON.stringify(data)}\n\n`);
+        };
+
+        // Simples tail: observa o diretório de eventos
+        const watcher = fs.watch(eventsPath, (eventType, filename) => {
+            if (eventType === 'change') {
+                // Ao mudar, poderíamos ler as últimas linhas. 
+                // Por simplificação agora, enviamos um sinal de "update".
+                sendEvent({ type: 'log_update', filename });
+            }
+        });
+
+        req.on('close', () => {
+            watcher.close();
+        });
+    });
+
     console.log('🔌 [BRIDGE] Agente Operacional: Rotas registradas em /api/agent/');
 }
 
