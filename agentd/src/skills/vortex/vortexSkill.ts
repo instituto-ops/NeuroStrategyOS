@@ -6,7 +6,6 @@
  */
 
 import axios from 'axios';
-import { PageSchema, VortexPage } from './schema';
 
 const VORTEX_API_BASE = 'http://localhost:3000/api/vortex';
 const API_KEY = process.env.VORTEX_API_KEY || '';

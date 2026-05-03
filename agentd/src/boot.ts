@@ -24,6 +24,10 @@ export let registry: ToolLoader | null = null;
 export let kernel: PermissionKernel | null = null;
 /** Memory Manager — acessível após boot */
 export let memory: MemoryManager | null = null;
+/** Brain loop — acessível após boot */
+export let brain: import('./brain/brain.js').Brain | null = null;
+/** Session Manager — acessível após boot */
+export let sessionManager: import('./brain/sessionManager.js').SessionManager | null = null;
 
 export async function boot(): Promise<void> {
   logger.info({ version: config.daemon.version, platform: config.platform }, '🚀 agentd booting...');
@@ -85,6 +89,16 @@ export async function boot(): Promise<void> {
   registerGoogleHandlers();
   registerDocumentHandlers();
   logger.info('⚙️ MCP handlers registrados (filesystem, terminal, git, vortex, browser, vercel, google, documents)');
+
+  // Brain / Loop LLM
+  const { Brain } = await import('./brain/brain.js');
+  const { GeminiClient } = await import('./brain/gemini.js');
+  const { SessionManager } = await import('./brain/sessionManager.js');
+  const geminiClient = new GeminiClient(config.daemon.apiKey, config.daemon.modelId);
+  logger.info({ modelId: config.daemon.modelId }, '🤖 Modelo LLM configurado');
+  sessionManager = new SessionManager(config.paths.sessions);
+  brain = new Brain(geminiClient, machine, registry, kernel, memory, sessionManager);
+  logger.info('🧠 Brain inicializado — agente pronto para receber tarefas');
 
   // Registrar métodos IPC e iniciar servidor
   registerCoreMethods();

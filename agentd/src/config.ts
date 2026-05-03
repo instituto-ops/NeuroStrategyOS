@@ -81,6 +81,8 @@ export const config = {
     version: '0.1.0',
     // Aceita tanto GEMINI_API_KEY (nome no .env raiz) quanto GOOGLE_GENAI_API_KEY
     apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || '',
+    // Modelo LLM: MODEL_NAVIGATION > GEMINI_MODEL > fallback gemini-2.5-flash
+    modelId: process.env.MODEL_NAVIGATION || process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   },
 } as const;
 

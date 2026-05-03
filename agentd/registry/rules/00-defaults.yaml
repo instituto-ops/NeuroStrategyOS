@@ -1,8 +1,8 @@
 ## Default Deny + base rules
 rules:
-  # Forbidden: nunca executar — prioridade máxima
+  # Forbidden: nunca executar - prioridade maxima.
   - id: "deny-forbidden-tools"
-    description: "Tools com risk_level forbidden são proibidas sem exceção"
+    description: "Tools com risk_level forbidden sao proibidas sem excecao"
     priority: 1
     decision: "forbidden"
     match: "all"
@@ -11,34 +11,10 @@ rules:
         op: "eq"
         value: "forbidden"
 
-  # Allow: tools safe sempre executam — mesmo em IDLE (leitura, list, search, audit)
-  # Prioridade 4 garante que passa ANTES do block-idle (prio 5)
-  - id: "allow-safe-tools-always"
-    description: "Tools marcadas como safe executam sem restrição de estado FSM"
-    priority: 4
-    decision: "allow"
-    match: "all"
-    predicates:
-      - field: "tool.risk_level"
-        op: "eq"
-        value: "safe"
-
-  # Block: não executar tools moderate/high/critical durante IDLE
-  # (safe tools já foram tratadas acima e não chegam aqui)
-  - id: "block-idle-execution"
-    description: "Bloqueia execução de tools com efeitos colaterais quando FSM está em IDLE"
-    priority: 5
-    decision: "block"
-    match: "all"
-    predicates:
-      - field: "ctx.fsm_state"
-        op: "eq"
-        value: "IDLE"
-
-  # Review: qualquer tool com risk_level high ou critical exige HITL
+  # Review: high/critical sempre entram em HITL antes do bloqueio generico de IDLE.
   - id: "review-high-risk"
-    description: "Tools de alto risco exigem aprovação humana (HITL)"
-    priority: 10
+    description: "Tools de alto risco exigem aprovacao humana (HITL)"
+    priority: 3
     decision: "review"
     match: "any"
     predicates:
@@ -48,3 +24,26 @@ rules:
       - field: "tool.risk_level"
         op: "eq"
         value: "critical"
+
+  # Allow: tools safe sempre executam, mesmo em IDLE.
+  - id: "allow-safe-tools-always"
+    description: "Tools marcadas como safe executam sem restricao de estado FSM"
+    priority: 4
+    decision: "allow"
+    match: "all"
+    predicates:
+      - field: "tool.risk_level"
+        op: "eq"
+        value: "safe"
+
+  # Block: nao executar tools moderate durante IDLE.
+  # High/critical ja foram tratadas por HITL acima.
+  - id: "block-idle-execution"
+    description: "Bloqueia execucao de tools com efeitos colaterais quando FSM esta em IDLE"
+    priority: 5
+    decision: "block"
+    match: "all"
+    predicates:
+      - field: "ctx.fsm_state"
+        op: "eq"
+        value: "IDLE"

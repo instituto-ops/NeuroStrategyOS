@@ -7,7 +7,7 @@
 import { registerMethod } from './server.js';
 import { readEstadoAtual } from '../state/estadoAtualReader.js';
 import { config } from '../config.js';
-import { machine, registry, kernel, memory } from '../boot.js';
+import { machine, registry, kernel, memory, brain, sessionManager } from '../boot.js';
 import { EventType } from '../fsm/states.js';
 import type { ToolCall, InvocationContext } from '../kernel/types.js';
 import { auditLog, verifyAuditChain } from '../kernel/audit.js';
@@ -47,6 +47,36 @@ export function registerCoreMethods(): void {
 
   registerMethod('agent.ping', () => {
     return { pong: true, timestamp: new Date().toISOString() };
+  });
+
+  registerMethod('agent.run', async (params) => {
+    if (!brain || !sessionManager) throw new Error('Brain nao inicializado');
+    const task = params.task as string;
+    if (!task) throw new Error('Parametro obrigatorio ausente: task');
+    const skill = (params.skill as string) ?? 'vortex';
+    const sessionId = params.sessionId as string | undefined;
+    const session = sessionId
+      ? await sessionManager.get(sessionId)
+      : await sessionManager.start(task, skill);
+    if (!session) throw new Error(`Sessao nao encontrada: ${sessionId}`);
+
+    brain.run(task, session.id).catch((err) =>
+      console.error({ err, sessionId: session.id }, 'Brain.run falhou'),
+    );
+
+    return { sessionId: session.id, status: 'started', task };
+  });
+
+  registerMethod('agent.session_status', async (params) => {
+    if (!sessionManager) throw new Error('SessionManager nao inicializado');
+    const session = await sessionManager.get(params.sessionId as string);
+    if (!session) throw new Error(`Sessao nao encontrada: ${params.sessionId as string}`);
+    return session;
+  });
+
+  registerMethod('agent.list_sessions', async () => {
+    if (!sessionManager) throw new Error('SessionManager nao inicializado');
+    return await sessionManager.listActive();
   });
 
   // === FSM (Fase 3) ===
